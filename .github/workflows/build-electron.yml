@@ -1,0 +1,5 @@
+# 1. Create a version tag
+git tag v1.0.0
+
+# 2. Push the tag to GitHub
+git push origin v1.0.0
