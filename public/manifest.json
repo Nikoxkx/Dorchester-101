@@ -1,0 +1,65 @@
+{
+  "name": "DOR101 — Dorchester 101",
+  "short_name": "DOR101",
+  "description": "Your neighborhood. Your rights. Your future. Free housing, food, and community resources for Dorchester residents.",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#FAFAF8",
+  "theme_color": "#1B3A6B",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["social", "education", "government", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Affordable Housing",
+      "short_name": "Housing",
+      "url": "/affordable-housing",
+      "description": "Find income-restricted housing in Dorchester"
+    },
+    {
+      "name": "Food Resources",
+      "short_name": "Food",
+      "url": "/food",
+      "description": "Find food pantries and meal programs"
+    },
+    {
+      "name": "Map",
+      "short_name": "Map",
+      "url": "/map",
+      "description": "View Dorchester resources map"
+    },
+    {
+      "name": "News",
+      "short_name": "News",
+      "url": "/news",
+      "description": "Latest community news"
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "related_applications": [],
+  "prefer_related_applications": false
+}

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#1B3A6B"/>
+  <!-- Roof -->
+  <path d="M256 96L128 200H384L256 96Z" fill="white" fill-opacity="0.95"/>
+  <!-- Floor 1 -->
+  <rect x="148" y="200" width="216" height="68" fill="white" fill-opacity="0.95"/>
+  <!-- Floor 2 -->
+  <rect x="148" y="272" width="216" height="68" fill="white" fill-opacity="0.9"/>
+  <!-- Floor 3 -->
+  <rect x="148" y="344" width="216" height="68" fill="white" fill-opacity="0.85"/>
+  <!-- Windows Floor 1 -->
+  <rect x="170" y="216" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.7"/>
+  <rect x="236" y="216" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.7"/>
+  <rect x="302" y="216" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.7"/>
+  <!-- Windows Floor 2 -->
+  <rect x="170" y="288" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.6"/>
+  <rect x="236" y="288" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.6"/>
+  <rect x="302" y="288" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.6"/>
+  <!-- Windows Floor 3 -->
+  <rect x="170" y="360" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.5"/>
+  <rect x="302" y="360" width="40" height="34" rx="4" fill="#1B3A6B" fill-opacity="0.5"/>
+  <!-- Door -->
+  <rect x="236" y="356" width="40" height="56" rx="4" fill="#C8102E"/>
+  <circle cx="268" cy="384" r="4" fill="#FFD700"/>
+  <!-- Location pin -->
+  <circle cx="380" cy="140" r="44" fill="#C8102E"/>
+  <circle cx="380" cy="140" r="22" fill="white"/>
+  <path d="M380 184L362 156H398L380 184Z" fill="#C8102E"/>
+</svg>
