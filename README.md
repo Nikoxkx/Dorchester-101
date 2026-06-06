@@ -2,15 +2,29 @@
 
 > **Your neighborhood. Your rights. Your future.**
 
-DOR101 is a free, open-source community resource hub built exclusively for the residents of Dorchester, Boston, Massachusetts — with a focus on lower-income families and individuals who need clear, verified information about housing, food assistance, healthcare, legal help, and community services.
+DOR101 is a free, open-source community resource hub built exclusively for the residents of Dorchester, Boston, Massachusetts — with a focus on lower-income families and individuals who need clear, actionable information about housing, food, and community services in their neighborhood.
+
+---
+
+## 📥 Download Desktop Application
+
+**Windows users:** Download the standalone `.exe` file and run it immediately — no installation or technical knowledge required.
+
+- **[📥 Download Dorchester 101 (Windows .exe)](https://github.com/Nikoxkx/Dorchester-101/releases)**
+- Portable executable (no installation needed)
+- Automatic updates download in the background
+- Works offline with cached data
+- Supports all 9 languages
+
+**Don't see the download button?** Visit the [Releases page](https://github.com/Nikoxkx/Dorchester-101/releases) and download `Dorchester-101-1.0.0.exe`
 
 ---
 
 ## 🏠 What Is DOR101?
 
-DOR101 aggregates verified data from authoritative Boston housing, food, healthcare, and social services sources and presents it in plain, respectful, and accessible language across **9 languages**. Every phone number, address, and data point is verified against official sources. The app never collects personal information, never requires an account, and never charges a fee.
+DOR101 aggregates verified data from authoritative Boston housing, food, healthcare, and social services sources and presents it in plain, respectful, and accessible language across **9 languages**.
 
-**Built for:** Renters and families in Dorchester neighborhoods — Fields Corner, Grove Hall, Uphams Corner, Savin Hill, Codman Square, Lower Mills, Port Norfolk, Four Corners, Ashmont, and the Mattapan border zone.
+**Built for:** Renters and families in Dorchester neighborhoods — Fields Corner, Grove Hall, Uphams Corner, Savin Hill, Codman Square, Lower Mills, Port Norfolk, Four Corners, Ashmont, and the Mattapan neighborhood — who need real, current information to make informed decisions about their homes and lives.
 
 ---
 
@@ -40,6 +54,7 @@ DOR101 aggregates verified data from authoritative Boston housing, food, healthc
 - **Accessibility**: WCAG 2.1 AA — large touch targets, keyboard navigation, screen reader compatible
 - **Satellite map**: ESRI World Imagery with Red Line and Fairmount Line routes
 - **Auto-refresh**: News (5 min), market data (5 min), transit (30 sec), notifications (1 min)
+- **Desktop & Web**: Run as Windows .exe or access via web browser
 
 ---
 
@@ -56,21 +71,30 @@ DOR101 aggregates verified data from authoritative Boston housing, food, healthc
 | Animation | Framer Motion |
 | State | Zustand |
 | Icons | Lucide React |
+| Desktop | Electron + electron-builder |
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### For End Users (Windows)
+1. Go to [Releases](https://github.com/Nikoxkx/Dorchester-101/releases)
+2. Download `Dorchester-101-1.0.0.exe`
+3. Double-click to run
+4. That's it! The app launches immediately
+
+### For Developers
+
+#### Prerequisites
 - Node.js 18+
 - PostgreSQL 15+ (or use the provided Docker configuration)
 
-### Installation
+#### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/dor101.git
-cd dor101
+git clone https://github.com/Nikoxkx/Dorchester-101.git
+cd Dorchester-101
 
 # Install dependencies
 npm install
@@ -87,6 +111,21 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+#### Building the Desktop App
+
+```bash
+# Development mode (with live reload)
+npm run dev:electron
+
+# Production build (creates .exe files)
+npm run build:electron:win
+
+# Publish to GitHub Releases with auto-update support
+npm run build:electron:win:publish
+```
+
+See [README-DESKTOP.md](./README-DESKTOP.md) for complete build instructions.
 
 ### Environment Variables
 
@@ -177,16 +216,24 @@ src/
 ├── db/                     # Drizzle ORM schema & connection
 ├── lib/                    # Utilities, i18n translations
 └── stores/                 # Zustand state management
+
+electron/                   # Desktop app (Electron)
+├── main.js                 # Electron entry point, auto-updates
+└── preload.js              # IPC communication bridge
 ```
 
 ---
 
 ## 🏗 Building for Production
 
+### Web Deployment
 ```bash
 npm run build
 npm start
 ```
+
+### Desktop Deployment
+See [README-DESKTOP.md](./README-DESKTOP.md) for Windows .exe build and release instructions.
 
 ---
 
