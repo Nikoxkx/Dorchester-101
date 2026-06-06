@@ -12,7 +12,7 @@ If you discover a security vulnerability in DOR101, please report it responsibly
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email: **security@dor101.org**
+Instead, please email: **neptunegreek1232gmail.com**
 
 We will acknowledge your report within 48 hours and provide a detailed response within 5 business days.
 
