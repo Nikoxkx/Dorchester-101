@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOR101 — Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background: #FAFAF8;
+      color: #1A1917;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      text-align: center;
+      max-width: 420px;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      color: #4A4844;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .emergency {
+      background: #1B3A6B;
+      color: white;
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .emergency h3 { font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .emergency a {
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .emergency small { display: block; opacity: 0.7; font-size: 0.75rem; margin-top: 0.25rem; }
+    button {
+      background: #1B3A6B;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/icon.svg" alt="DOR101" class="icon">
+    <h1>You're Offline</h1>
+    <p>
+      DOR101 needs an internet connection to load the latest housing, food, and community resource data.
+      Please check your connection and try again.
+    </p>
+
+    <div class="emergency">
+      <h3>Need help right now?</h3>
+      <a href="tel:211">Call 2-1-1</a>
+      <small>Free, 24/7, available in any language</small>
+    </div>
+
+    <div class="emergency" style="background: #C8102E;">
+      <h3>Need food today?</h3>
+      <a href="tel:18006458333">1-800-645-8333</a>
+      <small>Project Bread FoodSource Hotline (Mon–Fri 8am–5pm)</small>
+    </div>
+
+    <button onclick="window.location.reload()">Try Again</button>
+  </div>
+</body>
+</html>
