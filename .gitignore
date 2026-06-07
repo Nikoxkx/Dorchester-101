@@ -10,6 +10,8 @@ build/
 dist/
 dist-electron/
 release/**
+!release/
+!release/**/
 !release/**/RELEASE.md
 
 # Environment
