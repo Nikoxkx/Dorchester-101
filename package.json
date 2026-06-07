@@ -1,18 +1,13 @@
 {
-  "name": "dor101-desktop",
+  "name": "dor101-web",
   "version": "1.0.0",
   "private": true,
-  "description": "Dorchester 101 - Desktop Application",
-  "main": "electron/main.js",
-  "homepage": "./",
+  "description": "Dorchester 101 - Web Application",
+  "homepage": "/",
   "scripts": {
     "dev": "next dev",
-    "dev:electron": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "next build",
-    "build:electron": "npm run build && electron-builder",
-    "build:electron:win": "npm run build && electron-builder --win --publish=never",
-    "build:electron:win:publish": "npm run build && electron-builder --win --publish=always",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -49,61 +44,11 @@
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "concurrently": "^8.2.2",
     "drizzle-kit": "0.31.10",
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.0",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3",
-    "wait-on": "^7.0.1"
-  },
-  "build": {
-    "appId": "com.dorchester101.app",
-    "productName": "Dorchester 101",
-    "files": [
-      "out/**/*",
-      "electron/**/*",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "certificateFile": null,
-      "certificatePassword": null,
-      "signingHashAlgorithms": [
-        "sha256"
-      ],
-      "sign": "./scripts/sign.js"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Dorchester 101"
-    },
-    "portable": {
-      "artifactName": "${productName}-${version}-portable.exe"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "Nikoxkx",
-      "repo": "Dorchester-101"
-    }
+    "typescript": "5.9.3"
   }
 }
