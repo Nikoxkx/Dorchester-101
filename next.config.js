@@ -4,8 +4,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Disable trailing slashes for better desktop app UX
   trailingSlash: false,
+  skipMiddlewareSourceMapGeneration: true,
 };
 
 module.exports = nextConfig;
