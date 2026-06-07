@@ -1,0 +1,6 @@
+git pull origin main
+git add .
+git commit -m "Prepare for automated build"
+git push origin main
+git tag v1.0.0
+git push origin v1.0.0
