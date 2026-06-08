@@ -1,3 +1,5 @@
+<img width="3840" height="2160" alt="pasquale-scionti-new2" src="https://github.com/user-attachments/assets/57187705-8866-4763-a6e5-f8cfb5f5b9f1" />
+
 # DOR101 — Dorchester 101
 
 **Your neighborhood. Your rights. Your future.**
