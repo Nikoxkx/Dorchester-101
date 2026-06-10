@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { 
   Settings, 
@@ -14,6 +15,13 @@ import {
   Info,
   ExternalLink,
   CheckCircle,
+  Bell,
+  Trash2,
+  Plus,
+  X,
+  Rss,
+  MapPin,
+  Newspaper,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -26,6 +34,30 @@ const pageVariants: Variants = {
   enter: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+// News source options
+const AVAILABLE_NEWS_SOURCES = [
+  { id: 'dorchester-reporter', name: 'Dorchester Reporter', url: 'https://www.dotnews.com/', category: 'local' },
+  { id: 'boston-globe', name: 'Boston Globe', url: 'https://www.bostonglobe.com/', category: 'regional' },
+  { id: 'wbur', name: 'WBUR', url: 'https://www.wbur.org/', category: 'radio' },
+  { id: 'gbh-news', name: 'GBH News', url: 'https://www.wgbh.org/news', category: 'radio' },
+  { id: 'boston-gov', name: 'Boston.gov', url: 'https://www.boston.gov/news', category: 'government' },
+  { id: 'bpda', name: 'BPDA', url: 'https://www.bostonplans.org/news', category: 'planning' },
+  { id: 'mass-live', name: 'Mass Live', url: 'https://www.masslive.com/', category: 'regional' },
+  { id: 'boston-herald', name: 'Boston Herald', url: 'https://www.bostonherald.com/', category: 'regional' },
+];
+
+// Transit options
+const AVAILABLE_TRANSIT_SOURCES = [
+  { id: 'mbta', name: 'MBTA Alerts', url: 'https://www.mbta.com/alerts', enabled: true },
+  { id: 'commuter-rail', name: 'Commuter Rail Status', url: 'https://www.mbta.com/schedules/commuter-rail', enabled: true },
+];
+
+const NEWS_SOURCES_KEY = 'dor101-news-sources';
+const TRANSIT_ENABLED_KEY = 'dor101-transit-enabled';
+const NOTIFICATIONS_ENABLED_KEY = 'dor101-notifications-enabled';
+const AUTO_REFRESH_KEY = 'dor101-auto-refresh';
+const MAP_STYLE_KEY = 'dor101-map-style';
+
 export default function SettingsPage() {
   const { 
     theme, setTheme, 
@@ -34,6 +66,93 @@ export default function SettingsPage() {
     reduceMotion, setReduceMotion,
     lastUpdated,
   } = useAppStore();
+
+  // Custom settings state
+  const [selectedNewsSources, setSelectedNewsSources] = useState<string[]>([]);
+  const [enabledTransit, setEnabledTransit] = useState<string[]>(['mbta', 'commuter-rail']);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState(5); // minutes
+  const [mapStyle, setMapStyle] = useState<'satellite' | 'street' | 'hybrid'>('satellite');
+  const [showAddSource, setShowAddSource] = useState(false);
+  const [customNewsUrl, setCustomNewsUrl] = useState('');
+
+  // Load settings from localStorage
+  useEffect(() => {
+    // Load news sources
+    const storedNewsSources = localStorage.getItem(NEWS_SOURCES_KEY);
+    if (storedNewsSources) {
+      setSelectedNewsSources(JSON.parse(storedNewsSources));
+    } else {
+      setSelectedNewsSources(AVAILABLE_NEWS_SOURCES.map(s => s.id));
+    }
+
+    // Load transit
+    const storedTransit = localStorage.getItem(TRANSIT_ENABLED_KEY);
+    if (storedTransit) {
+      setEnabledTransit(JSON.parse(storedTransit));
+    }
+
+    // Load other settings
+    const storedNotifications = localStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+    if (storedNotifications !== null) {
+      setNotificationsEnabled(JSON.parse(storedNotifications));
+    }
+
+    const storedAutoRefresh = localStorage.getItem(AUTO_REFRESH_KEY);
+    if (storedAutoRefresh !== null) {
+      setAutoRefresh(JSON.parse(storedAutoRefresh));
+    }
+
+    const storedMapStyle = localStorage.getItem(MAP_STYLE_KEY) as 'satellite' | 'street' | 'hybrid' | null;
+    if (storedMapStyle) {
+      setMapStyle(storedMapStyle);
+    }
+  }, []);
+
+  // Save functions
+  const saveNewsSources = (sources: string[]) => {
+    setSelectedNewsSources(sources);
+    localStorage.setItem(NEWS_SOURCES_KEY, JSON.stringify(sources));
+  };
+
+  const saveTransit = (transit: string[]) => {
+    setEnabledTransit(transit);
+    localStorage.setItem(TRANSIT_ENABLED_KEY, JSON.stringify(transit));
+  };
+
+  const toggleNewsSource = (sourceId: string) => {
+    const newSources = selectedNewsSources.includes(sourceId)
+      ? selectedNewsSources.filter(s => s !== sourceId)
+      : [...selectedNewsSources, sourceId];
+    saveNewsSources(newSources);
+  };
+
+  const toggleTransit = (transitId: string) => {
+    const newTransit = enabledTransit.includes(transitId)
+      ? enabledTransit.filter(t => t !== transitId)
+      : [...enabledTransit, transitId];
+    saveTransit(newTransit);
+  };
+
+  const addCustomNewsSource = () => {
+    if (customNewsUrl && !selectedNewsSources.includes(customNewsUrl)) {
+      saveNewsSources([...selectedNewsSources, `custom-${customNewsUrl}`]);
+      setCustomNewsUrl('');
+      setShowAddSource(false);
+    }
+  };
+
+  const removeNewsSource = (sourceId: string) => {
+    saveNewsSources(selectedNewsSources.filter(s => s !== sourceId));
+  };
+
+  const clearAllData = () => {
+    if (confirm('Are you sure you want to clear all saved data? This cannot be undone.')) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
 
   return (
     <MainLayout>
@@ -85,6 +204,214 @@ export default function SettingsPage() {
                     <CheckCircle className="w-4 h-4 text-[var(--color-accent-primary)] ml-auto" />
                   )}
                 </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Custom News Sources */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-[var(--color-accent-primary)]" />
+              News Sources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Choose which news sources to display. Selected sources will fetch news automatically.
+            </p>
+            <div className="space-y-2">
+              {AVAILABLE_NEWS_SOURCES.map((source) => (
+                <label
+                  key={source.id}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedNewsSources.includes(source.id)}
+                      onChange={() => toggleNewsSource(source.id)}
+                      className="w-4 h-4 rounded border-[var(--color-border)]"
+                    />
+                    <div>
+                      <p className="font-heading font-medium text-sm">{source.name}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{source.url}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">
+                    {source.category}
+                  </span>
+                </label>
+              ))}
+            </div>
+            
+            {/* Custom URL */}
+            {showAddSource ? (
+              <div className="flex gap-2 p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                <input
+                  type="url"
+                  value={customNewsUrl}
+                  onChange={(e) => setCustomNewsUrl(e.target.value)}
+                  placeholder="https://example.com/rss"
+                  className="flex-1 px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
+                />
+                <Button variant="primary" size="sm" onClick={addCustomNewsSource}>Add</Button>
+                <Button variant="secondary" size="sm" onClick={() => setShowAddSource(false)}>Cancel</Button>
+              </div>
+            ) : (
+              <Button variant="secondary" size="sm" onClick={() => setShowAddSource(true)} leftIcon={<Plus className="w-4 h-4" />}>
+                Add Custom RSS Feed
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-[var(--color-accent-amber)]" />
+              Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer">
+              <div>
+                <p className="font-heading font-medium">Enable Notifications</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Receive alerts about housing deadlines, transit issues, and community updates
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setNotificationsEnabled(!notificationsEnabled);
+                  localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, JSON.stringify(!notificationsEnabled));
+                }}
+                className={cn(
+                  'w-12 h-6 rounded-full transition-colors relative',
+                  notificationsEnabled ? 'bg-[var(--color-accent-primary)]' : 'bg-[var(--color-border)]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
+                    notificationsEnabled ? 'left-7' : 'left-1'
+                  )}
+                />
+              </button>
+            </label>
+          </CardContent>
+        </Card>
+
+        {/* Auto Refresh */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Rss className="w-5 h-5 text-[var(--color-accent-green)]" />
+              Data Refresh
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer">
+              <div>
+                <p className="font-heading font-medium">Auto-refresh Data</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Automatically fetch latest information at regular intervals
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setAutoRefresh(!autoRefresh);
+                  localStorage.setItem(AUTO_REFRESH_KEY, JSON.stringify(!autoRefresh));
+                }}
+                className={cn(
+                  'w-12 h-6 rounded-full transition-colors relative',
+                  autoRefresh ? 'bg-[var(--color-accent-primary)]' : 'bg-[var(--color-border)]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
+                    autoRefresh ? 'left-7' : 'left-1'
+                  )}
+                />
+              </button>
+            </label>
+            
+            {autoRefresh && (
+              <div>
+                <label className="block text-sm font-heading font-medium mb-2">
+                  Refresh Interval (minutes)
+                </label>
+                <select
+                  value={autoRefreshInterval}
+                  onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
+                >
+                  <option value={1}>1 minute</option>
+                  <option value={5}>5 minutes</option>
+                  <option value={10}>10 minutes</option>
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                </select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Transit Sources */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-[var(--color-accent-primary)]" />
+              Transit & Maps
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-heading font-medium mb-2">Map Style</label>
+              <div className="flex gap-2">
+                {[
+                  { id: 'satellite' as const, label: 'Satellite' },
+                  { id: 'street' as const, label: 'Street' },
+                  { id: 'hybrid' as const, label: 'Hybrid' },
+                ].map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      setMapStyle(id);
+                      localStorage.setItem(MAP_STYLE_KEY, id);
+                    }}
+                    className={cn(
+                      'flex-1 p-3 rounded-lg text-center',
+                      'border transition-colors font-heading',
+                      mapStyle === id
+                        ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10 font-medium'
+                        : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-heading font-medium mb-2">Enabled Transit Sources</label>
+              {AVAILABLE_TRANSIT_SOURCES.map((transit) => (
+                <label
+                  key={transit.id}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={enabledTransit.includes(transit.id)}
+                    onChange={() => toggleTransit(transit.id)}
+                    className="w-4 h-4 rounded border-[var(--color-border)]"
+                  />
+                  <span className="font-heading font-medium text-sm">{transit.name}</span>
+                </label>
               ))}
             </div>
           </CardContent>
@@ -241,6 +568,24 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Clear Data */}
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Clear All Data
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
+              This will reset all settings, read notifications, and saved preferences. This action cannot be undone.
+            </p>
+            <Button variant="danger" onClick={clearAllData}>
+              Clear All Data
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* About */}
         <Card>
           <CardHeader>
@@ -261,7 +606,7 @@ export default function SettingsPage() {
                 Your neighborhood. Your rights. Your future.
               </p>
               <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                Version 1.0.0
+                Version 1.1.0
               </p>
             </div>
 

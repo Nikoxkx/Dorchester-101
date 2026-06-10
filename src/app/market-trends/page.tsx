@@ -36,6 +36,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ExpandableSection } from '@/components/ui/ExpandableSection';
 import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
 import { formatCurrency, cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -55,6 +57,8 @@ interface MarketData {
 }
 
 export default function MarketTrendsPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -111,10 +115,10 @@ export default function MarketTrendsPage() {
           <div className="space-y-2">
             <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
               <TrendingUp className="w-8 h-8 text-[var(--color-accent-primary)]" />
-              Market Trends
+              {t('market.title', 'Market Trends')}
             </h1>
             <p className="text-[var(--color-text-muted)] font-body">
-              Real-time housing market data for Dorchester (ZIP: 02121, 02122, 02124, 02125)
+              {t('market.description', 'Real-time housing market data for Dorchester (ZIP: 02121, 02122, 02124, 02125)')}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -122,7 +126,7 @@ export default function MarketTrendsPage() {
             <button
               onClick={fetchMarketData}
               className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
-              title="Refresh data"
+              title={t('common.refresh', 'Refresh')}
             >
               <RefreshCw className={cn('w-5 h-5', isLoading && 'animate-spin')} />
             </button>
