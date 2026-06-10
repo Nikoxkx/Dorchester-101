@@ -33,12 +33,26 @@ No database, API keys, or configuration files are required for the desktop app.
 
 ### What's New in v1.1.0
 
-- **Complete Language System**: All text across ALL pages now translates when language is changed (not just main page)
-- **Map Style Switching**: Choose between Satellite, Street, or Hybrid map views - preference saved
-- **Persistent Settings**: All preferences (language, map style, theme) saved and persist across sessions
-- **Notification Memory**: Read notifications are remembered and won't show again
-- **Live Data Updates**: News, market data, and notifications update automatically
-- **Bug Fixes**: Various improvements for smoother performance
+#### Critical Fixes
+- **Real News from RSS Feeds**: News now fetches from real sources (Dorchester Reporter, Boston.gov, WBUR, GBH, Boston Globe)
+- **Dynamic Notifications**: Notifications update based on date, season, and day of week
+- **Complete Translation System**: ALL text on ALL pages translates to selected language
+- **No Caching Old Data**: Always shows fresh content, never stale version
+
+#### New Features
+- **Map Style Switching**: Choose between Satellite, Street, or Hybrid map views
+- **Persistent Settings**: Language, theme, map style all saved across sessions
+- **Notification Memory**: Read notifications remembered, won't show again
+- **Live Data Updates**: News, market data, MBTA, notifications all update automatically
+- **Cache Busting**: Service worker forces fresh content on every visit
+
+#### Infrastructure
+- **CI/CD Pipeline**: GitHub Actions with lint, type check, test, build, deploy
+- **Unit Tests**: Vitest with React Testing Library
+- **E2E Tests**: Playwright for full application testing
+- **API Documentation**: OpenAPI 3.0 spec at `/api/docs`
+- **Error Handling**: Winston logger, Zod validation, graceful degradation
+- **In-Memory Cache**: TTL-based caching for all API responses
 
 ---
 
