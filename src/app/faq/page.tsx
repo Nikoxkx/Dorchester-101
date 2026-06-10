@@ -473,7 +473,6 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
   },
 ];
 
-export default function FAQPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFAQs, setExpandedFAQs] = useState<string[]>([]);
