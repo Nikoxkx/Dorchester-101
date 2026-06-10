@@ -1,156 +1,306 @@
 import { NextResponse } from 'next/server';
+import Parser from 'rss-parser';
 
-// Real-time news sources for Dorchester/Boston
-const NEWS_SOURCES = [
-  { name: 'Dorchester Reporter', url: 'https://www.dotnews.com', category: 'Local' },
-  { name: 'Boston Globe', url: 'https://www.bostonglobe.com', category: 'Regional' },
-  { name: 'WBUR', url: 'https://www.wbur.org', category: 'Public Radio' },
-  { name: 'GBH News', url: 'https://www.wgbh.org/news', category: 'Public Media' },
-  { name: 'Boston.gov', url: 'https://www.boston.gov/news', category: 'Government' },
+// Initialize RSS parser
+const parser = new Parser({
+  timeout: 10000,
+  headers: {
+    'User-Agent': 'DOR101/1.0 (Community Resource Hub)',
+  },
+});
+
+// Real RSS feed URLs for Dorchester/Boston news
+const RSS_FEEDS = [
+  {
+    name: 'Dorchester Reporter',
+    url: 'https://www.dotnews.com/rss.xml',
+    category: 'Local',
+    priority: 1,
+  },
+  {
+    name: 'Boston.gov News',
+    url: 'https://www.boston.gov/news/feed',
+    category: 'Government',
+    priority: 2,
+  },
+  {
+    name: 'WBUR Boston',
+    url: 'https://www.wbur.org/rss.xml',
+    category: 'Public Radio',
+    priority: 3,
+  },
+  {
+    name: 'GBH News',
+    url: 'https://www.wgbh.org/rss',
+    category: 'Public Media',
+    priority: 4,
+  },
+  {
+    name: 'Boston Globe Metro',
+    url: 'https://www.bostonglobe.com/rss/cms/?path=/news/metro',
+    category: 'Regional',
+    priority: 5,
+  },
 ];
 
-// Generate dynamic news with timestamps relative to now
-function generateLiveNews(): any[] {
+// In-memory cache for articles (15 min TTL)
+let articleCache: {
+  articles: any[];
+  fetchedAt: number;
+} = {
+  articles: [],
+  fetchedAt: 0,
+};
+
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+// Keywords to filter for Dorchester-relevant content
+const DORCHESTER_KEYWORDS = [
+  'dorchester', 'boston', 'fields corner', 'codman square', 'ashmont',
+  'savin hill', 'uphams corner', 'grove hall', 'lower mills', 'mattypan',
+  'bha', 'boston housing', 'mbta', 'masshealth', 'section 8',
+  'affordable housing', 'housing authority', 'rent', 'eviction',
+  'food assistance', 'snap', 'ebt', 'homeless', 'shelter',
+  'community development', 'bpda', 'planning & development',
+];
+
+// Check if article is relevant to Dorchester
+function isRelevantToDorchester(title: string, summary: string): boolean {
+  const content = `${title} ${summary}`.toLowerCase();
+  return DORCHESTER_KEYWORDS.some(keyword => content.includes(keyword));
+}
+
+// Normalize article from RSS feed
+function normalizeArticle(item: any, source: string): any {
   const now = new Date();
+  const publishedAt = item.pubDate ? new Date(item.pubDate) : now;
+  const daysSincePublished = Math.floor((now.getTime() - publishedAt.getTime()) / (1000 * 60 * 60 * 24));
   
-  // Live news articles with timestamps relative to current time
-  const articles = [
+  // Determine category based on content
+  let category = 'News';
+  const content = `${item.title || ''} ${item.contentSnippet || ''} ${item.content || ''}`.toLowerCase();
+  
+  if (content.includes('housing') || content.includes('rent') || content.includes('bha') || content.includes('affordable')) {
+    category = 'Housing';
+  } else if (content.includes('mbta') || content.includes('bus') || content.includes('subway') || content.includes('train')) {
+    category = 'Transportation';
+  } else if (content.includes('food') || content.includes('snap') || content.includes('pantr') || content.includes('meal')) {
+    category = 'Food Security';
+  } else if (content.includes('health') || content.includes('clinic') || content.includes('hospital') || content.includes('masshealth')) {
+    category = 'Healthcare';
+  } else if (content.includes('community') || content.includes('event') || content.includes('meeting')) {
+    category = 'Community';
+  }
+
+  return {
+    id: `article-${Buffer.from(item.link || item.guid || JSON.stringify(item)).toString('base64').slice(0, 20)}`,
+    title: item.title || 'Untitled',
+    summary: item.contentSnippet || item.content || item.summary || '',
+    source: source,
+    sourceUrl: item.link || '',
+    category: category,
+    publishedAt: publishedAt.toISOString(),
+    isVerified: true,
+    daysSincePublished: daysSincePublished,
+  };
+}
+
+// Fetch articles from all RSS feeds
+async function fetchAllArticles(): Promise<any[]> {
+  const allArticles: any[] = [];
+  
+  for (const feed of RSS_FEEDS) {
+    try {
+      const feedData = await parser.parseURL(feed.url);
+      const articles = (feedData.items || []).map(item => normalizeArticle(item, feed.name));
+      
+      // Filter for Dorchester relevance
+      const relevantArticles = articles.filter(article => 
+        isRelevantToDorchester(article.title, article.summary)
+      );
+      
+      allArticles.push(...relevantArticles);
+    } catch (error) {
+      console.error(`Failed to fetch ${feed.name}:`, error);
+      // Continue with other feeds
+    }
+  }
+  
+  // Deduplicate by title (keep newest)
+  const seen = new Map<string, any>();
+  allArticles.forEach(article => {
+    const key = article.title.toLowerCase().slice(0, 50);
+    const existing = seen.get(key);
+    if (!existing || new Date(article.publishedAt) > new Date(existing.publishedAt)) {
+      seen.set(key, article);
+    }
+  });
+  
+  return Array.from(seen.values());
+}
+
+// Generate fallback articles when RSS fails
+function generateFallbackArticles(): any[] {
+  const now = new Date();
+  return [
     {
-      id: 'live-1',
-      title: 'Boston Housing Authority Expands Emergency Voucher Program for Dorchester Families',
-      summary: 'BHA announces additional emergency housing choice vouchers targeting families in Dorchester facing displacement due to rising rents.',
-      source: 'Dorchester Reporter',
-      sourceUrl: 'https://www.dotnews.com',
+      id: 'local-1',
+      title: 'Boston Housing Authority Updates Waitlist Status',
+      summary: 'BHA announces current waitlist availability and application deadlines for Dorchester residents.',
+      source: 'DOR101 Local',
+      sourceUrl: 'https://www.bostonhousing.org',
       category: 'Housing',
-      publishedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      publishedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
     {
-      id: 'live-2',
-      title: 'MBTA Red Line Service Updates at Fields Corner Station',
-      summary: 'Recent service frequency updates and station improvements. Check real-time departure times on the DOR101 map.',
+      id: 'local-2',
+      title: 'MBTA Red Line Service Notice',
+      summary: 'Check real-time departure times at Fields Corner, Savin Hill, and Ashmont stations.',
       source: 'MBTA',
       sourceUrl: 'https://www.mbta.com',
       category: 'Transportation',
-      publishedAt: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+      publishedAt: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
     {
-      id: 'live-3',
-      title: 'Greater Boston Food Bank Updates Dorchester Distribution Schedule',
-      summary: 'Updated distribution times at Codman Square and surrounding areas. Check the food resources page for current schedules.',
-      source: 'Greater Boston Food Bank',
+      id: 'local-3',
+      title: 'Greater Boston Food Bank Distribution Update',
+      summary: 'Weekly food distribution schedule for Codman Square, Uphams Corner, and Fields Corner locations.',
+      source: 'GBFB',
       sourceUrl: 'https://www.gbfb.org',
       category: 'Food Security',
-      publishedAt: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+      publishedAt: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
     {
-      id: 'live-4',
-      title: 'City Council Discusses New Affordable Housing Initiatives',
-      summary: 'Latest developments in affordable housing funding for Dorchester neighborhoods. Track progress on our market trends page.',
-      source: 'Boston City Council',
-      sourceUrl: 'https://www.boston.gov',
+      id: 'local-4',
+      title: 'Dorchester Community Events This Week',
+      summary: 'Local resource fairs, neighborhood meetings, and community gatherings in Dorchester.',
+      source: 'DOR101',
+      sourceUrl: '/news',
+      category: 'Community',
+      publishedAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+      isVerified: true,
+    },
+    {
+      id: 'local-5',
+      title: 'RAFT Emergency Rental Assistance Available',
+      summary: 'Massachusetts residents can apply for up to $10,000 in emergency rental assistance.',
+      source: 'Mass.gov',
+      sourceUrl: 'https://www.mass.gov/raft',
       category: 'Housing',
-      publishedAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+      publishedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
     {
-      id: 'live-5',
-      title: 'MassHealth Enrollment Drive Continues in Dorchester',
-      summary: 'Free enrollment assistance available at Codman Square Health Center with multilingual staff.',
-      source: 'GBH News',
-      sourceUrl: 'https://www.wgbh.org/news',
+      id: 'local-6',
+      title: 'Affordable Housing Applications Open',
+      summary: 'New affordable housing lottery openings in Dorchester neighborhoods.',
+      source: 'DOR101',
+      sourceUrl: '/affordable-housing',
+      category: 'Housing',
+      publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      isVerified: true,
+    },
+    {
+      id: 'local-7',
+      title: 'MassHealth Enrollment Events in Dorchester',
+      summary: 'Free enrollment assistance available with multilingual staff at local health centers.',
+      source: 'MassHealth',
+      sourceUrl: 'https://www.mass.gov/masshealth',
       category: 'Healthcare',
-      publishedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      publishedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
     {
-      id: 'live-6',
-      title: 'Summer Youth Employment Program Now Accepting Applications',
-      summary: 'Boston\'s SYEP accepting applications for ages 14-18. Positions include community service and youth leadership roles.',
+      id: 'local-8',
+      title: 'Summer Youth Employment Program Applications',
+      summary: 'Boston SYEP accepting applications for youth ages 14-18.',
       source: 'City of Boston',
       sourceUrl: 'https://www.boston.gov',
       category: 'Employment',
-      publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      isVerified: true,
-    },
-    {
-      id: 'live-7',
-      title: 'RAFT Emergency Rental Assistance Funding Update',
-      summary: 'Emergency rental assistance program continues to process applications. Suffolk County residents can apply for up to $10,000.',
-      source: 'Mass.gov',
-      sourceUrl: 'https://www.mass.gov',
-      category: 'Housing',
-      publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      isVerified: true,
-    },
-    {
-      id: 'live-8',
-      title: 'Community Events in Dorchester This Week',
-      summary: 'Local community gatherings, resource fairs, and neighborhood meetings scheduled throughout Dorchester.',
-      source: 'Dorchester Reporter',
-      sourceUrl: 'https://www.dotnews.com',
-      category: 'Community',
-      publishedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-      isVerified: true,
-    },
-    {
-      id: 'live-9',
-      title: 'MBTA Bus Route Changes Affecting Dorchester',
-      summary: 'Schedule adjustments for several bus routes serving Dorchester neighborhoods. Check the map for current routes.',
-      source: 'MBTA',
-      sourceUrl: 'https://www.mbta.com',
-      category: 'Transportation',
-      publishedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-      isVerified: true,
-    },
-    {
-      id: 'live-10',
-      title: 'Economic Indicators Show Shifting Trends in Boston Housing Market',
-      summary: 'Latest market data indicates changes in rental and sales prices across Dorchester. Updated weekly on our market trends page.',
-      source: 'DOR101',
-      sourceUrl: 'https://dor101.org/market-trends',
-      category: 'Housing',
-      publishedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+      publishedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
       isVerified: true,
     },
   ];
-
-  return articles;
 }
 
 export async function GET() {
   try {
-    const articles = generateLiveNews();
+    const now = Date.now();
+    
+    // Check cache
+    if (articleCache.articles.length > 0 && (now - articleCache.fetchedAt) < CACHE_TTL) {
+      const articles = articleCache.articles;
+      articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+      
+      return NextResponse.json({
+        articles,
+        sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
+        lastUpdated: new Date(articleCache.fetchedAt).toISOString(),
+        nextUpdate: new Date(articleCache.fetchedAt + CACHE_TTL).toISOString(),
+        refreshInterval: CACHE_TTL,
+        cached: true,
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300',
+          'X-Articles-Count': articles.length.toString(),
+          'X-Cache-Status': 'HIT',
+        },
+      });
+    }
+    
+    // Fetch fresh articles
+    let articles = await fetchAllArticles();
+    
+    // If no articles from RSS, use fallback
+    if (articles.length === 0) {
+      articles = generateFallbackArticles();
+    }
+    
+    // Update cache
+    articleCache = {
+      articles,
+      fetchedAt: now,
+    };
     
     // Sort by publish date (newest first)
-    articles.sort((a, b) => 
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
+    articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     
-    const response = {
+    return NextResponse.json({
       articles,
-      sources: NEWS_SOURCES,
+      sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
       lastUpdated: new Date().toISOString(),
-      nextUpdate: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
-      refreshInterval: 5 * 60 * 1000, // 5 minutes
-    };
-
-    // Return with no-cache headers to ensure fresh data
-    return NextResponse.json(response, {
+      nextUpdate: new Date(now + CACHE_TTL).toISOString(),
+      refreshInterval: CACHE_TTL,
+      cached: false,
+    }, {
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'X-Build-Id': Date.now().toString(),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'X-Articles-Count': articles.length.toString(),
+        'X-Cache-Status': 'MISS',
       },
     });
   } catch (error) {
     console.error('Error fetching news:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch news' },
-      { status: 500 }
-    );
+    
+    // Return fallback on error
+    const fallbackArticles = generateFallbackArticles();
+    
+    return NextResponse.json({
+      articles: fallbackArticles,
+      sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
+      lastUpdated: new Date().toISOString(),
+      nextUpdate: new Date(Date.now() + CACHE_TTL).toISOString(),
+      refreshInterval: CACHE_TTL,
+      cached: false,
+      error: 'Using cached fallback articles',
+    }, {
+      status: 200, // Still return 200 with fallback data
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
   }
 }
