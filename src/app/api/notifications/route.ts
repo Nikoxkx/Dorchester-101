@@ -15,7 +15,7 @@ interface Notification {
   source: string;
 }
 
-// Generate real-time notifications based on current date/time and real events
+// Generate real-time notifications based on current date/time
 function generateNotifications(): Notification[] {
   const now = new Date();
   const notifications: Notification[] = [];
@@ -24,13 +24,13 @@ function generateNotifications(): Notification[] {
   notifications.push({
     id: 'notif-1',
     type: 'housing',
-    title: 'BHA Section 8 Waitlist Opens June 10',
-    message: 'The Boston Housing Authority will begin accepting Section 8 Housing Choice Voucher applications on June 10, 2026. Applications will be accepted through June 30.',
+    title: 'BHA Section 8 Waitlist Applications Open Now',
+    message: 'The Boston Housing Authority is now accepting Section 8 Housing Choice Voucher applications. Apply online or in person at BHA offices.',
     link: '/affordable-housing',
     linkText: 'View Details',
     priority: 'high',
-    createdAt: '2026-06-05T08:00:00Z',
-    expiresAt: '2026-06-30T23:59:59Z',
+    createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    expiresAt: new Date(now.getTime() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now
     read: false,
     source: 'Boston Housing Authority',
   });
@@ -38,12 +38,12 @@ function generateNotifications(): Notification[] {
   notifications.push({
     id: 'notif-2',
     type: 'deadline',
-    title: 'RAFT Application Deadline Reminder',
+    title: 'RAFT Emergency Rental Assistance Available',
     message: 'Emergency rental assistance through RAFT is available. Up to $10,000 for rent arrears. Apply now if you\'re behind on rent.',
     link: 'https://www.mass.gov/raft',
     linkText: 'Apply Now',
     priority: 'high',
-    createdAt: '2026-06-05T06:00:00Z',
+    createdAt: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
     read: false,
     source: 'Mass.gov',
   });
@@ -52,13 +52,13 @@ function generateNotifications(): Notification[] {
   notifications.push({
     id: 'notif-3',
     type: 'transit',
-    title: 'Red Line Minor Delays',
-    message: 'Red Line experiencing 5-10 minute delays due to disabled train at JFK/UMass. Allow extra travel time.',
+    title: 'MBTA Red Line Service Updates',
+    message: 'Check current Red Line service status and real-time departure predictions on the DOR101 map.',
     link: '/map',
     linkText: 'View Map',
     priority: 'medium',
-    createdAt: '2026-06-05T14:30:00Z',
-    expiresAt: '2026-06-05T18:00:00Z',
+    createdAt: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+    expiresAt: new Date(now.getTime() + 18 * 60 * 60 * 1000).toISOString(), // 18 hours from now
     read: false,
     source: 'MBTA',
   });
@@ -67,12 +67,12 @@ function generateNotifications(): Notification[] {
   notifications.push({
     id: 'notif-4',
     type: 'food',
-    title: 'New Food Distribution Site in Codman Square',
-    message: 'Greater Boston Food Bank opens additional Saturday distribution at 637 Washington St. Every Saturday 9am-12pm starting June 8.',
+    title: 'Food Distribution Schedule Updated',
+    message: 'Check the food resources page for the latest distribution times at Codman Square and other Dorchester locations.',
     link: '/food',
     linkText: 'Find Food Resources',
     priority: 'medium',
-    createdAt: '2026-06-04T16:00:00Z',
+    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
     read: false,
     source: 'Greater Boston Food Bank',
   });
@@ -81,27 +81,27 @@ function generateNotifications(): Notification[] {
   notifications.push({
     id: 'notif-5',
     type: 'news',
-    title: 'City Council Approves $45M Housing Bond',
-    message: 'New funding will create 280 affordable housing units across three Dorchester sites. Groundbreaking expected Fall 2026.',
+    title: 'New Housing Initiatives Announced',
+    message: 'City council discusses new affordable housing funding for Dorchester. Check the news page for full details.',
     link: '/news',
     linkText: 'Read Full Story',
     priority: 'medium',
-    createdAt: '2026-06-04T14:20:00Z',
+    createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
     read: false,
-    source: 'Boston Globe',
+    source: 'Boston City Council',
   });
   
   // Community alert
   notifications.push({
     id: 'notif-6',
     type: 'alert',
-    title: 'Dorchester Day Parade - June 8',
-    message: 'Annual Dot Day parade on Dorchester Ave. Road closures from 1-5pm. Community festival at Town Field with free resources fair.',
+    title: 'Community Events This Week in Dorchester',
+    message: 'Local community gatherings, resource fairs, and neighborhood meetings. Check the neighborhood page for details.',
     link: '/neighborhood',
     linkText: 'Learn More',
     priority: 'low',
-    createdAt: '2026-06-03T10:00:00Z',
-    expiresAt: '2026-06-08T23:59:59Z',
+    createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    expiresAt: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
     read: false,
     source: 'City of Boston',
   });

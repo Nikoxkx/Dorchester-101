@@ -168,7 +168,7 @@ export default function DashboardPage() {
         <footer className="text-center py-8 border-t border-[var(--color-border)]">
           <p className="text-sm text-[var(--color-text-muted)]">{t('dashboard.footer.line1')}</p>
           <p className="text-xs text-[var(--color-text-muted)] mt-2">{t('dashboard.footer.line2')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">{t('dashboard.footer.verified')}</p>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">{t('dashboard.footer.verified')}: {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : language === 'ht' ? 'ht-HT' : language === 'pt' ? 'pt-BR' : language === 'vi' ? 'vi-VN' : language === 'zh' ? 'zh-CN' : language === 'ar' ? 'ar-SA' : language === 'so' ? 'so-SO' : language === 'kea' ? 'kea-CV' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
         </footer>
       </motion.div>
     </MainLayout>

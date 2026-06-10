@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useAppStore } from '@/stores/appStore';
 
 interface Notification {
   id: string;
@@ -29,6 +30,9 @@ interface Notification {
   read: boolean;
   source: string;
 }
+
+// Storage key for persisting read notifications
+const READ_NOTIFICATIONS_KEY = 'dor101-read-notifications';
 
 const typeIcons = {
   housing: Home,
@@ -60,6 +64,25 @@ export function NotificationPanel() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set());
+
+  // Load persisted read notifications from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
+    if (stored) {
+      try {
+        const ids = JSON.parse(stored) as string[];
+        setReadNotificationIds(new Set(ids));
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, []);
+
+  // Persist read notifications to localStorage
+  const persistReadNotifications = (ids: Set<string>) => {
+    localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify(Array.from(ids)));
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -72,8 +95,14 @@ export function NotificationPanel() {
     try {
       const response = await fetch('/api/notifications');
       const data = await response.json();
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
+      // Apply persisted read state to fetched notifications
+      const notificationsWithReadState = (data.notifications || []).map((n: Notification) => ({
+        ...n,
+        read: n.read || readNotificationIds.has(n.id),
+      }));
+      setNotifications(notificationsWithReadState);
+      const unread = notificationsWithReadState.filter((n: Notification) => !n.read).length;
+      setUnreadCount(unread);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -81,15 +110,28 @@ export function NotificationPanel() {
   };
 
   const markAsRead = (id: string) => {
+    // Update local state
     setNotifications(prev => 
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
     setUnreadCount(prev => Math.max(0, prev - 1));
+    
+    // Persist to localStorage
+    const newReadIds = new Set(readNotificationIds);
+    newReadIds.add(id);
+    setReadNotificationIds(newReadIds);
+    persistReadNotifications(newReadIds);
   };
 
   const markAllAsRead = () => {
+    // Update local state
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
+    
+    // Persist all notification IDs as read
+    const allIds = new Set(notifications.map(n => n.id));
+    setReadNotificationIds(allIds);
+    persistReadNotifications(allIds);
   };
 
   const formatTime = (dateString: string) => {

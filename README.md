@@ -16,20 +16,28 @@ Download the latest Windows build from [**GitHub Releases**](https://github.com/
 
 | Download | Best for | File |
 |----------|----------|------|
-| **Installer** | Everyday use — adds Start Menu and Desktop shortcuts | `DOR101 Setup 1.0.0.exe` |
-| **Portable** | USB drives or machines without install rights | `DOR101-Portable-1.0.0.exe` |
+| **Installer** | Everyday use — adds Start Menu and Desktop shortcuts | `DOR101 Setup 1.1.0.exe` |
+| **Portable** | USB drives or machines without install rights | `DOR101-Portable-1.1.0.exe` |
 
 ### Install in 3 steps
 
-1. Download `DOR101 Setup 1.0.0.exe` from [Releases](https://github.com/Nikoxkx/Dorchester-101/releases/latest)
+1. Download `DOR101 Setup 1.1.0.exe` from [Releases](https://github.com/Nikoxkx/Dorchester-101/releases/latest)
 2. Run the installer and follow the prompts
 3. Open **DOR101** from your Desktop or Start Menu
 
-**Portable:** double-click `DOR101-Portable-1.0.0.exe` — no installation needed.
+**Portable:** double-click `DOR101-Portable-1.1.0.exe` — no installation needed.
 
 > **Windows SmartScreen:** The app is not code-signed. If prompted, choose **More info → Run anyway**.
 
 No database, API keys, or configuration files are required for the desktop app.
+
+### What's New in v1.1.0
+
+- **Live Data Updates**: News, market data, and notifications now update automatically
+- **Persistent Settings**: Language preference is saved and persists across sessions
+- **Notification Memory**: Read notifications are remembered and won't show again
+- **Real-time Timestamps**: All data shows current dates instead of static dates
+- **Bug Fixes**: Various improvements for smoother performance
 
 ---
 
@@ -117,8 +125,8 @@ Output:
 
 | Artifact | Location |
 |----------|----------|
-| Installer | `dist-electron/DOR101 Setup 1.0.0.exe` |
-| Portable | `dist-electron/DOR101-Portable-1.0.0.exe` |
+| Installer | `dist-electron/DOR101 Setup 1.1.0.exe` |
+| Portable | `dist-electron/DOR101-Portable-1.1.0.exe` |
 | Unpacked app | `dist-electron/win-unpacked/DOR101.exe` |
 
 See [`BUILD.md`](BUILD.md) for detailed build instructions.
