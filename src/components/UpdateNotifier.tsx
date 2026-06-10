@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function UpdateNotifier() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
-  const [isElectron] = useState(() => typeof window !== 'undefined' && window.electron !== undefined);
+  const [isElectron] = useState(() => typeof window !== 'undefined' && (window as any).electron !== undefined);
 
   useEffect(() => {
     if (!isElectron) return;
@@ -21,8 +21,11 @@ export function UpdateNotifier() {
       setUpdateDownloaded(true);
     };
 
-    window.electron.onUpdateAvailable(handleUpdateAvailable);
-    window.electron.onUpdateDownloaded(handleUpdateDownloaded);
+    const electron = (window as any).electron;
+    if (electron) {
+      electron.onUpdateAvailable(handleUpdateAvailable);
+      electron.onUpdateDownloaded(handleUpdateDownloaded);
+    }
 
     return () => {
       // Cleanup listeners if needed
@@ -30,8 +33,9 @@ export function UpdateNotifier() {
   }, [isElectron]);
 
   const handleRestartAndInstall = () => {
-    if (window.electron) {
-      window.electron.restartApp();
+    const electron = (window as any).electron;
+    if (electron) {
+      electron.restartApp();
     }
   };
 

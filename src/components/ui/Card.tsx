@@ -73,3 +73,16 @@ export function CardFooter({ children, className }: CardFooterProps) {
     </div>
   );
 }
+
+interface CardDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function CardDescription({ children, className }: CardDescriptionProps) {
+  return (
+    <p className={cn('text-sm text-[var(--color-text-muted)] mt-1', className)}>
+      {children}
+    </p>
+  );
+}
