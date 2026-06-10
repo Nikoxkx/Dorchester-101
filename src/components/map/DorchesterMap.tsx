@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
-import { X, Navigation, Clock, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { X, Navigation, Clock, ChevronRight, ArrowUpRight, Map, Layers } from 'lucide-react';
+import { useAppStore } from '@/stores/appStore';
 
 // Dynamic imports to avoid SSR issues with Leaflet
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false });
@@ -16,6 +17,24 @@ const Popup = dynamic(() => import('react-leaflet').then(m => m.Popup), { ssr: f
 const Polyline = dynamic(() => import('react-leaflet').then(m => m.Polyline), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then(m => m.CircleMarker), { ssr: false });
 const Tooltip = dynamic(() => import('react-leaflet').then(m => m.Tooltip), { ssr: false });
+
+/* ─── Map Style Tile Layers ───────────────────────────────── */
+export type MapStyle = 'satellite' | 'street' | 'hybrid';
+
+const MAP_TILE_LAYERS: Record<MapStyle, { url: string; attribution: string }> = {
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+  },
+  street: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+  },
+  hybrid: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors | Hybrid: Esri World Imagery',
+  },
+};
 
 /* ─── Types ──────────────────────────────────────────────── */
 export interface MapLocation {
@@ -114,11 +133,29 @@ export function DorchesterMap({
   zoom = 13,
   preview = false,
 }: DorchesterMapProps) {
+  const { language } = useAppStore();
   const [ready, setReady] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(Object.keys(LAYER_CONFIG)));
   const [showRoutes, setShowRoutes] = useState(true);
   const [selected, setSelected] = useState<MapLocation | null>(null);
   const [predictions, setPredictions] = useState<TransitPrediction[]>([]);
+  const [mapStyle, setMapStyle] = useState<MapStyle>('satellite');
+  const [showStyleMenu, setShowStyleMenu] = useState(false);
+
+  // Load map style from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('dor101-map-style') as MapStyle;
+    if (stored && ['satellite', 'street', 'hybrid'].includes(stored)) {
+      setMapStyle(stored);
+    }
+  }, []);
+
+  // Save map style to localStorage when changed
+  const handleMapStyleChange = (style: MapStyle) => {
+    setMapStyle(style);
+    localStorage.setItem('dor101-map-style', style);
+    setShowStyleMenu(false);
+  };
 
   useEffect(() => { setReady(true); }, []);
 
@@ -152,7 +189,7 @@ export function DorchesterMap({
   if (!ready) {
     return (
       <div style={{ height }} className="bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading satellite map…" />
+        <LoadingSpinner size="lg" text="Loading map…" />
       </div>
     );
   }
@@ -185,16 +222,18 @@ export function DorchesterMap({
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossOrigin="" />
 
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
-        {/* Satellite tiles */}
+        {/* Base map tiles - changes based on user preference */}
         <TileLayer
-          attribution='Tiles &copy; Esri'
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          attribution={MAP_TILE_LAYERS[mapStyle].attribution}
+          url={MAP_TILE_LAYERS[mapStyle].url}
         />
-        {/* Labels */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-          opacity={0.8}
-        />
+        {/* Labels overlay for hybrid mode */}
+        {mapStyle === 'hybrid' && (
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+            opacity={0.8}
+          />
+        )}
 
         {/* ── Route lines ──────────────────────────────── */}
         {showRoutes && (
@@ -273,6 +312,29 @@ export function DorchesterMap({
             <h4 className="font-heading font-semibold text-xs tracking-wider uppercase text-[var(--color-text-primary)]">
               Map Layers
             </h4>
+          </div>
+
+          {/* Map Style Selector */}
+          <div className="px-4 py-3 border-b border-[var(--color-border)]">
+            <label className="block text-[10px] font-heading font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+              Map Style
+            </label>
+            <div className="flex gap-1">
+              {(['satellite', 'street', 'hybrid'] as const).map((style) => (
+                <button
+                  key={style}
+                  onClick={() => handleMapStyleChange(style)}
+                  className={cn(
+                    'flex-1 px-2 py-1.5 rounded-lg text-xs font-heading font-medium transition-colors',
+                    mapStyle === style
+                      ? 'bg-[var(--color-accent-primary)] text-white'
+                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                  )}
+                >
+                  {style === 'satellite' ? '🛰️' : style === 'street' ? '🗺️' : '🧭'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Route toggle */}

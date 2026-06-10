@@ -7,6 +7,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand, BOSTON_AMI_2025 } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -14,6 +16,8 @@ const pageVariants: Variants = {
 };
 
 export default function ToolsPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [activeTab, setActiveTab] = useState<'rent' | 'ami' | 'documents'>('rent');
   
   // Rent burden calculator state

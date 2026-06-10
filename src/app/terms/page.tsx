@@ -4,10 +4,15 @@ import { motion, type Variants } from 'framer-motion';
 import { FileText } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/Card';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pv: Variants = { initial: { opacity: 0, y: 20 }, enter: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 
 export default function TermsPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
+  
   return (
     <MainLayout>
       <motion.div variants={pv} initial="initial" animate="enter" className="max-w-3xl mx-auto space-y-8">

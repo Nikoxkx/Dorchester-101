@@ -24,6 +24,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -206,6 +208,8 @@ const organizations = [
 ];
 
 export default function ResourcesPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 

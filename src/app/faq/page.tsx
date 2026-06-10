@@ -6,16 +6,22 @@ import { HelpCircle, Search, Phone, ExternalLink, ChevronDown } from 'lucide-rea
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
   enter: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-const FAQ_CATEGORIES = [
+export default function FAQPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
+
+  const FAQ_CATEGORIES = [
   {
     id: 'housing',
-    name: 'Housing & Rent',
+    name: t('faq.housing', 'Housing & Rent'),
     faqs: [
       {
         q: 'How do I apply for affordable housing in Dorchester?',

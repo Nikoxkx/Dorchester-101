@@ -16,6 +16,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -87,6 +89,8 @@ const projects = [
 ];
 
 export default function ProjectsPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 

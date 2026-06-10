@@ -24,6 +24,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ExpandableSection, ExpandableCard } from '@/components/ui/ExpandableSection';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -187,6 +189,8 @@ const transitInfo = {
 };
 
 export default function NeighborhoodPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [selectedHood, setSelectedHood] = useState<string | null>(null);
 
   return (
