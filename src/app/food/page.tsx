@@ -19,6 +19,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn, formatPhone } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -126,6 +128,8 @@ const foodResources = [
 ];
 
 export default function FoodResourcesPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string | null>(null);
 
@@ -161,10 +165,10 @@ export default function FoodResourcesPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <Apple className="w-8 h-8 text-[var(--color-accent-secondary)]" />
-            Food Resources
+            {t('food.title', 'Food Resources')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Find food pantries, hot meals, and assistance programs in Dorchester. All resources are free.
+            {t('food.description', 'Find food pantries, hot meals, and assistance programs in Dorchester. All resources are free.')}
           </p>
         </header>
 
@@ -174,10 +178,10 @@ export default function FoodResourcesPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
                 <h2 className="font-heading font-bold text-xl mb-1">
-                  Need Food Today?
+                  {t('food.needFoodToday', 'Need Food Today?')}
                 </h2>
                 <p className="text-[var(--color-text-secondary)]">
-                  Call Project Bread&apos;s FoodSource Hotline — free, confidential, and available in your language.
+                  {t('food.callHotline', "Call Project Bread's FoodSource Hotline — free, confidential, and available in your language.")}
                 </p>
               </div>
               <a
@@ -194,7 +198,7 @@ export default function FoodResourcesPage() {
               </a>
             </div>
             <p className="text-center text-sm text-[var(--color-text-muted)] mt-4">
-              Monday–Friday, 8:00 AM – 5:00 PM • Speak to someone in English, Spanish, Portuguese, Vietnamese, Haitian Creole, Mandarin, Cantonese, and more
+              {t('food.hotlineHours', 'Monday–Friday, 8:00 AM – 5:00 PM • Speak to someone in English, Spanish, Portuguese, Vietnamese, Haitian Creole, Mandarin, Cantonese, and more')}
             </p>
           </CardContent>
         </Card>

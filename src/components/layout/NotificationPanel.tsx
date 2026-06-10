@@ -59,79 +59,99 @@ const priorityColors = {
   low: 'border-l-gray-300',
 };
 
+// Load read notifications from localStorage
+const loadReadNotifications = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
+    if (stored) {
+      const ids = JSON.parse(stored) as string[];
+      return new Set(ids);
+    }
+  } catch {
+    // Ignore errors
+  }
+  return new Set();
+};
+
+// Save read notifications to localStorage
+const saveReadNotifications = (ids: Set<string>) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify(Array.from(ids)));
+};
+
 export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set());
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load persisted read notifications from localStorage on mount
+  // Initialize read IDs from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
-    if (stored) {
-      try {
-        const ids = JSON.parse(stored) as string[];
-        setReadNotificationIds(new Set(ids));
-      } catch {
-        // Ignore parse errors
-      }
-    }
+    const stored = loadReadNotifications();
+    setReadIds(stored);
+    setIsInitialized(true);
   }, []);
 
-  // Persist read notifications to localStorage
-  const persistReadNotifications = (ids: Set<string>) => {
-    localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify(Array.from(ids)));
-  };
-
+  // Fetch notifications and apply read state
   useEffect(() => {
+    if (!isInitialized) return;
+    
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('/api/notifications');
+        const data = await response.json();
+        
+        // Apply read state from localStorage to fetched notifications
+        const currentReadIds = loadReadNotifications();
+        const notificationsWithReadState = (data.notifications || []).map((n: Notification) => ({
+          ...n,
+          read: currentReadIds.has(n.id),
+        }));
+        
+        setNotifications(notificationsWithReadState);
+        const unread = notificationsWithReadState.filter((n: Notification) => !n.read).length;
+        setUnreadCount(unread);
+        setLastUpdated(new Date().toLocaleTimeString());
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
     fetchNotifications();
+    
     // Auto-refresh every minute
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const response = await fetch('/api/notifications');
-      const data = await response.json();
-      // Apply persisted read state to fetched notifications
-      const notificationsWithReadState = (data.notifications || []).map((n: Notification) => ({
-        ...n,
-        read: n.read || readNotificationIds.has(n.id),
-      }));
-      setNotifications(notificationsWithReadState);
-      const unread = notificationsWithReadState.filter((n: Notification) => !n.read).length;
-      setUnreadCount(unread);
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    }
-  };
+  }, [isInitialized]);
 
   const markAsRead = (id: string) => {
-    // Update local state
+    // Get current read IDs and add this one
+    const newReadIds = new Set(loadReadNotifications());
+    newReadIds.add(id);
+    
+    // Save to localStorage
+    saveReadNotifications(newReadIds);
+    setReadIds(newReadIds);
+    
+    // Update notifications state
     setNotifications(prev => 
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
     setUnreadCount(prev => Math.max(0, prev - 1));
-    
-    // Persist to localStorage
-    const newReadIds = new Set(readNotificationIds);
-    newReadIds.add(id);
-    setReadNotificationIds(newReadIds);
-    persistReadNotifications(newReadIds);
   };
 
   const markAllAsRead = () => {
-    // Update local state
+    // Mark all current notifications as read
+    const allIds = new Set(notifications.map(n => n.id));
+    saveReadNotifications(allIds);
+    setReadIds(allIds);
+    
+    // Update notifications state
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
-    
-    // Persist all notification IDs as read
-    const allIds = new Set(notifications.map(n => n.id));
-    setReadNotificationIds(allIds);
-    persistReadNotifications(allIds);
   };
 
   const formatTime = (dateString: string) => {

@@ -7,13 +7,15 @@ import dynamic from 'next/dynamic';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const DorchesterMap = dynamic(
   () => import('@/components/map/DorchesterMap').then((mod) => mod.DorchesterMap),
   { 
     ssr: false,
     loading: () => (
-      <div className="h-[calc(100vh-12rem)] bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center">
+      <div className="h-[600px] bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading satellite map…" />
       </div>
     ),
@@ -34,6 +36,8 @@ interface MBTAAlert {
 }
 
 export default function MapPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [alerts, setAlerts] = useState<MBTAAlert[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
@@ -58,17 +62,17 @@ export default function MapPage() {
         variants={pageVariants}
         initial="initial"
         animate="enter"
-        className="space-y-4"
+        className="space-y-4 pb-8"
       >
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold flex items-center gap-3">
               <Map className="w-6 h-6 text-[var(--color-accent-primary)]" />
-              Dorchester Resources Map
+              {t('map.title', 'Dorchester Resources Map')}
             </h1>
             <p className="text-sm text-[var(--color-text-muted)] mt-1">
-              Satellite view · Live MBTA transit · Community resources
+              {t('map.subtitle', 'Satellite view · Live MBTA transit · Community resources')}
             </p>
           </div>
           <DataRefreshIndicator lastUpdated={lastUpdated} isRefreshing={false} />
@@ -92,7 +96,7 @@ export default function MapPage() {
                     {alert.description}
                   </p>
                   <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
-                    Source: MBTA · Updated {new Date(alert.updatedAt).toLocaleString()}
+                    {t('common.source', 'Source')}: MBTA · {t('common.updated', 'Updated')} {new Date(alert.updatedAt).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -100,8 +104,10 @@ export default function MapPage() {
           </div>
         )}
 
-        {/* Map */}
-        <DorchesterMap height="calc(100vh - 14rem)" />
+        {/* Map - Fixed height with overflow handling */}
+        <div className="relative z-0">
+          <DorchesterMap height="600px" />
+        </div>
       </motion.div>
     </MainLayout>
   );

@@ -19,6 +19,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency, calculateAMIPercentage, getAMIBand, BOSTON_AMI_2025 } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -79,6 +81,8 @@ const sampleListings = [
 ];
 
 export default function AffordableHousingPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
   const [activeTab, setActiveTab] = useState<'listings' | 'learn' | 'calculator'>('listings');
   const [householdSize, setHouseholdSize] = useState(2);
   const [annualIncome, setAnnualIncome] = useState(50000);
@@ -106,10 +110,10 @@ export default function AffordableHousingPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <Home className="w-8 h-8 text-[var(--color-accent-primary)]" />
-            Affordable Housing
+            {t('housing.title', 'Affordable Housing')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Find income-restricted housing in Dorchester. These units have lower rents for people who qualify based on their income.
+            {t('housing.description', 'Find income-restricted housing in Dorchester. These units have lower rents for people who qualify based on their income.')}
           </p>
         </header>
 
