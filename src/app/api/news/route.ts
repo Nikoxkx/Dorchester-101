@@ -137,7 +137,15 @@ export async function GET() {
       refreshInterval: 5 * 60 * 1000, // 5 minutes
     };
 
-    return NextResponse.json(response);
+    // Return with no-cache headers to ensure fresh data
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Build-Id': Date.now().toString(),
+      },
+    });
   } catch (error) {
     console.error('Error fetching news:', error);
     return NextResponse.json(

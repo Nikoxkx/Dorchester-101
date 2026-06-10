@@ -1,8 +1,8 @@
-/// DOR101 Service Worker — v1.0.0
+/// DOR101 Service Worker — v1.1.0
 /// Provides offline caching, background sync, and install support
+/// Updated: Always fetch fresh content from network
 
-const CACHE_NAME = 'dor101-v1.0.0';
-const RUNTIME_CACHE = 'dor101-runtime-v1';
+const RUNTIME_CACHE = 'dor101-runtime-' + Date.now();
 
 // Core app shell files to cache on install
 const APP_SHELL = [
@@ -23,28 +23,33 @@ const API_ROUTES = [
 // Install — cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(RUNTIME_CACHE).then((cache) => {
       return cache.addAll(APP_SHELL);
     })
   );
   self.skipWaiting();
 });
 
-// Activate — clean old caches
+// Activate — clean ALL old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME && key !== RUNTIME_CACHE)
-          .map((key) => caches.delete(key))
+        keys.map((key) => caches.delete(key))
       );
+    }).then(() => {
+      // Force reload all clients
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'RELOAD_PAGE' });
+        });
+      });
     })
   );
   self.clients.claim();
 });
 
-// Fetch — network-first for API, cache-first for static assets
+// Fetch — ALWAYS network first, never serve stale content
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -55,102 +60,49 @@ self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests (except fonts & tiles)
   if (url.origin !== self.location.origin &&
       !url.hostname.includes('fonts.googleapis.com') &&
-      !url.hostname.includes('fonts.gstatic.com')) {
+      !url.hostname.includes('fonts.gstatic.com') &&
+      !url.hostname.includes('arcgisonline.com') &&
+      !url.hostname.includes('openstreetmap.org') &&
+      !url.hostname.includes('cartocdn.com')) {
     return;
   }
 
-  // API routes — network first, fallback to cache
-  if (API_ROUTES.some((route) => url.pathname.startsWith(route))) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, clone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request).then((cached) => {
-            if (cached) return cached;
-            return new Response(
-              JSON.stringify({ error: 'Offline', cached: true }),
-              { headers: { 'Content-Type': 'application/json' } }
-            );
-          });
-        })
-    );
-    return;
-  }
-
-  // Static assets — cache first, fallback to network
+  // ALWAYS use network-first strategy for fresh content
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok && url.origin === self.location.origin) {
+    fetch(request)
+      .then((response) => {
+        // Clone and cache the fresh response
+        if (response.ok) {
           const clone = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => {
             cache.put(request, clone);
           });
         }
         return response;
-      });
-    })
+      })
+      .catch(() => {
+        // Only fall back to cache if network fails completely
+        return caches.match(request).then((cached) => {
+          return cached || new Response(
+            'Network error - please refresh',
+            { 
+              headers: { 'Content-Type': 'text/plain' },
+              status: 503 
+            }
+          );
+        });
+      })
   );
 });
 
-// Background sync for data freshness
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-data') {
-    event.waitUntil(
-      Promise.all(
-        API_ROUTES.map((route) =>
-          fetch(route)
-            .then((response) => {
-              if (response.ok) {
-                const clone = response.clone();
-                return caches.open(RUNTIME_CACHE).then((cache) => {
-                  return cache.put(route, clone);
-                });
-              }
-            })
-            .catch(() => {}) // Silent fail
-        )
-      )
-    );
+// Handle messages from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
-});
-
-// Push notifications (placeholder for future implementation)
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'DOR101', {
-      body: data.body || '',
-      icon: '/icon.svg',
-      badge: '/icon.svg',
-      tag: data.tag || 'dor101-notification',
-      data: { url: data.url || '/' },
-    })
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const url = event.notification.data?.url || '/';
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clients) => {
-      for (const client of clients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
-          return client.focus();
-        }
-      }
-      return self.clients.openWindow(url);
-    })
-  );
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    caches.keys().then((keys) => {
+      keys.forEach((key) => caches.delete(key));
+    });
+  }
 });
