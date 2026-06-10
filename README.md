@@ -33,10 +33,11 @@ No database, API keys, or configuration files are required for the desktop app.
 
 ### What's New in v1.1.0
 
-- **Live Data Updates**: News, market data, and notifications now update automatically
-- **Persistent Settings**: Language preference is saved and persists across sessions
+- **Complete Language System**: All text across ALL pages now translates when language is changed (not just main page)
+- **Map Style Switching**: Choose between Satellite, Street, or Hybrid map views - preference saved
+- **Persistent Settings**: All preferences (language, map style, theme) saved and persist across sessions
 - **Notification Memory**: Read notifications are remembered and won't show again
-- **Real-time Timestamps**: All data shows current dates instead of static dates
+- **Live Data Updates**: News, market data, and notifications update automatically
 - **Bug Fixes**: Various improvements for smoother performance
 
 ---
@@ -51,7 +52,7 @@ Built for renters and families across Dorchester — Fields Corner, Grove Hall, 
 | **Housing Projects** | BPDA-approved developments with unit counts, AMI breakdowns, status |
 | **Affordable Housing** | Income-restricted listings, AMI calculator, application guide |
 | **Market Trends** | Rental and sale price charts (Zillow, Redfin, HUD) |
-| **Map** | Satellite map with 6 resource layers and MBTA transit predictions |
+| **Map** | Interactive map with Satellite/Street/Hybrid styles, 6 resource layers, and MBTA transit predictions |
 | **Food Resources** | Pantries, hot meals, SNAP/EBT guide with hours and directions |
 | **Neighborhood Guide** | Profiles for every Dorchester sub-neighborhood |
 | **Financial Tools** | Rent burden calculator, AMI screener, document checklist |
