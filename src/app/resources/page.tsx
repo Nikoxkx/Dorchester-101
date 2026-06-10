@@ -233,10 +233,10 @@ export default function ResourcesPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <BookOpen className="w-8 h-8 text-[var(--color-accent-primary)]" />
-            Resource Directory
+            {t('resources.title', 'Resource Directory')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Verified organizations and services for Dorchester residents. All contact information has been verified.
+            {t('resources.description', 'Verified organizations and services for Dorchester residents. All contact information has been verified.')}
           </p>
         </header>
 
@@ -246,10 +246,10 @@ export default function ResourcesPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <h2 className="font-heading font-semibold text-lg mb-1">
-                  Not sure where to start?
+                  {t('resources.notSure', 'Not sure where to start?')}
                 </h2>
                 <p className="text-[var(--color-text-secondary)]">
-                  Call 2-1-1 anytime (24/7) for free, confidential help finding services.
+                  {t('resources.call211', 'Call 2-1-1 anytime (24/7) for free, confidential help finding services.')}
                 </p>
               </div>
               <a
@@ -262,7 +262,7 @@ export default function ResourcesPage() {
                 )}
               >
                 <Phone className="w-5 h-5" />
-                Call 2-1-1
+                {t('resources.call211', 'Call 2-1-1')}
               </a>
             </div>
           </CardContent>
@@ -274,7 +274,7 @@ export default function ResourcesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
             <input
               type="text"
-              placeholder="Search organizations or services..."
+              placeholder={t('resources.search', 'Search organizations or services...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(

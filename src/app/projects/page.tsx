@@ -115,10 +115,10 @@ export default function ProjectsPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <Building2 className="w-8 h-8 text-[var(--color-accent-amber)]" />
-            Housing Projects
+            {t('projects.title', 'Housing Projects')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            BPDA-approved development projects in Dorchester. Track new housing from planning through completion.
+            {t('projects.description', 'BPDA-approved development projects in Dorchester. Track new housing from planning through completion.')}
           </p>
         </header>
 
@@ -128,7 +128,7 @@ export default function ProjectsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
             <input
               type="text"
-              placeholder="Search projects, neighborhoods, or addresses..."
+              placeholder={t('projects.search', 'Search projects, neighborhoods, or addresses...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
@@ -147,23 +147,23 @@ export default function ProjectsPage() {
               'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]'
             )}
           >
-            <option value="">All Statuses</option>
-            <option value="planning">Planning</option>
-            <option value="approved">Approved</option>
-            <option value="under_construction">Under Construction</option>
-            <option value="complete">Complete</option>
+            <option value="">{t('projects.allStatuses', 'All Statuses')}</option>
+            <option value="planning">{t('projects.planning', 'Planning')}</option>
+            <option value="approved">{t('projects.approved', 'Approved')}</option>
+            <option value="under_construction">{t('projects.underConstruction', 'Under Construction')}</option>
+            <option value="complete">{t('projects.complete', 'Complete')}</option>
           </select>
         </div>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Projects', value: projects.length },
-            { label: 'Total Units', value: projects.reduce((sum, p) => sum + p.totalUnits, 0) },
-            { label: 'Affordable Units', value: projects.reduce((sum, p) => sum + p.incomeRestrictedUnits, 0) },
-            { label: 'Under Construction', value: projects.filter(p => p.status === 'under_construction').length },
-          ].map((stat) => (
-            <Card key={stat.label} className="text-center py-4">
+            { label: t('projects.totalProjects', 'Total Projects'), value: projects.length },
+            { label: t('projects.totalUnits', 'Total Units'), value: projects.reduce((sum, p) => sum + p.totalUnits, 0) },
+            { label: t('projects.affordableUnits', 'Affordable Units'), value: projects.reduce((sum, p) => sum + p.incomeRestrictedUnits, 0) },
+            { label: t('projects.underConstruction', 'Under Construction'), value: projects.filter(p => p.status === 'under_construction').length },
+          ].map((stat, i) => (
+            <Card key={i} className="text-center py-4">
               <div className="font-mono text-2xl font-bold text-[var(--color-accent-primary)]">
                 {stat.value.toLocaleString()}
               </div>
@@ -197,37 +197,37 @@ export default function ProjectsPage() {
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-heading">TOTAL UNITS</p>
+                    <p className="text-xs text-[var(--color-text-muted)] font-heading">{t('projects.totalUnits', 'TOTAL UNITS')}</p>
                     <p className="font-mono font-semibold text-lg">{project.totalUnits}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-heading">AFFORDABLE</p>
+                    <p className="text-xs text-[var(--color-text-muted)] font-heading">{t('projects.affordable', 'AFFORDABLE')}</p>
                     <p className="font-mono font-semibold text-lg text-[var(--color-accent-green)]">
                       {project.incomeRestrictedUnits}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-heading">DEVELOPER</p>
+                    <p className="text-xs text-[var(--color-text-muted)] font-heading">{t('projects.developer', 'DEVELOPER')}</p>
                     <p className="font-medium text-sm">{project.developer}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-heading">EXPECTED</p>
+                    <p className="text-xs text-[var(--color-text-muted)] font-heading">{t('projects.expected', 'EXPECTED')}</p>
                     <p className="font-medium text-sm">
                       {project.expectedCompletion 
-                        ? new Date(project.expectedCompletion).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-                        : 'TBD'
+                        ? new Date(project.expectedCompletion).toLocaleDateString(language === 'en' ? 'en-US' : language, { month: 'short', year: 'numeric' })
+                        : t('projects.tbd', 'TBD')
                       }
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-[var(--color-text-muted)] font-heading mb-2">AMI BREAKDOWN</p>
+                  <p className="text-xs text-[var(--color-text-muted)] font-heading mb-2">{t('projects.amiBreakdown', 'AMI BREAKDOWN')}</p>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(project.amiBreakdown).map(([ami, count]) => (
                       <div key={ami} className="flex items-center gap-2">
                         <AMIBadge percentage={Number(ami)} />
-                        <span className="text-sm font-mono">{count} units</span>
+                        <span className="text-sm font-mono">{count} {t('projects.units', 'units')}</span>
                       </div>
                     ))}
                   </div>
@@ -238,7 +238,7 @@ export default function ProjectsPage() {
                 {project.approvalDate && (
                   <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
                     <Calendar className="w-4 h-4" />
-                    Approved {new Date(project.approvalDate).toLocaleDateString()}
+                    {t('projects.approved', 'Approved')} {new Date(project.approvalDate).toLocaleDateString(language === 'en' ? 'en-US' : language)}
                   </div>
                 )}
                 <Button 
@@ -247,7 +247,7 @@ export default function ProjectsPage() {
                   onClick={() => window.open(project.bpdaLink, '_blank')}
                   rightIcon={<ExternalLink className="w-3 h-3" />}
                 >
-                  BPDA Details
+                  {t('projects.bpdaDetails', 'BPDA Details')}
                 </Button>
               </CardFooter>
             </Card>
@@ -257,14 +257,14 @@ export default function ProjectsPage() {
         {filteredProjects.length === 0 && (
           <Card className="text-center py-12">
             <Building2 className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
-            <p className="font-heading font-medium mb-2">No projects match your search</p>
-            <p className="text-sm text-[var(--color-text-muted)]">Try different search terms or filters</p>
+            <p className="font-heading font-medium mb-2">{t('projects.noResults', 'No projects match your search')}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t('projects.tryDifferent', 'Try different search terms or filters')}</p>
           </Card>
         )}
 
         {/* Source attribution */}
         <p className="text-xs text-[var(--color-text-muted)] text-center">
-          Data sourced from Boston Planning & Development Agency (BPDA). 
+          {t('projects.dataSource', 'Data sourced from Boston Planning & Development Agency (BPDA).')} 
           <a href="https://www.bostonplans.org" className="text-[var(--color-accent-primary)] hover:underline ml-1" target="_blank" rel="noopener noreferrer">
             bostonplans.org
           </a>
