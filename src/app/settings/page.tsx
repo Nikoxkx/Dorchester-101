@@ -606,7 +606,7 @@ export default function SettingsPage() {
                 Your neighborhood. Your rights. Your future.
               </p>
               <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                Version 1.1.0
+                Version 1.2.0
               </p>
             </div>
 
