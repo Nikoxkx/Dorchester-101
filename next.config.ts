@@ -31,6 +31,19 @@ function buildId(): string {
  * No third-party script origins are whitelisted: the app ships its own fonts and
  * has no analytics, so the strictest CSP the UI tolerates is the honest default.
  */
+/**
+ * The preview environment (and any tunnel used to review a dev build) serves the
+ * page from a different origin than the dev server, so the frame-blocking
+ * headers and Next's cross-origin dev-resource guard have to be relaxed for
+ * `next dev` only. A production build keeps all of them.
+ */
+const isDev = process.env.NODE_ENV !== "production";
+
+/** Origins allowed to reach `/_next/*` dev resources (HMR, dev fonts). */
+const allowedDevOrigins = isDev
+  ? ["*.e2b.app", "3000-ialb6dlm5uifjn8e7xths.e2b.app", "*.localhost", "127.0.0.1"]
+  : [];
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -38,7 +51,9 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(self), browsing-history=(), interest-cohort=()",
   },
-  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  // Only when the app is really deployed: a preview iframe is a legitimate
+  // parent, and sending SAMEORIGIN from a dev server just shows a blank frame.
+  ...(isDev ? [] : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Content-Security-Policy",
@@ -51,7 +66,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org",
       "font-src 'self'",
       "connect-src 'self'",
-      "frame-ancestors 'self'",
+      ...(isDev ? [] : [`frame-ancestors 'self'`]),
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
@@ -61,6 +76,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins,
   poweredByHeader: false,
   compress: true,
   turbopack: { root },
