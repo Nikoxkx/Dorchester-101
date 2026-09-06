@@ -1,46 +1,40 @@
 'use client';
 
-import { HOTLINES } from '@/data/programs';
-import { telHref } from '@/lib/utils';
+import { Phone } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/lib/i18n';
 
 export function EmergencyBanner() {
-  const featured = HOTLINES[0];
-  const rest = HOTLINES.slice(1);
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
 
   return (
-    <section className="relative overflow-hidden bg-[var(--red)] text-[var(--paper)] -mx-4 md:-mx-7 px-4 md:px-7 py-6 border-y-4 border-[var(--ink)]" aria-label="Emergency hotlines">
-      {/* Raw paper texture overlay — original, not stock */}
-      <div aria-hidden className="absolute inset-0 opacity-[0.1] pointer-events-none select-none" style={{
-        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'5\'/%3E%3C/filter%3E%3Crect width=\'200\' height=\'200\' fill=\'%23fff\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-        backgroundSize: '200px 200px'
-      }} />
-
-      <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-6">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/70 mb-2">Emergency — 24 hours</p>
-          <h2 className="font-display text-[clamp(2.5rem,5vw,5rem)] leading-[0.9] tracking-[-0.05em]">Need help<br /><span className="italic">today</span></h2>
+    <div className={cn(
+      'bg-[var(--color-accent-primary)] text-white rounded-xl p-4 md:p-6',
+      'flex flex-col md:flex-row md:items-center justify-between gap-4'
+    )}>
+      <div className="flex items-start gap-4">
+        <div className="p-3 bg-white/20 rounded-lg">
+          <Phone className="w-6 h-6" />
         </div>
-        <a
-          href={telHref(featured.phone)}
-          className="shrink-0 bg-[var(--bone)] text-[var(--rust-dark)] px-6 py-4 font-bold text-base hover:bg-white transition-colors inline-block w-fit shadow-soft"
-        >
-          {featured.name} — {featured.phone}
+        <div>
+          <h3 className="font-heading font-semibold text-lg mb-1">{t('emergency.title')}</h3>
+          <p className="text-white/90 text-sm">{t('emergency.body')}</p>
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <a href="tel:18006458333" className={cn('flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg', 'bg-white text-[var(--color-accent-primary)] font-heading font-medium', 'hover:bg-white/90 transition-colors')}>
+          <Phone className="w-4 h-4" />
+          <span>1-800-645-8333</span>
+          <span className="text-xs opacity-75">({t('emergency.foodLabel')})</span>
+        </a>
+        <a href="tel:211" className={cn('flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg', 'bg-white/20 text-white font-heading font-medium', 'hover:bg-white/30 transition-colors')}>
+          <Phone className="w-4 h-4" />
+          <span>2-1-1</span>
+          <span className="text-xs opacity-75">({t('emergency.allLabel')})</span>
         </a>
       </div>
-
-      <div className="relative z-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {rest.map((h) => (
-          <a
-            key={h.id}
-            href={telHref(h.phone)}
-            className="group border border-white/30 bg-white/5 hover:bg-white/10 px-3 py-3 transition-colors"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-wide opacity-70">{h.name}</p>
-            <p className="font-display text-xl font-semibold leading-none mt-1 group-hover:underline decoration-2 underline-offset-4">{h.phone}</p>
-            <p className="text-xs opacity-90 mt-1">{h.blurb}</p>
-          </a>
-        ))}
-      </div>
-    </section>
+    </div>
   );
 }

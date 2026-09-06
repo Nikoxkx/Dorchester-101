@@ -1,69 +1,67 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Atkinson_Hyperlegible, Newsreader } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 
-const atkinson = Atkinson_Hyperlegible({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
-  variable: "--font-atkinson",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-newsreader",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "DOR101 — Dorchester desk",
-  description:
-    "Housing, food, transit, and rights for Dorchester. Phone numbers, waitlist status, and calculators. No account. No tracking.",
-  keywords: [
-    "Dorchester",
-    "Boston",
-    "housing",
-    "SNAP",
-    "MBTA",
-    "Section 8",
-    "BHA",
-    "Fields Corner",
-    "Codman Square",
-  ],
+  title: "DOR101 — Dorchester 101",
+  description: "Your neighborhood. Your rights. Your future. Free housing, food, and community resources for Dorchester residents.",
+  keywords: ["Dorchester", "Boston", "housing", "affordable housing", "food assistance", "community resources", "MBTA", "Section 8", "BHA"],
   authors: [{ name: "DOR101 Community Project" }],
+  creator: "DOR101",
+  publisher: "DOR101",
   applicationName: "DOR101",
+  category: "Community Resources",
+
+  // PWA manifest
   manifest: "/manifest.json",
+
+  // Apple/iOS PWA support
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "DOR101",
   },
+
+  // Open Graph (for sharing)
   openGraph: {
     type: "website",
-    siteName: "DOR101",
-    title: "DOR101 — Dorchester desk",
-    description: "Housing, food, transit, and rights for the Dot.",
+    siteName: "DOR101 — Dorchester 101",
+    title: "DOR101 — Dorchester 101",
+    description: "Free housing, food, and community resources for Dorchester residents.",
     locale: "en_US",
   },
-  robots: { index: true, follow: true },
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icon.svg" }],
+
+  // Robots
+  robots: {
+    index: true,
+    follow: true,
   },
+
+  // Icons
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon.svg" },
+    ],
+  },
+
+  // Other meta
   other: {
-    "msapplication-TileColor": "#c8102e",
+    // Windows tile color
+    "msapplication-TileColor": "#1B3A6B",
+    "msapplication-config": "none",
+    // Disable phone number detection (we handle our own tel: links)
     "format-detection": "telephone=no",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#c8102e" },
-    { media: "(prefers-color-scheme: dark)", color: "#121311" },
+    { media: "(prefers-color-scheme: light)", color: "#1B3A6B" },
+    { media: "(prefers-color-scheme: dark)", color: "#111110" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -74,11 +72,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${atkinson.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* Windows-specific PWA integrations */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="DOR101" />
+
+        {/* Prefetch API routes for faster first load */}
+        <link rel="prefetch" href="/api/news" />
+        <link rel="prefetch" href="/api/notifications" />
+      </head>
       <body className="antialiased">
-        <a href="#main" className="skip-link">
-          Skip to content
-        </a>
         {children}
         <ServiceWorkerRegistration />
       </body>

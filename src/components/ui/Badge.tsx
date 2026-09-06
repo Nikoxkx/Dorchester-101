@@ -11,59 +11,84 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'text-[var(--ink-soft)] border-[var(--line)]',
-  green: 'text-[var(--park)] border-[var(--park)]',
-  amber: 'text-[var(--gold)] border-[var(--gold)]',
-  red: 'text-[var(--red)] border-[var(--red)]',
-  blue: 'text-[var(--harbor)] border-[var(--harbor)]',
+  default: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]',
+  green: 'bg-[var(--color-accent-green)]/15 text-[var(--color-accent-green)]',
+  amber: 'bg-[var(--color-accent-amber)]/15 text-[var(--color-accent-amber)]',
+  red: 'bg-[var(--color-accent-secondary)]/15 text-[var(--color-accent-secondary)]',
+  blue: 'bg-[var(--color-accent-primary)]/15 text-[var(--color-accent-primary)]',
 };
 
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
-    <span className={cn('badge', variantStyles[variant], className)}>
+    <span
+      className={cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full',
+        'text-xs font-heading font-medium',
+        variantStyles[variant],
+        className
+      )}
+    >
       {children}
     </span>
   );
 }
 
-export function AMIBadge({ percentage, className }: { percentage: number; className?: string }) {
-  const band = percentage <= 30 ? 30 : percentage <= 50 ? 50 : percentage <= 60 ? 60 : percentage <= 80 ? 80 : 100;
-  const cls =
-    band <= 30 ? 'ami-30' :
-    band <= 50 ? 'ami-50' :
-    band <= 60 ? 'ami-60' :
-    band <= 80 ? 'ami-80' : 'ami-market';
+interface AMIBadgeProps {
+  percentage: number;
+  className?: string;
+}
+
+export function AMIBadge({ percentage, className }: AMIBadgeProps) {
+  let bgColor = 'bg-gray-400';
+  let textColor = 'text-gray-900';
+  
+  if (percentage <= 30) {
+    bgColor = 'bg-[#1B3A6B]';
+    textColor = 'text-white';
+  } else if (percentage <= 50) {
+    bgColor = 'bg-[#2E5A99]';
+    textColor = 'text-white';
+  } else if (percentage <= 60) {
+    bgColor = 'bg-[#4A7BC4]';
+    textColor = 'text-white';
+  } else if (percentage <= 80) {
+    bgColor = 'bg-[#7BA3E0]';
+    textColor = 'text-gray-900';
+  }
 
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase', cls, className)}>
-      {band}% AMI
+    <span
+      className={cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full',
+        'text-xs font-heading font-medium',
+        bgColor,
+        textColor,
+        className
+      )}
+    >
+      {percentage}% AMI
     </span>
   );
 }
 
 interface StatusBadgeProps {
-  status: 'available' | 'waitlist_open' | 'waitlist_closed' | 'in_review' | 'under_construction' | 'complete' | 'planning' | 'approved' | 'lottery' | 'check_source' | 'closed' | 'open' | 'open_priority_one';
+  status: 'available' | 'waitlist_open' | 'waitlist_closed' | 'in_review' | 'under_construction' | 'complete' | 'planning' | 'approved';
   className?: string;
 }
 
-const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-  available: { label: 'Openings', variant: 'green' },
-  waitlist_open: { label: 'Waitlist open', variant: 'amber' },
-  waitlist_closed: { label: 'Waitlist closed', variant: 'red' },
-  in_review: { label: 'In review', variant: 'blue' },
-  under_construction: { label: 'Under construction', variant: 'amber' },
-  complete: { label: 'Built', variant: 'green' },
+const statusConfig: Record<StatusBadgeProps['status'], { label: string; variant: BadgeVariant }> = {
+  available: { label: 'Available', variant: 'green' },
+  waitlist_open: { label: 'Waitlist Open', variant: 'amber' },
+  waitlist_closed: { label: 'Waitlist Closed', variant: 'red' },
+  in_review: { label: 'In Review', variant: 'blue' },
+  under_construction: { label: 'Under Construction', variant: 'amber' },
+  complete: { label: 'Complete', variant: 'green' },
   planning: { label: 'Planning', variant: 'default' },
   approved: { label: 'Approved', variant: 'blue' },
-  lottery: { label: 'Lottery', variant: 'amber' },
-  check_source: { label: 'Check source', variant: 'default' },
-  closed: { label: 'Closed', variant: 'red' },
-  open: { label: 'Open', variant: 'green' },
-  open_priority_one: { label: 'Priority One', variant: 'amber' },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusConfig[status] || { label: status, variant: 'default' as BadgeVariant };
+  const config = statusConfig[status];
   return (
     <Badge variant={config.variant} className={className}>
       {config.label}

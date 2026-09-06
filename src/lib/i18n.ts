@@ -18,7 +18,6 @@ function buildTranslations(): Record<string, Dict> {
     'nav.tools':           'Financial Tools',
     'nav.news':            'News',
     'nav.resources':       'Resources',
-    'nav.college':         'College Access',
     'nav.faq':             'FAQ',
     'nav.settings':        'Settings',
     'nav.collapse':        'Collapse',
@@ -30,17 +29,17 @@ function buildTranslations(): Record<string, Dict> {
     'theme.system':        'System Mode',
 
     // ── Introduction ────────────────────────────────────
-    'intro.title':         'DOR101',
-    'intro.subtitle':      'Dorchester desk',
-    'intro.body':          'Phone numbers, waitlist status, SNAP math, and the Red Line — for Fields Corner, Codman, Ashmont, and the rest of the Dot. No account. We cite the agency, not a rumor.',
-    'intro.cta':           'Open the desk',
+    'intro.title':         'Welcome to DOR101',
+    'intro.subtitle':      'Your Dorchester Community Resource Hub',
+    'intro.body':          'DOR101 is a free, open resource built for Dorchester residents — especially families and individuals who need clear, honest information about housing, food assistance, healthcare, legal help, and community services. Every phone number, address, and data point is verified. We never ask for personal information and we never charge a fee. This app exists because everyone deserves the same quality of information that wealthier communities take for granted.',
+    'intro.cta':           'Explore Resources',
 
     // ── Dashboard ───────────────────────────────────────
     'dashboard.greeting.morning':   'Good morning',
     'dashboard.greeting.afternoon': 'Good afternoon',
     'dashboard.greeting.evening':   'Good evening',
-    'dashboard.welcome':            'This is the desk',
-    'dashboard.tagline':            'Housing, food, transit, rights.',
+    'dashboard.welcome':            'welcome to DOR101',
+    'dashboard.tagline':            'Your neighborhood. Your rights. Your future.',
     'dashboard.glance':             'Dorchester at a Glance',
     'dashboard.quickAccess':        'Quick Access',
     'dashboard.latestNews':         'Latest News',
@@ -48,9 +47,9 @@ function buildTranslations(): Record<string, Dict> {
     'dashboard.spotlight':          'Spotlight',
     'dashboard.mapTitle':           'Dorchester Resources Map',
     'dashboard.viewFullMap':        'View Full Map',
-    'dashboard.footer.line1':       'DOR101 — Dorchester desk. Free. No tracking.',
-    'dashboard.footer.line2':       'Figures come from Boston.gov, BPDA, BHA, HUD, MBTA, and the organizations named on each page.',
-    'dashboard.footer.verified':    'Each page dates its own sources.',
+    'dashboard.footer.line1':       'DOR101 — Dorchester 101 · Free. Open. For the community.',
+    'dashboard.footer.line2':       'Data sourced from Boston.gov, BPDA, BHA, HUD, MBTA, and verified community organizations.',
+    'dashboard.footer.verified':    'Last verified: June 5, 2026',
 
     // ── Stats ───────────────────────────────────────────
     'stats.medianRent':        'Median 2BR Rent',
@@ -246,10 +245,8 @@ function buildTranslations(): Record<string, Dict> {
     'settings.noAccount':     'No account required',
     'settings.about':         'About DOR101',
     'settings.version':       'Version 1.0.0',
-    'settings.aboutDesc':     'A public-information desk for Dorchester. Confirm waitlists and hours with the agency before you act.',
+    'settings.aboutDesc':     'A free resource for Dorchester residents to access verified housing, food, and community service information. Built with care for the community.',
     'settings.viewSources':   'View Data Sources',
-    'settings.resetPrefs':    'Clear saved preferences on this device',
-    'resources.search':       'Search organizations or services…',
   };
 
   // ── Spanish ─────────────────────────────────────────────
@@ -365,18 +362,7 @@ function buildTranslations(): Record<string, Dict> {
     'resources.title':'Diretóriu di Rekursu','resources.description':'Organizason i servisu verifikadu pa moradori di Dorchester.','resources.notSure':'Nu sta sinshia ku kaminhu?','resources.call211':'Txama 2-1-1 kualkér hora (24/7) pa ajuda baratu i ku fidelidadi.','resources.search':'Buska organizason o servisu...',
   };
 
-  const merge = (partial: Dict): Dict => ({ ...en, ...partial });
-  return {
-    en,
-    es: merge(es),
-    ht: merge(ht),
-    pt: merge(pt),
-    vi: merge(vi),
-    zh: merge(zh),
-    ar: merge(ar),
-    so: merge(so),
-    kea: merge(kea),
-  };
+  return { en, es, ht, pt, vi, zh, ar, so, kea };
 }
 
 export const translations = buildTranslations();

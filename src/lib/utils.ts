@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { HUD_AMI_FY2026 } from '@/data/programs';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,12 +29,6 @@ export function formatPhone(phone: string): string {
   return phone;
 }
 
-export function telHref(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
-  if (cleaned === '211') return 'tel:211';
-  return `tel:${cleaned}`;
-}
-
 export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' {
   const hour = new Date().getHours();
   if (hour < 12) return 'morning';
@@ -46,23 +39,30 @@ export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' {
 export function getRelativeTime(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
+  
   if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export const BOSTON_AMI_2025 = Object.fromEntries(
-  Object.entries(HUD_AMI_FY2026.byHouseholdSize).map(([size, bands]) => [Number(size), bands.ami100]),
-) as Record<number, number>;
+// AMI Calculator for Boston 2024/2025
+export const BOSTON_AMI_2025 = {
+  1: 91900,
+  2: 105000,
+  3: 118100,
+  4: 131150,
+  5: 141650,
+  6: 152150,
+  7: 162650,
+  8: 173100,
+};
 
 export function calculateAMIPercentage(householdSize: number, annualIncome: number): number {
-  const size = Math.min(Math.max(householdSize, 1), 8);
-  const amiForSize = HUD_AMI_FY2026.byHouseholdSize[size].ami100;
-  if (!amiForSize || annualIncome < 0) return 0;
+  const size = Math.min(Math.max(householdSize, 1), 8) as keyof typeof BOSTON_AMI_2025;
+  const amiForSize = BOSTON_AMI_2025[size];
   return Math.round((annualIncome / amiForSize) * 100);
 }
 
@@ -72,7 +72,7 @@ export function getAMIBand(percentage: number): string {
   if (percentage <= 60) return '60% AMI';
   if (percentage <= 80) return '80% AMI';
   if (percentage <= 100) return '100% AMI';
-  return 'Over 100% AMI';
+  return 'Market Rate';
 }
 
 export function calculateRentBurden(monthlyIncome: number, monthlyRent: number): {
@@ -80,20 +80,18 @@ export function calculateRentBurden(monthlyIncome: number, monthlyRent: number):
   status: 'affordable' | 'cost-burdened' | 'severely-burdened';
   label: string;
 } {
-  if (monthlyIncome <= 0) {
-    return { percentage: 0, status: 'severely-burdened', label: 'Enter income' };
-  }
   const percentage = Math.round((monthlyRent / monthlyIncome) * 100);
-
+  
   if (percentage <= 30) {
-    return { percentage, status: 'affordable', label: 'At or under 30%' };
+    return { percentage, status: 'affordable', label: 'Affordable' };
   }
   if (percentage <= 50) {
-    return { percentage, status: 'cost-burdened', label: 'Cost-burdened' };
+    return { percentage, status: 'cost-burdened', label: 'Cost-Burdened' };
   }
-  return { percentage, status: 'severely-burdened', label: 'Severely cost-burdened' };
+  return { percentage, status: 'severely-burdened', label: 'Severely Cost-Burdened' };
 }
 
+// Dorchester neighborhood data
 export const DORCHESTER_NEIGHBORHOODS = [
   'Fields Corner',
   'Grove Hall',
@@ -110,16 +108,3 @@ export const DORCHESTER_NEIGHBORHOODS = [
 ] as const;
 
 export const DORCHESTER_ZIP_CODES = ['02121', '02122', '02124', '02125'] as const;
-
-export function localeForLanguage(language: string): string {
-  switch (language) {
-    case 'es': return 'es';
-    case 'ht': return 'ht';
-    case 'pt': return 'pt-BR';
-    case 'vi': return 'vi';
-    case 'zh': return 'zh-CN';
-    case 'ar': return 'ar';
-    case 'so': return 'so';
-    default: return 'en-US';
-  }
-}
