@@ -269,6 +269,43 @@ export default function SettingsPage() {
 
             <fieldset>
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.surface')}
+              </legend>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['solid', 'glass'] as const).map((value) => {
+                  const active = store.surface === value;
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer rounded-[var(--radius-md)] border px-2 py-2 text-center text-xs font-heading transition-colors',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                      )}
+                    >
+                      <input type="radio" name="surface" className="sr-only" checked={active} onChange={() => store.setSurface(value)} />
+                      <span className="flex items-center justify-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'inline-block h-3.5 w-3.5 rounded-[3px] border border-[var(--color-border-strong)]',
+                            value === 'glass' ? 'bg-[linear-gradient(135deg,rgba(20,48,79,0.55),rgba(166,54,42,0.35))] opacity-70' : 'bg-[var(--color-accent-primary)]'
+                          )}
+                        />
+                        {t(`settings.surface.${value}` as TranslationKey)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+                {t('settings.surfaceNote')}
+                {prefs.highContrast && <> {t('settings.surfaceContrastNote')}</>}
+              </p>
+            </fieldset>
+
+            <fieldset>
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('map.styleLabel')}
               </legend>
               <div className="grid grid-cols-3 gap-1.5">

@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': 'Dhibcaha khariidadda waxaa la soo dejiyaa marka aad xiriir leedahay.',
   'settings.customFeedLabel': 'Magac gaaban',
   'settings.detectedNone': 'Lama oga doorashada qalabka',
+  'settings.surface': 'Dusha',
+  'settings.surface.solid': 'Adag',
+  'settings.surface.glass': 'Hufan',
+  'settings.surfaceNote': 'Hufan wuxuu u oggolaanayaa sawirka Dorchester Bay inuu ka muuqdo guddiyada iyo liiska, iyadoo qoraalka gadaashiisa la mugdiyeeyay. Midabada qoraalku isma beddelaan, sidaas darteed wax walba waa la akhrisan karaa habka iftiinka iyo kan madow.',
+  'settings.surfaceContrastNote': 'Iftiin-kala-duwanaanshaha sare waa shid, sidaas darteed midabka adag ayaa la isticmaalayaa.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Rakib DOR101',
   'pwa.installed': 'DOR101 waa rakiban',

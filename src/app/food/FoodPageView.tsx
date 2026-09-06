@@ -13,6 +13,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
@@ -479,6 +480,9 @@ export default function FoodPageView() {
           <div className="mt-2.5">
             <ReportProblem />
           </div>
+        <ProjectNote sources={['gbfb', 'dta', 'bostongov', 'dor101']}>
+          Pantry hours and eligibility on this page are checked by hand against each organisation&apos;s own posted schedule and the Greater Boston Food Bank partner list; the date of the last check is printed on every card, and “open now” is computed from those hours in Boston time. SNAP rules follow the Massachusetts Department of Transitional Assistance.
+        </ProjectNote>
         </section>
       </div>
     </MainLayout>

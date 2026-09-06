@@ -21,6 +21,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ExpandableSection, ExpandableCard } from '@/components/ui/ExpandableSection';
 import { cn } from '@/lib/utils';
@@ -256,10 +257,12 @@ export default function NeighborhoodPage() {
           <p className="text-sm text-[var(--color-text-muted)] mb-4">
             Click any neighborhood to see detailed information about demographics, housing, transit, and current developments.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             {neighborhoods.map((hood) => (
               <ExpandableCard
                 key={hood.name}
+                expanded={selectedHood === hood.name}
+                onToggle={(open) => setSelectedHood(open ? hood.name : null)}
                 title={hood.name}
                 subtitle={hood.description}
                 icon={<MapPin className="w-5 h-5" />}
@@ -555,6 +558,9 @@ export default function NeighborhoodPage() {
               </div>
             </div>
           </div>
+        <ProjectNote sources={['census', 'mbta', 'bostongov', 'wikimedia']}>
+          Population and housing figures are Census ACS estimates for the tracts that make up each area; station lists are the MBTA&apos;s. History paragraphs cite the Dorchester Historical Society and the Boston Landmarks Commission where a claim is specific.
+        </ProjectNote>
         </ExpandableSection>
       </motion.div>
     </MainLayout>

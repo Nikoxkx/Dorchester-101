@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': 'Các lát bản đồ được tải từ nhà cung cấp khi bạn có mạng.',
   'settings.customFeedLabel': 'Tên ngắn',
   'settings.detectedNone': 'Không phát hiện tùy chọn thiết bị',
+  'settings.surface': 'Bề mặt',
+  'settings.surface.solid': 'Đặc',
+  'settings.surface.glass': 'Trong suốt',
+  'settings.surfaceNote': 'Trong suốt cho phép ảnh vịnh Dorchester hiện qua các bảng và menu, với lớp mờ phía sau chữ. Màu chữ không đổi nên mọi thứ vẫn dễ đọc ở cả chế độ sáng và tối.',
+  'settings.surfaceContrastNote': 'Độ tương phản cao đang bật nên bảng màu đặc vẫn được dùng.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Cài DOR101',
   'pwa.installed': 'DOR101 đã được cài',

@@ -15,6 +15,7 @@ import {
   Info,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -114,6 +115,9 @@ export default function AffordableHousingPage() {
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
             {t('housing.description')}
+          </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            Each card shows whether the waitlist is <strong>open</strong>, <strong>closed</strong> or run by <strong>lottery</strong>, the income band it serves as a share of area median income (AMI), and the date a volunteer last confirmed it with the housing office. Use the Tools page to find your AMI band first; most Boston listings are for households at or below 80% AMI. Applications are only ever made through the official link on each card.
           </p>
         </header>
 
@@ -461,6 +465,9 @@ export default function AffordableHousingPage() {
             </Card>
           </div>
         )}
+        <ProjectNote sources={['bha', 'bostongov', 'bpda', 'hud']}>
+          Waitlist status and lottery dates come from the Boston Housing Authority, the Office of Housing and BPDA listings, and are confirmed by hand. Income limits are HUD&apos;s published figures for the Boston metro. Apply only through the official portals linked on each card; DOR101 never takes an application.
+        </ProjectNote>
       </motion.div>
     </MainLayout>
   );

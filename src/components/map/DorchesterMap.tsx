@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { MapCanvas, type MapPin, type MapStyle, type MapStop, type ShapeData } from './MapCanvas';
 import { Shield } from './Shield';
+import { CategoryPin } from './CategoryPin';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore, useReduceMotion } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
@@ -1043,7 +1044,7 @@ function MapLegend({
         <ul className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
           {CATEGORIES.map((category) => (
             <li key={category} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 shrink-0 rounded-full border border-white/80 shadow-sm" style={{ background: pinTone(category) }} aria-hidden="true" />
+              <CategoryPin category={category} size={14} />
               {t(`map.${category}` as 'map.food')}
             </li>
           ))}
@@ -1062,17 +1063,6 @@ function MapLegend({
       </div>
     </div>
   );
-}
-
-function pinTone(category: ResourceCategory): string {
-  return {
-    housing: 'var(--color-accent-primary)',
-    food: 'var(--color-accent-green)',
-    health: 'var(--color-accent-secondary)',
-    legal: 'var(--color-accent-amber)',
-    community: 'var(--color-accent-primary-soft)',
-    school: 'var(--mbta-green)',
-  }[category];
 }
 
 /** Bundled geometry is only used for rail; a bus line without a feed has none. */

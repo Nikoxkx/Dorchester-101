@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': 'Kat yo chaje bay Founisè kat lè ou konekte.',
   'settings.customFeedLabel': 'Ti non',
   'settings.detectedNone': 'Pa gen preferans aparèy detekte',
+  'settings.surface': 'Sifas',
+  'settings.surface.solid': 'Solid',
+  'settings.surface.glass': 'Transparan',
+  'settings.surfaceNote': 'Transparan kite foto Dorchester Bay la parèt atravè panno yo ak meni an, ak yon flou dèyè tèks la. Koulè tèks yo pa janm chanje, kidonk tout bagay rete lizib nan mòd klè ak fènwa.',
+  'settings.surfaceContrastNote': 'Gwo kontras aktive, kidonk palèt solid la itilize kanmenm.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Enstale DOR101',
   'pwa.installed': 'DOR101 enstale',

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Bus, ExternalLink, Map as MapIcon, MapPin, TrainFront } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { DorchesterMapLoader } from '@/components/map/DorchesterMapLoader';
 import { useI18n } from '@/i18n/hook';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, TRANSIT_DATA_AS_OF } from '@/data/transit';
@@ -99,6 +100,9 @@ export function MapPageView() {
               {t('map.openMbta')} <ExternalLink className="h-3 w-3" aria-hidden="true" />
             </a>
           </article>
+        <ProjectNote sources={['mbta', 'osm', 'esri', 'dor101']}>
+          Arrival times and alerts are live from the MBTA&apos;s public API when it answers, and fall back to the published timetable when it does not; the map says which. Basemap tiles are OpenStreetMap (streets) and Esri World Imagery (satellite). Pins are the same directory listings as the rest of the site.
+        </ProjectNote>
         </section>
       </motion.div>
     </MainLayout>

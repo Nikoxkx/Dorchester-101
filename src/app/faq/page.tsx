@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { HelpCircle, Search, Phone, ExternalLink, ChevronDown } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -513,6 +514,9 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
             Find answers to common questions about housing, food assistance, healthcare, and more.
           </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            Answers are written in plain language from the statute or agency rule they describe, and each names the office to call. Search by a word you would actually say — &ldquo;heat&rdquo;, &ldquo;deposit&rdquo;, &ldquo;EBT&rdquo; — and open one question at a time. If an answer looks out of date, the &ldquo;report a problem&rdquo; link at the bottom sends it straight to the volunteers.
+          </p>
         </header>
 
         {/* Emergency Contact */}
@@ -701,6 +705,9 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
               View All Resources
             </a>
           </div>
+        <ProjectNote sources={['masslegal', 'bostongov', 'dta', 'bha']}>
+          Answers are written in plain language from the rules published by the agency or statute named in each answer. When a rule changes, the answer is updated and the change is visible in the public repository.
+        </ProjectNote>
         </Card>
       </motion.div>
     </MainLayout>

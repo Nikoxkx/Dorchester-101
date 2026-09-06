@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': 'Os mosaicos são carregados do provedor de mapas quando você está on-line.',
   'settings.customFeedLabel': 'Nome curto',
   'settings.detectedNone': 'Nenhuma preferência do dispositivo detectada',
+  'settings.surface': 'Superfície',
+  'settings.surface.solid': 'Sólida',
+  'settings.surface.glass': 'Transparente',
+  'settings.surfaceNote': 'Transparente deixa a fotografia da baía de Dorchester aparecer através dos painéis e do menu, com um desfoque atrás do texto. As cores do texto não mudam, por isso tudo continua legível nos modos claro e escuro.',
+  'settings.surfaceContrastNote': 'O alto contraste está ativo, por isso a paleta sólida é usada de qualquer forma.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Instalar o DOR101',
   'pwa.installed': 'O DOR101 está instalado',

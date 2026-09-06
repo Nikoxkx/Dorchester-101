@@ -15,6 +15,7 @@ import {
   Search,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from "@/components/ui/Badge";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
 import { useI18n } from "@/i18n/hook";
@@ -569,6 +570,9 @@ export function ResourcesView() {
           <div className="mt-2.5">
             <ReportProblem />
           </div>
+        <ProjectNote sources={['dor101', 'bostongov', 'masslegal', 'bha']}>
+          Program descriptions are written from the official page or printed schedule of each organisation and re-checked on the date shown. Legal rights summaries follow MassLegalHelp; nothing here is legal advice.
+        </ProjectNote>
         </section>
       </div>
     </MainLayout>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, MapPin, Phone, Printer, Search } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
 import { RESOURCES, verificationAge, verificationLevel, type ResourceCategory } from '@/data/resources';
@@ -290,6 +291,9 @@ export function DirectoryView() {
             })}
           </ul>
         )}
+        <ProjectNote sources={['dor101', 'bostongov', 'bha']}>
+          Every listing names the organisation, its phone number and the date a volunteer last confirmed the details with them. A listing older than six months is flagged rather than hidden, so you can still call, but you know to ask.
+        </ProjectNote>
       </div>
     </MainLayout>
   );

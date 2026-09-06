@@ -33,6 +33,7 @@ function DocumentSettings() {
     root.dataset.focusLarge = String(prefs.largeFocus);
     root.dataset.dyslexiaFont = String(prefs.legibleFont);
     root.dataset.textSpacing = String(prefs.textSpacing);
+    root.dataset.surface = prefs.surface;
     root.style.fontSize = prefs.fontSizePx;
   }, [
     prefs.dir,
@@ -44,6 +45,7 @@ function DocumentSettings() {
     prefs.largeFocus,
     prefs.legibleFont,
     prefs.textSpacing,
+    prefs.surface,
     prefs.fontSizePx,
     meta.intlLocale,
   ]);

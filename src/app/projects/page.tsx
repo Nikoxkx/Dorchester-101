@@ -12,6 +12,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -119,6 +120,9 @@ export default function ProjectsPage() {
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
             {t('projects.description')}
+          </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            Every project here is on the Boston Planning &amp; Development Agency docket. The status follows the BPDA&apos;s own stages (proposed, under review, approved, under construction); the unit counts and income-restricted share come from the filed project notification. Public comment periods are the moment a resident&apos;s letter is read into the record, so those dates are highlighted.
           </p>
         </header>
 
@@ -268,6 +272,9 @@ export default function ProjectsPage() {
           <a href="https://www.bostonplans.org" className="text-[var(--color-accent-primary)] hover:underline ml-1" target="_blank" rel="noopener noreferrer">
             bostonplans.org
           </a>
+        <ProjectNote sources={['bpda', 'bostongov']}>
+          Development projects are read from the BPDA docket: project name, status, unit counts and the number designated income-restricted. Meeting dates are as posted by the agency and can change; the docket link on each project is authoritative.
+        </ProjectNote>
         </p>
       </motion.div>
     </MainLayout>

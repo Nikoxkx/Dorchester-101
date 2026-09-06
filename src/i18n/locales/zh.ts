@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': '联网时地图瓦片由瓦片提供方加载。',
   'settings.customFeedLabel': '简称',
   'settings.detectedNone': '未检测到设备偏好',
+  'settings.surface': '界面表面',
+  'settings.surface.solid': '不透明',
+  'settings.surface.glass': '透明',
+  'settings.surfaceNote': '透明模式让多切斯特湾的照片透过面板和菜单显示，文字后方带有模糊效果。文字颜色保持不变，因此在浅色和深色模式下都清晰可读。',
+  'settings.surfaceContrastNote': '已开启高对比度，因此仍使用不透明配色。',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': '安装 DOR101',
   'pwa.installed': 'DOR101 已安装',

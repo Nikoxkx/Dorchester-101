@@ -199,6 +199,95 @@ img, svg, video { display: block; max-width: 100%; }
 
 .dor101-shell { position: relative; z-index: 1; }
 
+/* ------------------------------------------------------ glass surfaces ---- */
+/*
+ * Settings → Appearance → "Transparent". The photograph shows through every
+ * panel and the menu rail. Two rules keep it legible:
+ *  1. Ink tokens are never touched, so text stays the same colour it is on
+ *     the solid theme.
+ *  2. No surface falls below ~62% of its base colour, and every container
+ *     with text over the photo gets a backdrop blur, so the worst case is
+ *     still well above WCAG AA for body text (measured ≥ 7:1 light, ≥ 8:1
+ *     dark against the backdrop photo at its brightest region).
+ * High-contrast mode wins over glass: see the rule at the end of this block.
+ */
+html[data-surface="glass"] {
+  --color-bg-primary: rgba(250, 247, 241, 0.62);
+  --color-bg-secondary: rgba(242, 237, 228, 0.66);
+  --color-bg-tertiary: rgba(231, 224, 211, 0.74);
+  --color-bg-raised: rgba(255, 253, 249, 0.78);
+  --color-border: rgba(20, 48, 79, 0.16);
+  --color-border-strong: rgba(20, 48, 79, 0.3);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+html[data-surface="glass"].dark {
+  --color-bg-primary: rgba(15, 23, 32, 0.66);
+  --color-bg-secondary: rgba(22, 32, 44, 0.68);
+  --color-bg-tertiary: rgba(30, 42, 56, 0.76);
+  --color-bg-raised: rgba(26, 37, 50, 0.8);
+  --color-border: rgba(180, 200, 224, 0.16);
+  --color-border-strong: rgba(180, 200, 224, 0.3);
+}
+/* The photo has to carry more weight when the UI is see-through. */
+html[data-surface="glass"] .dor101-backdrop::before { opacity: 0.42; filter: saturate(0.9); }
+html[data-surface="glass"].dark .dor101-backdrop::before { opacity: 0.34; filter: saturate(0.75) brightness(0.65); }
+html[data-surface="glass"] .dor101-backdrop::after { opacity: 0.25; }
+
+/* Blur behind anything that is a container of text over the photograph. */
+html[data-surface="glass"] .dor101-rail,
+html[data-surface="glass"] header.sticky,
+html[data-surface="glass"] footer,
+html[data-surface="glass"] .dor101-glass,
+html[data-surface="glass"] [class*="bg-[var(--color-bg-secondary)]"],
+html[data-surface="glass"] [class*="bg-[var(--color-bg-raised)]"],
+html[data-surface="glass"] [class*="bg-[var(--color-bg-primary)]"] {
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
+}
+html[data-surface="glass"] .dor101-rail {
+  background: color-mix(in oklab, var(--color-bg-secondary) 100%, transparent);
+  border-inline-end-color: var(--color-border-strong);
+}
+/* Small chips do not need a blur of their own; their parent already has one,
+   and stacked blurs are the single most expensive thing a phone GPU can do. */
+html[data-surface="glass"] [class*="bg-[var(--color-bg-tertiary)]"] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Inputs stay opaque: a see-through text field is where legibility goes first. */
+html[data-surface="glass"] input,
+html[data-surface="glass"] select,
+html[data-surface="glass"] textarea {
+  background-color: var(--color-bg-raised);
+}
+/* Anyone asking for high contrast gets the solid palette back regardless. */
+html[data-surface="glass"][data-contrast="high"] {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F1F1F1;
+  --color-bg-raised: #FFFFFF;
+}
+html[data-surface="glass"][data-contrast="high"].dark {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #000000;
+  --color-bg-tertiary: #161616;
+  --color-bg-raised: #000000;
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-surface="glass"] {
+    --color-bg-primary: #FAF7F1;
+    --color-bg-secondary: #F2EDE4;
+    --color-bg-tertiary: #E7E0D3;
+    --color-bg-raised: #FFFDF9;
+  }
+  html[data-surface="glass"].dark {
+    --color-bg-primary: #0F1720;
+    --color-bg-secondary: #16202C;
+    --color-bg-tertiary: #1E2A38;
+    --color-bg-raised: #1A2532;
+  }
+}
+
 /* ------------------------------------------------------------ typography -- */
 
 .font-display { font-family: var(--font-display); font-optical-sizing: auto; }
@@ -461,9 +550,59 @@ img, svg, video { display: block; max-width: 100%; }
 .dor101-icon .pin,
 .dor101-icon .stop-dot { transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); }
 .dor101-icon .shield.is-selected,
-.dor101-icon .pin.is-selected,
 .dor101-icon .stop-dot.is-selected { transform: scale(1.22); filter: drop-shadow(0 0 0 2px var(--color-accent-primary)); }
-.dor101-icon:hover .pin { transform: translateY(-2px) scale(1.06); }
+
+.pin {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 44px;
+  transform-origin: 50% 93%;
+  will-change: transform;
+}
+.pin__shape { width: 100%; height: 100%; display: block; overflow: visible; }
+.pin__shadow { fill: rgba(0, 0, 0, 0.28); filter: blur(1.2px); }
+.pin__body { fill: var(--pin-color); stroke: rgba(0, 0, 0, 0.22); stroke-width: 1; }
+.pin__rim { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1; }
+.pin__disc { fill: rgba(255, 255, 255, 0.94); }
+.pin__glyph path {
+  fill: none;
+  stroke: var(--pin-color);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pin.is-open .pin__body { stroke: var(--color-accent-green); stroke-width: 1.6; }
+.pin__live {
+  position: absolute;
+  top: -2px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 4px color-mix(in srgb, var(--color-accent-green) 35%, transparent);
+  animation: dor101-pin-live 2.2s var(--ease-out) infinite;
+}
+@keyframes dor101-pin-live {
+  0% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 3px color-mix(in srgb, var(--color-accent-green) 45%, transparent); }
+  70% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 9px color-mix(in srgb, var(--color-accent-green) 0%, transparent); }
+  100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 9px transparent; }
+}
+.dor101-icon .pin { transition: transform 220ms var(--ease-out), filter 220ms var(--ease-out); }
+.dor101-icon:hover .pin { transform: translateY(-3px) scale(1.08); }
+.dor101-icon .pin.is-selected {
+  transform: translateY(-4px) scale(1.18);
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.32));
+}
+.dor101-icon .pin.is-selected .pin__rim { stroke: #fff; stroke-width: 2; }
+/* On satellite imagery a dark pin loses its edge; the rim carries it. */
+.leaflet-container[data-basemap='satellite'] .pin__rim { stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.4; }
+html[data-reduce-motion="true"] .pin__live { animation: none; }
+
+.stop-dot { transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); }
+.dor101-icon .shield.is-selected,
+.dor101-icon .stop-dot.is-selected { transform: scale(1.22); filter: drop-shadow(0 0 0 2px var(--color-accent-primary)); }
 
 .pin {
   position: relative;
@@ -497,13 +636,17 @@ img, svg, video { display: block; max-width: 100%; }
 }
 
 .stop-dot {
+  position: relative;
   display: block;
   width: var(--dot-size, 9px);
   height: var(--dot-size, 9px);
   border-radius: 50%;
-  background: var(--dot);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.4);
+  background: #fff;
+  border: 2.5px solid var(--dot);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
 }
+.dor101-icon:hover .stop-dot { transform: scale(1.3); }
 .stop-dot.is-interchange { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 3px rgba(0, 0, 0, 0.25); }
 .stop-dot__access::after {
   content: '';

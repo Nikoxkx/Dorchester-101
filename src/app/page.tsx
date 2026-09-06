@@ -10,6 +10,7 @@ import { useI18n } from '@/i18n/hook';
 import { useAppStore } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
@@ -172,7 +173,7 @@ export default function DashboardPage() {
               value={medianRent ?? 0}
               format="currency"
               unavailable={medianRent === null}
-              source={market?.acs?.vintage && market.acs.vintage !== 'unavailable' ? `Census ${market.acs.vintage}, B25058` : 'Census ACS 5-year, B25058'}
+              source={market?.acs?.vintage && market.acs.vintage !== 'unavailable' ? `Census ${market.acs.vintage}, B25064` : 'Census ACS 5-year, B25064'}
               sourceDate={market?.acs?.status === 'unavailable' ? undefined : market?.acs?.retrievedAt}
               accent="var(--color-accent-primary)"
             />
@@ -337,6 +338,9 @@ export default function DashboardPage() {
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {t('dashboard.footer.verified')}: {format.date(lastReviewedOn(), 'long')} · {meta.intlLocale}
           </p>
+        <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']}>
+          Every number on this page is computed from a dataset the site ships or from an API that names its own source and date. The directory counts are live from the listing data; the rent figure is the Census Bureau&apos;s; the headlines come from the publishers.
+        </ProjectNote>
         </footer>
       </motion.div>
     </MainLayout>

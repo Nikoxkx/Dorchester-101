@@ -534,6 +534,11 @@ export const locale: Dict = {
   'settings.mapSatelliteNote': 'تُحمَّل بلاطات الخريطة من مزودها عند الاتصال.',
   'settings.customFeedLabel': 'اسم مختصر',
   'settings.detectedNone': 'لم يُكتشف أي تفضيل للجهاز',
+  'settings.surface': 'السطح',
+  'settings.surface.solid': 'معتم',
+  'settings.surface.glass': 'شفاف',
+  'settings.surfaceNote': 'يسمح الوضع الشفاف بظهور صورة خليج دورتشيستر عبر اللوحات والقائمة مع تمويه خلف النص. ألوان النص لا تتغير، لذا يبقى كل شيء مقروءًا في الوضعين الفاتح والداكن.',
+  'settings.surfaceContrastNote': 'التباين العالي مفعّل، لذا تُستخدم اللوحة المعتمة على أي حال.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'ثبّت DOR101',
   'pwa.installed': 'DOR101 مثبّت',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppStore, FONT_SIZE_VALUES } from '@/stores/appStore';
+import { useAppStore, FONT_SIZE_VALUES, type Surface } from '@/stores/appStore';
 import { languageMeta, isRtl, type LanguageCode } from '@/i18n/config';
 import {
   usePrefersDark,
@@ -16,6 +16,7 @@ export interface ResolvedPreferences {
   reduceMotion: boolean;
   highContrast: boolean;
   dark: boolean;
+  surface: Surface;
   underlineLinks: boolean;
   largeFocus: boolean;
   legibleFont: boolean;
@@ -40,6 +41,7 @@ export function useResolvedPrefs(): ResolvedPreferences {
   const fontSize = useAppStore((s) => s.fontSize);
   const theme = useAppStore((s) => s.theme);
   const accessibility = useAppStore((s) => s.accessibility);
+  const surface = useAppStore((s) => s.surface);
   const hydrated = useAppStore((s) => s.hydrated);
 
   const deviceReduceMotion = usePrefersReducedMotion();
@@ -60,6 +62,7 @@ export function useResolvedPrefs(): ResolvedPreferences {
       reduceMotion,
       highContrast,
       dark,
+      surface,
       underlineLinks: accessibility.underlineLinks,
       largeFocus: accessibility.largeFocus,
       legibleFont: accessibility.legibleFont,
@@ -77,6 +80,7 @@ export function useResolvedPrefs(): ResolvedPreferences {
     fontSize,
     theme,
     accessibility,
+    surface,
     hydrated,
     deviceReduceMotion,
     deviceContrast,

@@ -570,6 +570,11 @@ export const en = {
   'settings.mapSatelliteNote': 'Tiles are loaded from the tile provider when you are online.',
   'settings.customFeedLabel': 'Short name',
   'settings.detectedNone': 'No device preference detected',
+  'settings.surface': 'Surface',
+  'settings.surface.solid': 'Solid',
+  'settings.surface.glass': 'Transparent',
+  'settings.surfaceNote': 'Transparent lets the Dorchester Bay photograph show through the panels and the menu, with a blur behind the text. Text colours never change, so everything stays readable in both light and dark mode.',
+  'settings.surfaceContrastNote': 'High contrast is on, so the solid palette is used regardless.',
 
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Install DOR101',

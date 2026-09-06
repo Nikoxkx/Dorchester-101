@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
+import { SourceMark } from '@/components/sources/SourceMark';
+import { FEED_SOURCE } from '@/data/sources';
 import { Badge } from '@/components/ui/Badge';
 import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
 import { useI18n } from '@/i18n/hook';
@@ -317,6 +320,9 @@ export function NewsPageView() {
               </Link>
             </div>
           </aside>
+        <ProjectNote sources={['dotnews', 'bostongov', 'wbur', 'gbh', 'globe', 'mbta']}>
+          Headlines are read directly from each publisher&apos;s own feed, no more than once every fifteen minutes, and link back to the publisher. Nothing is rewritten, ranked by engagement or paid for. If a feed fails, the page says which one.
+        </ProjectNote>
         </div>
       </div>
     </MainLayout>
@@ -335,7 +341,11 @@ export function NewsPageView() {
           )}
         >
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-heading text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{article.source}</span>
+            {FEED_SOURCE[article.sourceId] ? (
+              <SourceMark id={FEED_SOURCE[article.sourceId]} size="xs" withName />
+            ) : (
+              <span className="font-heading text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{article.source}</span>
+            )}
             <span className="text-[11px] text-[var(--color-text-muted)]" aria-hidden="true">
               ·
             </span>
