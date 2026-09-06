@@ -43,20 +43,24 @@ export default function FoodPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="relative border-b-3 border-[var(--ink)] pb-6 overflow-hidden">
-          <div aria-hidden className="absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/4 opacity-[0.06] pointer-events-none"><svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" /></svg></div>
-          <p className="kicker">Food desk</p>
-          <h1 className="font-display text-4xl">{t('food.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('food.description')}</p>
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Food desk</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('food.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('food.description')}</p>
         </header>
 
-        <section className="bg-[var(--red)] text-white p-5">
-          <h2 className="font-display text-2xl">{t('food.needFoodToday')}</h2>
-          <p className="mt-1 text-white/90">{t('food.callHotline')}</p>
-          <a href="tel:18006458333" className="inline-block mt-4 bg-white text-[var(--red)] px-4 py-2 font-mono font-bold text-xl">
-            1-800-645-8333
-          </a>
-          <p className="text-xs mt-2 text-white/80">Mon–Fri 8 AM–5 PM · 180+ languages</p>
+        <section className="relative overflow-hidden bg-[var(--red)] text-white rounded-2xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div>
+            <p className="text-[10px] font-display font-bold uppercase tracking-[0.2em] text-white/75">Free · confidential · no questions</p>
+            <h2 className="font-display text-3xl md:text-4xl font-black mt-1 leading-none">{t('food.needFoodToday')}</h2>
+            <p className="mt-2 text-white/85 text-sm max-w-xl leading-relaxed">{t('food.callHotline')}</p>
+          </div>
+          <div className="shrink-0">
+            <a href="tel:18006458333" className="inline-block bg-white text-[var(--red)] rounded-xl px-6 py-4 font-display font-black text-2xl md:text-3xl hover:bg-[var(--wax)] transition-colors shadow-lg">
+              1-800-645-8333
+            </a>
+            <p className="text-xs mt-2 text-white/80 text-center">Mon–Fri 8 AM–5 PM · 180+ languages</p>
+          </div>
         </section>
 
         <div className="flex flex-col sm:flex-row gap-2">
@@ -64,9 +68,9 @@ export default function FoodPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Name, square, address…"
-            className="flex-1 px-3 py-2 bg-[var(--surface)] border border-[var(--line)] text-sm"
+            className="flex-1 px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm outline-none focus:border-[var(--ink)]"
           />
-          <select value={type} onChange={(e) => setType(e.target.value)} className="px-3 py-2 bg-[var(--surface)] border border-[var(--line)] text-sm">
+          <select value={type} onChange={(e) => setType(e.target.value)} className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm outline-none focus:border-[var(--ink)]">
             <option value="">All types</option>
             <option value="Food Pantry">Pantries</option>
             <option value="Hot Meals">Hot meals</option>
@@ -106,6 +110,14 @@ export default function FoodPage() {
           ))}
         </div>
 
+        {!loading && sites.length === 0 && (
+          <div className="desk-card p-8 text-center">
+            <p className="font-display text-xl font-bold">No sites match that search.</p>
+            <p className="text-sm text-[var(--muted)] mt-1">Try a square name (Fields Corner, Codman, Ashmont) or clear the filters.</p>
+            <button onClick={() => { setQ(''); setType(''); }} className="cta cta-outline cta-md mt-4">Clear filters</button>
+          </div>
+        )}
+
         {data?.snap && (
           <section className="desk-panel p-5">
             <h2 className="font-display text-2xl mb-2">{t('food.snapTitle')} · {data.snap.fiscalYear}</h2>
@@ -118,9 +130,9 @@ export default function FoodPage() {
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap gap-3 mt-4">
-              <a href={data.snap.applyUrl} target="_blank" rel="noreferrer" className="bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">DTAConnect</a>
-              <a href={telHref(data.snap.phone)} className="underline text-sm">{data.snap.phone}</a>
+            <div className="flex flex-wrap items-center gap-4 mt-4">
+              <a href={data.snap.applyUrl} target="_blank" rel="noreferrer" className="cta cta-primary cta-md">Apply on DTAConnect</a>
+              <a href={telHref(data.snap.phone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--red)]">{data.snap.phone}</a>
             </div>
           </section>
         )}

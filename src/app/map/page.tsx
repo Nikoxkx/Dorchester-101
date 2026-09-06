@@ -28,24 +28,26 @@ export default function MapPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-3 pb-5 border-b border-[var(--line)]">
           <div>
-            <p className="kicker">Live board</p>
-            <h1 className="font-display text-3xl">{t('map.title')}</h1>
-            <p className="text-sm text-[var(--muted)]">{t('map.subtitle')}</p>
+            <p className="kicker mb-3">Live board</p>
+            <h1 className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('map.title')}</h1>
+            <p className="text-sm text-[var(--ink-soft)] mt-3">{t('map.subtitle')}</p>
           </div>
           <DataRefreshIndicator lastUpdated={data ? (data.live ? 'MBTA live' : 'MBTA down') : null} isRefreshing={loading} />
         </div>
 
         {(data?.alerts || []).slice(0, 4).map((alert) => (
-          <div key={alert.id} className="border-l-4 border-[var(--gold)] bg-[var(--surface)] px-3 py-2 text-sm">
-            <p className="font-semibold">{alert.header}</p>
-            <p className="text-xs text-[var(--muted)] mt-1">{alert.description}</p>
+          <div key={alert.id} className="border-l-4 border-[var(--ochre)] bg-[var(--wax)] px-4 py-3 text-sm rounded-r-lg">
+            <p className="font-bold text-[var(--charcoal)]">{alert.header}</p>
+            <p className="text-xs text-[var(--ink-soft)] mt-1">{alert.description}</p>
           </div>
         ))}
 
-        <DorchesterMap height="600px" />
+        <div className="rounded-2xl overflow-hidden border border-[var(--line)] shadow-[0_14px_40px_var(--shadow)]">
+          <DorchesterMap height="620px" />
+        </div>
       </div>
     </MainLayout>
   );

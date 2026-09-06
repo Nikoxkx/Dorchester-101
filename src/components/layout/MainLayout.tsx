@@ -51,7 +51,23 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     if (!isMobile) setDrawer(false);
   }, [isMobile]);
 
-  const sidebarWidth = isMobile ? 0 : sidebarCollapsed ? 56 : 232;
+  // Desktop (Electron) menu actions
+  useEffect(() => {
+    const api = window.electron;
+    if (!api) return;
+    const offRefresh = api.onMenu('refresh-all', () => {
+      window.dispatchEvent(new CustomEvent('refreshData'));
+    });
+    const offReport = api.onMenu('generate-report', () => {
+      window.location.assign('/?report=1');
+    });
+    return () => {
+      offRefresh();
+      offReport();
+    };
+  }, []);
+
+  const sidebarWidth = isMobile ? 0 : sidebarCollapsed ? 60 : 236;
 
   return (
     <div className="min-h-screen bg-[var(--paper)]">
@@ -59,7 +75,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       {isMobile && drawer && (
         <div className="fixed inset-0 z-50">
           <button className="absolute inset-0 bg-black/50" aria-label="Close menu" onClick={() => setDrawer(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-[min(280px,86vw)]">
+          <div className="absolute left-0 top-0 bottom-0 w-[min(290px,86vw)]">
             <Sidebar mobile onNavigate={() => setDrawer(false)} />
           </div>
         </div>
@@ -68,9 +84,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <main
         id="main"
         className="pt-14 min-h-screen"
-        style={{ marginLeft: sidebarWidth, paddingBottom: isMobile ? 80 : 0 }}
+        style={{ marginLeft: sidebarWidth, paddingBottom: isMobile ? 88 : 0 }}
       >
-        <div className="p-4 md:p-7 max-w-6xl">
+        <div className="p-4 md:p-8 xl:p-10 max-w-6xl mx-auto w-full">
           {children}
           <SiteFooter />
         </div>

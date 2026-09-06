@@ -43,7 +43,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative mx-auto mt-16 bg-[var(--surface)] border border-[var(--ink)] shadow-xl"
+        className="relative mx-auto mt-16 bg-[var(--paper)] border border-[var(--line)] rounded-2xl shadow-2xl overflow-hidden"
         style={{ width: `min(${wide ? '640px' : '480px'}, calc(100% - 24px))` }}
       >
         {title && (

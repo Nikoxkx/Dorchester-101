@@ -3,15 +3,19 @@ import { PROGRAM_META } from '@/data/programs';
 
 export async function GET() {
   return NextResponse.json({
+    ok: true,
     status: 'healthy',
     service: 'DOR101',
-    version: '1.2.0-rebuilt',
-    branch: 'arena/01a07424-dorchester-101',
+    version: '2.0.0',
     lastReviewed: PROGRAM_META.lastReviewed,
     features: [
       'dashboard',
-      'college-access',
+      'affordable-housing',
+      'food',
       'map',
+      'projects',
+      'market-estimates',
+      'neighborhood-guide',
       'report-engine',
       'multi-language',
       'dark-mode',
@@ -22,8 +26,10 @@ export async function GET() {
       'MBTA API v3',
       'BPDA',
       'BHA',
-      'CSNDC',
-      'Princeton Bridge Year',
+      'Mass.gov / EOHLC',
+      'USDA SNAP (DTA)',
+      'Project Bread',
+      'Dorchester Reporter',
     ],
     timestamp: new Date().toISOString(),
   });

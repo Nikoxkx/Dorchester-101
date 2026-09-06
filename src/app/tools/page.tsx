@@ -44,11 +44,14 @@ export default function ToolsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-3xl space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">Pencil math</p>
-          <h1 className="font-display text-4xl">{t('tools.title')}</h1>
-          <p className="text-[var(--muted)] mt-2">{t('tools.description')}</p>
+      <div className="max-w-4xl space-y-8">
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Pencil math</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('tools.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+            {t('tools.description')} Nothing here sends your numbers anywhere — the math runs in
+            this browser, on this device.
+          </p>
         </header>
 
         <div className="flex gap-1 border-b border-[var(--line)]">
@@ -68,15 +71,21 @@ export default function ToolsPage() {
             <div className="desk-panel p-4 space-y-4">
               <Input label="Monthly gross income" type="number" value={monthlyIncome} onChange={(e) => setMonthlyIncome(Number(e.target.value))} className="font-mono" />
               <Input label="Monthly rent" type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(Number(e.target.value))} className="font-mono" />
+              <p className="text-xs text-[var(--muted)]">The 30% line is HUD&apos;s guideline — many Dot renters live well above it. This is a planning number, not a judgment.</p>
             </div>
-            <div className="desk-panel p-4">
-              <p className="font-display text-5xl">{rentBurden.percentage}%</p>
-              <p className="font-bold mt-1">{rentBurden.label}</p>
-              <p className="text-sm mt-3 text-[var(--ink-soft)]">
-                HUD treats 30% as affordable. Over 50% is severe. This is a screening number, not a denial.
-              </p>
+            <div className="desk-panel p-5 flex flex-col justify-between">
+              <div>
+                <p className="text-[11px] font-display font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Your rent takes</p>
+                <p className="font-display text-6xl font-black text-[var(--charcoal)] leading-none mt-2">{rentBurden.percentage}%</p>
+                <p className="font-display text-lg font-bold mt-2 text-[var(--red)]">{rentBurden.label}</p>
+                <p className="text-sm mt-3 text-[var(--ink-soft)] leading-relaxed">
+                  {rentBurden.status === 'affordable' && 'Within the HUD guideline — this rent leaves room for everything else.'}
+                  {rentBurden.status === 'cost-burdened' && 'Above the 30% guideline. Look for income-restricted units, RAFT, or a rent negotiation before signing.'}
+                  {rentBurden.status === 'severely-burdened' && 'Severely cost-burdened. Housing help exists — start with the desk list and the RAFT program.'}
+                </p>
+              </div>
               {rentBurden.status !== 'affordable' && (
-                <Button className="mt-4" onClick={() => { window.location.href = '/affordable-housing'; }}>
+                <Button className="mt-5" variant="primary" onClick={() => { window.location.href = '/affordable-housing'; }}>
                   Housing desk
                 </Button>
               )}

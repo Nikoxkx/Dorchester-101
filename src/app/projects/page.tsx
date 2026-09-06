@@ -43,10 +43,10 @@ export default function ProjectsPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">BPDA</p>
-          <h1 className="font-display text-4xl">{t('projects.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('projects.description')}</p>
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">BPDA desk</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('projects.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('projects.description')}</p>
         </header>
 
         {data && (

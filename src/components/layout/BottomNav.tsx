@@ -17,7 +17,7 @@ export function BottomNav({ onMore }: { onMore: () => void }) {
 
   return (
     <nav
-      className="bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--line)] grid grid-cols-5"
+      className="bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--paper)] border-t border-[var(--line)] grid grid-cols-5 backdrop-blur bg-opacity-90"
       aria-label="Primary"
     >
       {items.map((item) => {
@@ -27,19 +27,20 @@ export function BottomNav({ onMore }: { onMore: () => void }) {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-bold uppercase tracking-wide',
+              'flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-bold uppercase tracking-wide',
               active ? 'text-[var(--red)]' : 'text-[var(--muted)]',
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-5 h-5" strokeWidth={active ? 2.6 : 2} />
             {item.label}
           </Link>
         );
       })}
       <button
         onClick={onMore}
-        className="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]"
+        className="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]"
       >
         <MoreHorizontal className="w-5 h-5" />
         More

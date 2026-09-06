@@ -29,21 +29,37 @@ export function StatCard({
     format === 'status' ? (status || '').replace(/_/g, ' ') :
     formatNumber(value);
 
+  const isPositive = trend && trend.value > 0;
+  const tone = trend && trend.value !== 0
+    ? (isPositive ? 'text-[var(--red)]' : 'text-[var(--sage)]')
+    : 'text-[var(--ink-soft)]';
+
   return (
-    <div className="py-4 border-t-2 border-[var(--ink)] relative group hover:bg-[var(--surface)] -mx-2 px-2 transition-colors">
-      <div aria-hidden className="absolute top-0 left-0 w-1 h-full bg-[var(--red)] opacity-60 group-hover:opacity-100 transition-opacity" />
-      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted)] mb-0.5">{label}</p>
-      <p className="font-display text-3xl tracking-[-0.04em] leading-none">{formatted}</p>
-      {trend && (
-        <p className={cn('text-xs mt-1', trend.value > 0 ? 'text-[var(--red)]' : 'text-[var(--park)]')}>
-          {trend.value > 0 ? '+' : ''}{trend.value}% yr
+    <div className="desk-card p-4 h-full flex flex-col justify-between gap-3 card-hover">
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] font-display font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</p>
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--red)] shrink-0" aria-hidden />
+        </div>
+        <p className="font-display text-[2rem] font-black tracking-[-0.02em] text-[var(--charcoal)] leading-none mt-2">
+          {formatted}
         </p>
-      )}
-      {source && (
-        <p className="text-[10px] text-[var(--muted)] mt-2">
-          {source}{sourceDate ? ` · ${sourceDate}` : ''}
-        </p>
-      )}
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        {trend ? (
+          <span className={cn('text-xs font-bold', tone)}>
+            {trend.value > 0 ? '+' : ''}{trend.value}% yr
+          </span>
+        ) : (
+          <span />
+        )}
+        {(source || sourceDate) && (
+          <span className="text-[10px] text-[var(--muted)] text-right leading-tight">
+            {source}
+            {sourceDate && <span className="block">{sourceDate}</span>}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

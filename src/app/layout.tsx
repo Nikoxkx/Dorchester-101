@@ -1,28 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Atkinson_Hyperlegible, Newsreader } from "next/font/google";
+// Self-hosted fonts (@fontsource) — no runtime Google Fonts dependency.
+import "@fontsource/archivo/400.css";
+import "@fontsource/archivo/500.css";
+import "@fontsource/archivo/600.css";
+import "@fontsource/archivo/700.css";
+import "@fontsource/archivo/800.css";
+import "@fontsource/archivo/900.css";
+import "@fontsource/atkinson-hyperlegible/400.css";
+import "@fontsource/atkinson-hyperlegible/700.css";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 
-const atkinson = Atkinson_Hyperlegible({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
-  variable: "--font-atkinson",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-newsreader",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "DOR101 — Dorchester desk",
+  title: "DOR101 — The Dot desk",
   description:
-    "Housing, food, transit, and rights for Dorchester. Phone numbers, waitlist status, and calculators. No account. No tracking.",
+    "The free neighborhood desk for Dorchester, Boston: income-restricted housing, food pantries, rent help, transit, and tenant rights. Real phone numbers, dated sources, no account, no tracking.",
   keywords: [
     "Dorchester",
     "Boston",
@@ -33,6 +26,9 @@ export const metadata: Metadata = {
     "BHA",
     "Fields Corner",
     "Codman Square",
+    "Ashmont",
+    "tenant rights",
+    "food pantry",
   ],
   authors: [{ name: "DOR101 Community Project" }],
   applicationName: "DOR101",
@@ -45,8 +41,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "DOR101",
-    title: "DOR101 — Dorchester desk",
-    description: "Housing, food, transit, and rights for the Dot.",
+    title: "DOR101 — The Dot desk",
+    description: "Housing, food, transit, and rights for Dorchester — the Dot, decoded.",
     locale: "en_US",
   },
   robots: { index: true, follow: true },
@@ -55,15 +51,15 @@ export const metadata: Metadata = {
     apple: [{ url: "/icon.svg" }],
   },
   other: {
-    "msapplication-TileColor": "#c8102e",
+    "msapplication-TileColor": "#0f2820",
     "format-detection": "telephone=no",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#c8102e" },
-    { media: "(prefers-color-scheme: dark)", color: "#121311" },
+    { media: "(prefers-color-scheme: light)", color: "#d7261e" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1713" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -74,7 +70,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${atkinson.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <a href="#main" className="skip-link">
           Skip to content

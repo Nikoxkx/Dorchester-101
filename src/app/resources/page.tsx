@@ -51,40 +51,50 @@ export default function ResourcesPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">Directory</p>
-          <h1 className="font-display text-4xl">{t('resources.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('resources.description')}</p>
+      <div className="space-y-7">
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Verified directory</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('resources.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+            {t('resources.description')} Each entry carries the date it was last checked — if we
+            couldn&apos;t verify a number, it isn&apos;t here.
+          </p>
         </header>
 
-        <aside className="desk-panel p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="font-display text-xl">{t('resources.notSure')}</p>
-            <p className="text-sm">{t('resources.call211')}</p>
+        <aside className="desk-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="w-11 h-11 rounded-xl bg-[var(--red)] text-white flex items-center justify-center font-display text-lg font-black shrink-0">211</span>
+            <div>
+              <p className="font-display text-lg font-bold text-[var(--charcoal)]">{t('resources.notSure')}</p>
+              <p className="text-sm text-[var(--ink-soft)] mt-0.5">{t('resources.call211')}</p>
+            </div>
           </div>
-          <a href="tel:211" className="bg-[var(--red)] text-white px-4 py-2 font-mono font-bold">2-1-1</a>
+          <a href="tel:211" className="cta cta-primary cta-lg">Call 2-1-1</a>
         </aside>
 
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t('resources.search', 'Search organizations or services...')}
-          className="w-full px-3 py-2 bg-[var(--surface)] border border-[var(--line)]"
+          className="w-full px-4 py-3 bg-[var(--paper)] border border-[var(--line)] rounded-xl text-sm outline-none focus:border-[var(--charcoal)]"
+          aria-label="Search resources"
         />
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {cats.map(([id, label]) => (
             <button
               key={id}
               onClick={() => setCat(id)}
-              className={cat === id ? 'bg-[var(--ink)] text-[var(--paper)] px-3 py-1 text-xs font-bold' : 'border border-[var(--line)] px-3 py-1 text-xs'}
+              aria-pressed={cat === id}
+              className={cat === id
+                ? 'bg-[var(--charcoal)] text-[var(--paper)] px-3.5 py-1.5 text-xs font-bold rounded-full'
+                : 'border border-[var(--line)] px-3.5 py-1.5 text-xs font-bold rounded-full hover:border-[var(--ink-soft)] transition-colors'}
             >
               {label}
             </button>
           ))}
         </div>
 
-        <p className="text-xs text-[var(--muted)]">{list.length} listed</p>
+        <p className="text-xs text-[var(--muted)]"><strong className="text-[var(--charcoal)]">{list.length}</strong> organizations listed{cat !== 'all' ? ` in ${cat}` : ''}</p>
         {loading && <LoadingSpinner />}
         {error && <button onClick={reload} className="underline">{t('common.retry')}</button>}
 
@@ -102,11 +112,19 @@ export default function ResourcesPage() {
               {org.eligibility && <p className="text-xs border-t border-[var(--line)] pt-2">Eligibility: {org.eligibility}</p>}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-[var(--muted)]">Verified {org.lastVerified}</span>
-                {org.website && <a href={org.website} target="_blank" rel="noreferrer" className="underline">Website</a>}
+                {org.website && <a href={org.website} target="_blank" rel="noreferrer" className="underline font-bold hover:text-[var(--red)]">Website</a>}
               </div>
             </article>
           ))}
         </div>
+
+        {!loading && list.length === 0 && (
+          <div className="desk-card p-8 text-center">
+            <p className="font-display text-xl font-bold">Nothing matches that search.</p>
+            <p className="text-sm text-[var(--muted)] mt-1">Try a service word (&ldquo;childcare&rdquo;, &ldquo;ESL&rdquo;, &ldquo;eviction&rdquo;) or the org&apos;s name.</p>
+            <button onClick={() => { setQ(''); setCat('all'); }} className="cta cta-outline cta-md mt-4">Show everything</button>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

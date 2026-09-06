@@ -52,8 +52,8 @@ function createWindow() {
     height: 820,
     minWidth: 880,
     minHeight: 560,
-    title: 'DOR101 — Dorchester desk',
-    backgroundColor: '#f0ebe3',
+    title: 'DOR101 — The Dot desk',
+    backgroundColor: '#f6f7f4',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -70,8 +70,6 @@ function createWindow() {
         submenu: [
           { role: 'reload' },
           { type: 'separator' },
-          { label: 'Generate Report', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
-          { type: 'separator' },
           { role: 'quit' },
         ],
       },
@@ -87,17 +85,19 @@ function createWindow() {
         ],
       },
       {
-        label: 'Data',
+        label: 'Desk',
         submenu: [
           { label: 'Refresh All', click: () => mainWindow && mainWindow.webContents.send('refresh-all') },
-          { label: 'Export College Pathway', click: () => mainWindow && mainWindow.webContents.send('export-college') },
+          { label: 'Generate Report', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
+          { type: 'separator' },
+          { label: 'Front Desk', click: () => mainWindow && mainWindow.loadURL(`http://127.0.0.1:${PORT}/`) },
         ],
       },
       {
         label: 'Help',
         submenu: [
           { label: 'Source', click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101') },
-          { label: 'Princeton Pathway', click: () => shell.openExternal('https://admission.princeton.edu/') },
+          { label: 'Report an issue', click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101/issues') },
         ],
       },
     ]),
@@ -167,10 +167,13 @@ function startServer() {
 
 ipcMain.handle('check-for-updates', async () => ({ available: false }));
 ipcMain.handle('generate-report', async () => {
-  const reportData = { generatedAt: new Date().toISOString(), sources: ['HUD FY2026', 'MBTA', 'BPDA', 'CSNDC', 'Princeton Bridge Year'], status: 'complete' };
+  const reportData = {
+    generatedAt: new Date().toISOString(),
+    sources: ['HUD FY2026 (AMI + FMR)', 'MBTA', 'BPDA', 'BHA', 'Mass.gov / EOHLC (RAFT)', 'USDA SNAP (DTA)'],
+    status: 'complete',
+  };
   return reportData;
 });
-ipcMain.handle('export-college', async () => ({ exported: true, file: 'dorchester-college-pathway.pdf', url: 'https://example.com/college-export' }));
 ipcMain.handle('restart-app', () => {
   app.relaunch();
   app.exit(0);

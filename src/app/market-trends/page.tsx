@@ -88,7 +88,7 @@ export default function MarketTrendsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                  <Area type="monotone" dataKey="value" stroke="#c8102e" fill="#c8102e22" strokeWidth={2} />
+                  <Area type="monotone" dataKey="value" stroke="#DA291C" fill="#DA291C20" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -102,7 +102,7 @@ export default function MarketTrendsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                  <Area type="monotone" dataKey="value" stroke="#1e3a5f" fill="#1e3a5f22" strokeWidth={2} />
+                  <Area type="monotone" dataKey="value" stroke="#1E6FA5" fill="#1E6FA522" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -118,7 +118,7 @@ export default function MarketTrendsPage() {
                 <XAxis type="number" tickFormatter={(v) => `$${v}`} />
                 <YAxis dataKey="name" type="category" width={50} />
                 <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                <Bar dataKey="rent" fill="#1e3a5f" />
+                <Bar dataKey="rent" fill="#1E6FA5" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -129,9 +129,9 @@ export default function MarketTrendsPage() {
           <p className="text-sm leading-relaxed">
             A Dorchester household at the published median income of <strong>{formatCurrency(market.rentBurdenAnalysis.dorchesterMedianIncome)}</strong> paying <strong>{formatCurrency(market.rentBurdenAnalysis.avgRent2BR)}</strong> for a 2BR spends <strong>{market.rentBurdenAnalysis.rentBurdenPercent}%</strong> of income on rent. HUD’s 30% line would be {formatCurrency(market.rentBurdenAnalysis.affordableRentAt30Percent)} a month.
           </p>
-          <div className="flex gap-3">
-            <a href="/affordable-housing" className="bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">Housing desk</a>
-            <a href="/tools" className="border border-[var(--ink)] px-4 py-2 text-sm font-bold">Calculator</a>
+          <div className="flex flex-wrap gap-3 pt-1">
+            <a href="/affordable-housing" className="cta cta-primary cta-md">See income-restricted listings</a>
+            <a href="/tools" className="cta cta-outline cta-md">Run your own numbers</a>
           </div>
         </section>
       </div>

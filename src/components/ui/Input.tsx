@@ -4,7 +4,7 @@ import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type T
 import { cn } from '@/lib/utils';
 
 const fieldClass =
-  'mt-1 w-full px-3 py-2 border border-[var(--line)] bg-[var(--paper)] text-sm font-normal outline-none focus:border-[var(--ink)]';
+  'mt-1 w-full px-3.5 py-2.5 border border-[var(--line)] bg-[var(--paper)] text-sm font-normal rounded-lg outline-none focus:border-[var(--charcoal)] focus:ring-2 focus:ring-[var(--indigo)]/20';
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;

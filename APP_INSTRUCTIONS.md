@@ -1,6 +1,7 @@
-# DOR101 — App Build Instructions
+# DOR101 — Build & Run Instructions
 
-This repository contains both the web application (Next.js 16 App Router) and the Electron desktop wrapper. If you want to build and distribute from your own computer — or create a mobile/web app for college-facing presentations — follow these steps exactly.
+This repository contains the web app (Next.js 16, App Router) and the Windows
+desktop wrapper (Electron). Everything below runs without API keys or a database.
 
 ---
 
@@ -12,7 +13,13 @@ cd Dorchester-101
 npm install
 ```
 
-Requirements: Node.js 18+, npm, (optional) PostgreSQL 15+ if you want the database-backed features.
+Requirements: Node.js 20+, npm.
+
+Web-only development? Skip the Electron binary download:
+
+```bash
+ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm install
+```
 
 ---
 
@@ -22,7 +29,8 @@ Requirements: Node.js 18+, npm, (optional) PostgreSQL 15+ if you want the databa
 npm run dev
 ```
 
-Open `http://localhost:3000`. All pages — including the new `/college-access` pathway — are fully server-rendered and client-hydrated.
+Open `http://localhost:3000`. All pages are server-rendered and client-hydrated;
+content comes from `src/data/` through `/api/*` routes.
 
 ---
 
@@ -33,71 +41,75 @@ npm run build
 npm start
 ```
 
-Output is in `.next/`.
-
 ---
 
-## 4. Build the Windows Electron desktop app
+## 4. Build the Windows Electron app
 
 ```bash
 npm run build:exe
 ```
 
-Files will be in `dist-electron/`: installer (`DOR101 Setup 1.2.0.exe`) and portable (`DOR101-Portable-1.2.0.exe`). This is the exact command used for releases.
+Output lands in `dist-electron/`:
 
-Note: Windows SmartScreen may warn about unsigned software. Click “More info” → “Run anyway.” The app requires no database, no API keys, and collects zero data.
+- `DOR101 Setup 2.0.0.exe` — installer
+- `DOR101-Portable-2.0.0.exe` — portable build
+
+Windows SmartScreen may warn about unsigned software: **More info → Run anyway**.
+The app requires no database, no API keys, and collects no data.
 
 ---
 
-## 5. Creating a mobile / PWA version from your computer
+## 5. Use it on a phone (PWA)
 
-If you want a mobile app to show alongside the site — for example, a college-admissions presentation — the cleanest path is a Progressive Web App (PWA) rather than a native binary (which requires Apple Developer or Google Play accounts).
-
-### Option A: PWA (preferred — works on any phone)
+The desk is installable as a Progressive Web App:
 
 ```bash
 npm run build
-# Serve `.next/` with a static server
-npx serve .next -l 3000
+npm start
 ```
 
-Then open `http://your-ip:3000` on your phone, add to home screen, and it behaves like a native app. The site already includes `manifest.json` and `sw.js`.
+Open the site on your phone, then **Add to Home Screen**. `public/manifest.json`
+and the service worker provide the offline shell and emergency numbers.
 
-### Option B: React Native / Expo (if you want native iOS/Android)
+For a native wrapper, build an Expo/React Native app that calls the same routes
+(`/api/news`, `/api/map`, `/api/stats`, `/api/report`) — content is API-driven.
 
-Because this repository is pure Next.js / TypeScript, you can wrap it using `react-native-web` or build a separate Expo app that points to the API routes (`/api/news`, `/api/map`, `/api/stats`). Example scaffold:
+---
+
+## 6. Update content without touching UI
+
+All content lives in `src/data/`:
+
+| File | Content |
+|---|---|
+| `programs.ts` | HUD FY2026 AMI + FMR, SNAP, RAFT, BHA status, MBTA fares, hotlines |
+| `housing.ts` | Income-restricted listings, BPDA projects |
+| `food.ts` / `resources.ts` | Pantries, meals, community organizations |
+| `map.ts` | Map layers and transit lines |
+| `faq.ts` / `neighborhoods.ts` | Answers and neighborhood profiles |
+
+Edit the record (including its `lastVerified`/`asOf` date) and redeploy —
+never edit UI components for content changes.
+
+---
+
+## 7. Quality gates
 
 ```bash
-npx create-expo-app Dorchester101-Mobile --template blank-typescript
-cd Dorchester101-Mobile
-npm install axios
+npm run lint
+npm run typecheck
+npm test          # unit tests
+npm run build
+npm run test:e2e  # Playwright (needs `npx playwright install chromium` first)
 ```
 
-Then create screens that fetch from `http://localhost:3000/api/news` (or deploy the web app to Vercel and point to the live URL). The content is API-driven, so no hardcoded data needs to be rewritten.
-
 ---
 
-## 6. Updating data without touching code
+## 8. Deploy
 
-All content lives in `src/data/` (e.g., `college.ts`, `programs.ts`, `map.ts`). If you need to update a phone number or add a new shelter, edit the JSON/TS object and redeploy — never edit UI components for content changes.
+This is a Next.js App Router app with API routes — deploy to Vercel (or any Node
+host) for full functionality. Static export would break `/api/*`.
 
----
-
-## 7. Testing all new components
-
-```bash
-npm run test
-npm run test:e2e
-```
-
-The `/college-access` page, redesigned homepage feature, and updated navigation are covered by the existing Playwright suite in `e2e/`.
-
----
-
-## 8. Deploy to GitHub Pages / Vercel
-
-Because this is a Next.js App Router site with API routes, deploy to Vercel for full functionality (API routes run server-side). Static export (`output: 'export'`) will break `/api/*` routes.
-
----
-
-If any build step fails, check `next.config.ts` for `output: 'export'` — it must be removed for API routes to work.
+Release builds are automated by `.github/workflows/release.yml` when a `v*` tag
+is pushed (Windows only). CI runs lint, typecheck, unit tests, build, and e2e on
+every push/PR via `.github/workflows/ci.yml`.

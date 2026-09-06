@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowUpRight, Apple, Building, Calculator, Globe, Home, Languages, Scale, TrainFront } from 'lucide-react';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
 
@@ -9,44 +10,50 @@ export function QuickLinks() {
   const { t } = useTranslation(language);
 
   const links = [
-    { href: '/affordable-housing', label: t('quick.applyHousing') },
-    { href: '/food', label: t('quick.findFood') },
-    { href: '/neighborhood', label: t('quick.knowRights') },
-    { href: 'https://www.mbta.com/schedules', label: t('quick.mbtaStatus'), external: true },
-    { href: '/tools', label: t('quick.rentCalc') },
-    { href: 'https://boston.myhousing.com', label: t('quick.bhaWaitlist'), external: true },
-    { href: '/resources', label: t('quick.legalHelp') },
-    { href: '/college-access', label: 'College Access — Princeton Pathway', new: true },
-    { href: '/settings', label: t('quick.langSettings') },
+    { href: '/affordable-housing', label: t('quick.applyHousing'), icon: Building, hint: 'AMI bands · waitlists · apply' },
+    { href: '/food', label: t('quick.findFood'), icon: Apple, hint: 'Pantries · meals · SNAP' },
+    { href: '/neighborhood', label: t('quick.knowRights'), icon: Scale, hint: 'Eviction · heat · deposits' },
+    { href: 'https://www.mbta.com/schedules', label: t('quick.mbtaStatus'), icon: TrainFront, hint: 'Live schedules', external: true },
+    { href: '/tools', label: t('quick.rentCalc'), icon: Calculator, hint: 'Rent burden · AMI' },
+    { href: 'https://boston.myhousing.com', label: t('quick.bhaWaitlist'), icon: Home, hint: 'BHA applications', external: true },
+    { href: '/resources', label: t('quick.legalHelp'), icon: Scale, hint: 'GBLS · City Life · ABCD' },
+    { href: '/settings', label: t('quick.langSettings'), icon: Languages, hint: '9 languages · dark mode' },
   ];
 
   return (
-    <div className="relative">
-      <div className="mb-3 flex items-baseline gap-3">
-        <h3 className="font-display text-xl tracking-[-0.03em]">Quick access</h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--red)]">Updated 6 Sept 2026</span>
+    <section>
+      <div className="flex items-baseline justify-between gap-4 mb-4">
+        <h2 className="font-display text-2xl md:text-3xl font-extrabold">{t('dashboard.quickAccess')}</h2>
+        <span className="hidden sm:block text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]">Agencies verified {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
       </div>
-      <ol className="columns-1 sm:columns-2 gap-x-8 text-sm">
-        {links.map((link, i) => {
-          const className = 'flex items-baseline gap-2 py-2 border-b border-[var(--line)] break-inside-avoid hover:bg-[var(--surface)] -mx-2 px-2 transition-colors';
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {links.map((link) => {
+          const Icon = link.icon;
           const inner = (
             <>
-              <span className="font-mono text-[11px] text-[var(--red)] w-5 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-              <span className="underline underline-offset-2 decoration-[var(--red)]/40 hover:text-[var(--red)] transition-colors">{link.label}</span>
-              {link.new && <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--red)] border border-[var(--red)] px-1 py-0.5 shrink-0 ml-1">New</span>}
+              <span className="w-10 h-10 rounded-lg bg-[var(--wax)] border border-[var(--line)] flex items-center justify-center text-[var(--red)] transition-colors group-hover:bg-[var(--red)] group-hover:text-white group-hover:border-[var(--red)]">
+                <Icon className="w-5 h-5" strokeWidth={2.2} />
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-1 font-display font-bold text-sm text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors">
+                  {link.label}
+                  {link.external && <ArrowUpRight className="w-3 h-3 shrink-0" />}
+                </span>
+                <span className="block text-[11px] text-[var(--muted)] mt-0.5 truncate">{link.hint}</span>
+              </span>
             </>
           );
-          return (
-            <li key={link.href}>
-              {link.external ? (
-                <a href={link.href} target="_blank" rel="noreferrer" className={className}>{inner}</a>
-              ) : (
-                <Link href={link.href} className={className}>{inner}</Link>
-              )}
-            </li>
+          const cls = 'group flex items-start gap-3 p-3.5 desk-card card-hover h-full';
+          return link.external ? (
+            <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={cls}>{inner}</a>
+          ) : (
+            <Link key={link.href} href={link.href} className={cls}>{inner}</Link>
           );
         })}
-      </ol>
-    </div>
+      </div>
+      <p className="text-[11px] text-[var(--muted)] mt-3 inline-flex items-center gap-1.5">
+        <Globe className="w-3.5 h-3.5" /> Every link goes to the agency or program itself — nothing is a referral middleman.
+      </p>
+    </section>
   );
 }

@@ -7,6 +7,7 @@ import { useAppStore, type Language } from '@/stores/appStore';
 import { availableLanguages, useTranslation } from '@/lib/i18n';
 import { NotificationPanel } from './NotificationPanel';
 import { SearchTrigger } from './SearchDialog';
+import { DOR101Mark } from '@/components/ui/Logo';
 
 export function Header({
   sidebarWidth,
@@ -38,30 +39,33 @@ export function Header({
 
   return (
     <header
-      className="fixed top-0 right-0 h-14 z-30 bg-[var(--paper)] border-b border-[var(--line)] flex items-center gap-3 px-3 md:px-5"
+      className="fixed top-0 right-0 h-14 z-30 bg-[var(--paper)] border-b border-[var(--line)] flex items-center gap-2 md:gap-3 px-2.5 md:px-5"
       style={{ left: sidebarWidth }}
     >
       {onMenu && (
-        <button onClick={onMenu} className="p-2 md:hidden" aria-label="Open menu">
+        <button onClick={onMenu} className="p-2 -ml-1 md:hidden" aria-label="Open menu">
           <Menu className="w-5 h-5" />
         </button>
       )}
 
       {onMenu && (
-        <span className="font-display font-semibold md:hidden shrink-0">DOR101</span>
+        <span className="md:hidden shrink-0 mr-1">
+          <DOR101Mark width={26} />
+        </span>
       )}
 
       <SearchTrigger />
 
-      <div className="flex items-center gap-1 ml-auto">
+      <div className="flex items-center gap-0.5 md:gap-1 ml-auto">
         <span className="hidden lg:block masthead-date mr-2">
           {t('common.updated')} {lastUpdated || '—'}
         </span>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 hover:bg-[var(--surface)]"
+          className="p-2 rounded-full hover:bg-[var(--wax)] disabled:opacity-60"
           title="Refresh"
+          aria-label="Refresh data"
         >
           <RefreshCw className={cn('w-4 h-4 text-[var(--muted)]', refreshing && 'animate-spin')} />
         </button>
@@ -69,8 +73,9 @@ export function Header({
         <div className="relative">
           <button
             onClick={() => setLangOpen(!langOpen)}
-            className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-[var(--surface)]"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[var(--line)] bg-[var(--wax)] hover:border-[var(--ink-soft)]"
             aria-label="Language"
+            aria-expanded={langOpen}
           >
             <Globe className="w-4 h-4 text-[var(--muted)]" />
             <span className="hidden sm:inline text-xs font-bold uppercase tracking-wide">
@@ -80,14 +85,14 @@ export function Header({
           {langOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
-              <div className="absolute right-0 top-full mt-1 z-50 w-64 bg-[var(--surface)] border border-[var(--ink)] shadow-lg p-1">
+              <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-[var(--surface)] border border-[var(--line)] rounded-xl shadow-lg p-1.5">
                 {availableLanguages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageChange(lang.code as Language)}
                     className={cn(
-                      'flex items-center gap-2 w-full px-3 py-2 text-left text-sm hover:bg-[var(--paper)]',
-                      language === lang.code && 'bg-[var(--paper)]',
+                      'flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-[var(--paper)]',
+                      language === lang.code && 'bg-[var(--paper)] font-bold',
                     )}
                   >
                     <span className="font-mono text-[11px] w-8">{lang.code}</span>

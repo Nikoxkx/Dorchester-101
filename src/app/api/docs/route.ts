@@ -7,7 +7,7 @@ const openApiSpec = {
   openapi: '3.0.0',
   info: {
     title: 'DOR101 API',
-    version: '1.0.0',
+    version: '2.0.0',
     description: 'API for Dorchester 101 - Community Resource Hub for Dorchester residents',
     contact: {
       name: 'DOR101 Community Project',

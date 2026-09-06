@@ -1,8 +1,11 @@
 interface ElectronAPI {
   checkForUpdates(): Promise<{ available: boolean }>;
   restartApp(): void;
-  onUpdateAvailable(callback: () => void): void;
-  onUpdateDownloaded(callback: () => void): void;
+  refreshAll(): void;
+  generateReport(): Promise<unknown>;
+  onMenu(action: string, callback: () => void): () => void;
+  onUpdateAvailable(callback: () => void): () => void;
+  onUpdateDownloaded(callback: () => void): () => void;
 }
 
 interface Window {

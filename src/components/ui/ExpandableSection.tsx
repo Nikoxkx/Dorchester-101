@@ -30,10 +30,11 @@ export function ExpandableSection({
   const [open, setOpen] = useState(defaultExpanded);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)]', className)}>
+    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-xl overflow-hidden card-hover', className)}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-[var(--paper)]"
+        aria-expanded={open}
+        className="w-full flex items-center gap-3 p-4 text-left hover:bg-[var(--paper)] transition-colors"
       >
         {icon && <div className="text-[var(--red)]">{icon}</div>}
         <div className="flex-1 min-w-0">
@@ -77,8 +78,8 @@ export function ExpandableCard({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)]', className)}>
-      <button onClick={() => setOpen(!open)} className="w-full p-4 text-left">
+    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-xl overflow-hidden card-hover', className)}>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full p-4 text-left transition-colors hover:bg-[var(--paper)]">
         <div className="flex items-start gap-3">
           {icon && <div className="text-[var(--red)]">{icon}</div>}
           <div className="flex-1">

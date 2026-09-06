@@ -6,13 +6,14 @@ export default function PrivacyPage() {
   return (
     <MainLayout>
       <article className="max-w-2xl space-y-4 text-sm leading-relaxed">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">Legal</p>
-          <h1 className="font-display text-4xl">Privacy</h1>
-          <p className="text-[var(--muted)] mt-1">Last written September 2026.</p>
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Legal</p>
+          <h1 className="font-display text-[clamp(2rem,4vw,3.25rem)] font-black leading-none text-[var(--charcoal)]">Privacy</h1>
+          <p className="text-[var(--muted)] mt-3">Last written September 2026.</p>
         </header>
         <p>
-          DORCHESTER 101 is a neighborhood desk. We do not run ads, we do not sell lists, and we do not require an account.
+          DOR101 is a neighborhood desk. We do not run ads, we do not sell lists, and we do not
+          require an account. That is the whole privacy policy in one sentence.
         </p>
         <h2 className="font-display text-2xl pt-2">What stays on your device</h2>
         <p>
@@ -28,7 +29,8 @@ export default function PrivacyPage() {
         </p>
         <h2 className="font-display text-2xl pt-2">Contact</h2>
         <p>
-          Questions about this notice: treat the GitHub repository as the source of truth for who maintains the code.
+          Questions about this notice: the GitHub repository is the source of truth for who
+          maintains the code — open an issue there and a maintainer will reply.
         </p>
       </article>
     </MainLayout>

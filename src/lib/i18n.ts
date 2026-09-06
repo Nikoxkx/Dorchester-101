@@ -18,7 +18,6 @@ function buildTranslations(): Record<string, Dict> {
     'nav.tools':           'Financial Tools',
     'nav.news':            'News',
     'nav.resources':       'Resources',
-    'nav.college':         'College Access',
     'nav.faq':             'FAQ',
     'nav.settings':        'Settings',
     'nav.collapse':        'Collapse',
@@ -245,7 +244,7 @@ function buildTranslations(): Record<string, Dict> {
     'settings.noTracking':    'No analytics, tracking, or advertising',
     'settings.noAccount':     'No account required',
     'settings.about':         'About DOR101',
-    'settings.version':       'Version 1.0.0',
+    'settings.version':       'Version 2.0.0',
     'settings.aboutDesc':     'A public-information desk for Dorchester. Confirm waitlists and hours with the agency before you act.',
     'settings.viewSources':   'View Data Sources',
     'settings.resetPrefs':    'Clear saved preferences on this device',
@@ -273,7 +272,7 @@ function buildTranslations(): Record<string, Dict> {
     'news.title':'Noticias y Actualizaciones','news.description':'Últimas noticias que afectan la vivienda, el acceso a alimentos y los servicios comunitarios.','news.liveUpdates':'Actualizaciones en Vivo','news.autoRefresh':'Las noticias se actualizan automáticamente cada 5 minutos','news.latest':'Últimas (Últimas 24 Horas)','news.allNews':'Todas las Noticias','news.sources':'Fuentes de Noticias','news.sourcesDesc':'Noticias agregadas de fuentes locales y regionales verificadas:',
     'resources.title':'Directorio de Recursos','resources.description':'Organizaciones y servicios verificados para residentes de Dorchester.','resources.notSure':'¿No sabe por dónde empezar?','resources.call211':'Llame al 2-1-1 en cualquier momento (24/7) para ayuda gratuita y confidencial.','resources.search':'Buscar organizaciones o servicios...',
     'faq.title':'Preguntas Frecuentes','faq.description':'Encuentre respuestas a preguntas comunes sobre vivienda, asistencia alimentaria y más.','faq.searchPlaceholder':'Buscar preguntas…','faq.allTopics':'Todos los Temas','faq.stillQuestions':'¿Todavía tiene preguntas?','faq.reachOut':'Estamos aquí para ayudar.',
-    'settings.title':'Configuración','settings.description':'Personalice su experiencia DOR101.','settings.language':'Idioma','settings.selectLang':'Seleccione su idioma','settings.appearance':'Apariencia','settings.theme':'Tema','settings.light':'Claro','settings.dark':'Oscuro','settings.system':'Sistema','settings.fontSize':'Tamaño de Fuente','settings.small':'Pequeño','settings.medium':'Mediano','settings.large':'Grande','settings.extraLarge':'Extra Grande','settings.accessibility':'Accesibilidad','settings.reduceMotion':'Reducir Movimiento','settings.reduceMotionDesc':'Minimizar animaciones y transiciones','settings.data':'Datos y Actualizaciones','settings.lastUpdated':'Última Actualización','settings.refreshNow':'Actualizar Ahora','settings.privacy':'Privacidad','settings.privacyTitle':'Su Privacidad Está Protegida','settings.noDataCollected':'No se recopilan ni transmiten datos personales','settings.localOnly':'Todas las configuraciones se almacenan localmente','settings.noTracking':'Sin análisis, rastreo ni publicidad','settings.noAccount':'No se requiere cuenta','settings.about':'Acerca de DOR101','settings.version':'Versión 1.0.0','settings.aboutDesc':'Un recurso gratuito para residentes de Dorchester.','settings.viewSources':'Ver Fuentes de Datos',
+    'settings.title':'Configuración','settings.description':'Personalice su experiencia DOR101.','settings.language':'Idioma','settings.selectLang':'Seleccione su idioma','settings.appearance':'Apariencia','settings.theme':'Tema','settings.light':'Claro','settings.dark':'Oscuro','settings.system':'Sistema','settings.fontSize':'Tamaño de Fuente','settings.small':'Pequeño','settings.medium':'Mediano','settings.large':'Grande','settings.extraLarge':'Extra Grande','settings.accessibility':'Accesibilidad','settings.reduceMotion':'Reducir Movimiento','settings.reduceMotionDesc':'Minimizar animaciones y transiciones','settings.data':'Datos y Actualizaciones','settings.lastUpdated':'Última Actualización','settings.refreshNow':'Actualizar Ahora','settings.privacy':'Privacidad','settings.privacyTitle':'Su Privacidad Está Protegida','settings.noDataCollected':'No se recopilan ni transmiten datos personales','settings.localOnly':'Todas las configuraciones se almacenan localmente','settings.noTracking':'Sin análisis, rastreo ni publicidad','settings.noAccount':'No se requiere cuenta','settings.about':'Acerca de DOR101','settings.version':'Versión 2.0.0','settings.aboutDesc':'Un recurso gratuito para residentes de Dorchester.','settings.viewSources':'Ver Fuentes de Datos',
   };
 
   // ── Haitian Creole ──────────────────────────────────────

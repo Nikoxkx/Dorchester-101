@@ -4,12 +4,20 @@ contextBridge.exposeInMainWorld('electron', {
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   restartApp: () => ipcRenderer.invoke('restart-app'),
   generateReport: () => ipcRenderer.invoke('generate-report'),
-  exportCollege: () => ipcRenderer.invoke('export-college'),
   refreshAll: () => ipcRenderer.send('refresh-all'),
+  onMenu: (action, callback) => {
+    const listener = () => callback();
+    ipcRenderer.on(action, listener);
+    return () => ipcRenderer.removeListener(action, listener);
+  },
   onUpdateAvailable: (callback) => {
-    ipcRenderer.on('update-available', () => callback());
+    const listener = () => callback();
+    ipcRenderer.on('update-available', listener);
+    return () => ipcRenderer.removeListener('update-available', listener);
   },
   onUpdateDownloaded: (callback) => {
-    ipcRenderer.on('update-downloaded', () => callback());
+    const listener = () => callback();
+    ipcRenderer.on('update-downloaded', listener);
+    return () => ipcRenderer.removeListener('update-downloaded', listener);
   },
 });

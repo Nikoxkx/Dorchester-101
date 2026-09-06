@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { AMIBadge, StatusBadge } from '@/components/ui/Badge';
+import { AMIBadge, Badge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn, formatCurrency, calculateAMIPercentage, getAMIBand, telHref } from '@/lib/utils';
@@ -21,12 +20,13 @@ interface HousingPayload {
     unitTypes: { type: string; count: number; rent: number | null }[];
     amiRequired: number;
     waitlistStatus: 'available' | 'waitlist_open' | 'waitlist_closed' | 'lottery' | 'check_source';
+    applicationDeadline?: string | null;
     propertyManagerPhone: string;
     applyUrl: string;
     transitAccess: string;
     notes: string;
   }[];
-  bha: { section8TenantBased: string; publicHousing: string; note: string; asOf: string; applyUrl: string; phone: string };
+  bha: { section8TenantBased: string; publicHousing: string; note: string; asOf: string; applyUrl: string; phone: string; source: string };
   raft: { maxBenefit: number; note: string; sourceUrl: string };
 }
 
@@ -51,26 +51,35 @@ export default function AffordableHousingPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="relative border-b-3 border-[var(--ink)] pb-6 overflow-hidden">
-          <div aria-hidden className="absolute top-0 right-0 w-32 h-32 -translate-y-1/2 translate-x-1/4 opacity-[0.06] pointer-events-none">
-            <svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" /><circle cx="100" cy="100" r="70" fill="none" stroke="var(--ink)" strokeWidth="3" /></svg>
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Housing desk</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">Affordable <span className="text-[var(--red)]">housing</span></h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+            Income-restricted apartments across the Dot — every listing checked against BPDA, BHA,
+            or HUD records, with a real phone and an application link. If a waitlist is open, it
+            says so here. Rents, AMI math, and lotteries included.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-5">
+            <Badge variant="green">Public housing waitlist: open</Badge>
+            <Badge variant="red">Section 8 (tenant-based): closed</Badge>
+            <Badge variant="amber">RAFT: up to $7,000 / 12 mo</Badge>
           </div>
-          <p className="masthead-date mb-2">Housing Desk · Updated 6 Sept 2026</p>
-          <h1 className="font-display text-5xl md:text-6xl tracking-[-0.045em] leading-[0.92]">Affordable<br /><span className="italic">Housing</span></h1>
-          <p className="text-[var(--ink-soft)] mt-3 max-w-2xl leading-relaxed">Income-restricted listings with AMI breakdowns. No generic listings — every property is verified against BPDA, BHA, or HUD records, with real application links.</p>
         </header>
 
         {data?.bha && (
-          <aside className="desk-panel p-4">
-            <p className="kicker">BHA as of {data.bha.asOf}</p>
-            <p className="font-display text-xl mt-1">
-              Tenant-based Section 8 is {data.bha.section8TenantBased}. Public housing is {data.bha.publicHousing}.
+          <aside className="desk-card p-5 md:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <p className="kicker">Boston Housing Authority · as of {data.bha.asOf}</p>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]">{data.bha.source}</span>
+            </div>
+            <p className="font-display text-xl md:text-2xl font-bold text-[var(--charcoal)] leading-snug">
+              Tenant-based Section 8: <span className="text-[var(--red)]">{data.bha.section8TenantBased}</span> ·
+              Public housing: <span className="text-[var(--sage)]">{data.bha.publicHousing}</span>
             </p>
-            <p className="text-sm text-[var(--ink-soft)] mt-2">{data.bha.note}</p>
-              <div className="flex flex-wrap gap-3 mt-3">
-              <a href={telHref(data.bha.phone)} className="underline text-sm">{data.bha.phone}</a>
-              <a href={data.bha.applyUrl} target="_blank" rel="noreferrer" className="bg-[var(--red)] text-white px-3 py-1.5 text-sm font-bold">boston.myhousing.com</a>
-              <Link href="/college-access" className="border border-[var(--ink)] text-sm px-3 py-1.5 font-bold hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors">College Pathway →</Link>
+            <p className="text-sm text-[var(--ink-soft)] mt-2 leading-relaxed">{data.bha.note}</p>
+            <div className="flex flex-wrap gap-3 mt-4">
+              <a href={telHref(data.bha.phone)} className="cta cta-outline cta-md">Call {data.bha.phone}</a>
+              <a href={data.bha.applyUrl} target="_blank" rel="noreferrer" className="cta cta-primary cta-md">Apply at boston.myhousing.com</a>
             </div>
           </aside>
         )}
@@ -124,9 +133,12 @@ export default function AffordableHousingPage() {
                 </div>
                 <p className="text-sm">{listing.notes}</p>
                 <p className="text-sm text-[var(--muted)]">Transit: {listing.transitAccess}</p>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <a href={telHref(listing.propertyManagerPhone)} className="underline text-sm">{listing.propertyManagerPhone}</a>
-                  <a href={listing.applyUrl} target="_blank" rel="noreferrer" className="bg-[var(--ink)] text-[var(--paper)] px-3 py-1.5 text-sm font-bold">Apply / open source</a>
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <a href={telHref(listing.propertyManagerPhone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--red)]">{listing.propertyManagerPhone}</a>
+                  <a href={listing.applyUrl} target="_blank" rel="noreferrer" className="cta cta-dark cta-sm">Apply / open source</a>
+                  {listing.applicationDeadline && (
+                    <span className="text-xs text-[var(--muted)]">Deadline: {new Date(listing.applicationDeadline).toLocaleDateString()}</span>
+                  )}
                 </div>
               </article>
             ))}

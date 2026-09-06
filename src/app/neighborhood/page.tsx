@@ -36,10 +36,10 @@ export default function NeighborhoodPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">Walking tour</p>
-          <h1 className="font-display text-4xl">{t('neighborhood.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('neighborhood.description')}</p>
+        <header className="pb-6 border-b border-[var(--line)]">
+          <p className="kicker mb-3">Walking tour</p>
+          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('neighborhood.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('neighborhood.description')}</p>
         </header>
 
         <ExpandableSection title="About the Dot" preview={`Settled ${data.overview.settled}, annexed ${data.overview.annexed}`} defaultExpanded>
@@ -50,7 +50,10 @@ export default function NeighborhoodPage() {
         </ExpandableSection>
 
         <section>
-          <h2 className="font-display text-2xl mb-3">Squares</h2>
+          <div className="flex items-baseline justify-between gap-4 mb-3">
+            <h2 className="font-display text-2xl md:text-3xl font-extrabold">The squares</h2>
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]">{data.neighborhoods.length} neighborhoods · tap to open</span>
+          </div>
           <div className="grid md:grid-cols-2 gap-3">
             {data.neighborhoods.map((n) => (
               <ExpandableCard key={n.slug} title={n.name} subtitle={n.description}>
@@ -80,7 +83,7 @@ export default function NeighborhoodPage() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               {data.transit.busRoutes.map((b) => (
                 <div key={b.route} className="border border-[var(--line)] p-2">
-                  <span className="font-mono font-bold bg-[#ffc72c] text-black px-1">{b.route}</span>
+                  <span className="font-mono font-bold bg-[#FFC72C] text-[#1F1F1F] px-1.5 py-0.5 rounded-md inline-block">{b.route}</span>
                   <p className="mt-1">{b.destination}</p>
                 </div>
               ))}
