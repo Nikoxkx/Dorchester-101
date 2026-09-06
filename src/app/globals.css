@@ -1011,19 +1011,16 @@ html[data-palette="violet"].dark {
   --color-accent-primary: #B9A3F2; --color-accent-primary-soft: #8E74D4; --color-accent-secondary: #F3907F;
 }
 
-/* Where a palette's dark accent is light (midnight, forest, …), white text on an
-   accent-filled button would vanish. Tailwind's `text-white` is applied on those
-   buttons; give the accent an ink token and use it. */
-html[data-palette="midnight"].dark { --color-on-accent: #0A0A0B; }
-html[data-palette="forest"].dark { --color-on-accent: #0C1511; }
-html[data-palette="brick"].dark { --color-on-accent: #170F0D; }
-html[data-palette="slate"].dark { --color-on-accent: #0E1216; }
-html[data-palette="sand"].dark { --color-on-accent: #17130C; }
-html[data-palette="violet"].dark { --color-on-accent: #100C1A; }
-:root { --color-on-accent: #FFFFFF; }
-html.dark { --color-on-accent: #0F1720; }
-html.dark .bg-\[var\(--color-accent-primary\)\].text-white,
-html.dark .bg-\[var\(--color-accent-primary\)\] .text-white { color: var(--color-on-accent); }
+/* Accent-filled surfaces (banner, primary buttons, active pills) always carry
+   white text. In dark mode most palettes use a light accent for links and icons,
+   which would leave white text unreadable on a filled surface — so the *fill* is
+   deepened instead of recolouring the text. Icons and text on those surfaces stay
+   white in every palette, light or dark. */
+:root { --color-accent-fill: var(--color-accent-primary); }
+html.dark { --color-accent-fill: color-mix(in srgb, var(--color-accent-primary) 42%, #0B1017); }
+html[data-palette="midnight"].dark { --color-accent-fill: #1E1E24; }
+html.dark .bg-\[var\(--color-accent-primary\)\] { background-color: var(--color-accent-fill); }
+html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
 
 /* Dashboard preview: keep Leaflet's panes inside the card (they otherwise create
    their own stacking context above later sections while scrolling). */

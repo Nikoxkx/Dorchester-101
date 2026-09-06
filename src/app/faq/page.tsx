@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import { HelpCircle, Search, Phone, ExternalLink, ChevronDown } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import Link from 'next/link';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -685,30 +686,29 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
         )}
 
         {/* Still have questions */}
-        <Card className="text-center py-8">
-          <h3 className="font-heading font-semibold text-lg mb-2">Still have questions?</h3>
-          <p className="text-[var(--color-text-muted)] mb-4">
-            We&apos;re here to help. Reach out to local resources for personalized assistance.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
+        <Card className="py-8 text-center">
+          <h3 className="mb-2 font-heading text-lg font-semibold">{t('faq.stillQuestions')}</h3>
+          <p className="mx-auto mb-5 max-w-prose text-[var(--color-text-muted)]">{t('faq.stillBody')}</p>
+          <div className="flex flex-wrap justify-center gap-3">
             <a
               href="tel:211"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-primary)] text-white rounded-lg font-heading"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-white"
             >
-              <Phone className="w-4 h-4" />
-              Call 2-1-1
+              <Phone className="h-4 w-4 text-white" aria-hidden="true" />
+              {t('faq.call211')}
             </a>
-            <a
+            <Link
               href="/resources"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] rounded-lg font-heading"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] px-4 py-2 font-heading hover:border-[var(--color-accent-primary)]"
             >
-              View All Resources
-            </a>
+              {t('faq.viewAll')}
+            </Link>
           </div>
-        <ProjectNote sources={['masslegal', 'bostongov', 'dta', 'bha']}>
+        </Card>
+
+        <ProjectNote className="mt-6" sources={['masslegal', 'bostongov', 'dta', 'bha']}>
           Answers are written in plain language from the rules published by the agency or statute named in each answer. When a rule changes, the answer is updated and the change is visible in the public repository.
         </ProjectNote>
-        </Card>
       </motion.div>
     </MainLayout>
   );

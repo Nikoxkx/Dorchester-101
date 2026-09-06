@@ -46,13 +46,21 @@ interface NewsItem {
 
 /** The slice of `/api/market-data` this page reads; see `src/app/api/market-data/route.ts`. */
 interface MarketResponse {
+  geography?: string;
   acs?: {
     status: 'live' | 'cache' | 'unavailable';
     vintage?: string;
     retrievedAt?: string;
-    metrics?: { medianGrossRent?: number | null };
+    metrics?: {
+      medianGrossRent?: number | null;
+      medianIncome?: number | null;
+      renterShare?: number | null;
+      burden30?: number | null;
+      burden40?: number | null;
+    };
     error?: string;
   };
+  derived?: { affordableRentAtWage?: { wageCents: number; monthly: number } | null; gapPercent?: number | null };
 }
 
 export default function DashboardPage() {
@@ -105,6 +113,54 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.verification.checkedOn).getTime() - new Date(a.verification.checkedOn).getTime())
     .slice(0, 3);
   const medianRent = market?.acs?.metrics?.medianGrossRent ?? null;
+  const metrics = market?.acs?.metrics;
+
+  // ── Expandable detail for each "at a glance" card, all computed from the same
+  // data the headline number comes from, so the two can never disagree.
+  const pct = (v: number | null | undefined) => (v === null || v === undefined ? null : format.percent(v / 100, 1));
+  const rentDetails = {
+    summary: t('glance.rent.summary'),
+    points: [
+      metrics?.medianIncome ? t('glance.rent.income', { value: format.currency(metrics.medianIncome) }) : null,
+      metrics?.renterShare !== null && metrics?.renterShare !== undefined ? t('glance.rent.renters', { value: pct(metrics.renterShare) ?? '' }) : null,
+      metrics?.burden30 !== null && metrics?.burden30 !== undefined ? t('glance.rent.burden', { value: pct(metrics.burden30) ?? '' }) : null,
+      market?.derived?.affordableRentAtWage
+        ? t('glance.rent.wage', { value: format.currency(market.derived.affordableRentAtWage.monthly) })
+        : null,
+      t('glance.rent.geography'),
+    ].filter((x): x is string => Boolean(x)),
+    link: { href: '/market', label: t('nav.market') },
+  };
+  const foodByKind = RESOURCES.filter((r) => r.category === 'food');
+  const foodOpenToday = foodByKind.filter((r) => r.hours && isOpenNow(r.hours, now, BOSTON_TZ));
+  const foodDetails = {
+    summary: t('glance.food.summary'),
+    points: [
+      t('glance.food.listed', { count: String(foodListed) }),
+      t('glance.food.openNow', { count: String(foodOpenToday.length) }),
+      t('glance.food.noId'),
+      t('glance.food.snap'),
+    ],
+    link: { href: '/food', label: t('nav.food') },
+  };
+  const verifyDetails = {
+    summary: t('glance.verify.summary'),
+    points: [
+      t('glance.verify.total', { count: String(RESOURCES.length) }),
+      t('glance.verify.fresh', { count: String(RESOURCES.length - backlog.needsReview) }),
+      t('glance.verify.backlog', { count: String(backlog.needsReview) }),
+      t('glance.verify.how'),
+    ],
+    link: { href: '/about', label: t('nav.about') },
+  };
+  const transitDetails = {
+    summary: t('glance.transit.summary'),
+    points: [
+      ...TRANSIT_LINES.map((line) => `${line.name} · ${t('map.stopCount', { count: String(line.dorchesterStops.length) })}`),
+      t('glance.transit.live'),
+    ],
+    link: { href: '/map', label: t('nav.map') },
+  };
 
   return (
     <MainLayout>
@@ -166,7 +222,7 @@ export default function DashboardPage() {
           <h2 id="glance" className="mb-3 font-heading text-lg font-bold sm:text-xl">
             {t('dashboard.glance')}
           </h2>
-          <motion.div variants={cv} initial="hidden" animate="visible" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <motion.div variants={cv} initial="hidden" animate="visible" className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={<DollarSign className="h-5 w-5" aria-hidden="true" />}
               label={t('stats.medianRent')}
@@ -176,6 +232,7 @@ export default function DashboardPage() {
               source={market?.acs?.vintage && market.acs.vintage !== 'unavailable' ? `Census ${market.acs.vintage}, B25064` : 'Census ACS 5-year, B25064'}
               sourceDate={market?.acs?.status === 'unavailable' ? undefined : market?.acs?.retrievedAt}
               accent="var(--color-accent-primary)"
+              details={rentDetails}
             />
             <StatCard
               icon={<Clock className="h-5 w-5" aria-hidden="true" />}
@@ -185,6 +242,7 @@ export default function DashboardPage() {
               source="DOR101 directory"
               sourceDate={lastReviewedOn()}
               accent="var(--color-accent-green)"
+              details={foodDetails}
             />
             <StatCard
               icon={<BadgeCheck className="h-5 w-5" aria-hidden="true" />}
@@ -194,6 +252,7 @@ export default function DashboardPage() {
               source="DOR101 verification log"
               sourceDate={lastReviewedOn()}
               accent="var(--color-accent-secondary)"
+              details={verifyDetails}
             />
             <StatCard
               icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
@@ -202,6 +261,7 @@ export default function DashboardPage() {
               hint={t('map.stopCount', { count: String(TRANSIT_LINES.reduce((total, line) => total + line.dorchesterStops.length, 0)) })}
               source="MBTA V3"
               accent="var(--mbta-red)"
+              details={transitDetails}
             />
           </motion.div>
         </section>

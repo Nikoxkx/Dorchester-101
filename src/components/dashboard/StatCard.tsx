@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowRight, ChevronDown, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n/hook';
 import { useReduceMotion } from '@/stores/appStore';
@@ -35,6 +36,16 @@ interface StatCardProps {
   unavailable?: boolean;
   accent?: string;
   href?: string;
+  /**
+   * Optional expandable detail. When present the card grows a "More" toggle; the
+   * panel opens inline (the grid reflows) so it can never sit on top of another
+   * card or of the section below.
+   */
+  details?: {
+    summary: string;
+    points: string[];
+    link?: { href: string; label: string };
+  };
 }
 
 export function StatCard({
@@ -49,9 +60,12 @@ export function StatCard({
   unavailable = false,
   accent = 'var(--color-accent-primary)',
   href,
+  details,
 }: StatCardProps) {
   const { t, format: locale } = useI18n();
   const reduceMotion = useReduceMotion();
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   const [displayValue, setDisplayValue] = useState(unavailable ? 0 : value);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const hasAnimated = useRef(false);
@@ -148,6 +162,54 @@ export function StatCard({
           )}
         </div>
       )}
+
+      {details && (
+        <>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls={panelId}
+            className="mt-3 inline-flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 font-heading text-xs font-semibold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+          >
+            <span>{open ? t('common.showLess') : t('common.showMore')}</span>
+            <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
+          </button>
+          <AnimatePresence initial={false}>
+            {open && (
+              <motion.div
+                id={panelId}
+                key="panel"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="pt-3 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                  <p>{details.summary}</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {details.points.map((point) => (
+                      <li key={point} className="flex gap-2">
+                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full" style={{ background: accent }} aria-hidden="true" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {details.link && (
+                    <a
+                      href={details.link.href}
+                      className="mt-3 inline-flex items-center gap-1 font-heading font-semibold text-[var(--color-accent-primary)] underline-offset-2 hover:underline"
+                    >
+                      {details.link.label} <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </>
   );
 
@@ -158,7 +220,7 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.35 }}
       className={cn(
-        'rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 transition-shadow',
+        'self-start rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 transition-shadow',
         'hover:shadow-[var(--shadow-md)]',
         href && 'cursor-pointer'
       )}
