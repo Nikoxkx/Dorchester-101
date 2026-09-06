@@ -12,12 +12,13 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-const VERSION = 'v1.3.0';
+const VERSION = 'v4.0.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
 
-const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png', '/manifest.json'];
+const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png',
+  '/og.png', '/manifest.json'];
 const LIVE_MAX_ENTRIES = 40;
 const TILE_MAX_ENTRIES = 480;
 

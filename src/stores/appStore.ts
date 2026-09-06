@@ -15,6 +15,9 @@ export type MapStyle = 'satellite' | 'street' | 'hybrid';
  * every glass surface keeps at least ~70% of its base colour.
  */
 export type Surface = 'solid' | 'glass';
+/** Colour palette for the whole interface. Each has a light and a dark variant. */
+export type Palette = 'harbor' | 'midnight' | 'forest' | 'brick' | 'slate' | 'sand' | 'violet';
+export const PALETTES: Palette[] = ['harbor', 'midnight', 'forest', 'brick', 'slate', 'sand', 'violet'];
 
 export const FONT_SIZE_VALUES: Record<FontSize, string> = {
   small: '15px',
@@ -86,6 +89,7 @@ interface AppState {
   lastUpdated: string | null;
   mapStyle: MapStyle;
   surface: Surface;
+  palette: Palette;
   accessibility: AccessibilityPrefs;
   speechRate: number;
   /**
@@ -122,6 +126,7 @@ interface AppState {
   setLastUpdated: (time: string) => void;
   setMapStyle: (style: MapStyle) => void;
   setSurface: (surface: Surface) => void;
+  setPalette: (palette: Palette) => void;
   setAccessibility: <K extends keyof AccessibilityPrefs>(key: K, value: AccessibilityPrefs[K]) => void;
   toggleAccessibility: (key: keyof Pick<AccessibilityPrefs, 'underlineLinks' | 'largeFocus' | 'legibleFont' | 'textSpacing' | 'announceUpdates'>) => void;
   setAccessibilityAuto: (key: 'reduceMotion' | 'highContrast') => void;
@@ -180,6 +185,7 @@ export const useAppStore = create<AppState>()(
       lastUpdated: null,
       mapStyle: 'satellite',
       surface: 'solid',
+      palette: 'harbor',
       accessibility: DEFAULT_ACCESSIBILITY,
       speechRate: 1,
       speechVoiceURI: null,
@@ -208,6 +214,7 @@ export const useAppStore = create<AppState>()(
       setLastUpdated: (lastUpdated) => set({ lastUpdated }),
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setSurface: (surface) => set({ surface }),
+      setPalette: (palette) => set({ palette }),
 
       setAccessibility: (key, value) =>
         set((s) => ({ accessibility: { ...s.accessibility, [key]: value } })),
@@ -257,6 +264,7 @@ export const useAppStore = create<AppState>()(
           sidebarCollapsed: false,
           mapStyle: 'satellite',
           surface: 'solid',
+          palette: 'harbor',
           accessibility: DEFAULT_ACCESSIBILITY,
           speechRate: 1,
           speechVoiceURI: null,
@@ -281,6 +289,7 @@ export const useAppStore = create<AppState>()(
         sidebarCollapsed: s.sidebarCollapsed,
         mapStyle: s.mapStyle,
         surface: s.surface,
+        palette: s.palette,
         accessibility: s.accessibility,
         speechRate: s.speechRate,
         speechVoiceURI: s.speechVoiceURI,

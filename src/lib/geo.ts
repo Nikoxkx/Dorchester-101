@@ -27,9 +27,15 @@ export function formatDistance(meters: number, locale = 'en-US'): string {
   return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(miles)} mi`;
 }
 
+/**
+ * Google Maps Directions URL (documented "Maps URLs" API, no key needed).
+ * With an origin it draws the full route; without one Google Maps falls back
+ * to the device's current location as the start point.
+ */
 export function googleDirections(dest: [number, number], mode: 'walking' | 'transit', origin?: [number, number] | null) {
-  const o = origin ? `&origin=${origin[0]},${origin[1]}` : '';
-  return `https://www.google.com/maps/dir/?api=1${o}&destination=${dest[0]},${dest[1]}&travelmode=${mode}`;
+  const o = origin ? `&origin=${origin[0].toFixed(6)},${origin[1].toFixed(6)}` : '';
+  const dirflags = mode === 'transit' ? '&dir_action=navigate' : '';
+  return `https://www.google.com/maps/dir/?api=1${o}&destination=${dest[0].toFixed(6)},${dest[1].toFixed(6)}&travelmode=${mode}${dirflags}`;
 }
 
 export function appleDirections(dest: [number, number], mode: 'walking' | 'transit') {

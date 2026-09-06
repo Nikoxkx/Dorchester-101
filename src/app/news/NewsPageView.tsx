@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
@@ -127,11 +127,14 @@ export function NewsPageView() {
 
   // Initial fetch, auto-refresh and "refresh now" all come from useLivePolling;
   // this effect only clears the list so stale rows never sit under a new spinner.
-  useEffect(() => {
+  const filterKey = `${sinceHours}|${enabledSources.join(',')}|${customFeeds.length}`;
+  const [seenFilterKey, setSeenFilterKey] = useState(filterKey);
+  if (filterKey !== seenFilterKey) {
+    setSeenFilterKey(filterKey);
     setState('loading');
-  }, [sinceHours, enabledSources, customFeeds]);
+  }
 
-  const articles = payload?.articles ?? [];
+  const articles = useMemo(() => payload?.articles ?? [], [payload]);
   const counts = useMemo(() => {
     const map = new Map<NewsCategorySlug, number>();
     for (const article of articles) map.set(article.category, (map.get(article.category) ?? 0) + 1);

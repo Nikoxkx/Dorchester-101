@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -78,7 +78,7 @@ export function DorchesterMap() {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [focus, setFocus] = useState<Focus>({ kind: 'rail', routeId: 'Red' });
   const [hiddenRails, setHiddenRails] = useState<string[]>([]);
   const [categories, setCategories] = useState<ResourceCategory[]>(['food', 'health', 'community', 'housing']);
@@ -103,8 +103,6 @@ export function DorchesterMap() {
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  useEffect(() => setMounted(true), []);
-
   // One clock drives every countdown so the departures list, the "updated" stamp
   // and the open/closed badges cannot disagree with each other.
   useEffect(() => {
@@ -112,7 +110,6 @@ export function DorchesterMap() {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [live, liveArrivals.length]);
-  void now;
 
   /* ── route geometry ──────────────────────────────────────────── */
   const shapeRoutes = useMemo(() => {
@@ -121,12 +118,17 @@ export function DorchesterMap() {
   }, [hiddenRails, focus]);
 
   useEffect(() => {
-    if (shapeRoutes.length === 0) {
-      setShapes([]);
-      return;
-    }
     let cancelled = false;
-    setStatus('loading');
+    // Kick off on the next tick so state resets happen outside the effect body.
+    const kick = window.setTimeout(() => {
+      if (cancelled) return;
+      if (shapeRoutes.length === 0) {
+        setShapes([]);
+        return;
+      }
+      setStatus('loading');
+    }, 0);
+    if (shapeRoutes.length === 0) return () => { cancelled = true; window.clearTimeout(kick); };
     fetch(`/api/mbta?type=shapes&route=${encodeURIComponent(shapeRoutes.join(','))}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((payload: { shapes?: Record<string, ShapeData>; reference?: { source?: DataSource } }) => {
@@ -149,6 +151,7 @@ export function DorchesterMap() {
       });
     return () => {
       cancelled = true;
+      window.clearTimeout(kick);
     };
   }, [shapeRoutes, dataEpoch]);
 
@@ -260,7 +263,8 @@ export function DorchesterMap() {
   // The first read is issued by useLivePolling; this only resets the badge so a
   // panel never shows yesterday's "live" dot while its new request is in flight.
   useEffect(() => {
-    setLive(false);
+    const id = window.setTimeout(() => setLive(false), 0);
+    return () => window.clearTimeout(id);
   }, [stopParam, focus.routeId]);
 
   /* ── selection ───────────────────────────────────────────────── */
@@ -313,6 +317,9 @@ export function DorchesterMap() {
   useEffect(() => {
     if (appliedParams.current) return;
     appliedParams.current = true;
+    const id = window.setTimeout(() => applyUrlParams(), 0);
+    return () => window.clearTimeout(id);
+    function applyUrlParams() {
     const stopParamFromUrl = searchParams.get('stop');
     const placeParam = searchParams.get('place');
     const routeParam = searchParams.get('route');
@@ -332,6 +339,7 @@ export function DorchesterMap() {
       }
     }
     if (placeParam && RESOURCES.some((r) => r.id === placeParam)) selectPin(placeParam);
+    }
   }, [searchParams, selectPin]);
 
   /* ── map affordances ─────────────────────────────────────────── */
@@ -399,7 +407,7 @@ export function DorchesterMap() {
       .slice(0, selectedStopId ? 8 : 10)
       .map((arrival) => ({
         ...arrival,
-        minutes: format.minutesAway(arrival.arrivalAt),
+        minutes: Math.max(0, Math.round((new Date(arrival.arrivalAt).getTime() - now) / 60000)),
         clock: format.time(arrival.arrivalAt),
       }));
   }, [liveArrivals, selectedStopId, format, now]);

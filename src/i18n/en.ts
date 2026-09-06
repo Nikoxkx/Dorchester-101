@@ -577,6 +577,15 @@ export const en = {
   'settings.surfaceNote': 'Transparent lets the Dorchester Bay photograph show through the panels and the menu, with a blur behind the text. Text colours never change, so everything stays readable in both light and dark mode.',
   'settings.surfaceContrastNote': 'High contrast is on, so the solid palette is used regardless.',
   'settings.surfaceHint': 'Also available from the menu: the “Transparent” switch at the bottom of the sidebar.',
+  'settings.palette': 'Colour palette',
+  'settings.palette.harbor': 'Harbor (default)',
+  'settings.palette.midnight': 'Black & white',
+  'settings.palette.forest': 'Forest',
+  'settings.palette.brick': 'Brick',
+  'settings.palette.slate': 'Slate',
+  'settings.palette.sand': 'Sand',
+  'settings.palette.violet': 'Violet',
+  'settings.paletteNote': 'Every palette has a light and a dark version and keeps the same contrast ratios, so text stays readable whichever you pick. Transit line colours never change: they are the MBTA’s.',
 
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Install DOR101',

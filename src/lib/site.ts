@@ -7,7 +7,7 @@
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export const SITE_NAME = 'DOR101';
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '1.3.0';
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '4.0.0';
 
 /**
  * Contact. A community project should publish a human address, so this is read

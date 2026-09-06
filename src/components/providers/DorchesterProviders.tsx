@@ -34,6 +34,7 @@ function DocumentSettings() {
     root.dataset.dyslexiaFont = String(prefs.legibleFont);
     root.dataset.textSpacing = String(prefs.textSpacing);
     root.dataset.surface = prefs.surface;
+    root.dataset.palette = prefs.palette;
     root.style.fontSize = prefs.fontSizePx;
   }, [
     prefs.dir,
@@ -46,6 +47,7 @@ function DocumentSettings() {
     prefs.legibleFont,
     prefs.textSpacing,
     prefs.surface,
+    prefs.palette,
     prefs.fontSizePx,
     meta.intlLocale,
   ]);

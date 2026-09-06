@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -160,7 +160,37 @@ function Photo({ stopId, lat, lng, label }: { stopId?: string; lat: number; lng:
 
 function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; userPosition: [number, number] | null; onLocate: () => void }) {
   const { meta } = useI18n();
+  const [resolving, setResolving] = useState<'walking' | 'transit' | null>(null);
   const meters = userPosition ? haversineMeters(userPosition, dest) : null;
+
+  /**
+   * Opens Google Maps with a real origin → destination route. If we do not yet
+   * know where the rider is, ask the browser once (≤ 8 s); if they decline or it
+   * fails, Google Maps still opens with the destination and "Your location" as
+   * the origin, which the Maps app resolves itself.
+   */
+  const go = (mode: 'walking' | 'transit') => {
+    const open = (origin: [number, number] | null) => {
+      const url = googleDirections(dest, mode, origin);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+    if (userPosition) return open(userPosition);
+    if (!('geolocation' in navigator)) return open(null);
+    setResolving(mode);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setResolving(null);
+        onLocate();
+        open([pos.coords.latitude, pos.coords.longitude]);
+      },
+      () => {
+        setResolving(null);
+        open(null);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  };
+
   return (
     <section className="px-3 pt-3">
       <h3 className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -177,16 +207,27 @@ function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; us
         </button>
       )}
       <div className="mt-2 grid grid-cols-2 gap-1.5">
-        <a href={googleDirections(dest, 'transit', userPosition)} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3 py-2 font-heading text-xs font-bold text-white no-underline">
-          <Bus className="h-3.5 w-3.5" aria-hidden="true" /> Transit directions
-        </a>
-        <a href={googleDirections(dest, 'walking', userPosition)} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-2 font-heading text-xs font-bold no-underline hover:border-[var(--color-accent-primary)]">
-          <Footprints className="h-3.5 w-3.5" aria-hidden="true" /> Walking
-        </a>
+        <button
+          type="button"
+          onClick={() => go('transit')}
+          disabled={resolving !== null}
+          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3 py-2 font-heading text-xs font-bold text-white disabled:opacity-70"
+        >
+          <Bus className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'transit' ? 'Finding you…' : 'Bus / train route'}
+        </button>
+        <button
+          type="button"
+          onClick={() => go('walking')}
+          disabled={resolving !== null}
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-2 font-heading text-xs font-bold hover:border-[var(--color-accent-primary)] disabled:opacity-70"
+        >
+          <Footprints className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'walking' ? 'Finding you…' : 'Walking route'}
+        </button>
       </div>
-      <a href={appleDirections(dest, 'transit')} className="mt-1 inline-block text-[11px] text-[var(--color-text-muted)] underline decoration-dotted underline-offset-2">
-        Open in Apple Maps instead
-      </a>
+      <p className="mt-1 text-[10px] leading-snug text-[var(--color-text-muted)]">
+        Opens Google Maps with the route from where you are to this place, step by step, using live MBTA times.{' '}
+        <a href={appleDirections(dest, 'transit')} className="underline decoration-dotted underline-offset-2">Apple Maps instead</a>.
+      </p>
     </section>
   );
 }

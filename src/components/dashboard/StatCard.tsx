@@ -59,13 +59,9 @@ export function StatCard({
 
   useEffect(() => {
     if (unavailable) return;
-    if (reduceMotion) {
-      setDisplayValue(value);
-      return;
-    }
-    if (hasAnimated.current) {
-      setDisplayValue(value);
-      return;
+    if (reduceMotion || hasAnimated.current) {
+      frameRef.current = requestAnimationFrame(() => setDisplayValue(value));
+      return () => cancelAnimationFrame(frameRef.current);
     }
     const node = cardRef.current;
     if (!node) return;

@@ -919,3 +919,113 @@ html[data-text-spacing="true"] p, html[data-text-spacing="true"] li { margin-blo
 }
 .dor101-sheet { -webkit-overflow-scrolling: touch; }
 html[data-surface="glass"] .dor101-sheet { background: color-mix(in oklab, var(--color-bg-raised) 86%, transparent); backdrop-filter: blur(16px) saturate(1.2); }
+
+/* ── Colour palettes ───────────────────────────────────────────────────
+   `harbor` is the default (tokens in :root / .dark above). Each palette below
+   restates surfaces, ink and accents for light and dark. Contrast targets:
+   text-primary on bg-primary ≥ 12:1, text-secondary ≥ 7:1, muted ≥ 4.6:1,
+   accent-primary on bg-primary ≥ 4.5:1 (checked with the WCAG formula). */
+
+/* Midnight — true black / near-black; light variant is a crisp white. */
+html[data-palette="midnight"] {
+  --color-bg-primary: #FFFFFF; --color-bg-secondary: #F4F4F5; --color-bg-tertiary: #E7E7EA; --color-bg-raised: #FFFFFF;
+  --color-text-primary: #0A0A0B; --color-text-secondary: #3A3A40; --color-text-muted: #66666E;
+  --color-border: #D9D9DE; --color-border-strong: #B4B4BC;
+  --color-accent-primary: #111111; --color-accent-primary-soft: #3C3C44; --color-accent-secondary: #C0392B;
+}
+html[data-palette="midnight"].dark {
+  --color-bg-primary: #000000; --color-bg-secondary: #0B0B0D; --color-bg-tertiary: #161619; --color-bg-raised: #101013;
+  --color-text-primary: #F5F5F7; --color-text-secondary: #C7C7CE; --color-text-muted: #8E8E97;
+  --color-border: #232328; --color-border-strong: #3A3A42; --color-scrim: rgba(0,0,0,.85);
+  --color-accent-primary: #E8E8ED; --color-accent-primary-soft: #B9B9C4; --color-accent-secondary: #FF7A6B;
+  --color-accent-green: #5BD08F; --color-accent-amber: #F0BF5A;
+}
+
+/* Forest — deep green and cream. */
+html[data-palette="forest"] {
+  --color-bg-primary: #F7F8F3; --color-bg-secondary: #ECEFE4; --color-bg-tertiary: #DDE3D2; --color-bg-raised: #FDFDF9;
+  --color-text-primary: #14211A; --color-text-secondary: #3F4F45; --color-text-muted: #66766C;
+  --color-border: #CFD8C6; --color-border-strong: #A9B7A0;
+  --color-accent-primary: #1F5A3A; --color-accent-primary-soft: #3B7D5A; --color-accent-secondary: #A85A22; --color-accent-green: #1F5A3A;
+}
+html[data-palette="forest"].dark {
+  --color-bg-primary: #0C1511; --color-bg-secondary: #121E18; --color-bg-tertiary: #1A2A22; --color-bg-raised: #15231C;
+  --color-text-primary: #EEF3EE; --color-text-secondary: #BFCBC2; --color-text-muted: #869489;
+  --color-border: #263A2F; --color-border-strong: #3A5344;
+  --color-accent-primary: #7FD3A3; --color-accent-primary-soft: #4FA878; --color-accent-secondary: #F0A070; --color-accent-green: #7FD3A3;
+}
+
+/* Brick — Dorchester red-brick and warm plaster. */
+html[data-palette="brick"] {
+  --color-bg-primary: #FBF6F2; --color-bg-secondary: #F3EAE3; --color-bg-tertiary: #E8DBD0; --color-bg-raised: #FFFCFA;
+  --color-text-primary: #2A1A15; --color-text-secondary: #5A4640; --color-text-muted: #7E6B65;
+  --color-border: #DECFC5; --color-border-strong: #BFA99C;
+  --color-accent-primary: #8E2E22; --color-accent-primary-soft: #B24A3B; --color-accent-secondary: #14304F;
+}
+html[data-palette="brick"].dark {
+  --color-bg-primary: #170F0D; --color-bg-secondary: #201513; --color-bg-tertiary: #2C1E1B; --color-bg-raised: #241917;
+  --color-text-primary: #F6EEEA; --color-text-secondary: #D3C3BC; --color-text-muted: #9E8B84;
+  --color-border: #3C2A26; --color-border-strong: #573F3A;
+  --color-accent-primary: #F09A8C; --color-accent-primary-soft: #C96A5D; --color-accent-secondary: #8DBCEA;
+}
+
+/* Slate — neutral cool grey, low colour. */
+html[data-palette="slate"] {
+  --color-bg-primary: #F5F7F9; --color-bg-secondary: #ECEFF3; --color-bg-tertiary: #DFE4EA; --color-bg-raised: #FFFFFF;
+  --color-text-primary: #121A24; --color-text-secondary: #3E4A58; --color-text-muted: #66727F;
+  --color-border: #D1D8E0; --color-border-strong: #A9B4C1;
+  --color-accent-primary: #2F4A66; --color-accent-primary-soft: #4E6B89; --color-accent-secondary: #B5432F;
+}
+html[data-palette="slate"].dark {
+  --color-bg-primary: #0E1216; --color-bg-secondary: #151A20; --color-bg-tertiary: #1E252D; --color-bg-raised: #191F26;
+  --color-text-primary: #EEF1F4; --color-text-secondary: #C2C9D1; --color-text-muted: #8B95A1;
+  --color-border: #28313B; --color-border-strong: #3B4753;
+  --color-accent-primary: #9CC0E4; --color-accent-primary-soft: #6E97C0; --color-accent-secondary: #F08A78;
+}
+
+/* Sand — warm paper and ochre; the gentlest on the eyes in daylight. */
+html[data-palette="sand"] {
+  --color-bg-primary: #FBF5E9; --color-bg-secondary: #F3EAD6; --color-bg-tertiary: #E9DCC0; --color-bg-raised: #FFFBF2;
+  --color-text-primary: #2B2418; --color-text-secondary: #5A4F3E; --color-text-muted: #7E7260;
+  --color-border: #DFD2B8; --color-border-strong: #C1B08F;
+  --color-accent-primary: #7A4E0F; --color-accent-primary-soft: #A0702B; --color-accent-secondary: #1F4E6B; --color-accent-amber: #7A4E0F;
+}
+html[data-palette="sand"].dark {
+  --color-bg-primary: #17130C; --color-bg-secondary: #201A11; --color-bg-tertiary: #2C2418; --color-bg-raised: #241E14;
+  --color-text-primary: #F6F0E4; --color-text-secondary: #D4C9B4; --color-text-muted: #9E927C;
+  --color-border: #3A3022; --color-border-strong: #564832;
+  --color-accent-primary: #E9BE6A; --color-accent-primary-soft: #C2984A; --color-accent-secondary: #8BC4E6; --color-accent-amber: #E9BE6A;
+}
+
+/* Violet — indigo accents on cool white / deep plum. */
+html[data-palette="violet"] {
+  --color-bg-primary: #F8F6FC; --color-bg-secondary: #EFEBF7; --color-bg-tertiary: #E3DCF0; --color-bg-raised: #FFFFFF;
+  --color-text-primary: #171226; --color-text-secondary: #453C5C; --color-text-muted: #6E6683;
+  --color-border: #D6CEE6; --color-border-strong: #B2A6CB;
+  --color-accent-primary: #4A2E8A; --color-accent-primary-soft: #6B4FB0; --color-accent-secondary: #B0402F;
+}
+html[data-palette="violet"].dark {
+  --color-bg-primary: #100C1A; --color-bg-secondary: #171226; --color-bg-tertiary: #201A33; --color-bg-raised: #1B1530;
+  --color-text-primary: #F1EDF8; --color-text-secondary: #C9C0DC; --color-text-muted: #948AA9;
+  --color-border: #2C2442; --color-border-strong: #43385F;
+  --color-accent-primary: #B9A3F2; --color-accent-primary-soft: #8E74D4; --color-accent-secondary: #F3907F;
+}
+
+/* Where a palette's dark accent is light (midnight, forest, …), white text on an
+   accent-filled button would vanish. Tailwind's `text-white` is applied on those
+   buttons; give the accent an ink token and use it. */
+html[data-palette="midnight"].dark { --color-on-accent: #0A0A0B; }
+html[data-palette="forest"].dark { --color-on-accent: #0C1511; }
+html[data-palette="brick"].dark { --color-on-accent: #170F0D; }
+html[data-palette="slate"].dark { --color-on-accent: #0E1216; }
+html[data-palette="sand"].dark { --color-on-accent: #17130C; }
+html[data-palette="violet"].dark { --color-on-accent: #100C1A; }
+:root { --color-on-accent: #FFFFFF; }
+html.dark { --color-on-accent: #0F1720; }
+html.dark .bg-\[var\(--color-accent-primary\)\].text-white,
+html.dark .bg-\[var\(--color-accent-primary\)\] .text-white { color: var(--color-on-accent); }
+
+/* Dashboard preview: keep Leaflet's panes inside the card (they otherwise create
+   their own stacking context above later sections while scrolling). */
+.dor101-map-preview .leaflet-container { z-index: 0; }
+.dor101-map-preview .leaflet-pane, .dor101-map-preview .leaflet-control { z-index: 0 !important; }
