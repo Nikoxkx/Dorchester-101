@@ -1,310 +1,118 @@
-<img width="3840" height="2160" alt="dorchester-101-rebuilt" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1440&q=80" />
+# DOR101 — Dorchester resources, live
 
-# DOR101 — Dorchester 101
-
-> **Your neighborhood. Your rights. Your future.**
+> **Housing, food, transit, and rights for the Dot — with the source and the date on every number.**
 >
-> A free, open-source community resource hub rebuilt from the ground up. No generic templates. No AI copy. No hidden tracking. Just verified information — housing, food, legal aid, transit, college access — in an editorial design system that respects the people who use it.
+> Free, open-source, privacy-first. No account. No tracking. No personal data leaves your device. 9 languages. Works offline. Ships as a web app (PWA) and a Windows desktop app from one codebase.
 
 ---
 
 ## What this is
 
-DOR101 brings together public data from HUD, MBTA, BPDA, Boston Housing Authority, CSNDC, Greater Boston Legal Services, UMass Boston, and Princeton University into one readable place — across 9 languages, with no account required and zero data collection.
+DOR101 is a community resource hub for Dorchester, Boston — most of our neighbors are low-income and immigrant families navigating HUD income limits, BHA waitlists, SNAP paperwork, and MBTA disruptions, often in their second or third language. DOR101 puts the verified numbers and the phone numbers in one place:
 
-This is not a template. Every component — from the serif editorial masthead to the interactive map legend — has been rebuilt with original code, a custom palette (`bone` / `rust` / `indigo` / `ochre` / `sage` / `charcoal`), and intentional asymmetry. The design signals what it is: human-made, place-based, trustworthy.
+- **Affordable housing** — income-restricted listings with waitlist status, an AMI calculator that computes against current HUD FY2026 limits, and a step-by-step application guide.
+- **Housing projects** — BPDA-recorded developments, filterable and sortable, with unit counts, AMI breakdowns, and a detail view per project.
+- **Market trends** — published rent/sale data with the source and as-of date on every chart (never presented as a live feed when it isn't one).
+- **Food resources** — pantries and hot meals with parsed weekly hours ("open now" computed, not guessed), SNAP/EBT guide, directions, Project Bread hotline.
+- **Map** — satellite/street tiles, toggleable resource layers, live MBTA predictions, MBTA service alerts.
+- **Neighborhood guide** — a real profile per sub-neighborhood (Fields Corner, Savin Hill, Uphams Corner, Codman Square, and more), transit guide, tenant-rights basics.
+- **Financial tools** — rent-burden calculator, AMI screener, document checklist. All math runs on-device; nothing you type is sent anywhere.
+- **News** — live RSS aggregation from outlets that cover the neighborhood, pushed in real time.
+- **Resource directory** — verified organizations by category with phones, languages, and last-verified dates.
 
----
+## Privacy, stated plainly
 
-## The redesign (2026-09-06)
+- No accounts, no sign-ups, no analytics, no third-party trackers.
+- Favorites, language, theme, text size, and checklist checkmarks are stored **only** in your browser's local storage (or Electron's local storage on desktop).
+- The only network calls are to this app's own API routes and to public government data sources (MBTA API v3) plus RSS feeds from named news outlets.
+- The document checklist and calculators never transmit what you enter.
 
-| Area | Before | After |
-|---|---|---|
-| **Color system** | Generic paper/ink | Original `bone` / `rust` / `indigo` / `ochre` palette with full dark mode |
-| **Typography** | Default sans-serif headings | `Newsreader` display serif + `Atkinson Hyperlegible` UI font |
-| **Layout** | Rigid 12-column grid | Broken grid, asymmetrical editorial sections, left-rule quotes |
-| **Map** | Standard toggle controls | Custom checkbox styling, editorial layer labels, live MBTA predictions |
-| **Dashboard** | Generic stat cards | Red-rule stat cards, paper-noise texture banners, featured hotline layout |
-| **College access** | Not present | Full `/college-access` pathway aligned with Princeton values (Excellence, Imagination, Craftsmanship, Cosmopolitanism, Boldness) |
-| **App / Desktop** | Basic Electron wrapper | Native menu (Generate Report, Export College Pathway, Refresh All), complex IPC handlers, window management |
-| **Backend** | Simple API routes | Complex `/api/report` endpoint with cross-source aggregation (AMI + FMR + college match + computed summary) |
-| **Text / Copy** | Generic descriptions | Original editorial voice; every headline written for a specific human reader |
+## Real-time by design
 
----
+One server-sent-events channel (`/api/notifications/stream`) pushes:
 
-## Design philosophy: Anti-AI, human-first
+- **MBTA service alerts** for the Red Line, Fairmount Line, and main Dorchester buses (30-second server-side polling, diffed — clients only hear about changes);
+- **new articles** in the news aggregation;
+- **verified-dataset changes** (food hours, BPDA project records, program statuses).
 
-- **No gradients, no purple-blue blobs, no Inter-default typography.** The palette is drawn from paper, brick, harbor, and gold.
-- **Asymmetrical layouts** break the 12-column grid; elements overlap, sit askew, or ignore rigid alignment.
-- **Hand-made textures** (grain, scanned-paper SVG backgrounds) replace stock photography and AI-generated illustrations.
-- **Every headline is written in a specific voice** — editorial, direct, sometimes urgent.
-- **Functional first:** Every interactive element uses real data from HUD, MBTA, BPDA, and verified organizations.
+Clients fall back to interval polling automatically when SSE can't connect (offline desktop, restrictive networks). MBTA predictions keep their 30-second refresh, wired through the same layer. Everything degrades to cached data offline — the service worker precaches the resource directory and food data, because unreliable data plans are a fact of life for this audience, not an edge case.
 
----
+## Languages — full parity, enforced
 
-## College Access & Princeton Alignment
+English, Español, Kreyòl Ayisyen, Português, Tiếng Việt, Kriolu (Cape Verdean Creole), Soomaali, 中文, العربية (RTL).
 
-A new `/college-access` pathway connects Dorchester students to verified resources:
+Every dictionary is typed `Record<TranslationKey, string>` against the canonical English set — **a missing key in any language fails `tsc` and CI**, so partial translations cannot ship. Arabic flips the whole layout via CSS logical properties (`margin-inline-start`, `inset-inline-*`) — there are no LTR-only hard-coded directions. Numbers, dates, and currency format through `Intl` per locale (currency is always USD; this is Boston).
 
-- **CSNDC College Access Program** (free SAT/ACT, FAFSA/CSS workshops, bilingual)
-- **Boston Public Schools — Office of Counseling & Resource Services**
-- **Greater Boston Legal Services — Immigration & Education Unit** (free legal help for DACA / financial aid documentation)
-- **UMass Boston — Center for Student Equity & Success**
-- **Princeton University — Bridge Year Program** (funded service year before entry; direct alignment with Princeton’s mission)
+## Design system — Liquid Glass, black and white
 
-All content is framed by Princeton’s formal values — **Excellence, Imagination, Craftsmanship, Cosmopolitanism, Boldness** — and its motto: *Dei Sub Numine Viget*. If you show this site to Princeton, they will see evidence of sustained service rooted in a specific place, not marketing copy.
+Apple's Liquid Glass material, adapted for the web, in a strict black-and-white palette:
 
----
+- **Two layers, strictly separated.** Glass belongs to the *control layer only* — nav bar, tab bar, sidebar, sheets, toasts, command palette, menus. Content (text, tables, charts, map tiles, forms) is always flat and opaque, at full contrast. No frosted content cards on a frosted background, ever.
+- **Two glass weights.** `glass-regular` (36px blur, 170% saturation, `rgba(255,255,255,.68)` / `rgba(0,0,0,.62)`, specular top edge) for large chrome; `glass-clear` (18px blur, more transparent) for buttons, pills, and small controls. Both are translucent enough that the backdrop visibly shifts their tint.
+- **True black dark mode** (`#000000`) and true white light — no off-blacks, no gray-on-gray.
+- **Functional color only.** System red for emergencies, green for "available now," amber for pending. No brand gradients anywhere.
+- **Squircles for real.** `corner-shape: superellipse(2.4)` where supported (Chromium 139+), with clean radius fallbacks elsewhere. Named radius scale: `xs/sm/md/lg/xl`.
+- **Spring physics.** Framer Motion springs for every transition (controls `300/30`, sheets `220/26`); the nav and tab bars shrink on scroll-down and expand on scroll-up. `prefers-reduced-motion` and an in-app toggle remove decorative motion; `prefers-reduced-transparency` and an in-app toggle replace glass with solid surfaces.
+- **Type scale follows Dynamic Type ratios** in `rem`, so the text-size setting scales the entire scale, not just body copy. System font stack (SF Pro → Inter → Segoe → Roboto); no webfont downloads.
+- **One icon family** (Lucide) at one stroke weight throughout.
 
-## Download
+## Data integrity rules
 
-Download the latest Windows build from [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releases/latest):
+1. Every number on screen names its source and shows an as-of/last-verified date — on the surface, not in a code comment.
+2. If a source has no live feed, the UI says so ("published estimate," "last verified …") rather than dressing stale data as current. Rent/sale figures are labeled published estimates from named providers.
+3. Nothing is invented. If it can't be traced to HUD, MBTA, BPDA, BHA, Census/ACS, Boston Open Data, or a named organization, it isn't shown.
 
-| Version | Description |
-|---------|-------------|
-| **Installer** | Standard installation with Start Menu and Desktop shortcuts |
-| **Portable** | Runs without installation — suitable for USB drives or restricted machines |
+## The stack
 
-### Installation
-
-1. Download `DOR101 Setup 1.2.0.exe` from the releases page
-2. Run the installer and follow the prompts
-3. Launch DOR101 from your Desktop or Start Menu
-
-The portable version (`DOR101-Portable-1.2.0.exe`) requires no installation — simply double-click to run.
-
-> **Note:** Windows SmartScreen may warn about unsigned software. Click “More info” then “Run anyway” to proceed.
-
-No database, API keys, or configuration files are required.
-
----
-
-## Features
-
-**Dashboard** — Community overview with key statistics, live news feed, emergency hotlines, map preview, and Princeton Pathway feature.
-
-**Housing Projects** — BPDA-approved developments with unit counts, AMI breakdowns, approval status, and developer information.
-
-**Affordable Housing** — Income-restricted listings with AMI calculator and application guide; updated FY2026 HUD limits.
-
-**Market Trends** — Rental and sale price data from Zillow, Redfin, and HUD with historical charts.
-
-**Map** — Interactive map with satellite, street, and hybrid views; six resource layers; real-time MBTA transit predictions; custom editorial control design.
-
-**Food Resources** — Pantry locations, hot meal programs, SNAP/EBT eligibility guide with hours and directions.
-
-**Neighborhood Guide** — Profiles for every Dorchester sub-neighborhood including Fields Corner, Grove Hall, Uphams Corner, Savin Hill, Codman Square, and others.
-
-**Financial Tools** — Rent burden calculator, AMI eligibility screener, and document checklist.
-
-**News** — Aggregated news from Dorchester Reporter, Boston Globe, WBUR, and GBH.
-
-**Resource Directory** — Verified community organizations organized by category.
-
-**FAQ** — Answers to common questions for low-income families and renters.
-
-**College Access / Princeton Pathway** — Verified resources for first-generation students, updated 6 Sept 2026; direct links to CSNDC, BPS Counseling, GBLS, UMass Boston, and Princeton Bridge Year.
-
-**Report Engine** — `/api/report` generates cross-source neighborhood analysis combining HUD AMI, FMR, rent burden, and college-access matches (backend only; accessible via Electron menu or direct API call).
-
-**Settings** — Language selection, theme toggle, font size adjustment, and accessibility options.
-
----
-
-## Supported Languages
-
-English, Spanish, Haitian Creole, Portuguese, Vietnamese, Cape Verdean Creole, Somali, Mandarin Chinese, and Arabic (RTL layout supported).
-
----
-
-## For Developers
-
-### Requirements
-
-- Node.js 18 or later
-- npm (included with Node.js)
-- PostgreSQL 15+ (optional — only for database-backed deployments)
-
-### Quick Start
-
-```bash
-git clone https://github.com/Nikoxkx/Dorchester-101.git
-cd Dorchester-101
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-### Build Windows Executable
+Next.js 16 (App Router) · TypeScript strict · Tailwind CSS 4 (CSS-first tokens) · Framer Motion springs · Zustand (persisted locally) · Leaflet + react-leaflet + Esri/CARTO tiles · Recharts · rss-parser · Node SSE. Electron 33 wraps the same app for Windows (spawns its own local Next server — fully offline-capable, never needs a database; Postgres/Drizzle remains optional and unused by default).
 
 ```bash
 npm install
-npm run build:exe
+npm run dev            # web at localhost:3000
+npm run test:run       # unit tests (calculators, parsers, i18n parity)
+npm run build && npm start
+npm run test:e2e       # Playwright + axe-core (EN, dark mode, RTL Arabic)
+npm run electron:dev   # desktop
+npm run build:exe      # Windows installer
 ```
 
-The executable files will be generated in the `dist-electron/` directory.
+## Accessibility
 
-### App Build Instructions (Desktop + Mobile)
+WCAG 2.2 AA is the bar, not the stretch goal: keyboard-navigable throughout (focus-visible rings everywhere, including on glass), skip link, focus-trapped sheets, `role`-correct menus and tabs, screen-reader text for icon-only controls, `aria-live` for filter results and notifications, axe-core sweeps in CI across light, dark, and RTL Arabic, and minimum-scale zoom never disabled.
 
-See [APP_INSTRUCTIONS.md](APP_INSTRUCTIONS.md) for complete steps to:
-- Run the web app locally (`npm run dev`)
-- Build the Windows Electron executable (`npm run build:exe`)
-- Create a mobile PWA or React Native wrapper from your computer
-- Update content through `src/data/` without touching UI code
-
-### Available Commands
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start development server |
-| `npm run build` | Create production build |
-| `npm run start` | Run production server |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | TypeScript validation |
-| `npm run test` | Run unit tests |
-| `npm run test:e2e` | Run end-to-end tests |
-| `npm run build:exe` | Build Windows installer and portable exe |
-
----
-
-## Technology
-
-| Component | Technology |
-|-----------|------------|
-| Framework | Next.js 16 (App Router) |
-| Desktop | Electron 33 |
-| Language | TypeScript 5 (strict mode) |
-| Database | PostgreSQL with Drizzle ORM (optional) |
-| Styling | Tailwind CSS 4 |
-| Design System | Custom `src/lib/format.ts` — editorial type scale, spacing grid, shadow, border, color tokens |
-| Maps | Leaflet with react-leaflet and ESRI tiles |
-| Charts | Recharts |
-| State | Zustand |
-| Testing | Vitest and Playwright |
-| CI/CD | GitHub Actions |
-
----
-
-## Data Sources
-
-All information is sourced from verified public authorities and reputable news organizations:
-
-- Zillow Research — Rental price data (ZORI)
-- Redfin Data Center — Sale prices and inventory
-- HUD User — Fair Market Rents and AMI limits (FY2026)
-- MBTA API v3 — Transit predictions and service alerts
-- Boston Open Data — Housing inventory and permits
-- BPDA — Development projects and planning
-- Boston Housing Authority — Public housing and Section 8
-- U.S. Census ACS — Demographics and income data
-- Greater Boston Food Bank — Food distribution sites
-- Dorchester Reporter — Local news coverage
-- WBUR — Public radio news
-- GBH News — Public media coverage
-- CSNDC — College access and legal services
-- Princeton University — Bridge Year Program and admission mission
-
----
-
-## Privacy
-
-- No personal data is collected
-- No accounts or sign-in required
-- No analytics, tracking, or telemetry
-- User preferences are stored locally only
-- All API calls target public government data sources
-- No data is sent to third-party AI services
-
----
-
-## Project Structure
+## Repo layout
 
 ```
-DOR101/
-├── .github/workflows/     # CI/CD configuration
-├── electron/               # Electron main process, preload, native menu, complex IPC
-├── src/
-│   ├── app/               # Next.js pages, API routes (/api/report complex), layout
-│   ├── components/        # UI components rebuilt with original design
-│   ├── lib/               # Utilities, i18n, design format system (format.ts)
-│   ├── db/                # Database schema (optional)
-│   └── stores/             # State management
-├── e2e/                   # End-to-end tests
-├── APP_INSTRUCTIONS.md    # Desktop / mobile / PWA build guide
-└── dist-electron/          # Build output
+src/app/                 routes (pages + API route handlers)
+src/components/glass/    the glass primitives (Surface, Sheet, Controls, Menu, Toaster)
+src/components/layout/   sidebar, header, tab bar, palette, saved sheet
+src/lib/i18n/            one typed dictionary per language (en is canonical)
+src/lib/                 motion tokens, notifications builder, news parser, realtime hub
+src/data/                sourced, dated datasets (HUD, MBTA, BPDA, food, resources)
+public/logos/            partner marks + sourcing manifest (see below)
+electron/                desktop shell (local server, no DB required)
 ```
 
----
+### Organization logos — the honesty rule
 
-## Contributing
+Partner organizations are represented by their **real marks only**. `public/logos/MANIFEST.md` lists each organization, the exact file to drop in, the verified source URL, and its license status (U.S. government seals are public-domain works; community organizations' marks come from their own press pages). **Zillow and Redfin get text attribution, not their logos** — their brand guidelines restrict this kind of use, and mistyping that tradeoff for a school project would be worse than a wordmark. Until a mark's file is added, the UI renders a plain typographic chip — never a generated or approximated logo.
 
-1. Verify all information against official sources before adding content
-2. Add new UI strings to `src/lib/i18n.ts`
-3. Ensure all type checks and builds pass before submitting
-4. Include a clear description with any pull request
-5. Never use AI-generated copy — write in a specific human voice
+## Known limitations (stated, not hidden)
 
----
+- **Boston Globe** is absent from the news aggregation: it discontinued public RSS feeds in 2023. Dorchester Reporter, Bay State Banner, Boston.gov, WBUR, and GBH cover the neighborhood.
+- **Rent/sale figures** are published estimates (RentCafe, Redfin summaries, HUD FMR), not a live MLS feed — no open API exists without keys; the UI labels them as estimates with their month.
+- **BPDA project records** are a curated, dated directory of significant Dorchester developments, linked to each project page — not a live scrape of Article 80 filings (no stable public feed); each record links to bostonplans.org.
+- **FAQ long-form answers** are currently English-only prose; a per-answer note (in all 9 languages) offers the free 2-1-1 interpretation line, and translating legal-adjacent text responsibly is the next content milestone — machine-translating eviction guidance without review would be worse than being honest about the gap.
+- **Partner logos** require manual addition per the manifest (licensing-safe sourcing); text chips render until then.
+- **Somali, Kriolu, and Kreyòl strings** were written carefully for this rebuild but deserve review by native-speaker community members before being called final.
+
+## What's next
+
+1. Community translation review (Somali, Kriolu, Kreyòl, Vietnamese) with named reviewers.
+2. Real logos per the manifest, and a "data sources" page aggregating every as-of date.
+3. BPDA Article 80 filings via the Boston Open Data portal (CKAN) once a stable dataset key is confirmed.
+4. Print-dedicated one-pagers per resource for appointment packets.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
----
-
-## Acknowledgments
-
-DOR101 is built to serve the Dorchester community. Special thanks to the Boston Housing Authority, BPDA, Mayor's Office of Housing, Greater Boston Legal Services, Greater Boston Food Bank, Project Bread, CSNDC, DBEDC, VietAID, ABCD, City Life / Vida Urbana, MBTA, HUD, Dorchester Reporter, WBUR, GBH, and Princeton University for the public data, services, and values that make this project possible.
-
----
-
-**DOR101 — Dorchester 101**  
-*Rebuilt from the ground up — bone, rust, indigo, ochre.*  
-*Your neighborhood. Your rights. Your future.*
-
----
-
-## Massive Update — 2026-09-06 (Complete Overhaul)
-
-This is the final comprehensive rebuild. Everything listed below has been added, rebuilt, or verified fully functional:
-
-### New Components & Features Added
-- `src/lib/format.ts` — Design format system (type scale, spacing grid, shadow/border, color tokens)
-- `src/components/features/CollegePathwayCard.tsx` — Editorial feature card linking college-access to homepage
-- `src/components/features/ReportGenerator.tsx` — Interactive UI that calls `/api/report` and displays computed AMI, rent burden, college matches
-- `src/components/ui/EditorialQuote.tsx` — Reusable editorial blockquote with decorative quotation mark
-- `src/components/ui/TextureBackground.tsx` — Reusable raw SVG paper-noise texture overlay
-- `src/lib/validators.ts` — Original calculation/validation utilities (AMI %, band, rent burden, household size, income)
-
-### New Backend Endpoints (Fully Functional)
-- `GET /api/health` — Service health with version, branch, feature list, data sources, timestamp
-- `GET /api/search?q=` — Cross-source real-time search: college resources + map locations + pathway match
-- `GET /api/report?householdSize=&income=` — Complex aggregated report combining HUD FY2026 AMI, FMR, rent estimates, college-access matches, computed summary string
-
-### App / Electron Enhancements
-- `electron/preload.js` — Exposes `generateReport`, `exportCollege`, `refreshAll` to web layer
-- `electron/main.js` — Native menu rebuilt with File/Generate Report, Data/Refresh All + Export College Pathway, View/Developer Tools; complex IPC handlers for report generation and college export
-- Window management preserved; background color updated to new `bone` palette
-
-### Design System Overhaul
-- Global CSS rebuilt: `bone` (#f0ebe3), `rust` (#a23b28), `indigo` (#2d3e50), `ochre` (#c4a35a), `sage` (#5e6e5a), `charcoal` (#1a1814)
-- All existing variables mapped via aliases so 20+ rebuilt components render correctly without breakage
-- Typography: `Newsreader` display + `Atkinson Hyperlegible` UI (no default Inter)
-- Layout: asymmetrical editorial sections, broken grids, left-rule quotes, raw textures
-
-### Content Overhaul
-- Homepage: original editorial headline + feature section + quote + report generator + pathway card
-- College-access: fully rewritten with original editorial copy, verified sources, direct links
-- Affordable-housing: editorial header + college cross-link button
-- All dates updated to 2026-09-06
-
-### Testing & Functionality
-- Every new endpoint responds correctly
-- All links secure (`rel="noreferrer"` on external)
-- Dark mode, accessibility focus, reduced-motion, print styles preserved
-- No hardcoded placeholders or AI-generated copy anywhere in rebuilt components
-
----
-
-**Every single detail is functional. Nothing is decorative-only. Every new component connects to real data or real user action.**
+MIT — see [LICENSE](LICENSE). Data belongs to its named sources; always confirm waitlists, hours, and eligibility with the agency before acting.

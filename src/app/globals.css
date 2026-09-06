@@ -1,99 +1,221 @@
+/* ==========================================================================
+   DOR101 design system — "Liquid Glass, black and white"
+
+   Two layers, strictly separated (Apple Liquid Glass rules):
+   · CONTROL LAYER — glass. Nav bars, tab bars, sidebars, sheets, modals,
+     toasts, menus, floating controls. Nothing else.
+   · CONTENT LAYER — flat, opaque, full contrast. Body text, tables, charts,
+     map tiles, articles, form inputs. Never glass.
+
+   Palette is genuinely black and white. Color appears only where it carries
+   meaning: red = emergency/urgent, green = available/eligible, amber = pending.
+   ========================================================================== */
+
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* --------------------------------------------------------------------------
+   Design tokens (Tailwind 4 CSS-first config).
+   Values live on :root/.dark; @theme inline maps them to utilities so
+   components never hard-code a color, radius, or duration.
+   -------------------------------------------------------------------------- */
+
 :root {
-  --paper: var(--bone);
-  --surface: var(--wax);
-  --red: var(--rust);
-  --red-dark: var(--rust-dark);
-  --harbor: var(--indigo);
-  --park: var(--sage);
-  --gold: var(--ochre);
-  --ink-soft: #6e685e;
-  --bone: #f0ebe3;
-  --wax: #e7e0d4;
-  --parchment: #ddd5c7;
-  --charcoal: #1a1814;
-  --ink: #2a2722;
-  --rust: #a23b28;
-  --rust-dark: #7a2b1e;
-  --indigo: #2d3e50;
-  --ochre: #c4a35a;
-  --sage: #5e6e5a;
-  --line: #cfc6ba;
-  --line-strong: #2a2722;
-  --shadow: rgba(26, 24, 20, 0.14);
+  color-scheme: light;
 
-  --font-ui: var(--font-atkinson), "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --font-display: var(--font-newsreader), Newsreader, "Iowan Old Style", Georgia, serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Source Code Pro", Menlo, monospace;
+  /* Base — true white / true black, no off-whites */
+  --canvas: #ffffff;
+  --ink: #000000;
 
-  --radius: 2px;
+  /* Text, stepped by alpha (WCAG-checked against flat white) */
+  --text-1: rgba(0, 0, 0, 0.88);
+  --text-2: rgba(0, 0, 0, 0.58);
+  --text-3: rgba(0, 0, 0, 0.38);
+
+  /* Separators & flat surfaces (content layer — always opaque) */
+  --separator: rgba(0, 0, 0, 0.09);
+  --separator-strong: rgba(0, 0, 0, 0.22);
+  --surface: #f5f5f7;
+  --surface-2: #ebebed;
+  --content-raised: #ffffff;
+
+  /* Functional color only — Apple system colors, accessibility variants for
+     text on light, vivid variants for fills and dark mode */
+  --red-text: #d70015;      /* Apple systemRed (accessible, light)  */
+  --red-fill: #ff3b30;
+  --green-text: #248a3d;    /* Apple systemGreen (accessible, light)*/
+  --green-fill: #34c759;
+  --amber-text: #b25000;    /* Apple systemOrange (accessible-ish)  */
+  --amber-fill: #ff9500;
+
+  /* Glass — Regular (nav, sidebars, sheets, modals) */
+  --glass-regular-bg: rgba(255, 255, 255, 0.68);
+  --glass-regular-blur: 36px;
+  --glass-regular-sat: 170%;
+  --glass-regular-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --glass-edge: rgba(255, 255, 255, 0.5);
+  --glass-inner-line: rgba(0, 0, 0, 0.14);
+  --glass-specular: rgba(255, 255, 255, 0.55);
+
+  /* Glass — Clear (buttons, pills, toggles, small floating controls) */
+  --glass-clear-bg: rgba(255, 255, 255, 0.45);
+  --glass-clear-blur: 18px;
+  --glass-clear-sat: 160%;
+  --glass-clear-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --glass-clear-hover: rgba(255, 255, 255, 0.62);
+
+  /* Radius scale — continuous-corner feel; see .squircle for corner-shape */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --radius-pill: 999px;
+
+  /* Motion — spring physics in CSS where JS springs aren't available.
+     Exact spring constants live in src/lib/motion.ts (Framer Motion). */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-control: cubic-bezier(0.25, 0.9, 0.3, 1.1);
+  --dur-control: 220ms;
+  --dur-sheet: 380ms;
+
+  /* Type scale — iOS Dynamic Type ratios, in rem so the user's font-size
+     setting scales the entire scale, not just body text. */
+  --text-caption2: 0.6875rem;  /* 11 */
+  --text-caption: 0.75rem;     /* 12 */
+  --text-footnote: 0.8125rem;  /* 13 */
+  --text-subhead: 0.9375rem;   /* 15 */
+  --text-callout: 1rem;        /* 16 */
+  --text-body: 1.0625rem;      /* 17 */
+  --text-title3: 1.25rem;      /* 20 */
+  --text-title2: 1.375rem;     /* 22 */
+  --text-title1: 1.75rem;      /* 28 */
+  --text-large: 2.125rem;      /* 34 */
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* Layout */
   --header-h: 56px;
-  --sidebar-w: 232px;
-  --sidebar-collapsed: 56px;
+  --sidebar-w: 244px;
+  --sidebar-collapsed: 68px;
   --bottom-nav: 64px;
 
-  --color-bg-primary: var(--bone);
-  --color-bg-secondary: var(--wax);
-  --color-bg-tertiary: #ddd5c7;
-  --color-text-primary: var(--charcoal);
-  --color-text-secondary: var(--ink);
-  --color-text-muted: #6e685e;
-  --color-border: var(--line);
-  --color-accent-primary: var(--indigo);
-  --color-accent-secondary: var(--rust);
-  --color-accent-green: var(--sage);
-  --color-accent-amber: var(--ochre);
-  --color-shadow: var(--shadow);
+  --shadow-flat: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.07), 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .dark {
-  --bone: #141210;
-  --wax: #1a1814;
-  --parchment: #24201c;
-  --charcoal: #f0ebe3;
-  --ink: #ddd5c7;
-  --rust: #d46a5a;
-  --rust-dark: #a23b28;
-  --indigo: #7a9bbd;
-  --ochre: #d4bc7a;
-  --sage: #7aa28a;
-  --line: #38342e;
-  --line-strong: #ddd5c7;
-  --shadow: rgba(0, 0, 0, 0.55);
   color-scheme: dark;
+
+  --canvas: #000000;   /* true black — OLED-friendly by design */
+  --ink: #ffffff;
+
+  --text-1: rgba(255, 255, 255, 0.92);
+  --text-2: rgba(255, 255, 255, 0.6);
+  --text-3: rgba(255, 255, 255, 0.35);
+
+  --separator: rgba(255, 255, 255, 0.12);
+  --separator-strong: rgba(255, 255, 255, 0.28);
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --content-raised: #1c1c1e;
+
+  --red-text: #ff453a;
+  --green-text: #30d158;
+  --amber-text: #ff9f0a;
+
+  --glass-regular-bg: rgba(0, 0, 0, 0.62);
+  --glass-regular-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-inner-line: rgba(255, 255, 255, 0.14);
+  --glass-specular: rgba(255, 255, 255, 0.14);
+
+  --glass-clear-bg: rgba(0, 0, 0, 0.4);
+  --glass-clear-hover: rgba(255, 255, 255, 0.12);
+
+  --shadow-flat: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
 }
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-separator: var(--separator);
+  --color-separator-strong: var(--separator-strong);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-raised: var(--content-raised);
+
+  --color-danger: var(--red-text);
+  --color-danger-fill: var(--red-fill);
+  --color-success: var(--green-text);
+  --color-success-fill: var(--green-fill);
+  --color-warning: var(--amber-text);
+  --color-warning-fill: var(--amber-fill);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-ui: var(--font-ui);
+  --font-mono: var(--font-mono);
+
+  --text-caption2: var(--text-caption2);
+  --text-caption: var(--text-caption);
+  --text-footnote: var(--text-footnote);
+  --text-subhead: var(--text-subhead);
+  --text-callout: var(--text-callout);
+  --text-body: var(--text-body);
+  --text-title3: var(--text-title3);
+  --text-title2: var(--text-title2);
+  --text-title1: var(--text-title1);
+  --text-large: var(--text-large);
+
+  --shadow-flat: var(--shadow-flat);
+  --shadow-raised: var(--shadow-raised);
+
+  --ease-spring: var(--ease-spring);
+  --ease-control: var(--ease-control);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-size: 16px;
-  scroll-behavior: auto;
+  font-size: 16px; /* reset per user setting from the store; rem tokens scale */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   font-family: var(--font-ui);
-  background: var(--bone);
-  color: var(--charcoal);
-  line-height: 1.55;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  background: var(--canvas);
+  color: var(--text-1);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: var(--charcoal);
-}
-
-h4, h5, h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-ui);
   font-weight: 700;
-  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: var(--text-1);
+  margin: 0;
 }
 
 a {
@@ -102,131 +224,158 @@ a {
 
 button, input, select, textarea {
   font-family: inherit;
+  font-size: inherit;
 }
 
-.font-display { font-family: var(--font-display); }
-.font-heading { font-family: var(--font-ui); }
-.font-body { font-family: var(--font-ui); }
-.font-mono { font-family: var(--font-mono); }
-
-.rule {
-  height: 1px;
-  background: var(--line);
-  border: 0;
+::selection {
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+}
+.dark ::selection {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
 }
 
-.rule-heavy {
-  height: 3px;
-  background: var(--charcoal);
-  border: 0;
-}
-
-.rule-rust {
-  height: 3px;
-  background: var(--rust);
-  border: 0;
-}
-
-.masthead-date {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink);
-  opacity: 0.7;
-}
-
-.kicker {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--rust);
-}
-
-.desk-panel {
-  background: var(--wax);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.desk-panel-ink {
-  background: #1a1814;
-  color: var(--bone);
-  border-radius: var(--radius);
-}
-
-.dark .desk-panel-ink {
-  background: #0c0b09;
-}
-
+/* Keyboard focus — visible everywhere, including on glass.
+   Double ring keeps contrast against both light and dark backdrops. */
 :focus-visible {
-  outline: 2.5px solid var(--indigo);
+  outline: 2px solid var(--text-1);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+.glass :focus-visible,
+.glass:focus-visible {
+  outline: 2px solid var(--text-1);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 4px var(--canvas);
 }
 
+/* Skip link */
 .skip-link {
-  position: absolute;
-  left: 12px;
-  top: -40px;
-  z-index: 100;
-  background: var(--charcoal);
-  color: var(--bone);
-  padding: 8px 12px;
-  border-radius: var(--radius);
+  position: fixed;
+  inset-inline-start: var(--radius-sm);
+  top: -48px;
+  z-index: 200;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: 10px 16px;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+  transition: top var(--dur-control) var(--ease-control);
 }
-
 .skip-link:focus {
-  top: 8px;
+  top: var(--radius-sm);
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--bone); }
-::-webkit-scrollbar-thumb { background: var(--line); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+/* --------------------------------------------------------------------------
+   Glass — the control-layer material. Two weights, per Apple:
+   Regular (nav/sidebars/sheets) and Clear (buttons/pills/small controls).
+   Both are translucent enough that saturated backdrop content shifts their
+   apparent tint — the material reacts to what is behind it.
+   -------------------------------------------------------------------------- */
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 7px;
-  border: 1px solid currentColor;
-  border-radius: 2px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-family: var(--font-ui);
+.glass {
+  position: relative;
 }
 
-.ami-30 { background: var(--indigo); color: var(--bone); }
-.ami-50 { background: #3d5a80; color: var(--bone); }
-.ami-60 { background: #5a7a9a; color: var(--bone); }
-.ami-80 { background: #7a98b5; color: var(--charcoal); }
-.ami-market { background: #9aa093; color: var(--charcoal); }
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.glass-regular {
+  background: var(--glass-regular-bg);
+  -webkit-backdrop-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-sat));
+  backdrop-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-sat));
+  box-shadow: var(--glass-regular-shadow);
 }
 
-.skeleton {
-  background: linear-gradient(90deg, var(--wax) 25%, var(--bone) 50%, var(--wax) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: 2px;
+.glass-clear {
+  background: var(--glass-clear-bg);
+  -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-sat));
+  backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-sat));
+  box-shadow: var(--glass-clear-shadow);
+  transition: background var(--dur-control) var(--ease-control);
 }
 
+/* Specular edge — a 1px top highlight like light bending through the material */
+.glass-edge {
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-inner-line);
+}
+
+/* Pointer-tracked specular highlight on large glass surfaces (mouse only) */
+@media (hover: hover) and (pointer: fine) {
+  .glass-specular::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      320px circle at var(--spec-x, 50%) var(--spec-y, 0%),
+      var(--glass-specular),
+      transparent 65%
+    );
+    opacity: var(--spec-opacity, 0);
+    transition: opacity var(--dur-sheet) var(--ease-control);
+  }
+  .glass-specular:hover::before {
+    --spec-opacity: 1;
+  }
+}
+
+/* Squircle corners — real continuous curvature where the browser supports it
+   (Chromium 139+), plain rounding elsewhere. */
+.squircle {
+  border-radius: var(--squircle-r, var(--radius-md));
+}
+@supports (corner-shape: squircle) {
+  .squircle {
+    corner-shape: superellipse(2.4);
+    border-radius: var(--squircle-r, var(--radius-md));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced transparency — OS preference or in-app toggle. Glass becomes a
+   flat opaque surface; content contrast is guaranteed.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-regular,
+  .glass-clear {
+    background: var(--canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: inset 0 0 0 1px var(--separator);
+  }
+  .glass-specular::before {
+    display: none;
+  }
+}
+
+.reduce-transparency .glass-regular,
+.reduce-transparency .glass-clear {
+  background: var(--canvas);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px var(--separator);
+}
+.reduce-transparency .glass-specular::before {
+  display: none;
+}
+
+/* Reduced motion — keep state feedback, drop decorative motion */
 .reduce-motion *,
 .reduce-motion *::before,
 .reduce-motion *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -234,45 +383,213 @@ button, input, select, textarea {
   }
 }
 
-@media print {
-  .no-print { display: none !important; }
-  body { background: white; color: black; }
+/* --------------------------------------------------------------------------
+   Content-layer primitives (flat, opaque, full contrast)
+   -------------------------------------------------------------------------- */
+
+.content-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-flat);
+}
+.squircle.content-card {
+  --squircle-r: var(--radius-md);
 }
 
-.leaflet-container { font-family: var(--font-ui); }
-.leaflet-popup-content-wrapper {
-  border-radius: 4px !important;
-  box-shadow: 0 8px 24px var(--shadow) !important;
-  border: 1px solid var(--line) !important;
+.content-raised {
+  background: var(--content-raised);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
 }
-.leaflet-popup-content { margin: 0 !important; }
+
+.rule {
+  height: 1px;
+  background: var(--separator);
+  border: 0;
+}
+
+.kicker {
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* Data table — content layer, never glass */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-subhead);
+}
+.data-table th {
+  text-align: start;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--separator-strong);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--separator);
+  vertical-align: top;
+}
+.data-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--text-1) 4%, transparent);
+}
+
+/* Status colors — functional only */
+.status-open { color: var(--green-text); }
+.status-pending { color: var(--amber-text); }
+.status-urgent { color: var(--red-text); }
+
+.dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.dot-open { background: var(--green-fill); }
+.dot-pending { background: var(--amber-fill); }
+.dot-urgent { background: var(--red-fill); }
+
+/* --------------------------------------------------------------------------
+   Skeletons / loading
+   -------------------------------------------------------------------------- */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-xs);
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.live-dot {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+.reduce-motion .live-dot {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbars
+   -------------------------------------------------------------------------- */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--separator-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); background-clip: content-box; }
+
+/* --------------------------------------------------------------------------
+   Leaflet — restyled to the monochrome system
+   -------------------------------------------------------------------------- */
+
+.leaflet-container {
+  font-family: var(--font-ui);
+  background: var(--surface);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-raised) !important;
+  background: var(--canvas) !important;
+  color: var(--text-1) !important;
+}
+.leaflet-popup-content { margin: 12px 14px !important; }
+.leaflet-popup-tip { background: var(--canvas) !important; }
 .leaflet-control-attribution {
   font-size: 9px !important;
-  background: rgba(240, 235, 227, 0.85) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: var(--text-2) !important;
 }
 .dark .leaflet-control-attribution {
-  background: rgba(20, 18, 16, 0.85) !important;
-  color: #aaa !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: var(--text-2) !important;
 }
+.leaflet-control-attribution a { color: var(--text-2) !important; }
 .leaflet-control-zoom a {
-  background: var(--wax) !important;
-  color: var(--charcoal) !important;
-  border-color: var(--line) !important;
+  background: var(--canvas) !important;
+  color: var(--text-1) !important;
+  border-color: var(--separator) !important;
 }
+.leaflet-bar { border: none !important; box-shadow: var(--shadow-flat) !important; }
 
-.dark input,
-.dark select,
-.dark textarea {
-  background: var(--wax);
-  color: var(--charcoal);
-  border-color: var(--line);
-}
-
-.hotline-bar a:hover {
-  background: #fff;
-  color: var(--rust-dark);
-}
+/* --------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
 
 .bottom-nav {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+.text-balance { text-wrap: balance; }
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* Screen-reader only */
+.sr-only-x {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Print — clean output of resource lists & checklists (no chrome, no glass)
+   -------------------------------------------------------------------------- */
+
+@media print {
+  :root {
+    --canvas: #ffffff;
+    --text-1: #000000;
+    --text-2: #333333;
+    --separator: #cccccc;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 12pt;
+  }
+  .no-print { display: none !important; }
+  .glass-regular,
+  .glass-clear {
+    background: #fff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  .print-only { display: block !important; }
+  .print-block { break-inside: avoid; }
+  a { text-decoration: none; color: #000; }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #444;
+  }
+  a[href^="tel:"]::after {
+    content: " — " attr(href);
+    font-size: 9pt;
+    color: #444;
+  }
+}
+
+.print-only { display: none; }

@@ -1,30 +1,49 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { StatCard } from '@/components/dashboard/StatCard';
-import { RedLineStrip } from '@/components/transit/RedLineStrip';
-import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
-import { getTimeOfDay, localeForLanguage } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
+import { LiveTransit } from '@/components/transit/LiveTransit';
 import { useAppStore } from '@/stores/appStore';
-import { useApi } from '@/hooks/useApi';
-import { BHA_STATUS } from '@/data/programs';
-import { CollegePathwayCard } from '@/components/features/CollegePathwayCard';
-import { ReportGenerator } from '@/components/features/ReportGenerator';
-import { EditorialQuote } from '@/components/ui/EditorialQuote';
+import { useTranslation } from '@/lib/i18n';
+import { useLiveApi } from '@/hooks/useLiveApi';
+import { getTimeOfDay } from '@/lib/utils';
+import { RAFT_PROGRAM } from '@/data/programs';
+import { ArrowRight, RadioTower } from 'lucide-react';
 
 const DorchesterMap = dynamic(
   () => import('@/components/map/DorchesterMap').then((m) => m.DorchesterMap),
-  { ssr: false, loading: () => <div className="h-64 bg-[var(--surface)] flex items-center justify-center"><LoadingSpinner /></div> },
+  {
+    ssr: false,
+    loading: () => <div className="h-72 content-card squircle animate-pulse" aria-hidden />,
+  },
 );
 
-interface NewsPayload { articles?: { id: string; title: string; source: string; publishedAt: string; category: string }[] }
+interface NewsPayload {
+  articles?: {
+    id: string;
+    title: string;
+    source: string;
+    sourceUrl: string;
+    publishedAt: string;
+    category: string;
+  }[];
+}
+type StatKey = Parameters<ReturnType<typeof useTranslation>['t']>[0];
+
+const STAT_LABEL: Record<string, StatKey> = {
+  rent: 'stats.medianRent',
+  sale: 'stats.medianSale',
+  projects: 'stats.activeProjects',
+  food: 'stats.foodSites',
+  section8: 'stats.section8',
+  'public-housing': 'stats.publicHousing',
+};
+
 interface StatsPayload {
   stats?: {
     id: string;
@@ -39,134 +58,192 @@ interface StatsPayload {
 }
 
 export default function DashboardPage() {
-  const { language, setLastUpdated } = useAppStore();
-  const { t } = useTranslation(language);
-  const news = useApi<NewsPayload>('/api/news');
-  const stats = useApi<StatsPayload>('/api/stats');
+  const { language } = useAppStore();
+  const { t, formatFor } = useTranslation(language);
 
-  const today = useMemo(
-    () => new Date().toLocaleDateString(localeForLanguage(language), {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    }),
-    [language],
-  );
+  // Live channels: news items push via SSE; stats reload when verified
+  // datasets change on the server.
+  const news = useLiveApi<NewsPayload>('/api/news', { channels: ['news'] });
+  const stats = useLiveApi<StatsPayload>('/api/stats', { channels: ['data'] });
+
+  const articles = news.data?.articles?.slice(0, 5) ?? [];
+  const greeting = t(`dashboard.greeting.${getTimeOfDay()}`);
 
   useEffect(() => {
-    if (news.data) setLastUpdated(new Date().toLocaleTimeString());
-  }, [news.data, setLastUpdated]);
-
-  const greeting = t(`dashboard.greeting.${getTimeOfDay()}`);
-  const articles = news.data?.articles?.slice(0, 4) || [];
+    document.title = 'DOR101 — Dorchester resources, live';
+  }, []);
 
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="masthead-date">{today}</p>
-          <h1 className="font-display text-5xl md:text-7xl tracking-[-0.05em] leading-[0.92]">Dorchester<br /><span className="italic">101</span></h1>
-          <p className="text-[var(--ink-soft)] mt-3 max-w-2xl text-lg leading-relaxed">A neighborhood resource hub rebuilt from the ground up. No templates. No AI copy. Just verified housing, food, transit, legal, and college-access data — in the voice of the people who live here.</p>
-          <p className="text-sm text-[var(--muted)] mt-2">{greeting}. {t('dashboard.tagline')}</p>
+        {/* Masthead */}
+        <header>
+          <p className="kicker">{formatFor.date(new Date(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <h1 className="text-large md:text-5xl font-bold tracking-tight text-1 mt-1 text-balance">
+            {t('dashboard.welcome')}
+          </h1>
+          <p className="text-title3 text-text-2 mt-2 max-w-2xl leading-snug text-balance">
+            {t('dashboard.tagline')}
+          </p>
+          <p className="text-subhead text-text-2 mt-3 flex items-center gap-2">
+            <span className="font-semibold text-1">{greeting}.</span>
+            <span className="inline-flex items-center gap-1.5 text-caption2 font-bold uppercase tracking-wider text-success">
+              <RadioTower className="w-3 h-3" aria-hidden />
+              {t('dashboard.liveBadge')}
+            </span>
+          </p>
         </header>
 
         <EmergencyBanner />
 
-        <section className="grid md:grid-cols-[1.3fr_0.7fr] gap-8">
+        {/* Live stats + transit */}
+        <section aria-label={t('dashboard.glance')} className="grid lg:grid-cols-[1fr_320px] gap-4">
           <div>
-            <div className="flex items-end justify-between mb-2">
-              <h2 className="font-display text-2xl">{t('dashboard.glance')}</h2>
-              <DataRefreshIndicator lastUpdated={stats.loading ? null : 'sourced'} isRefreshing={stats.loading} />
+            <div className="flex items-end justify-between mb-2.5">
+              <h2 className="text-title2 font-bold text-1">{t('dashboard.glance')}</h2>
             </div>
-            <div className="grid sm:grid-cols-2 gap-x-8">
-              {(stats.data?.stats || []).map((s) => (
-                <StatCard
-                  key={s.id}
-                  label={s.label}
-                  value={s.value}
-                  format={s.format}
-                  status={s.status}
-                  trend={typeof s.trend === 'number' ? { value: s.trend, direction: s.trend >= 0 ? 'up' : 'down' } : undefined}
-                  source={s.source}
-                  sourceDate={s.sourceDate}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-[var(--muted)] mt-3">
-              BHA tenant-based Section 8 is <strong>{BHA_STATUS.section8TenantBased}</strong> as of {BHA_STATUS.asOf}. Public housing waitlists are {BHA_STATUS.publicHousing}.
-            </p>
+            {stats.loading && (
+              <div className="grid sm:grid-cols-2 gap-2.5" aria-hidden>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="skeleton h-28" />
+                ))}
+              </div>
+            )}
+            {stats.error && !stats.data && (
+              <div role="alert" className="content-card squircle p-4">
+                <p className="text-subhead font-semibold text-1">{t('common.error')}</p>
+                <p className="text-footnote text-text-2 mt-1">{t('common.errorHint')}</p>
+              </div>
+            )}
+            {stats.data?.stats && (
+              <div className="grid sm:grid-cols-2 gap-2.5">
+                {stats.data.stats.map((s) => (
+                  <StatCard
+                    key={s.id}
+                    label={s.id in STAT_LABEL ? t(STAT_LABEL[s.id]) : s.label}
+                    value={
+                      s.format === 'currency'
+                        ? formatFor.currency(s.value)
+                        : s.format === 'percent'
+                          ? formatFor.percent(s.value / 100)
+                          : s.format === 'status'
+                            ? s.status === 'open'
+                              ? t('common.open')
+                              : s.status === 'closed'
+                                ? t('common.closed')
+                                : (s.status ?? '')
+                            : formatFor.number(s.value)
+                    }
+                    trend={typeof s.trend === 'number' ? { value: s.trend, direction: s.trend >= 0 ? 'up' : 'down' } : undefined}
+                    source={s.source}
+                    sourceDate={s.sourceDate}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          <aside className="desk-panel p-4">
-            <RedLineStrip />
-            <Link href="/map" className="text-sm underline mt-4 inline-block">{t('dashboard.viewFullMap')}</Link>
-          </aside>
+          <div className="space-y-4">
+            <LiveTransit compact />
+          </div>
         </section>
 
-        <section className="bg-[var(--surface)] border-y-2 border-[var(--ink)] py-8 px-6 md:px-10 relative overflow-hidden">
-          <div aria-hidden className="absolute top-0 right-0 w-40 h-40 opacity-[0.07] pointer-events-none translate-x-10 -translate-y-10">
-            <svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" />
-              <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontFamily="serif" fontSize="70" fill="var(--paper)">P</text>
-            </svg>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 relative z-10">
-            <div>
-              <p className="kicker mb-1">Princeton Alignment · Service Pathway</p>
-              <h2 className="font-display text-3xl md:text-4xl tracking-[-0.04em] leading-none">Dorchester to Princeton</h2>
-              <p className="font-body text-[var(--ink-soft)] mt-2 max-w-xl">Real resources. Real legal help. A design that refuses to look like it was generated by an AI with no sense of place.</p>
-            </div>
-            <Link href="/college-access" className="inline-block bg-[var(--red)] text-white px-6 py-3 font-bold text-sm hover:bg-[var(--red-dark)] transition-colors shrink-0">Explore the pathway</Link>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="font-display text-2xl mb-3">{t('dashboard.quickAccess')}</h2>
+        {/* Quick actions */}
+        <section aria-label={t('dashboard.quickAccess')}>
+          <h2 className="text-title2 font-bold text-1 mb-2.5">{t('dashboard.quickAccess')}</h2>
           <QuickLinks />
         </section>
 
-        <div className="grid lg:grid-cols-[1.4fr_0.6fr] gap-8">
-          <section>
-            <div className="flex items-end justify-between border-b border-[var(--ink)] pb-2 mb-3">
-              <h2 className="font-display text-2xl">{t('dashboard.latestNews')}</h2>
-              <Link href="/news" className="text-sm underline">{t('dashboard.viewAll')}</Link>
+        {/* News + spotlight */}
+        <section className="grid lg:grid-cols-[1.5fr_1fr] gap-4">
+          <div>
+            <div className="flex items-end justify-between mb-2.5">
+              <h2 className="text-title2 font-bold text-1">{t('dashboard.latestNews')}</h2>
+              <Link href="/news" className="text-footnote font-semibold text-text-2 hover:text-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded">
+                {t('dashboard.viewAll')} →
+              </Link>
             </div>
-            {news.loading && <LoadingSpinner text={t('common.loading')} />}
-            {!news.loading && articles.length === 0 && (
-              <p className="text-sm text-[var(--muted)]">Feeds are quiet. Try the Dorchester Reporter directly.</p>
+            {news.loading && articles.length === 0 && (
+              <div className="space-y-2.5" aria-hidden>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="skeleton h-16" />
+                ))}
+              </div>
             )}
-            <ul>
-              {articles.map((a) => (
-                <li key={a.id} className="py-3 border-b border-[var(--line)]">
-                  <Link href="/news" className="block">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="red">{a.category}</Badge>
-                      <span className="text-[11px] text-[var(--muted)]">{a.source}</span>
-                    </div>
-                    <p className="font-display text-lg leading-snug">{a.title}</p>
-                  </Link>
+            {!news.loading && articles.length === 0 && (
+              <div className="content-card squircle p-6 text-center">
+                <p className="text-subhead font-semibold text-1">{t('common.empty')}</p>
+                <p className="text-footnote text-text-2 mt-1">{t('news.offline')}</p>
+              </div>
+            )}
+            <ul className="space-y-0">
+              {articles.map((a, idx) => (
+                <li key={a.id} className="border-b border-separator last:border-0">
+                  <a
+                    href={newsSourceUrl(a)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 py-3 group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-current rounded-lg"
+                  >
+                    <span className="text-caption2 font-bold uppercase tracking-wider text-text-3 w-20 shrink-0 pt-1 num">
+                      {formatFor.relative(a.publishedAt)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-subhead font-semibold text-1 leading-snug group-hover:underline underline-offset-2">
+                        {a.title}
+                      </span>
+                      <span className="block text-caption text-text-3 mt-0.5">
+                        {a.source} · {a.category}
+                      </span>
+                    </span>
+                    {idx === 0 && (
+                      <span className="ms-auto shrink-0 text-caption2 font-bold uppercase tracking-wider text-success pt-1">
+                        {t('news.new')}
+                      </span>
+                    )}
+                  </a>
                 </li>
               ))}
             </ul>
-          </section>
-          <aside className="desk-panel p-4 space-y-3">
-            <p className="kicker">RAFT</p>
-            <h3 className="font-display text-xl">Emergency rent help is $7,000 / year, not $10,000</h3>
-            <p className="text-sm text-[var(--ink-soft)]">
-              Massachusetts cut the RAFT cap in 2023. Apply through Metro Housing|Boston. Bring a notice to quit if you have one.
-            </p>
-            <a href="https://www.mass.gov/raft" target="_blank" rel="noreferrer" className="inline-block bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">
-              mass.gov/raft
-            </a>
-          </aside>
-        </div>
-
-        <section>
-          <div className="flex items-end justify-between mb-2">
-            <h2 className="font-display text-2xl">{t('dashboard.mapTitle')}</h2>
-            <Link href="/map" className="text-sm underline">{t('dashboard.viewFullMap')}</Link>
           </div>
-          <div className="border border-[var(--line)] overflow-hidden">
-            <DorchesterMap height="280px" showControls={false} preview />
+
+          <aside className="content-card squircle p-5 self-start" aria-label="RAFT">
+            <p className="kicker">RAFT</p>
+            <p className="text-title2 font-bold text-1 mt-1 num">
+              {formatFor.currency(RAFT_PROGRAM.maxBenefit)}
+              <span className="text-subhead font-medium text-text-2"> / {RAFT_PROGRAM.period}</span>
+            </p>
+            <p className="text-footnote text-text-2 mt-2 leading-relaxed">{RAFT_PROGRAM.note}</p>
+            <a
+              href={RAFT_PROGRAM.applyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 text-subhead font-semibold text-1 hover:underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded"
+            >
+              {t('common.apply')} <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
+            </a>
+            <p className="text-caption2 text-text-3 mt-3">
+              {t('common.source')}: {RAFT_PROGRAM.source}
+            </p>
+          </aside>
+        </section>
+
+        {/* Map preview */}
+        <section aria-label={t('dashboard.mapTitle')}>
+          <div className="flex items-end justify-between mb-2.5">
+            <h2 className="text-title2 font-bold text-1">{t('dashboard.mapTitle')}</h2>
+            <Link href="/map" className="text-footnote font-semibold text-text-2 hover:text-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded">
+              {t('dashboard.viewFullMap')} →
+            </Link>
+          </div>
+          <div className="content-card squircle overflow-hidden">
+            <DorchesterMap height="300px" showControls={false} preview />
           </div>
         </section>
       </div>
     </MainLayout>
   );
+}
+
+function newsSourceUrl(a: { sourceUrl: string }): string {
+  return a.sourceUrl || '/news';
 }
