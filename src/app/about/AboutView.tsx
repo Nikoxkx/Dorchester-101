@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { BadgeCheck, CircleAlert, Gauge, Languages, ShieldCheck } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ReportProblem } from '@/components/a11y/ReportProblem';
+import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
 import { LANGUAGES, languageMeta } from '@/i18n/config';
@@ -185,6 +186,9 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
               How to contribute
             </a>
           </div>
+
+          {/* The actual .exe files, resolved from the latest GitHub release. */}
+          <DownloadAppCard className="mt-4" />
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">

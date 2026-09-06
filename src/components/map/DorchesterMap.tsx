@@ -394,6 +394,25 @@ export function DorchesterMap() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Collapsing the sidebar (or any font-size/palette change that reflows the
+  // shell) resizes the map box without a window resize event. Leaflet does not
+  // watch its own container, so it keeps painting at the old size: grey
+  // gutters, offset clicks. A ResizeObserver closes that gap.
+  useEffect(() => {
+    const mapBox = shellRef.current?.querySelector<HTMLElement>('.dor101-map-canvas-box');
+    if (!mapBox || typeof ResizeObserver === 'undefined') return;
+    let raf = 0;
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => mapRef.current?.invalidateSize());
+    });
+    observer.observe(mapBox);
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
   /* ── derived panels ──────────────────────────────────────────── */
   const selectedStop = selectedStopId ? stops.find((s) => s.id === selectedStopId) ?? null : null;
   const selectedResource = selectedPinId ? RESOURCES.find((r) => r.id === selectedPinId) ?? null : null;
@@ -527,7 +546,7 @@ export function DorchesterMap() {
 
       {/* ── map + details ───────────────────────────────────────── */}
       <div className="grid items-stretch gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="relative min-h-[20rem] overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
+        <div className="dor101-map-canvas-box relative min-h-[20rem] overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
           <div className={cn('relative w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')} data-sheet-open={selectedPinId || selectedStopId ? 'true' : undefined}>
             {!mounted ? (
               <div className="flex h-full items-end bg-[var(--color-bg-tertiary)] p-4">

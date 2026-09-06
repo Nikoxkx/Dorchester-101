@@ -43,6 +43,8 @@ export interface MarketResponse {
     effectiveYear: number;
     note: string;
     sourceUrl: string;
+    /** True when huduser.gov was unreachable and the verified capture is shown. */
+    snapshot?: boolean;
   };
   derived: {
     /** Rent a full-time minimum-wage household can afford at 30% of income. */
@@ -135,8 +137,11 @@ export async function GET() {
         : {},
       basis: `HUD FY${incomeLimits?.fiscalYear ?? 'current'} 50% income limits doubled = area median family income by household size (${incomeLimits?.area ?? 'Boston-Cambridge-Newton, MA-NH Metro'})`,
       effectiveYear: incomeLimits?.fiscalYear ?? new Date().getFullYear(),
-      note: 'Income limits, not rents. HUD publishes these from ACS each spring; the ladder is HUD-derived median family income by household size, live from the publisher workbook.',
+      note: incomeLimits?.snapshot
+        ? 'Income limits, not rents. HUD could not be reached, so this is the verified FY capture; the live workbook returns on the next successful fetch.'
+        : 'Income limits, not rents. HUD publishes these from ACS each spring; the ladder is HUD-derived median family income by household size, live from the publisher workbook.',
       sourceUrl: incomeLimits?.sourceUrl ?? 'https://www.huduser.gov/portal/datasets/il.html',
+      snapshot: incomeLimits?.snapshot ?? false,
     },
     derived: {
       affordableRentAtWage: affordable != null && wage.rateCents != null ? { wageCents: wage.rateCents, monthly: affordable } : null,

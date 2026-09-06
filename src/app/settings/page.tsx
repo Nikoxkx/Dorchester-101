@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
+import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { useAppStore, type FontSize, type MapStyle, PALETTES, type Palette } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
@@ -48,7 +49,7 @@ import type { TranslationKey } from '@/i18n/en';
  * guessing.
  */
 
-const SECTION_IDS = ['language', 'appearance', 'accessibility', 'data', 'feeds', 'saved', 'privacy'] as const;
+const SECTION_IDS = ['language', 'appearance', 'accessibility', 'data', 'permissions', 'feeds', 'saved', 'privacy'] as const;
 type SectionId = (typeof SECTION_IDS)[number];
 
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
@@ -128,6 +129,7 @@ export default function SettingsPage() {
     appearance: 'settings.section.appearance',
     accessibility: 'settings.section.accessibility',
     data: 'settings.section.data',
+    permissions: 'settings.section.permissions',
     feeds: 'settings.section.feed',
     saved: 'settings.savedPlaces',
     privacy: 'settings.section.privacy',
@@ -588,6 +590,11 @@ export default function SettingsPage() {
               })}
             </div>
           </fieldset>
+        </Section>
+
+        {/* ── Permissions & alerts ──────────────────────────────────── */}
+        <Section id="permissions" title={t('settings.section.permissions')} icon={<ShieldCheck className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.permissions = node; }}>
+          <PermissionSetup />
         </Section>
 
         {/* ── Feeds ────────────────────────────────────────────────── */}

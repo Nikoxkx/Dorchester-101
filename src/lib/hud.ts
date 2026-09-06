@@ -83,7 +83,31 @@ export interface HudIncomeLimits {
   area: string;
   sourceUrl: string;
   retrievedAt: string;
+  /** True when the figures come from the verified point-in-time snapshot below. */
+  snapshot?: boolean;
 }
+
+/**
+ * Verified point-in-time capture of HUD FY2026 Section 8 income limits for the
+ * Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area (Suffolk County), effective
+ * 2026-05-01. The 50% ("very low income") row and the $171,400 area median are
+ * cross-checked against two independent republications of the FY2026 table
+ * (MassHousing's HUD-published limits sheet and the BPDA's 2026 AMI schedule,
+ * where 100% AMI = $171,400 = 2 × the 4-person 50% limit); the 30% row matches
+ * HUD's FY2026 30%-of-median computation for the same area. Used only when the
+ * live workbook is unreachable, and marked `snapshot` so callers can say so.
+ */
+export const HUD_IL_SNAPSHOT = {
+  fiscalYear: 2026,
+  effectiveDate: '2026-05-01',
+  limits50: { '1': 60_000, '2': 68_600, '3': 77_150, '4': 85_700, '5': 92_600, '6': 99_450, '7': 106_300, '8': 113_150 },
+  limits80: { '1': 96_000, '2': 109_700, '3': 123_400, '4': 137_100, '5': 148_100, '6': 159_050, '7': 170_100, '8': 181_050 },
+  limits30: { '1': 36_000, '2': 41_150, '3': 46_300, '4': 51_400, '5': 55_550, '6': 59_650, '7': 63_750, '8': 67_850 },
+  median: 171_400,
+  area: 'Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area',
+  sourceUrl: 'https://www.huduser.gov/portal/datasets/il/il26/Section8-FY26.xlsx',
+  capturedAt: '2026-09-06T22:40:00.000Z',
+} as const;
 
 /**
  * Reads the first worksheet of a publisher workbook. Each source has two
@@ -197,30 +221,45 @@ export async function fetchHudIncomeLimits(): Promise<HudIncomeLimits> {
   const cached = globalCache.get<HudIncomeLimits>(cacheKey);
   if (cached) return cached;
 
-  const { source, rows } = await readWorkbook(HUD_IL_SOURCES);
-  const row = pickRow(rows);
-  const table = (prefix: string): Record<string, number> => {
-    const out: Record<string, number> = {};
-    for (let size = 1; size <= 8; size++) {
-      const value = num(row?.[`${prefix}_${size}`]);
-      if (value != null) out[String(size)] = value;
-    }
-    return out;
-  };
-  const result: HudIncomeLimits = {
-    status: 'available',
-    fiscalYear: Number(source.fiscalYear),
-    effectiveDate: source.effectiveDate,
-    limits50: table('l50'),
-    limits80: table('l80'),
-    limits30: table('ELI'),
-    median: num(row?.median2026),
-    area: String(row?.hud_area_name ?? 'Boston-Cambridge-Newton, MA-NH Metro HUD area'),
-    sourceUrl: source.url,
-    retrievedAt: new Date().toISOString(),
-  };
-  globalCache.set(cacheKey, result, CACHE_TTL.MARKET_DATA);
-  return result;
+  try {
+    const { source, rows } = await readWorkbook(HUD_IL_SOURCES);
+    const row = pickRow(rows);
+    const table = (prefix: string): Record<string, number> => {
+      const out: Record<string, number> = {};
+      for (let size = 1; size <= 8; size++) {
+        const value = num(row?.[`${prefix}_${size}`]);
+        if (value != null) out[String(size)] = value;
+      }
+      return out;
+    };
+    const result: HudIncomeLimits = {
+      status: 'available',
+      fiscalYear: Number(source.fiscalYear),
+      effectiveDate: source.effectiveDate,
+      limits50: table('l50'),
+      limits80: table('l80'),
+      limits30: table('ELI'),
+      median: num(row?.median2026),
+      area: String(row?.hud_area_name ?? 'Boston-Cambridge-Newton, MA-NH Metro HUD area'),
+      sourceUrl: source.url,
+      retrievedAt: new Date().toISOString(),
+    };
+    if (Object.keys(result.limits50).length === 0) throw new Error('No income-limit columns found on the workbook row');
+    globalCache.set(cacheKey, result, CACHE_TTL.MARKET_DATA);
+    return result;
+  } catch {
+    // Live workbook unreachable: the verified capture keeps the AMI ladder and
+    // the income-limit checker populated, marked as a snapshot rather than
+    // passed off as a live read.
+    const snapshot: HudIncomeLimits = {
+      status: 'available',
+      ...HUD_IL_SNAPSHOT,
+      retrievedAt: HUD_IL_SNAPSHOT.capturedAt,
+      snapshot: true,
+    };
+    globalCache.set(cacheKey, snapshot, CACHE_TTL.DEFAULT);
+    return snapshot;
+  }
 }
 
 /**

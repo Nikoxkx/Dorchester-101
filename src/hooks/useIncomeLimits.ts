@@ -13,6 +13,8 @@ export interface IncomeLimitsResponse {
   bands?: Record<'30' | '50' | '80', Record<string, number>>;
   median?: number | null;
   error?: string;
+  /** True when huduser.gov was unreachable and a verified capture is shown. */
+  snapshot?: boolean;
 }
 
 /**
@@ -27,14 +29,19 @@ export function useIncomeLimits(): { data: IncomeLimitsResponse | null; loading:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    setLoading(true);
-    setError(null);
+  const refresh = useCallback((options: { silent?: boolean } = {}) => {
+    // The initial mount fetch is silent: `loading` already starts true, so no
+    // state has to be written synchronously inside the effect body.
+    if (!options.silent) {
+      setLoading(true);
+      setError(null);
+    }
     fetch('/api/income-limits', { cache: 'no-store' })
       .then(async (res) => {
         const payload = (await res.json()) as IncomeLimitsResponse;
         if (!res.ok || payload.status !== 'available') throw new Error(payload.error ?? 'Income limits unavailable');
         setData(payload);
+        setError(null);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Income limits unavailable');
@@ -44,7 +51,10 @@ export function useIncomeLimits(): { data: IncomeLimitsResponse | null; loading:
   }, []);
 
   useEffect(() => {
-    refresh();
+    // Deferred a tick (repo pattern): `loading` starts true, so the first paint
+    // is already correct and nothing is written synchronously in the effect.
+    const kick = window.setTimeout(() => refresh({ silent: true }), 0);
+    return () => window.clearTimeout(kick);
   }, [refresh]);
 
   return { data, loading, error, refresh };

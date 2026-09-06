@@ -22,6 +22,7 @@ export async function GET() {
         area: limits.area,
         sourceUrl: limits.sourceUrl,
         retrievedAt: limits.retrievedAt,
+        snapshot: limits.snapshot ?? false,
         // 100% of the size-adjusted median family income = 2 × the 50% limit.
         table: Object.fromEntries(
           ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -45,6 +46,7 @@ export async function GET() {
         sourceUrl: 'https://www.huduser.gov/portal/datasets/il.html',
         table: {},
         bands: {},
+        snapshot: false,
       },
       { status: 502, headers: { 'cache-control': 'no-store' } }
     );

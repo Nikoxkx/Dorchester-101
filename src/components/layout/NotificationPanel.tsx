@@ -11,6 +11,7 @@ import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { useLivePolling } from '@/hooks/useLivePolling';
 import type { TranslationKey } from '@/i18n/en';
 import { useAnnounce } from '@/components/providers/LiveRegion';
+import { notifyIfAllowed } from '@/hooks/useBrowserPermissions';
 
 /**
  * The updates bell.
@@ -81,6 +82,9 @@ export function NotificationPanel() {
   const [error, setError] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  // System notifications are raised once per id per visit, and only while the
+  // tab is in the background — a notification over the open panel would be noise.
+  const sysNotified = useRef<Set<string>>(new Set());
 
   const load = useCallback(
     async (options: { silent?: boolean } = {}) => {
@@ -93,8 +97,22 @@ export function NotificationPanel() {
         const json = (await res.json()) as Payload;
         setData(json);
         setError(false);
-        const fresh = json.notifications.filter((n) => !read.has(n.id)).length;
-        if (options.silent && fresh > 0) announce(t('notifications.label', { count: fresh }), 'polite');
+        const fresh = json.notifications.filter((n) => !read.has(n.id));
+        if (options.silent && fresh.length > 0) announce(t('notifications.label', { count: fresh.length }), 'polite');
+        // If the visitor allowed system alerts (Settings → Permissions) and the
+        // tab is hidden, surface the most urgent new notice on the desktop.
+        if (options.silent && document.hidden) {
+          const urgent = fresh
+            .filter((n) => n.priority === 'urgent' || n.priority === 'high')
+            .find((n) => !sysNotified.current.has(n.id));
+          if (urgent) {
+            sysNotified.current.add(urgent.id);
+            notifyIfAllowed(t(urgent.titleKey as TranslationKey, urgent.params), {
+              body: `${urgent.sourceLabel} · DOR101`,
+              tag: urgent.id,
+            });
+          }
+        }
       } catch {
         setError(true);
       } finally {
@@ -106,7 +124,10 @@ export function NotificationPanel() {
     [announce, followed, t]
   );
 
-  useLivePolling(() => void load({ silent: true }), { minMs: POLL_MS });
+  // Identity-stable wrapper (see the note in useLivePolling): an inline arrow
+  // here would re-trigger the fetch effect on every render and loop forever.
+  const loadSilent = useCallback(() => void load({ silent: true }), [load]);
+  useLivePolling(loadSilent, { minMs: POLL_MS });
 
   useEffect(() => {
     if (!open) return;

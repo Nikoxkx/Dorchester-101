@@ -255,6 +255,11 @@ export default function ToolsPage() {
                       <p className="font-mono font-medium text-[var(--color-text-primary)]">
                         {formatCurrency(amiTable[householdSize] ?? amiTable[String(householdSize)] ?? 0)}
                       </p>
+                      {incomeLimits?.snapshot && (
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          HUD could not be reached from this server, so this is the verified FY{incomeLimits.fiscalYear} capture; live figures return on the next successful fetch.
+                        </p>
+                      )}
                     </>
                   )}
                 </div>

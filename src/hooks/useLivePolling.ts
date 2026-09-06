@@ -24,12 +24,19 @@ export function useLivePolling(
   const minutes = useAppStore((s) => s.refreshIntervalMinutes);
   const epoch = useAppStore((s) => s.dataEpoch);
   const lastRun = useRef(0);
+  const inFlight = useRef(false);
   const enabled = autoRefresh;
   const intervalMs = Math.max(options.minMs ?? 20_000, Math.max(1, minutes) * 60_000);
 
   const run = () => {
+    // One request per panel at a time: a slow feed plus a fast tick (or a
+    // caller whose `refresh` identity churns) must never pile up requests.
+    if (inFlight.current) return;
+    inFlight.current = true;
     lastRun.current = Date.now();
-    void refresh();
+    void Promise.resolve(refresh()).finally(() => {
+      inFlight.current = false;
+    });
   };
 
   // Mount, "Refresh now" in Settings (which bumps the epoch) and any change to
