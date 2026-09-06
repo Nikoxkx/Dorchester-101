@@ -38,6 +38,10 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
               >
                 {label('common.retry', 'Try again')}
               </button>
+              {/* next/link needs the root layout and the client router, and this
+                  boundary renders when those have failed, so this one link is
+                  deliberately a plain anchor. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/"
                 style={{ border: '1px solid #cbbfa9', borderRadius: 999, padding: '.6rem 1.1rem', fontWeight: 700, color: '#17202B', textDecoration: 'none' }}
