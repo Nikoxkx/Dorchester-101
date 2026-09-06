@@ -43,11 +43,15 @@ interface NewsItem {
   category: string;
 }
 
+/** The slice of `/api/market-data` this page reads; see `src/app/api/market-data/route.ts`. */
 interface MarketResponse {
-  status: 'live' | 'cache' | 'unavailable';
-  asOf?: string;
-  metrics?: { medianGrossRent?: number | null };
-  error?: string;
+  acs?: {
+    status: 'live' | 'cache' | 'unavailable';
+    vintage?: string;
+    retrievedAt?: string;
+    metrics?: { medianGrossRent?: number | null };
+    error?: string;
+  };
 }
 
 export default function DashboardPage() {
@@ -99,7 +103,7 @@ export default function DashboardPage() {
   const recentlyChecked = [...RESOURCES]
     .sort((a, b) => new Date(b.verification.checkedOn).getTime() - new Date(a.verification.checkedOn).getTime())
     .slice(0, 3);
-  const medianRent = market?.metrics?.medianGrossRent ?? null;
+  const medianRent = market?.acs?.metrics?.medianGrossRent ?? null;
 
   return (
     <MainLayout>
@@ -168,8 +172,8 @@ export default function DashboardPage() {
               value={medianRent ?? 0}
               format="currency"
               unavailable={medianRent === null}
-              source="Census ACS 5-year B2510"
-              sourceDate={market?.asOf}
+              source={market?.acs?.vintage && market.acs.vintage !== 'unavailable' ? `Census ${market.acs.vintage}, B25058` : 'Census ACS 5-year, B25058'}
+              sourceDate={market?.acs?.status === 'unavailable' ? undefined : market?.acs?.retrievedAt}
               accent="var(--color-accent-primary)"
             />
             <StatCard

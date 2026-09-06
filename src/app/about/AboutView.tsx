@@ -36,7 +36,7 @@ interface Meta {
 }
 
 interface MarketStatus {
-  hudFmr?: 'installed' | 'not-installed' | string;
+  hudFmr?: { status?: 'available' | 'not-installed' | string };
   source?: string;
 }
 
@@ -205,7 +205,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 <tr className="align-top">
                   <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold">HUD Fair Market Rents</th>
                   <td className="py-1.5 pe-3 leading-snug text-[var(--color-text-secondary)]">
-                    {market?.hudFmr === 'installed' ? t('market.currentSnapshot') : t('error.dataUnavailable')}
+                    {market?.hudFmr?.status === 'available' ? t('market.currentSnapshot') : t('error.dataUnavailable')}
                   </td>
                   <td className="py-1.5 tabular-nums text-[var(--color-text-muted)]">{t('map.updatedEvery', { seconds: String(minutes(CACHE_TTL.MARKET_DATA) * 60) })}</td>
                 </tr>

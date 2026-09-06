@@ -109,7 +109,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <style>{`.dor101-js-only { display: none !important; } .dor101-nojs { display: block !important; }`}</style>
         </noscript>
       </head>
-      <body className="antialiased dor101-backdrop">
+      <body className="antialiased">
+        {/*
+          The photographic backdrop is its own fixed, pointer-transparent layer.
+          It must never be the <body>: a fixed body with `pointer-events: none`
+          pins the whole document to the viewport (no scrolling) and swallows
+          every click in the page.
+        */}
+        <div className="dor101-backdrop" aria-hidden="true" />
         <DorchesterProviders>{children}</DorchesterProviders>
         <ServiceWorkerRegistration />
       </body>
