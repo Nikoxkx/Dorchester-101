@@ -17,6 +17,7 @@ module.exports = {
     '!dist-electron/**/*',
     '!electron/**/*',
     'electron/main.js',
+    'electron/preload.js',
     '.next/**/*',
     'public/**/*',
     'node_modules/**/*',

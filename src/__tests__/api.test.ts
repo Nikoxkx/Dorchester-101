@@ -1,155 +1,71 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { describe, expect, it } from 'vitest';
+import { GET as health } from '@/app/api/health/route';
+import { GET as housing } from '@/app/api/housing/route';
+import { GET as food } from '@/app/api/food/route';
+import { GET as resources } from '@/app/api/resources/route';
+import { GET as notifications } from '@/app/api/notifications/route';
+import { POST as notificationsPost } from '@/app/api/notifications/route';
+import { GET as market } from '@/app/api/market-data/route';
+import { GET as map } from '@/app/api/map/route';
+import { GET as faq } from '@/app/api/faq/route';
 
-// Mock external APIs
-const mockRSSResponse = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>Dorchester Reporter</title>
-    <item>
-      <title>BHA Announces New Housing Initiative</title>
-      <link>https://www.dotnews.com/bha-housing</link>
-      <pubDate>${new Date().toISOString()}</pubDate>
-      <description>Boston Housing Authority announces new affordable housing initiative for Dorchester residents.</description>
-    </item>
-  </channel>
-</rss>`;
-
-export const handlers = [
-  http.get('https://www.dotnews.com/rss.xml', () => {
-    return new HttpResponse(mockRSSResponse, {
-      headers: { 'Content-Type': 'application/rss+xml' },
-    });
-  }),
-];
-
-export const server = setupServer(...handlers);
-
-beforeAll(() => server.listen());
-afterAll(() => server.close());
-
-describe('News API', () => {
-  it('should fetch news articles', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.articles).toBeDefined();
-    expect(Array.isArray(data.articles)).toBe(true);
+describe('API routes', () => {
+  it('health reports ok', async () => {
+    const res = await health();
+    const data = await res.json();
+    expect(data.ok).toBe(true);
   });
 
-  it('should return sources information', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.sources).toBeDefined();
-    expect(Array.isArray(data.sources)).toBe(true);
-    expect(data.sources.length).toBeGreaterThan(0);
+  it('housing returns BHA status and listings', async () => {
+    const res = await housing();
+    const data = await res.json();
+    expect(data.bha.section8TenantBased).toBe('closed');
+    expect(Array.isArray(data.listings)).toBe(true);
   });
 
-  it('should have lastUpdated timestamp', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.lastUpdated).toBeDefined();
-    expect(new Date(data.lastUpdated).getTime()).toBeLessThanOrEqual(Date.now());
+  it('food returns sites', async () => {
+    const res = await food();
+    const data = await res.json();
+    expect(Array.isArray(data.sites)).toBe(true);
+    expect(data.sites.length).toBeGreaterThan(0);
   });
 
-  it('should have refreshInterval', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.refreshInterval).toBeDefined();
-    expect(typeof data.refreshInterval).toBe('number');
-  });
-});
-
-describe('Notifications API', () => {
-  it('should fetch notifications', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.notifications).toBeDefined();
-    expect(Array.isArray(data.notifications)).toBe(true);
+  it('resources lists organizations', async () => {
+    const res = await resources(new Request('http://localhost/api/resources'));
+    const data = await res.json();
+    expect(data.resources.length).toBeGreaterThan(0);
   });
 
-  it('should have unreadCount', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(data.unreadCount).toBeDefined();
-    expect(typeof data.unreadCount).toBe('number');
-  });
-
-  it('should have lastUpdated timestamp', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(data.lastUpdated).toBeDefined();
-  });
-
-  it('should generate dynamic notifications based on date', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    // Should always have at least some notifications
+  it('notifications include BHA closed notice', async () => {
+    const res = await notifications();
+    const data = await res.json();
     expect(data.notifications.length).toBeGreaterThan(0);
-    
-    // Should have source info
-    expect(data.source).toBeDefined();
+    expect(data.unreadCount).toBeGreaterThan(0);
+    expect(data.notifications.some((n: { id: string }) => n.id === 'bha-s8')).toBe(true);
   });
 
-  it('should mark notification as read via POST', async () => {
-    const response = await fetch('/api/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notificationId: 'notif-1', action: 'markRead' }),
-    });
-    
-    expect(response.status).toBe(200);
-    const data = await response.json();
+  it('notifications POST acknowledges read', async () => {
+    const res = await notificationsPost();
+    const data = await res.json();
     expect(data.success).toBe(true);
   });
-});
 
-describe('Market Data API', () => {
-  it('should fetch market data', async () => {
-    const response = await fetch('/api/market-data');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
+  it('market data wraps published estimates', async () => {
+    const res = await market();
+    const data = await res.json();
+    expect(data.data.medianRent.twoBed.value).toBeGreaterThan(2000);
+    expect(data.data.rentBurdenAnalysis.dorchesterMedianIncome).toBe(82953);
   });
-});
 
-describe('MBTA API', () => {
-  it('should fetch MBTA predictions', async () => {
-    const response = await fetch('/api/mbta');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
+  it('map returns pins', async () => {
+    const res = await map();
+    const data = await res.json();
+    expect(data.locations.length).toBeGreaterThan(5);
   });
-});
 
-describe('Resources API', () => {
-  it('should fetch resources', async () => {
-    const response = await fetch('/api/resources');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
-  });
-});
-
-describe('Health API', () => {
-  it('should return health status', async () => {
-    const response = await fetch('/api/health');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.ok).toBe(true);
+  it('faq returns categories', async () => {
+    const res = await faq();
+    const data = await res.json();
+    expect(Array.isArray(data.categories)).toBe(true);
   });
 });

@@ -1,17 +1,13 @@
-// DOR101 Electron Main Process
-// This wraps the Next.js app in a native Windows window
-
-const { app, BrowserWindow, Menu, Tray, shell, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const http = require('http');
 
 let mainWindow = null;
-let tray = null;
 let serverProcess = null;
-const PORT = 3101;
+const PORT = Number(process.env.DOR101_PORT || 3101);
 const isDev = process.argv.includes('--dev');
 
-// Single instance lock — prevent multiple copies
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -24,42 +20,98 @@ app.on('second-instance', () => {
   }
 });
 
+function waitForServer(timeoutMs = 20000) {
+  const started = Date.now();
+  return new Promise((resolve, reject) => {
+    const ping = () => {
+      const req = http.get({ hostname: '127.0.0.1', port: PORT, path: '/api/health', timeout: 1500 }, (res) => {
+        res.resume();
+        if (res.statusCode && res.statusCode < 500) resolve();
+        else retry();
+      });
+      req.on('error', retry);
+      req.on('timeout', () => {
+        req.destroy();
+        retry();
+      });
+    };
+    const retry = () => {
+      if (Date.now() - started > timeoutMs) {
+        reject(new Error('Next server did not start'));
+        return;
+      }
+      setTimeout(ping, 400);
+    };
+    ping();
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
-    minWidth: 900,
-    minHeight: 600,
-    title: 'DOR101 — Dorchester 101',
-    icon: path.join(__dirname, '..', 'public', 'icon.svg'),
-    backgroundColor: '#FAFAF8',
+    minWidth: 880,
+    minHeight: 560,
+    title: 'DOR101 — Dorchester desk',
+    backgroundColor: '#e9ebe4',
     show: false,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
     },
   });
 
-  // Remove default menu
-  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate([
+      {
+        label: 'File',
+        submenu: [
+          { role: 'reload' },
+          { type: 'separator' },
+          { role: 'quit' },
+        ],
+      },
+      {
+        label: 'View',
+        submenu: [
+          { role: 'togglefullscreen' },
+          { role: 'resetZoom' },
+          { role: 'zoomIn' },
+          { role: 'zoomOut' },
+        ],
+      },
+      {
+        label: 'Help',
+        submenu: [
+          {
+            label: 'Source',
+            click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101'),
+          },
+        ],
+      },
+    ]),
+  );
 
-  // Load the app
-  const url = `http://localhost:${PORT}`;
+  const url = `http://127.0.0.1:${PORT}`;
   mainWindow.loadURL(url);
+  mainWindow.once('ready-to-show', () => mainWindow.show());
 
-  // Show window when ready (prevents white flash)
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  mainWindow.webContents.setWindowOpenHandler(({ url: next }) => {
+    if (next.startsWith('http://127.0.0.1') || next.startsWith(`http://localhost:${PORT}`)) {
+      return { action: 'allow' };
+    }
+    shell.openExternal(next);
+    return { action: 'deny' };
   });
 
-  // Open external links in default browser
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
+  mainWindow.webContents.on('will-navigate', (event, next) => {
+    const local = next.startsWith(url);
+    if (!local) {
+      event.preventDefault();
+      shell.openExternal(next);
     }
-    return { action: 'allow' };
   });
 
   mainWindow.on('closed', () => {
@@ -74,9 +126,8 @@ function getAppRoot() {
 }
 
 function startServer() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (isDev) {
-      // In dev mode, assume next dev is already running
       resolve();
       return;
     }
@@ -84,7 +135,6 @@ function startServer() {
     const appRoot = getAppRoot();
     const nextCli = path.join(appRoot, 'node_modules', 'next', 'dist', 'bin', 'next');
 
-    // Electron binary runs as Node when ELECTRON_RUN_AS_NODE is set
     serverProcess = spawn(process.execPath, [nextCli, 'start', '-p', String(PORT)], {
       cwd: appRoot,
       env: { ...process.env, PORT: String(PORT), ELECTRON_RUN_AS_NODE: '1' },
@@ -93,58 +143,46 @@ function startServer() {
     });
 
     serverProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      console.log('[Server]', output);
-      if (output.includes('Ready') || output.includes('started') || output.includes(String(PORT))) {
-        resolve();
-      }
+      process.stdout.write(`[next] ${data}`);
     });
-
     serverProcess.stderr.on('data', (data) => {
-      console.error('[Server Error]', data.toString());
+      process.stderr.write(`[next] ${data}`);
+    });
+    serverProcess.on('exit', (code) => {
+      if (!app.isQuitting && code) reject(new Error(`next start exited ${code}`));
     });
 
-    // Fallback: resolve after 5 seconds even if we don't see the "Ready" message
-    setTimeout(resolve, 5000);
+    waitForServer().then(resolve).catch(resolve);
   });
 }
 
-function createTray() {
-  // Simple tray with text menu
-  tray = new Tray(nativeImage.createEmpty());
-  tray.setToolTip('DOR101 — Dorchester 101');
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Open DOR101', click: () => { if (mainWindow) mainWindow.show(); } },
-    { type: 'separator' },
-    { label: 'About', click: () => { if (mainWindow) mainWindow.loadURL(`http://localhost:${PORT}/settings`); mainWindow.show(); } },
-    { type: 'separator' },
-    { label: 'Quit', click: () => { app.quit(); } },
-  ]);
-  tray.setContextMenu(contextMenu);
-  tray.on('click', () => { if (mainWindow) mainWindow.show(); });
-}
+ipcMain.handle('check-for-updates', async () => ({ available: false }));
+ipcMain.handle('restart-app', () => {
+  app.relaunch();
+  app.exit(0);
+});
 
-// App lifecycle
 app.whenReady().then(async () => {
   await startServer();
+  if (isDev) {
+    try {
+      await waitForServer(8000);
+    } catch {
+      /* next dev may still be compiling */
+    }
+  }
   createWindow();
-  createTray();
 });
 
 app.on('window-all-closed', () => {
-  // On Windows, don't quit when window closes (stay in tray)
-  // But for simplicity, we quit
   app.quit();
 });
 
 app.on('before-quit', () => {
-  if (serverProcess) {
-    serverProcess.kill();
-  }
+  app.isQuitting = true;
+  if (serverProcess) serverProcess.kill();
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
+  if (mainWindow === null) createWindow();
 });
