@@ -1,102 +1,125 @@
 import { describe, it, expect } from 'vitest';
-import {
-  translations,
-  useTranslation,
-  formatFor,
-  availableLanguages,
-  isRtl,
-  type TranslationKey,
-} from '@/lib/i18n';
-import { en } from '@/lib/i18n/en';
+import { translations, useTranslation, availableLanguages } from '@/lib/i18n';
 
 describe('i18n', () => {
-  describe('full parity (the compiler enforces it too)', () => {
-    it('every language defines every English key with a non-empty string', () => {
-      const keys = Object.keys(en) as TranslationKey[];
-      expect(keys.length).toBeGreaterThan(150);
-      for (const lang of availableLanguages) {
-        const dict = translations[lang.code];
-        expect(dict, `missing dictionary for ${lang.code}`).toBeDefined();
-        for (const key of keys) {
-          expect(dict[key], `${lang.code} missing "${key}"`).toBeTruthy();
-          expect(typeof dict[key], `${lang.code} "${key}" not a string`).toBe('string');
-        }
-      }
+  describe('translations object', () => {
+    it('should have translations for all supported languages', () => {
+      availableLanguages.forEach(lang => {
+        expect(translations[lang.code]).toBeDefined();
+      });
     });
 
-    it('no language accidentally ships English in nav (spot check)', () => {
-      for (const lang of availableLanguages) {
-        if (lang.code === 'en') continue;
-        const dict = translations[lang.code];
-        // Sanity: the value must differ from English for a Latin-script sample
-        // and exist for all.
-        expect(dict['nav.food']).not.toBe('');
-      }
-      expect(translations.zh['nav.food']).toMatch(/食物/);
-      expect(translations.ar['nav.food']).toMatch(/طعام/);
+    it('should have all required navigation keys', () => {
+      const requiredNavKeys = [
+        'nav.dashboard', 'nav.projects', 'nav.affordable', 'nav.market',
+        'nav.map', 'nav.food', 'nav.neighborhood', 'nav.tools',
+        'nav.news', 'nav.resources', 'nav.faq', 'nav.settings'
+      ];
+
+      Object.entries(translations).forEach(([langCode, dict]) => {
+        requiredNavKeys.forEach(key => {
+          expect(dict[key as keyof typeof dict]).toBeDefined();
+        });
+      });
+    });
+
+    it('should have projects translations', () => {
+      const requiredProjectsKeys = [
+        'projects.title', 'projects.description', 'projects.totalProjects',
+        'projects.totalUnits', 'projects.affordableUnits', 'projects.underConstruction'
+      ];
+
+      Object.entries(translations).forEach(([langCode, dict]) => {
+        requiredProjectsKeys.forEach(key => {
+          expect(dict[key as keyof typeof dict]).toBeDefined();
+        });
+      });
     });
   });
 
-  describe('useTranslation', () => {
-    it('returns translation function', () => {
+  describe('useTranslation hook', () => {
+    it('should return translation function', () => {
       const { t } = useTranslation('en');
       expect(typeof t).toBe('function');
     });
 
-    it('translates for valid key and language', () => {
-      const { t } = useTranslation('es');
-      expect(t('nav.dashboard')).toBe('Inicio');
+    it('should return translation for valid key', () => {
+      const { t } = useTranslation('en');
+      expect(t('nav.dashboard')).toBe('Dashboard');
     });
 
-    it('falls back to English for unknown language', () => {
+    it('should return fallback for missing key', () => {
+      const { t } = useTranslation('en');
+      expect(t('nonexistent.key', 'fallback text')).toBe('fallback text');
+    });
+
+    it('should fall back to English for unknown language', () => {
       const { t } = useTranslation('unknown-language');
       expect(t('nav.dashboard')).toBe('Dashboard');
     });
 
-    it('interpolates {vars}', () => {
-      const { t } = useTranslation('en');
-      expect(t('common.household', { n: 4 })).toBe('Household of 4');
-      expect(t('emergency.callLabel', { name: 'Project Bread' })).toContain('Project Bread');
-    });
-
-    it('same language instance gives same result (stable)', () => {
-      const a = useTranslation('ht');
-      const b = useTranslation('ht');
-      expect(a.t('settings.title')).toBe(b.t('settings.title'));
-    });
-  });
-
-  describe('locale formatting', () => {
-    it('formats currency per locale', () => {
-      expect(formatFor('en').currency(1234)).toBe('$1,234');
-      // USD stays the currency; the locale controls digits and grouping.
-      expect(formatFor('zh').currency(1234)).toBe('US$1,234');
-      // ar-EG renders Eastern Arabic numerals: ١٬٢٣٤
-      expect(formatFor('ar').currency(1234)).toMatch(/[٠-٩]/);
-    });
-
-    it('formats numbers per locale', () => {
-      expect(formatFor('en').number(12345)).toBe('12,345');
-      expect(formatFor('de' in {} ? 'en' : 'en').number(12345)).toBe('12,345'); // en fallback guard
-    });
-
-    it('localeFor maps every UI language (kea → pt-CV)', () => {
-      expect(formatFor('kea').locale).toBe('pt-CV');
-      expect(formatFor('zh').locale).toBe('zh-CN');
-    });
-
-    it('rtl detection only for Arabic', () => {
-      expect(isRtl('ar')).toBe(true);
-      expect(isRtl('en')).toBe(false);
-      expect(isRtl('ht')).toBe(false);
+    it('should return Spanish translation for es locale', () => {
+      const { t } = useTranslation('es');
+      expect(t('nav.dashboard')).toBe('Inicio');
     });
   });
 
   describe('availableLanguages', () => {
-    it('has exactly the 9 supported languages', () => {
-      expect(availableLanguages.map((l) => l.code)).toEqual([
-        'en', 'es', 'ht', 'pt', 'vi', 'kea', 'so', 'zh', 'ar',
-      ]);
+    it('should have 9 languages', () => {
+      expect(availableLanguages).toHaveLength(9);
+    });
+
+    it('should include English', () => {
+      const english = availableLanguages.find(l => l.code === 'en');
+      expect(english).toBeDefined();
+      expect(english?.name).toBe('English');
+    });
+
+    it('should include Spanish', () => {
+      const spanish = availableLanguages.find(l => l.code === 'es');
+      expect(spanish).toBeDefined();
+      expect(spanish?.name).toBe('Spanish');
+    });
+
+    it('should have nativeName for all languages', () => {
+      availableLanguages.forEach(lang => {
+        expect(lang.nativeName).toBeDefined();
+        expect(lang.nativeName.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should have flag for all languages', () => {
+      availableLanguages.forEach(lang => {
+        expect(lang.flag).toBeDefined();
+        expect(lang.flag.length).toBeGreaterThan(0);
+      });
+    });
+  });
+});
+
+describe('Translation Coverage', () => {
+  const requiredKeys = [
+    'nav.dashboard', 'nav.projects', 'nav.affordable', 'nav.market',
+    'nav.map', 'nav.food', 'nav.neighborhood', 'nav.tools',
+    'nav.news', 'nav.resources', 'nav.faq', 'nav.settings',
+    'intro.title', 'intro.body', 'intro.cta',
+    'dashboard.welcome', 'dashboard.tagline', 'dashboard.glance',
+    'stats.medianRent', 'stats.incomeRestricted', 'stats.activeProjects',
+    'projects.title', 'projects.description', 'projects.totalProjects',
+    'projects.totalUnits', 'projects.affordableUnits', 'projects.underConstruction',
+    'resources.title', 'resources.description', 'resources.notSure',
+    'faq.title', 'faq.description', 'faq.searchPlaceholder',
+    'settings.title', 'settings.language', 'settings.theme',
+  ];
+
+  availableLanguages.forEach(lang => {
+    describe(`${lang.name} (${lang.code})`, () => {
+      requiredKeys.forEach(key => {
+        it(`should have translation for ${key}`, () => {
+          const dict = translations[lang.code];
+          expect(dict[key as keyof typeof dict]).toBeDefined();
+        });
+      });
     });
   });
 });

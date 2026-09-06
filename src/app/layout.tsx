@@ -1,33 +1,38 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Atkinson_Hyperlegible, Newsreader } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 
-/**
- * System font stack — SF Pro on Apple devices, Inter/Segoe/Roboto fallbacks
- * elsewhere. No webfont download: faster first paint, and one less
- * third-party request for a privacy-first app.
- */
+const atkinson = Atkinson_Hyperlegible({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "700"],
+  variable: "--font-atkinson",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: {
-    default: "DOR101 — Dorchester resources, live",
-    template: "%s · DOR101",
-  },
+  title: "DOR101 — Dorchester desk",
   description:
-    "Housing, food, transit, and rights for Dorchester, Boston. Real numbers with sources and as-of dates. No account. No tracking. Works offline.",
+    "Housing, food, transit, and rights for Dorchester. Phone numbers, waitlist status, and calculators. No account. No tracking.",
   keywords: [
     "Dorchester",
     "Boston",
-    "affordable housing",
+    "housing",
     "SNAP",
     "MBTA",
     "Section 8",
     "BHA",
-    "BPDA",
     "Fields Corner",
     "Codman Square",
-    "Ashmont",
   ],
   authors: [{ name: "DOR101 Community Project" }],
   applicationName: "DOR101",
@@ -40,28 +45,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "DOR101",
-    title: "DOR101 — Dorchester resources, live",
-    description:
-      "Housing, food, transit, and rights for the Dot. Sourced, dated, and free.",
+    title: "DOR101 — Dorchester desk",
+    description: "Housing, food, transit, and rights for the Dot.",
     locale: "en_US",
   },
   robots: { index: true, follow: true },
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png" }],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg" }],
   },
   other: {
+    "msapplication-TileColor": "#c8102e",
     "format-detection": "telephone=no",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#c8102e" },
+    { media: "(prefers-color-scheme: dark)", color: "#121311" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -72,9 +74,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${atkinson.variable} ${newsreader.variable}`} suppressHydrationWarning>
       <body className="antialiased">
-        <a href="#main" className="skip-link no-print">
+        <a href="#main" className="skip-link">
           Skip to content
         </a>
         {children}

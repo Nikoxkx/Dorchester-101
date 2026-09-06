@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Clock, Navigation, X } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn, telHref } from '@/lib/utils';
 import {
   FAIRMOUNT_LINE,
@@ -72,16 +73,13 @@ export function DorchesterMap({
   const [mapStyle, setMapStyle] = useState<MapStyle>('street');
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      try {
-        const stored = localStorage.getItem('dor101-map-style') as MapStyle | null;
-        if (stored && ['satellite', 'street', 'hybrid'].includes(stored)) setMapStyle(stored);
-      } catch {
-        /* ignore */
-      }
-      setReady(true);
-    });
-    return () => cancelAnimationFrame(raf);
+    setReady(true);
+    try {
+      const stored = localStorage.getItem('dor101-map-style') as MapStyle | null;
+      if (stored && ['satellite', 'street', 'hybrid'].includes(stored)) setMapStyle(stored);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -134,8 +132,8 @@ export function DorchesterMap({
 
   if (!ready) {
     return (
-      <div style={{ height }} className="bg-[var(--surface)] flex items-center justify-center border border-[var(--separator)]">
-        <div className="skeleton w-full h-full" aria-label="Loading map" />
+      <div style={{ height }} className="bg-[var(--surface)] flex items-center justify-center border border-[var(--line)]">
+        <LoadingSpinner size="lg" text="Loading map…" />
       </div>
     );
   }
@@ -158,7 +156,7 @@ export function DorchesterMap({
             <Polyline positions={RED_LINE.stops.map((s) => [s.lat, s.lng] as [number, number])} color={RED_LINE.color} weight={4} />
             <Polyline positions={FAIRMOUNT_LINE.stops.map((s) => [s.lat, s.lng] as [number, number])} color={FAIRMOUNT_LINE.color} weight={4} />
           </MapContainer>
-          <div className="absolute inset-x-0 bottom-0 bg-[var(--ink)]/85 text-[var(--canvas)] p-4">
+          <div className="absolute inset-x-0 bottom-0 bg-[var(--ink)]/85 text-[var(--paper)] p-4">
             <p className="font-display text-lg">Open the full map</p>
             <p className="text-xs opacity-80">{locations.length} pins · Red Line · Fairmount</p>
           </div>
@@ -168,7 +166,7 @@ export function DorchesterMap({
   }
 
   return (
-    <div className="relative border border-[var(--separator)] overflow-hidden" style={{ height }}>
+    <div className="relative border border-[var(--line)] overflow-hidden" style={{ height }}>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer attribution={TILES[mapStyle].attribution} url={TILES[mapStyle].url} />
         {mapStyle === 'hybrid' && (
@@ -228,30 +226,30 @@ export function DorchesterMap({
 
       {showControls && (
         <div className="absolute top-3 right-3 z-[1000] w-56 bg-[var(--surface)] border border-[var(--ink)] text-sm">
-          <div className="px-3 py-2 border-b border-[var(--separator)]">
+          <div className="px-3 py-2 border-b border-[var(--line)]">
             <p className="kicker">Layers</p>
           </div>
-          <div className="px-3 py-2 border-b border-[var(--separator)] flex gap-1">
+          <div className="px-3 py-2 border-b border-[var(--line)] flex gap-1">
             {(['street', 'satellite', 'hybrid'] as const).map((style) => (
               <button
                 key={style}
                 onClick={() => setStyle(style)}
                 className={cn(
                   'flex-1 py-1 text-[11px] uppercase tracking-wide border',
-                  mapStyle === style ? 'bg-[var(--ink)] text-[var(--canvas)] border-[var(--ink)]' : 'border-[var(--separator)]',
+                  mapStyle === style ? 'bg-[var(--ink)] text-[var(--paper)] border-[var(--ink)]' : 'border-[var(--line)]',
                 )}
               >
                 {style}
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2 px-3 py-2 border-b border-[var(--separator)] cursor-pointer">
+          <label className="flex items-center gap-2 px-3 py-2 border-b border-[var(--line)] cursor-pointer">
             <input type="checkbox" checked={showRoutes} onChange={(e) => setShowRoutes(e.target.checked)} />
             <span>Transit lines</span>
           </label>
           <div className="py-1">
             {(Object.entries(LAYER_CONFIG) as [MapLayer, (typeof LAYER_CONFIG)[MapLayer]][]).map(([key, cfg]) => (
-              <label key={key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[var(--canvas)] transition-colors border-b border-[var(--separator)] group">
+              <label key={key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[var(--paper)] transition-colors border-b border-[var(--line)] group">
                 <input
                   type="checkbox"
                   checked={active.has(key)}
@@ -264,7 +262,7 @@ export function DorchesterMap({
               </label>
             ))}
           </div>
-          <p className="px-3 py-2 text-[11px] text-[var(--text-3)] border-t border-[var(--separator)]">
+          <p className="px-3 py-2 text-[11px] text-[var(--muted)] border-t border-[var(--line)]">
             {filtered.length} of {locations.length} shown
           </p>
         </div>
@@ -285,7 +283,7 @@ export function DorchesterMap({
 
       {selected && (
         <div className="absolute top-3 left-3 z-[1001] w-80 max-h-[calc(100%-1.5rem)] overflow-y-auto bg-[var(--surface)] border border-[var(--ink)]">
-          <div className="px-4 py-3 border-b border-[var(--separator)] flex justify-between gap-2">
+          <div className="px-4 py-3 border-b border-[var(--line)] flex justify-between gap-2">
             <div>
               <p className="kicker">{LAYER_CONFIG[selected.type].label}</p>
               <h3 className="font-display text-lg leading-tight">{selected.name}</h3>
@@ -300,23 +298,23 @@ export function DorchesterMap({
               <a href={telHref(selected.phone)} className="underline font-mono block">{selected.phone}</a>
             )}
             {selected.hours && (
-              <p className="flex gap-2 text-[var(--text-3)]">
+              <p className="flex gap-2 text-[var(--muted)]">
                 <Clock className="w-4 h-4 mt-0.5 shrink-0" />
                 {selected.hours}
               </p>
             )}
-            {selected.description && <p className="text-[var(--text-2)]">{selected.description}</p>}
+            {selected.description && <p className="text-[var(--ink-soft)]">{selected.description}</p>}
 
             {selected.type === 'transit' && (
-              <div className="border border-[var(--separator)]">
-                <p className="px-3 py-2 text-[10px] uppercase tracking-wide text-[var(--text-3)] border-b border-[var(--separator)]">
+              <div className="border border-[var(--line)]">
+                <p className="px-3 py-2 text-[10px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
                   Upcoming
                 </p>
                 {predsFor(selected.name).length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-[var(--text-3)]">No live predictions right now.</p>
+                  <p className="px-3 py-2 text-xs text-[var(--muted)]">No live predictions right now.</p>
                 ) : (
                   predsFor(selected.name).slice(0, 4).map((p, i) => (
-                    <div key={`${p.stopId}-${i}`} className="px-3 py-2 flex justify-between border-t border-[var(--separator)]">
+                    <div key={`${p.stopId}-${i}`} className="px-3 py-2 flex justify-between border-t border-[var(--line)]">
                       <span>{p.direction}</span>
                       <span className="font-mono">
                         {p.minutesAway <= 1 ? 'Arriving' : `${p.minutesAway} min`}
@@ -327,12 +325,12 @@ export function DorchesterMap({
               </div>
             )}
           </div>
-          <div className="px-4 py-3 border-t border-[var(--separator)] flex gap-2">
+          <div className="px-4 py-3 border-t border-[var(--line)] flex gap-2">
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}&travelmode=transit`}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 text-center bg-[var(--red-fill)] text-white py-2 text-sm font-bold"
+              className="flex-1 text-center bg-[var(--red)] text-white py-2 text-sm font-bold"
             >
               <Navigation className="w-3.5 h-3.5 inline mr-1" />
               Directions
