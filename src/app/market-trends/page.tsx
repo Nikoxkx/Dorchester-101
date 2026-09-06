@@ -530,6 +530,11 @@ export default function MarketTrendsPage() {
                   a listing above these bars is one a voucher holder usually cannot take.
                 </p>
                 <Cite id="hud" asOf={`FY${hudFmr.fiscalYear}, effective ${hudFmr.effectiveDate}`} href={hudFmr.sourceUrl} className="mt-2" />
+                {hudFmr.snapshot && (
+                  <p role="status" className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    The HUD workbook could not be reached just now, so these are the figures published for FY{hudFmr.fiscalYear} (verified copy, {hudFmr.publishedAt ? format.date(hudFmr.publishedAt, 'medium') : ''}). Live figures return on the next successful fetch.
+                  </p>
+                )}
               </>
             ) : (
               <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-secondary)]">

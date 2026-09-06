@@ -24,7 +24,9 @@ const FEED = {
 
 describe("feed configuration", () => {
   it("gives every configured feed a real https homepage and a category", () => {
-    expect(NEWS_FEEDS.length).toBeGreaterThanOrEqual(5);
+    // Four feeds are live-tested against the publishers; anything added has to
+    // survive the same check before it may be enabled by default.
+    expect(NEWS_FEEDS.length).toBeGreaterThanOrEqual(4);
     for (const feed of NEWS_FEEDS) {
       expect(feed.url ?? feed.homepage).toMatch(/^https:\/\//);
       expect(["local", "city", "state", "news", "other", "transportation"]).toContain(
@@ -124,5 +126,13 @@ describe("/api/health", () => {
     for (const check of body.checks)
       expect(["ok", "degraded", "error"]).toContain(check.status);
     expect(body.uptimeSeconds).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("geography configuration", () => {
+  it("queries Suffolk County, Massachusetts (FIPS 25025), not a neighboring county", async () => {
+    const { GEO_COUNTY, GEO_SUFFIX } = await import("@/lib/census");
+    expect(GEO_SUFFIX).toBe("state:25");
+    expect(GEO_COUNTY).toBe("county:025");
   });
 });

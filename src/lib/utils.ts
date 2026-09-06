@@ -48,21 +48,21 @@ export function getRelativeTime(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// AMI Calculator for Boston 2024/2025
-export const BOSTON_AMI_2025 = {
-  1: 91900,
-  2: 105000,
-  3: 118100,
-  4: 131150,
-  5: 141650,
-  6: 152150,
-  7: 162650,
-  8: 173100,
-};
-
-export function calculateAMIPercentage(householdSize: number, annualIncome: number): number {
-  const size = Math.min(Math.max(householdSize, 1), 8) as keyof typeof BOSTON_AMI_2025;
-  const amiForSize = BOSTON_AMI_2025[size];
+/**
+ * AMI percentage, computed against the live HUD ladder fetched from
+ * `/api/income-limits` (years and household sizes change every spring, so the
+ * ladder is never copied into the bundle).
+ *
+ * `table` maps household size (string or number) to 100% AMI for that size.
+ */
+export function calculateAMIPercentage(
+  householdSize: number,
+  annualIncome: number,
+  table: Record<string | number, number>
+): number {
+  const size = Math.min(Math.max(householdSize, 1), 8);
+  const amiForSize = table[size] ?? table[String(size)];
+  if (!amiForSize || !Number.isFinite(amiForSize)) return 0;
   return Math.round((annualIncome / amiForSize) * 100);
 }
 

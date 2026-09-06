@@ -20,9 +20,10 @@ import { HousingStartHere, HowToApply } from '@/components/housing/HousingPrimer
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { cn, formatCurrency, calculateAMIPercentage, getAMIBand, BOSTON_AMI_2025 } from '@/lib/utils';
+import { cn, formatCurrency, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
+import { useIncomeLimits } from '@/hooks/useIncomeLimits';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -90,8 +91,10 @@ export default function AffordableHousingPage() {
   const [annualIncome, setAnnualIncome] = useState(50000);
   const [filterAmi, setFilterAmi] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const { data: incomeLimits, loading: amiLoading, error: amiError } = useIncomeLimits();
 
-  const amiPercentage = calculateAMIPercentage(householdSize, annualIncome);
+  const amiTable = incomeLimits?.table ?? {};
+  const amiPercentage = calculateAMIPercentage(householdSize, annualIncome, amiTable);
   const amiBand = getAMIBand(amiPercentage);
 
   const filteredListings = sampleListings.filter(listing => {
@@ -307,7 +310,7 @@ export default function AffordableHousingPage() {
                     <thead>
                       <tr className="border-b border-[var(--color-border)]">
                         <th className="text-left py-2 font-heading font-medium">Household Size</th>
-                        <th className="text-right py-2 font-heading font-medium">100% AMI (2025)</th>
+                        <th className="text-right py-2 font-heading font-medium">100% AMI</th>
                         <th className="text-right py-2 font-heading font-medium">80% AMI</th>
                         <th className="text-right py-2 font-heading font-medium">60% AMI</th>
                         <th className="text-right py-2 font-heading font-medium">50% AMI</th>
@@ -316,25 +319,30 @@ export default function AffordableHousingPage() {
                     </thead>
                     <tbody>
                       {[1, 2, 3, 4].map((size) => {
-                        const ami100 = BOSTON_AMI_2025[size as keyof typeof BOSTON_AMI_2025];
+                        const ami100 = amiTable[size] ?? amiTable[String(size)];
                         return (
                           <tr key={size} className="border-b border-[var(--color-border)]">
                             <td className="py-2">{size} person{size > 1 ? 's' : ''}</td>
-                            <td className="text-right font-mono">{formatCurrency(ami100)}</td>
-                            <td className="text-right font-mono">{formatCurrency(ami100 * 0.8)}</td>
-                            <td className="text-right font-mono">{formatCurrency(ami100 * 0.6)}</td>
-                            <td className="text-right font-mono">{formatCurrency(ami100 * 0.5)}</td>
-                            <td className="text-right font-mono">{formatCurrency(ami100 * 0.3)}</td>
+                            <td className="text-right font-mono">{ami100 ? formatCurrency(ami100) : '—'}</td>
+                            <td className="text-right font-mono">{ami100 ? formatCurrency(Math.round(ami100 * 0.8)) : '—'}</td>
+                            <td className="text-right font-mono">{ami100 ? formatCurrency(Math.round(ami100 * 0.6)) : '—'}</td>
+                            <td className="text-right font-mono">{ami100 ? formatCurrency(Math.round(ami100 * 0.5)) : '—'}</td>
+                            <td className="text-right font-mono">{ami100 ? formatCurrency(Math.round(ami100 * 0.3)) : '—'}</td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
                 </div>
-                
-                <p className="text-xs text-[var(--color-text-muted)]">
-                  Source: HUD FY2025 Income Limits for Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area
-                </p>
+
+                {amiLoading && <p className="text-xs text-[var(--color-text-muted)]">Loading the current HUD income limits…</p>}
+                {amiError && <p className="text-xs text-[var(--color-text-muted)]">HUD income limits are unavailable right now — no figures are shown rather than stale ones.</p>}
+                {!amiLoading && !amiError && (
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    Source: HUD FY{incomeLimits?.fiscalYear} Income Limits for {incomeLimits?.area} (effective {incomeLimits?.effectiveDate}).
+                    100% AMI is twice HUD&apos;s published 50% limit for the household size; other bands are the same ladder at the published breakpoints.
+                  </p>
+                )}
               </CardContent>
             </Card>
 

@@ -8,9 +8,10 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand, BOSTON_AMI_2025 } from '@/lib/utils';
+import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
+import { useIncomeLimits } from '@/hooks/useIncomeLimits';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -29,9 +30,11 @@ export default function ToolsPage() {
   // AMI calculator state
   const [householdSize, setHouseholdSize] = useState(2);
   const [annualIncome, setAnnualIncome] = useState(50000);
+  const { data: incomeLimits, loading: amiLoading, error: amiError } = useIncomeLimits();
 
+  const amiTable = incomeLimits?.table ?? {};
   const rentBurden = calculateRentBurden(monthlyIncome, monthlyRent);
-  const amiPercentage = calculateAMIPercentage(householdSize, annualIncome);
+  const amiPercentage = calculateAMIPercentage(householdSize, annualIncome, amiTable);
   const amiBand = getAMIBand(amiPercentage);
 
   return (
@@ -242,10 +245,18 @@ export default function ToolsPage() {
                 </div>
 
                 <div className="text-sm text-[var(--color-text-muted)]">
-                  <p>2025 Boston AMI for {householdSize} person{householdSize > 1 ? 's' : ''}:</p>
-                  <p className="font-mono font-medium text-[var(--color-text-primary)]">
-                    {formatCurrency(BOSTON_AMI_2025[householdSize as keyof typeof BOSTON_AMI_2025])}
-                  </p>
+                  {amiLoading && <p>Loading the current HUD income limits…</p>}
+                  {amiError && <p>HUD income limits are unavailable right now — no figure is shown rather than a stale one.</p>}
+                  {!amiLoading && !amiError && (
+                    <>
+                      <p>
+                        FY{incomeLimits?.fiscalYear} Boston area AMI (HUD, effective {incomeLimits?.effectiveDate}) for {householdSize} person{householdSize > 1 ? 's' : ''}:
+                      </p>
+                      <p className="font-mono font-medium text-[var(--color-text-primary)]">
+                        {formatCurrency(amiTable[householdSize] ?? amiTable[String(householdSize)] ?? 0)}
+                      </p>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

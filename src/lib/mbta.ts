@@ -11,8 +11,20 @@
 import { globalCache, CACHE_TTL } from './cache';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, TRANSIT_DATA_AS_OF, type TransitLine } from '@/data/transit';
 import { BOSTON_TZ } from '@/lib/hours';
+import * as GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 
 const BASE = 'https://api-v3.mbta.com';
+/**
+ * Public GTFS-realtime feeds served from the MBTA CDN. Unlike the v3 JSON API
+ * (20 requests/minute without a key), these feeds are published for anyone to
+ * consume and are the same data the authority's own apps use, so the app can be
+ * live without registering a key.
+ */
+const RT_BASE = 'https://cdn.mbta.com/realtime';
+const RtMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
+const RtScheduleRelationship = GtfsRealtimeBindings.transit_realtime.TripUpdate.StopTimeUpdate.ScheduleRelationship;
+const RtSeverityLevel = GtfsRealtimeBindings.transit_realtime.Alert.SeverityLevel;
+const RtEffect = GtfsRealtimeBindings.transit_realtime.Alert.Effect;
 const REQUEST_TIMEOUT_MS = 6_000;
 
 export type DataSource = 'mbta-live' | 'timetable' | 'offline-cache';
@@ -187,7 +199,165 @@ function minutesUntil(iso: string, now: number): number {
  * more reliably than a comma list for `filter[stop]`, so we fan out with a
  * small concurrency cap and merge.
  */
+/**
+ * Decodes one of the MBTA's public GTFS-realtime feeds.
+ *
+ * The CDN feeds are large (a few MB), so the decoded message is cached for the
+ * length of one client poll plus a margin. `globalCache` is an in-memory cache;
+ * on Vercel each instance keeps its own copy, which is exactly what we want.
+ */
+async function fetchRtFeed(name: 'TripUpdates' | 'VehiclePositions' | 'Alerts'): Promise<InstanceType<typeof RtMessage>> {
+  const cacheKey = `mbta:rt:${name}`;
+  const cached = globalCache.get<InstanceType<typeof RtMessage>>(cacheKey);
+  if (cached) return cached;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${RT_BASE}/${name}.pb`, {
+      signal: controller.signal,
+      cache: 'no-store',
+      headers: { accept: 'application/x-protobuf, application/octet-stream' },
+    });
+    if (!res.ok) throw new Error(`GTFS-RT ${name} responded ${res.status}`);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    const message = RtMessage.decode(bytes);
+    globalCache.set(cacheKey, message, 25_000);
+    return message;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Station names the app already ships, indexed by GTFS stop id. */
+const STOP_NAME_BY_ID: Map<string, string> = new Map(
+  TRANSIT_LINES.flatMap((line) => line.dorchesterStops.map((stop) => [stop.id, stop.name] as const))
+);
+
+/** First English (or any) translation of a GTFS-RT translated string. */
+function translated(
+  raw: { translation?: Array<{ text?: string | null; language?: string | null }> | null } | null | undefined,
+  fallback = ''
+): string {
+  const entries = raw?.translation ?? [];
+  const en = entries.find((t) => (t.language ?? '').toLowerCase().startsWith('en'));
+  return (en?.text ?? entries[0]?.text ?? fallback).trim();
+}
+
+function epochSeconds(value: unknown): number | null {
+  if (value == null) return null;
+  const n = typeof value === 'bigint' ? Number(value) : Number(value as number);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Live arrivals from `TripUpdates.pb`.
+ *
+ * Stop time updates carry the authority's current estimate (updated in real time
+ * as a vehicle moves), the trip's route and direction, and the schedule
+ * relationship, so "live" here means exactly that: the feed's own timestamp and
+ * the fact that the time was refreshed by the feed, not by us.
+ */
+async function fetchArrivalsFromRt(stopIds: string[], limitPerStop: number): Promise<{ arrivals: Arrival[]; fetchedAt: string }> {
+  const feed = await fetchRtFeed('TripUpdates');
+  const now = Date.now();
+  const wanted = new Set(stopIds);
+  const seen = new Set<string>();
+  const arrivals: Arrival[] = [];
+
+  for (const entity of feed.entity ?? []) {
+    const update = entity.tripUpdate;
+    if (!update?.trip?.routeId || !update.stopTimeUpdate?.length) continue;
+    const trip = update.trip;
+    const routeId = trip.routeId;
+    if (!routeId) continue;
+    const lineByRoute = TRANSIT_LINES.find((l) => l.routeId === routeId);
+    const routeColor = lineByRoute?.color ?? (routeId === 'Red' ? '#DA291C' : '#14304F');
+    const mode = modeForRoute(routeId, undefined);
+    const directionId = trip.directionId ?? 0;
+
+    for (const st of update.stopTimeUpdate) {
+      const stopId = st.stopId;
+      if (typeof stopId !== 'string' || !wanted.has(stopId)) continue;
+      const arrivalTime = epochSeconds(st.arrival?.time);
+      const departureTime = epochSeconds(st.departure?.time);
+      const atSeconds = arrivalTime ?? departureTime;
+      if (atSeconds == null) continue;
+      const arrivalAt = new Date(atSeconds * 1000);
+      if (arrivalAt.getTime() < now - 2 * 60_000) continue; // stale/just passed
+      const minutes = Math.max(0, Math.round((arrivalAt.getTime() - now) / 60_000));
+      if (minutes > 90) continue;
+      const rel = st.scheduleRelationship;
+      const key = `${stopId}:${routeId}:${arrivalAt.toISOString()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      arrivals.push({
+        stopId,
+        stopName: STOP_NAME_BY_ID.get(stopId) ?? `Stop ${stopId}`,
+        routeId,
+        routeLabel: lineByRoute?.label ?? routeId,
+        routeColor,
+        mode,
+        direction: directionId === 0 ? 'Inbound' : 'Outbound',
+        // The feed names the destination on some stop time updates; when it does
+        // not, the UI falls back to route/direction text rather than a guess.
+        headsign: (st.stopTimeProperties?.stopHeadsign ?? '').trim() || undefined,
+        arrivalAt: arrivalAt.toISOString(),
+        departureAt: departureTime ? new Date(departureTime * 1000).toISOString() : arrivalAt.toISOString(),
+        minutesAway: minutes,
+        status: rel === RtScheduleRelationship.SKIPPED ? 'canceled' : minutes <= 1 ? 'arriving' : 'on_time',
+        delayMinutes: 0,
+      });
+    }
+  }
+
+  // Keep the same shape the v3 path returns: newest first, capped per stop.
+  const perStop = new Map<string, Arrival[]>();
+  for (const arrival of arrivals.sort((a, b) => a.minutesAway - b.minutesAway)) {
+    const bucket = perStop.get(arrival.stopId) ?? [];
+    if (bucket.length < limitPerStop) {
+      bucket.push(arrival);
+      perStop.set(arrival.stopId, bucket);
+    }
+  }
+  return {
+    arrivals: [...perStop.values()].flat().sort((a, b) => a.minutesAway - b.minutesAway),
+    fetchedAt: new Date(now).toISOString(),
+  };
+}
+
 export async function fetchArrivals(stopIds: string[], opts: { limitPerStop?: number } = {}): Promise<{ arrivals: Arrival[]; source: DataSource; fetchedAt: string; degradedReason?: string }> {
+  const limit = opts.limitPerStop ?? 6;
+
+  // With a registered key the v3 API is cheap and carries headsigns and delays;
+  // without one the public GTFS-RT feed is the honest live source.
+  if (!apiKey()) {
+    try {
+      const { arrivals, fetchedAt } = await fetchArrivalsFromRt(stopIds, limit);
+      if (arrivals.length > 0) {
+        return { arrivals, source: 'mbta-live', fetchedAt };
+      }
+      return {
+        arrivals: estimateArrivals(stopIds, limit),
+        source: 'timetable',
+        fetchedAt,
+        degradedReason: 'No real-time predictions in the feed for these stops',
+      };
+    } catch (error) {
+      return {
+        arrivals: estimateArrivals(stopIds, limit),
+        source: 'timetable',
+        fetchedAt: new Date().toISOString(),
+        degradedReason: error instanceof Error ? error.message.slice(0, 120) : 'GTFS-RT feed unreachable',
+      };
+    }
+  }
+
+  return fetchArrivalsV3(stopIds, { limitPerStop: limit });
+}
+
+async function fetchArrivalsV3(stopIds: string[], opts: { limitPerStop?: number } = {}): Promise<{ arrivals: Arrival[]; source: DataSource; fetchedAt: string; degradedReason?: string }> {
   const limit = opts.limitPerStop ?? 6;
   const now = Date.now();
   const results: Arrival[] = [];
@@ -375,12 +545,93 @@ function stopIndex(line: TransitLine, stopId: string): number {
 }
 
 const ROUTE_IDS_FOR_ALERTS = ['Red', 'Mattapan', 'CR-Fairmount', ...DORCHESTER_BUS_ROUTES.map((b) => b.id)];
+/** GTFS stop ids for lines DOR101 tracks, used to keep alerts about a station. */
+const DORCHESTER_STOP_IDS_RT = new Set(TRANSIT_LINES.flatMap((line) => line.dorchesterStops.map((stop) => stop.id)));
 
 export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }> {
   const cacheKey = 'mbta:alerts:dorchester';
   const cached = globalCache.get<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }>(cacheKey);
   if (cached) return cached;
 
+  // Registered key: v3 JSON (its own rate limit, richer translated fields).
+  if (apiKey()) {
+    const v3 = await fetchAlertsV3();
+    globalCache.set(cacheKey, v3, 5 * 60_000);
+    return v3;
+  }
+
+  const alerts: ServiceAlert[] = [];
+  const seen = new Set<string>();
+  let attemptedRoutes = 0;
+
+  try {
+    const feed = await fetchRtFeed('Alerts');
+    const nowMs = Date.now();
+    for (const entity of feed.entity ?? []) {
+      const alert = entity.alert;
+      if (!alert) continue;
+      const entities = alert.informedEntity ?? [];
+      const routeIds = [
+        ...new Set(
+          entities.map((e) => e.routeId).filter((id): id is string => typeof id === 'string' && id.length > 0)
+        ),
+      ];
+      const stopIds = entities.map((e) => e.stopId).filter((id): id is string => typeof id === 'string' && id.length > 0);
+      const touchesDorchester = routeIds.some((id) => ROUTE_IDS_FOR_ALERTS.includes(id)) || stopIds.some((id) => DORCHESTER_STOP_IDS_RT.has(id));
+      if (!touchesDorchester) continue;
+
+      const active = alert.activePeriod ?? [];
+      const inWindow =
+        active.length === 0 ||
+        active.some((period) => {
+          const start = epochSeconds(period.start);
+          const end = epochSeconds(period.end);
+          if (start != null && nowMs < start * 1000) return false;
+          if (end != null && nowMs > end * 1000) return false;
+          return true;
+        });
+      if (!inWindow) continue;
+
+      attemptedRoutes++;
+      if (seen.has(entity.id)) continue;
+      seen.add(entity.id);
+
+      const severity =
+        alert.severityLevel === RtSeverityLevel.SEVERE
+          ? 'major'
+          : alert.severityLevel === RtSeverityLevel.WARNING
+            ? 'minor'
+            : 'info';
+      const header = translated(alert.headerText);
+      alerts.push({
+        id: entity.id,
+        header: header || 'Service notice',
+        description: translated(alert.descriptionText),
+        effect: alert.effect != null ? (RtEffect[alert.effect] ?? 'UNKNOWN_EFFECT') : 'UNKNOWN_EFFECT',
+        severity,
+        routeIds,
+        validFrom: active[0]?.start != null ? new Date(Number(active[0].start) * 1000).toISOString() : null,
+        validUntil: active[0]?.end != null ? new Date(Number(active[0].end) * 1000).toISOString() : null,
+        lastModified: feed.header?.timestamp != null ? new Date(Number(feed.header.timestamp) * 1000).toISOString() : null,
+        url: translated(alert.url) || null,
+      });
+    }
+  } catch {
+    // Fall through to the timetable answer below; the caller sees the source.
+  }
+
+  const payload = {
+    alerts: alerts.sort((a, b) => severityRank(b.severity) - severityRank(a.severity)),
+    source: (alerts.length ? 'mbta-live' : 'timetable') as DataSource,
+    fetchedAt: new Date().toISOString(),
+    attemptedRoutes,
+  };
+  globalCache.set(cacheKey, payload, 5 * 60_000);
+  return payload;
+}
+
+/** v3 /alerts, used only when MBTA_API_KEY is configured. */
+async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }> {
   interface AlertAttrs {
     header?: string;
     description?: string;
@@ -404,7 +655,6 @@ export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: D
         'filter[route]': routeId,
         'filter[lifecycle]': 'current',
         'page[limit]': 10,
-        include: 'route',
       });
       for (const a of list(doc)) {
         if (seen.has(a.id)) continue;
@@ -430,14 +680,12 @@ export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: D
     }
   }
 
-  const payload = {
+  return {
     alerts: alerts.sort((a, b) => severityRank(b.severity) - severityRank(a.severity)),
     source: (alerts.length ? 'mbta-live' : 'timetable') as DataSource,
     fetchedAt: new Date().toISOString(),
     attemptedRoutes: attempted,
   };
-  globalCache.set(cacheKey, payload, 5 * 60_000);
-  return payload;
 }
 
 function normalizeSeverity(priority?: string, severity?: number): ServiceAlert['severity'] {
@@ -463,6 +711,18 @@ export async function fetchShapes(routeIds: string[], bbox?: string): Promise<Re
       const cached = globalCache.get<ShapeGeometry>(cacheKey);
       if (cached) {
         out[routeId] = cached;
+        return;
+      }
+      // Without a key the v3 endpoint is rate limited to 20 req/min, shared
+      // across every anonymous consumer; the bundled geometry is the fallback
+      // the rest of the app already trusts, so only ask v3 when a key exists.
+      if (!apiKey()) {
+        const line = TRANSIT_LINES.find((l) => l.routeId === routeId);
+        out[routeId] = {
+          routeId,
+          paths: line?.fallbackPath ? [line.fallbackPath] : [],
+          source: 'timetable',
+        };
         return;
       }
       interface ShapeAttrs {
@@ -494,11 +754,39 @@ export async function fetchShapes(routeIds: string[], bbox?: string): Promise<Re
   return out;
 }
 
-/** Station list for a route, so a rebuild does not require editing our code. */
-export async function fetchStopsForRoute(routeId: string): Promise<Array<{ id: string; name: string; lat: number; lng: number; accessible: boolean; parentId?: string | null }>> {
+/**
+ * Station list for a route, so a rebuild does not require editing our code.
+ *
+ * Without an API key the JSON endpoint usually answers 429, so the live request
+ * is only made when a key is configured. The bundled GTFS reference (the same
+ * ids the timetable fallback uses) is the honest, always-available answer and is
+ * labelled `timetable` by the caller.
+ */
+export async function fetchStopsForRoute(routeId: string): Promise<{
+  stops: Array<{ id: string; name: string; lat: number; lng: number; accessible: boolean; parentId?: string | null }>;
+  source: DataSource;
+}> {
   const cacheKey = `mbta:stops:${routeId}`;
-  const cached = globalCache.get<Array<{ id: string; name: string; lat: number; lng: number; accessible: boolean; parentId?: string | null }>>(cacheKey);
+  const cached = globalCache.get<{
+    stops: Array<{ id: string; name: string; lat: number; lng: number; accessible: boolean; parentId?: string | null }>;
+    source: DataSource;
+  }>(cacheKey);
   if (cached) return cached;
+
+  const bundled = (): { stops: Array<{ id: string; name: string; lat: number; lng: number; accessible: boolean; parentId?: string | null }>; source: DataSource } => {
+    const seen = new Set<string>();
+    const stops = TRANSIT_LINES.filter((line) => line.routeId === routeId)
+      .flatMap((line) => line.dorchesterStops)
+      .filter((stop) => {
+        if (seen.has(stop.id)) return false;
+        seen.add(stop.id);
+        return true;
+      })
+      .map((stop) => ({ id: stop.id, name: stop.name, lat: stop.lat, lng: stop.lng, accessible: stop.accessible, parentId: null }));
+    return { stops, source: 'timetable' };
+  };
+
+  if (!apiKey()) return bundled();
 
   interface StopAttrsExt extends StopAttrs {
     location_type?: number;
@@ -518,13 +806,13 @@ export async function fetchStopsForRoute(routeId: string): Promise<Array<{ id: s
         accessible: s.attributes.wheelchair_boarding === 1,
         parentId: s.relationships?.parent_station?.data ? (s.relationships!.parent_station.data as { id: string }).id : null,
       }));
-    if (stops.length) {
-      // 12 h: station inventory moves rarely, and this keeps anonymous traffic down.
-      globalCache.set(cacheKey, stops, 12 * 60 * 60_000);
-    }
-    return stops;
+    if (stops.length === 0) return bundled();
+    // 12 h: station inventory moves rarely, and this keeps anonymous traffic down.
+    const payload = { stops, source: 'mbta-live' as const };
+    globalCache.set(cacheKey, payload, 12 * 60 * 60_000);
+    return payload;
   } catch {
-    return [];
+    return bundled();
   }
 }
 
@@ -538,6 +826,7 @@ export async function fetchRouteMeta(routeIds: string[]): Promise<Record<string,
         out[id] = cached;
         return;
       }
+      if (!apiKey()) return; // bundled colours/names are shown; no key, no v3 call
       try {
         const doc = await request<RouteAttrs>(`/routes/${id}`);
         const resource = list(doc)[0];

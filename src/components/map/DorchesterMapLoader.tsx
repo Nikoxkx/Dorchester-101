@@ -37,8 +37,17 @@ const MapPreviewInner = dynamic(() => import('./MapPreview').then((mod) => mod.M
   loading: () => <Skeleton className="h-full w-full rounded-none" />,
 });
 
+/**
+ * The shell owns the height. Without it, the `ssr:false` loading skeleton has no
+ * parent with a height and collapses to nothing — which is exactly the blank
+ * preview the dashboard used to show before hydration.
+ */
 export function MapPreview({ height = '15rem' }: { height?: string }) {
-  return <MapPreviewInner height={height} />;
+  return (
+    <div style={{ height }} className="relative w-full overflow-hidden bg-[var(--color-bg-tertiary)]" aria-hidden="false">
+      <MapPreviewInner height={height} />
+    </div>
+  );
 }
 
 export function MapSkeleton() {

@@ -98,9 +98,9 @@ export async function GET(request: Request) {
 
       case 'stops': {
         const routeId = parsed.data.route ?? 'Red';
-        const stops = await fetchStopsForRoute(routeId);
+        const { stops, source } = await fetchStopsForRoute(routeId);
         return NextResponse.json(
-          { routeId, stops, fetchedAt: new Date().toISOString(), source: stops.length ? 'mbta-live' : 'timetable' },
+          { routeId, stops, fetchedAt: new Date().toISOString(), source },
           { headers: { 'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400' } }
         );
       }

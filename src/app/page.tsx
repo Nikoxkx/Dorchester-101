@@ -68,6 +68,7 @@ export default function DashboardPage() {
   const setLastUpdated = useAppStore((s) => s.setLastUpdated);
   const dataEpoch = useAppStore((s) => s.dataEpoch);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsSnapshot, setNewsSnapshot] = useState<{ asOf: string; note: string } | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export default function DashboardPage() {
       ]);
       if (newsRes.status === 'fulfilled' && newsRes.value) {
         setNews((newsRes.value.articles ?? []).slice(0, 3) as NewsItem[]);
+        setNewsSnapshot(newsRes.value.snapshot ?? null);
       }
       if (marketRes.status === 'fulfilled' && marketRes.value) setMarket(marketRes.value as MarketResponse);
       const stamp = new Date().toISOString();
@@ -287,6 +289,12 @@ export default function DashboardPage() {
                   {t('dashboard.viewAll')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </CardHeader>
+              {newsSnapshot && (
+                <p role="status" className="mx-5 mb-1 flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent-amber)]" aria-hidden="true" />
+                  {newsSnapshot.note}
+                </p>
+              )}
               <CardContent>
                 {loading && news.length === 0 ? (
                   <ul className="flex flex-col gap-3" aria-busy="true">
