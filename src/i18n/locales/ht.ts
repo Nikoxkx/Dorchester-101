@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "Gratis e open source. Windows 10 oswa pi resan, 64-bit.",
   'settings.section.permissions': "Pèmisyon ak alèt",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "Nou sou entènèt ankò — n ap mete done yo ajou.",
+  'data.grantedRefresh': "Pèmisyon akòde — n ap mete done dirèk yo ajou.",
+
 };

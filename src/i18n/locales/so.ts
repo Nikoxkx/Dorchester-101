@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "Bilaash oo fur furan. Windows 10 ama ka dambeeyo, 64-bit.",
   'settings.section.permissions': "Ogolaansho iyo ogeysiis",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "Internetka wuu soo noqday — waa la cusboonaysiinayay xogta ugu cusub.",
+  'data.grantedRefresh': "Ogolaanshaha waa la siiyay — waa la cusboonaysiinayay xogta tooska ah.",
+
 };

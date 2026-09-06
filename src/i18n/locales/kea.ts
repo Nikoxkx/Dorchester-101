@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "Grátis i kódigu abertu. Windows 10 us kiló mas novu, 64-bit.",
   'settings.section.permissions': "Pèmisson i avizu",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "Online denu — ta atualiza dadus mas recenti.",
+  'data.grantedRefresh': "Pèmisson dodu — ta atualiza dadus en diretu.",
+
 };

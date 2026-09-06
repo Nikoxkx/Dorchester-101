@@ -210,7 +210,10 @@ export async function fetchHudFmrs(): Promise<HudFmrResult> {
       retrievedAt: HUD_FMR_SNAPSHOT.capturedAt,
       snapshot: true,
     };
-    globalCache.set(cacheKey, snapshot, CACHE_TTL.DEFAULT);
+    // Two minutes, not the usual five: the snapshot is a bridge for an outage,
+    // and when huduser.gov answers again the live workbook should retake the
+    // page at the next poll rather than several minutes later.
+    globalCache.set(cacheKey, snapshot, 2 * 60_000);
     return snapshot;
   }
 }
@@ -257,7 +260,10 @@ export async function fetchHudIncomeLimits(): Promise<HudIncomeLimits> {
       retrievedAt: HUD_IL_SNAPSHOT.capturedAt,
       snapshot: true,
     };
-    globalCache.set(cacheKey, snapshot, CACHE_TTL.DEFAULT);
+    // Two minutes, not the usual five: the snapshot is a bridge for an outage,
+    // and when huduser.gov answers again the live workbook should retake the
+    // page at the next poll rather than several minutes later.
+    globalCache.set(cacheKey, snapshot, 2 * 60_000);
     return snapshot;
   }
 }

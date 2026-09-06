@@ -93,50 +93,56 @@ export function useBrowserPermissions() {
     };
   }, [refresh]);
 
-  const requestNotifications = useCallback(async () => {
+  const requestNotifications = useCallback(async (): Promise<'granted' | 'denied' | 'unsupported'> => {
     if (!notificationsSupported()) {
       setStates((prev) => ({ ...prev, notifications: 'unsupported' }));
-      return;
+      return 'unsupported';
     }
     setBusy((prev) => ({ ...prev, notifications: true }));
     try {
       const result = await Notification.requestPermission();
       setStates((prev) => ({ ...prev, notifications: result as PermissionValue }));
+      return result === 'granted' ? 'granted' : 'denied';
     } finally {
       setBusy((prev) => ({ ...prev, notifications: false }));
     }
   }, []);
 
-  const requestLocation = useCallback(() => {
+  const requestLocation = useCallback((): Promise<boolean> => {
     if (!locationSupported()) {
       setStates((prev) => ({ ...prev, location: 'unsupported' }));
-      return;
+      return Promise.resolve(false);
     }
     setBusy((prev) => ({ ...prev, location: true }));
     // One-shot read; the coordinates are used for nothing here — the point is
     // only to raise (and remember) the browser's own permission question.
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        setStates((prev) => ({ ...prev, location: 'granted' }));
-        setBusy((prev) => ({ ...prev, location: false }));
-      },
-      (error) => {
-        setStates((prev) => ({ ...prev, location: error.code === error.PERMISSION_DENIED ? 'denied' : 'prompt' }));
-        setBusy((prev) => ({ ...prev, location: false }));
-      },
-      { timeout: 10_000, maximumAge: 600_000 }
-    );
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setStates((prev) => ({ ...prev, location: 'granted' }));
+          setBusy((prev) => ({ ...prev, location: false }));
+          resolve(true);
+        },
+        (error) => {
+          setStates((prev) => ({ ...prev, location: error.code === error.PERMISSION_DENIED ? 'denied' : 'prompt' }));
+          setBusy((prev) => ({ ...prev, location: false }));
+          resolve(false);
+        },
+        { timeout: 10_000, maximumAge: 600_000 }
+      );
+    });
   }, []);
 
-  const requestStorage = useCallback(async () => {
+  const requestStorage = useCallback(async (): Promise<boolean> => {
     if (!storageSupported()) {
       setStates((prev) => ({ ...prev, storage: 'unsupported' }));
-      return;
+      return false;
     }
     setBusy((prev) => ({ ...prev, storage: true }));
     try {
       const granted = await navigator.storage.persist();
       setStates((prev) => ({ ...prev, storage: granted ? 'granted' : 'denied' }));
+      return granted;
     } finally {
       setBusy((prev) => ({ ...prev, storage: false }));
     }

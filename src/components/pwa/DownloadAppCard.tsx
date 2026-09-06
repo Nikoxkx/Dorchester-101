@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Download, ExternalLink, Monitor, PackageOpen, RotateCw } from 'lucide-react';
 import { useI18n } from '@/i18n/hook';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
 import { APP_VERSION } from '@/lib/site';
 import type { DownloadInfo } from '@/app/api/download/route';
 
@@ -44,12 +45,16 @@ export function DownloadAppCard({ variant = 'full', className }: { variant?: 'he
       .catch(() => setState('error'));
   }, []);
 
+  // Also refetch on every global data refresh (permission granted, connection
+  // back), so a card that showed the pinned release while GitHub was
+  // unreachable upgrades to the newest release by itself.
+  const dataEpoch = useAppStore((s) => s.dataEpoch);
   useEffect(() => {
     // Deferred a tick so no state write happens synchronously in the effect
     // body; `state` already starts at 'loading' so the first paint is honest.
     const kick = window.setTimeout(() => load({ silent: true }), 0);
     return () => window.clearTimeout(kick);
-  }, [load]);
+  }, [load, dataEpoch]);
 
   const asset = info?.installer ?? null;
 

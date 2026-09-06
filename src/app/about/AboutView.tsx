@@ -9,6 +9,7 @@ import { ReportProblem } from '@/components/a11y/ReportProblem';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
+import { useAppStore } from '@/stores/appStore';
 import { LANGUAGES, languageMeta } from '@/i18n/config';
 import { TOTAL_KEYS, localeCoverage } from '@/i18n';
 import type { PhotoCredit } from './page';
@@ -48,6 +49,10 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
   const { t, format, lang } = useI18n();
   const [meta, setMeta] = useState<Meta | null>(null);
   const [market, setMarket] = useState<MarketStatus | null>(null);
+  // Refetch when the app-wide refresh signal fires (permission granted,
+  // connection restored, Settings → Refresh now), so the live-source statuses
+  // on this page never sit on a stale reading.
+  const dataEpoch = useAppStore((s) => s.dataEpoch);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +66,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dataEpoch]);
 
   const backlog = reviewBacklog();
   const freshCount = RESOURCES.filter((resource) => verificationLevel(resource) === 'fresh').length;

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Bell, Check, CircleAlert, HardDriveDownload, MapPin, ShieldCheck, X } from 'lucide-react';
 import { useI18n } from '@/i18n/hook';
+import { useAppStore } from '@/stores/appStore';
 import { cn } from '@/lib/utils';
 import { readDismissed, writeDismissed, useBrowserPermissions, type PermissionValue } from '@/hooks/useBrowserPermissions';
 import type { TranslationKey } from '@/i18n/en';
@@ -23,6 +24,8 @@ import type { TranslationKey } from '@/i18n/en';
 export function PermissionSetup({ variant = 'full' }: { variant?: 'banner' | 'full' }) {
   const { t } = useI18n();
   const { states, busy, requestNotifications, requestLocation, requestStorage } = useBrowserPermissions();
+  const refreshAllData = useAppStore((s) => s.refreshAllData);
+  const announce = useAppStore((s) => s.announce);
   const [dismissed, setDismissed] = useState(true);
 
   // Avoid a hydration mismatch: the banner's visibility depends on localStorage,
@@ -32,6 +35,33 @@ export function PermissionSetup({ variant = 'full' }: { variant?: 'banner' | 'fu
     const id = window.setTimeout(() => setDismissed(readDismissed()), 0);
     return () => window.clearTimeout(id);
   }, []);
+
+  // Granting a permission is the moment the visitor has said "go" — so it also
+  // triggers one global data refresh (the same bump Settings → "Refresh now"
+  // uses). Every live panel refetches immediately, which is what turns any
+  // field still showing "unavailable" into real data without a page reload.
+  const granted = useCallback(() => {
+    refreshAllData();
+    announce(t('data.grantedRefresh'), 'polite');
+  }, [announce, refreshAllData, t]);
+
+  const enableNotifications = useCallback(() => {
+    void requestNotifications().then((result) => {
+      if (result === 'granted') granted();
+    });
+  }, [granted, requestNotifications]);
+
+  const enableLocation = useCallback(() => {
+    void requestLocation().then((ok) => {
+      if (ok) granted();
+    });
+  }, [granted, requestLocation]);
+
+  const enableStorage = useCallback(() => {
+    void requestStorage().then((ok) => {
+      if (ok) granted();
+    });
+  }, [granted, requestStorage]);
 
   if (variant === 'banner' && dismissed) return null;
 
@@ -86,7 +116,7 @@ export function PermissionSetup({ variant = 'full' }: { variant?: 'banner' | 'fu
           description={t('permissions.notifications.desc')}
           state={states.notifications}
           busy={busy.notifications}
-          onEnable={() => void requestNotifications()}
+          onEnable={enableNotifications}
         />
         <PermissionRow
           icon={<MapPin className="h-4 w-4" aria-hidden="true" />}
@@ -94,7 +124,7 @@ export function PermissionSetup({ variant = 'full' }: { variant?: 'banner' | 'fu
           description={t('permissions.location.desc')}
           state={states.location}
           busy={busy.location}
-          onEnable={requestLocation}
+          onEnable={enableLocation}
         />
         <PermissionRow
           icon={<HardDriveDownload className="h-4 w-4" aria-hidden="true" />}
@@ -102,7 +132,7 @@ export function PermissionSetup({ variant = 'full' }: { variant?: 'banner' | 'fu
           description={t('permissions.storage.desc')}
           state={states.storage}
           busy={busy.storage}
-          onEnable={() => void requestStorage()}
+          onEnable={enableStorage}
         />
       </ul>
 

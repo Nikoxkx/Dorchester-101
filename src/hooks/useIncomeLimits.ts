@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useAppStore } from '@/stores/appStore';
 
 export interface IncomeLimitsResponse {
   status: 'available' | 'unavailable';
@@ -50,12 +51,17 @@ export function useIncomeLimits(): { data: IncomeLimitsResponse | null; loading:
       .finally(() => setLoading(false));
   }, []);
 
+  // The initial fetch and every global data refresh (Settings → "Refresh now",
+  // a permission being granted, the connection coming back) land here, so a
+  // calculator that opened while HUD was unreachable never stays stuck on
+  // "unavailable" for the rest of the visit.
+  const dataEpoch = useAppStore((s) => s.dataEpoch);
   useEffect(() => {
     // Deferred a tick (repo pattern): `loading` starts true, so the first paint
     // is already correct and nothing is written synchronously in the effect.
     const kick = window.setTimeout(() => refresh({ silent: true }), 0);
     return () => window.clearTimeout(kick);
-  }, [refresh]);
+  }, [refresh, dataEpoch]);
 
   return { data, loading, error, refresh };
 }

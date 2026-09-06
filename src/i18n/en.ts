@@ -744,6 +744,8 @@ export const en = {
   'download.app.offline': "The release list is unreachable right now. Try again in a moment.",
   'download.app.note': "Free and open source. Windows 10 or later, 64-bit.",
   'settings.section.permissions': "Permissions & alerts",
+  'data.backOnline': "Back online — refreshing the latest data.",
+  'data.grantedRefresh': "Permission granted — refreshing live data.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

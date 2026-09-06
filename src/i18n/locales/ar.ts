@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "مجاني ومفتوح المصدر. ويندوز 10 أو أحدث، 64 بت.",
   'settings.section.permissions': "الأذونات والتنبيهات",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "عاد الاتصال بالإنترنت — يجري تحديث أحدث البيانات.",
+  'data.grantedRefresh': "تم منح الإذن — يجري تحديث البيانات المباشرة.",
+
 };

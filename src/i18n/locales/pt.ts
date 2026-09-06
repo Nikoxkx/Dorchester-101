@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "Gratuito e de código aberto. Windows 10 ou superior, 64 bits.",
   'settings.section.permissions': "Permissões e avisos",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "De volta online — atualizando os dados mais recentes.",
+  'data.grantedRefresh': "Permissão concedida — atualizando os dados ao vivo.",
+
 };

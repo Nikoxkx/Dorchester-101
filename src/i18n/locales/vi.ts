@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "Miễn phí và mã nguồn mở. Windows 10 trở lên, 64-bit.",
   'settings.section.permissions': "Quyền và thông báo",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "Đã trực tuyến lại — đang làm mới dữ liệu mới nhất.",
+  'data.grantedRefresh': "Đã cấp quyền — đang làm mới dữ liệu trực tiếp.",
+
 };

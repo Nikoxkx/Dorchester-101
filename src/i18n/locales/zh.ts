@@ -699,4 +699,8 @@ export const locale: Dict = {
   'download.app.note': "免费且开源。Windows 10 或更高版本，64 位。",
   'settings.section.permissions': "权限与提醒",
 
+  // ── Data auto-recovery announcements ──
+  'data.backOnline': "已恢复联网——正在刷新最新数据。",
+  'data.grantedRefresh': "已授予权限——正在刷新实时数据。",
+
 };

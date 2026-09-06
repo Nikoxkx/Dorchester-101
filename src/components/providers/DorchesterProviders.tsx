@@ -5,6 +5,7 @@ import { MotionConfig } from 'framer-motion';
 import { useAppStore } from '@/stores/appStore';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { languageMeta } from '@/i18n/config';
+import { useI18n } from '@/i18n/hook';
 import { LiveRegionProvider } from './LiveRegion';
 import { SkipLink, ShortcutHelp } from '@/components/a11y';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -81,6 +82,41 @@ function HydrationBridge() {
   return null;
 }
 
+/**
+ * When the connection comes back, every panel refetches on its own — no reload.
+ *
+ * A resident who opened the site on the subway saw "unavailable" fields and
+ * (where one exists) a snapshot. The moment the browser fires `online`, this
+ * bumps the store's data epoch, which is the same signal Settings → "Refresh
+ * now" uses: every `useLivePolling` panel (news, market charts, MBTA,
+ * notifications) and every epoch-aware hook re-asks the server, and the server
+ * re-asks each publisher — so empty fields fill with live data by themselves.
+ *
+ * Debounced a beat because `online` can fire before the network is actually
+ * usable; the panels' own polling remains the steady state afterwards.
+ */
+function DataRecovery() {
+  const { t } = useI18n();
+
+  useEffect(() => {
+    let timer = 0;
+    const onOnline = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        useAppStore.getState().refreshAllData();
+        useAppStore.getState().announce(t('data.backOnline'), 'polite');
+      }, 1_500);
+    };
+    window.addEventListener('online', onOnline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.clearTimeout(timer);
+    };
+  }, [t]);
+
+  return null;
+}
+
 export function DorchesterProviders({ children }: { children: ReactNode }) {
   const reduceMotion = useResolvedPrefs().reduceMotion;
 
@@ -91,6 +127,7 @@ export function DorchesterProviders({ children }: { children: ReactNode }) {
       <LiveRegionProvider>
         <DocumentSettings />
         <HydrationBridge />
+        <DataRecovery />
         <SkipLink />
         {children}
         <ShortcutHelp />
