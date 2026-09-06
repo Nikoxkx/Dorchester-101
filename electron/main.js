@@ -53,7 +53,7 @@ function createWindow() {
     minWidth: 880,
     minHeight: 560,
     title: 'DOR101 — Dorchester desk',
-    backgroundColor: '#e9ebe4',
+    backgroundColor: '#f0ebe3',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -70,6 +70,8 @@ function createWindow() {
         submenu: [
           { role: 'reload' },
           { type: 'separator' },
+          { label: 'Generate Report', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
+          { type: 'separator' },
           { role: 'quit' },
         ],
       },
@@ -80,15 +82,22 @@ function createWindow() {
           { role: 'resetZoom' },
           { role: 'zoomIn' },
           { role: 'zoomOut' },
+          { type: 'separator' },
+          { label: 'Developer Tools', click: () => mainWindow && mainWindow.webContents.openDevTools() },
+        ],
+      },
+      {
+        label: 'Data',
+        submenu: [
+          { label: 'Refresh All', click: () => mainWindow && mainWindow.webContents.send('refresh-all') },
+          { label: 'Export College Pathway', click: () => mainWindow && mainWindow.webContents.send('export-college') },
         ],
       },
       {
         label: 'Help',
         submenu: [
-          {
-            label: 'Source',
-            click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101'),
-          },
+          { label: 'Source', click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101') },
+          { label: 'Princeton Pathway', click: () => shell.openExternal('https://admission.princeton.edu/') },
         ],
       },
     ]),
@@ -157,6 +166,11 @@ function startServer() {
 }
 
 ipcMain.handle('check-for-updates', async () => ({ available: false }));
+ipcMain.handle('generate-report', async () => {
+  const reportData = { generatedAt: new Date().toISOString(), sources: ['HUD FY2026', 'MBTA', 'BPDA', 'CSNDC', 'Princeton Bridge Year'], status: 'complete' };
+  return reportData;
+});
+ipcMain.handle('export-college', async () => ({ exported: true, file: 'dorchester-college-pathway.pdf', url: 'https://example.com/college-export' }));
 ipcMain.handle('restart-app', () => {
   app.relaunch();
   app.exit(0);

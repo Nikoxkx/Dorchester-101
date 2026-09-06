@@ -18,6 +18,7 @@ function buildTranslations(): Record<string, Dict> {
     'nav.tools':           'Financial Tools',
     'nav.news':            'News',
     'nav.resources':       'Resources',
+    'nav.college':         'College Access',
     'nav.faq':             'FAQ',
     'nav.settings':        'Settings',
     'nav.collapse':        'Collapse',

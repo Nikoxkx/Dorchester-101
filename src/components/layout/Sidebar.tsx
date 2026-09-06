@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home, Building2, DollarSign, Map, Apple, Info, Calculator,
-  Newspaper, BookOpen, Settings, ChevronLeft, ChevronRight, Sun, Moon, HelpCircle, TrendingUp,
+  Newspaper, BookOpen, Settings, ChevronLeft, ChevronRight, Sun, Moon, HelpCircle, TrendingUp, GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -22,6 +22,7 @@ export const navItems = [
   { href: '/tools', icon: Calculator, labelKey: 'nav.tools' },
   { href: '/news', icon: Newspaper, labelKey: 'nav.news' },
   { href: '/resources', icon: BookOpen, labelKey: 'nav.resources' },
+  { href: '/college-access', icon: GraduationCap, labelKey: 'nav.college' },
   { href: '/faq', icon: HelpCircle, labelKey: 'nav.faq' },
 ];
 

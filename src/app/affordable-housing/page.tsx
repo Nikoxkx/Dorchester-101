@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -50,10 +51,13 @@ export default function AffordableHousingPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
-          <p className="kicker">Housing desk</p>
-          <h1 className="font-display text-4xl">{t('housing.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('housing.description')}</p>
+        <header className="relative border-b-3 border-[var(--ink)] pb-6 overflow-hidden">
+          <div aria-hidden className="absolute top-0 right-0 w-32 h-32 -translate-y-1/2 translate-x-1/4 opacity-[0.06] pointer-events-none">
+            <svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" /><circle cx="100" cy="100" r="70" fill="none" stroke="var(--ink)" strokeWidth="3" /></svg>
+          </div>
+          <p className="masthead-date mb-2">Housing Desk · Updated 6 Sept 2026</p>
+          <h1 className="font-display text-5xl md:text-6xl tracking-[-0.045em] leading-[0.92]">Affordable<br /><span className="italic">Housing</span></h1>
+          <p className="text-[var(--ink-soft)] mt-3 max-w-2xl leading-relaxed">Income-restricted listings with AMI breakdowns. No generic listings — every property is verified against BPDA, BHA, or HUD records, with real application links.</p>
         </header>
 
         {data?.bha && (
@@ -63,9 +67,10 @@ export default function AffordableHousingPage() {
               Tenant-based Section 8 is {data.bha.section8TenantBased}. Public housing is {data.bha.publicHousing}.
             </p>
             <p className="text-sm text-[var(--ink-soft)] mt-2">{data.bha.note}</p>
-            <div className="flex flex-wrap gap-3 mt-3">
+              <div className="flex flex-wrap gap-3 mt-3">
               <a href={telHref(data.bha.phone)} className="underline text-sm">{data.bha.phone}</a>
               <a href={data.bha.applyUrl} target="_blank" rel="noreferrer" className="bg-[var(--red)] text-white px-3 py-1.5 text-sm font-bold">boston.myhousing.com</a>
+              <Link href="/college-access" className="border border-[var(--ink)] text-sm px-3 py-1.5 font-bold hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors">College Pathway →</Link>
             </div>
           </aside>
         )}
