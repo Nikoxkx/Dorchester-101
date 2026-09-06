@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Home, Apple, Scale, Train, Calculator, ClipboardList, Gavel, Globe } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
 
@@ -9,44 +12,46 @@ export function QuickLinks() {
   const { t } = useTranslation(language);
 
   const links = [
-    { href: '/affordable-housing', label: t('quick.applyHousing') },
-    { href: '/food', label: t('quick.findFood') },
-    { href: '/neighborhood', label: t('quick.knowRights') },
-    { href: 'https://www.mbta.com/schedules', label: t('quick.mbtaStatus'), external: true },
-    { href: '/tools', label: t('quick.rentCalc') },
-    { href: 'https://boston.myhousing.com', label: t('quick.bhaWaitlist'), external: true },
-    { href: '/resources', label: t('quick.legalHelp') },
-    { href: '/college-access', label: 'College Access — Princeton Pathway', new: true },
-    { href: '/settings', label: t('quick.langSettings') },
+    { href: '/affordable-housing', icon: Home, labelKey: 'quick.applyHousing', color: '#1B3A6B' },
+    { href: '/food', icon: Apple, labelKey: 'quick.findFood', color: '#1A6B3A' },
+    { href: '/resources?category=legal', icon: Scale, labelKey: 'quick.knowRights', color: '#B8860B' },
+    { href: 'https://www.mbta.com/schedules', icon: Train, labelKey: 'quick.mbtaStatus', color: '#C8102E', external: true },
+    { href: '/tools#rent-burden', icon: Calculator, labelKey: 'quick.rentCalc', color: '#4A7BC4' },
+    { href: 'https://www.bostonhousing.org', icon: ClipboardList, labelKey: 'quick.bhaWaitlist', color: '#6B5B95', external: true },
+    { href: '/resources?category=legal', icon: Gavel, labelKey: 'quick.legalHelp', color: '#88B04B' },
+    { href: '/settings', icon: Globe, labelKey: 'quick.langSettings', color: '#955251' },
   ];
 
   return (
-    <div className="relative">
-      <div className="mb-3 flex items-baseline gap-3">
-        <h3 className="font-display text-xl tracking-[-0.03em]">Quick access</h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--red)]">Updated 6 Sept 2026</span>
-      </div>
-      <ol className="columns-1 sm:columns-2 gap-x-8 text-sm">
-        {links.map((link, i) => {
-          const className = 'flex items-baseline gap-2 py-2 border-b border-[var(--line)] break-inside-avoid hover:bg-[var(--surface)] -mx-2 px-2 transition-colors';
-          const inner = (
-            <>
-              <span className="font-mono text-[11px] text-[var(--red)] w-5 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-              <span className="underline underline-offset-2 decoration-[var(--red)]/40 hover:text-[var(--red)] transition-colors">{link.label}</span>
-              {link.new && <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--red)] border border-[var(--red)] px-1 py-0.5 shrink-0 ml-1">New</span>}
-            </>
-          );
-          return (
-            <li key={link.href}>
-              {link.external ? (
-                <a href={link.href} target="_blank" rel="noreferrer" className={className}>{inner}</a>
-              ) : (
-                <Link href={link.href} className={className}>{inner}</Link>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+    <motion.div
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {links.map((link) => {
+        const Icon = link.icon;
+        const Component = link.external ? 'a' : Link;
+        const extraProps = link.external ? { target: '_blank' as const, rel: 'noopener noreferrer' } : {};
+        return (
+          <Component
+            key={link.href}
+            href={link.href}
+            {...extraProps}
+            className={cn(
+              'flex flex-col items-center gap-2 p-4 rounded-xl',
+              'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
+              'hover:shadow-md hover:border-[var(--color-accent-primary)]/30',
+              'transition-all duration-200 text-center'
+            )}
+          >
+            <div className="p-3 rounded-lg" style={{ backgroundColor: `${link.color}15` }}>
+              <Icon className="w-6 h-6" style={{ color: link.color }} />
+            </div>
+            <span className="text-sm font-heading font-medium">{t(link.labelKey)}</span>
+          </Component>
+        );
+      })}
+    </motion.div>
   );
 }

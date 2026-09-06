@@ -1,13 +1,17 @@
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+// DOR101 Electron Main Process
+// This wraps the Next.js app in a native Windows window
+
+const { app, BrowserWindow, Menu, Tray, shell, nativeImage } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const http = require('http');
 
 let mainWindow = null;
+let tray = null;
 let serverProcess = null;
-const PORT = Number(process.env.DOR101_PORT || 3101);
+const PORT = 3101;
 const isDev = process.argv.includes('--dev');
 
+// Single instance lock — prevent multiple copies
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -20,107 +24,42 @@ app.on('second-instance', () => {
   }
 });
 
-function waitForServer(timeoutMs = 20000) {
-  const started = Date.now();
-  return new Promise((resolve, reject) => {
-    const ping = () => {
-      const req = http.get({ hostname: '127.0.0.1', port: PORT, path: '/api/health', timeout: 1500 }, (res) => {
-        res.resume();
-        if (res.statusCode && res.statusCode < 500) resolve();
-        else retry();
-      });
-      req.on('error', retry);
-      req.on('timeout', () => {
-        req.destroy();
-        retry();
-      });
-    };
-    const retry = () => {
-      if (Date.now() - started > timeoutMs) {
-        reject(new Error('Next server did not start'));
-        return;
-      }
-      setTimeout(ping, 400);
-    };
-    ping();
-  });
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
-    minWidth: 880,
-    minHeight: 560,
-    title: 'DOR101 — Dorchester desk',
-    backgroundColor: '#f0ebe3',
+    minWidth: 900,
+    minHeight: 600,
+    title: 'DOR101 — Dorchester 101',
+    icon: path.join(__dirname, '..', 'public', 'icon.svg'),
+    backgroundColor: '#FAFAF8',
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
     },
   });
 
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: 'File',
-        submenu: [
-          { role: 'reload' },
-          { type: 'separator' },
-          { label: 'Generate Report', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
-          { type: 'separator' },
-          { role: 'quit' },
-        ],
-      },
-      {
-        label: 'View',
-        submenu: [
-          { role: 'togglefullscreen' },
-          { role: 'resetZoom' },
-          { role: 'zoomIn' },
-          { role: 'zoomOut' },
-          { type: 'separator' },
-          { label: 'Developer Tools', click: () => mainWindow && mainWindow.webContents.openDevTools() },
-        ],
-      },
-      {
-        label: 'Data',
-        submenu: [
-          { label: 'Refresh All', click: () => mainWindow && mainWindow.webContents.send('refresh-all') },
-          { label: 'Export College Pathway', click: () => mainWindow && mainWindow.webContents.send('export-college') },
-        ],
-      },
-      {
-        label: 'Help',
-        submenu: [
-          { label: 'Source', click: () => shell.openExternal('https://github.com/Nikoxkx/Dorchester-101') },
-          { label: 'Princeton Pathway', click: () => shell.openExternal('https://admission.princeton.edu/') },
-        ],
-      },
-    ]),
-  );
+  // Remove default menu
+  Menu.setApplicationMenu(null);
 
-  const url = `http://127.0.0.1:${PORT}`;
+  // Load the app
+  const url = `http://localhost:${PORT}`;
   mainWindow.loadURL(url);
-  mainWindow.once('ready-to-show', () => mainWindow.show());
 
-  mainWindow.webContents.setWindowOpenHandler(({ url: next }) => {
-    if (next.startsWith('http://127.0.0.1') || next.startsWith(`http://localhost:${PORT}`)) {
-      return { action: 'allow' };
-    }
-    shell.openExternal(next);
-    return { action: 'deny' };
+  // Show window when ready (prevents white flash)
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
-  mainWindow.webContents.on('will-navigate', (event, next) => {
-    const local = next.startsWith(url);
-    if (!local) {
-      event.preventDefault();
-      shell.openExternal(next);
+  // Open external links in default browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http')) {
+      shell.openExternal(url);
+      return { action: 'deny' };
     }
+    return { action: 'allow' };
   });
 
   mainWindow.on('closed', () => {
@@ -135,8 +74,9 @@ function getAppRoot() {
 }
 
 function startServer() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (isDev) {
+      // In dev mode, assume next dev is already running
       resolve();
       return;
     }
@@ -144,6 +84,7 @@ function startServer() {
     const appRoot = getAppRoot();
     const nextCli = path.join(appRoot, 'node_modules', 'next', 'dist', 'bin', 'next');
 
+    // Electron binary runs as Node when ELECTRON_RUN_AS_NODE is set
     serverProcess = spawn(process.execPath, [nextCli, 'start', '-p', String(PORT)], {
       cwd: appRoot,
       env: { ...process.env, PORT: String(PORT), ELECTRON_RUN_AS_NODE: '1' },
@@ -152,51 +93,58 @@ function startServer() {
     });
 
     serverProcess.stdout.on('data', (data) => {
-      process.stdout.write(`[next] ${data}`);
-    });
-    serverProcess.stderr.on('data', (data) => {
-      process.stderr.write(`[next] ${data}`);
-    });
-    serverProcess.on('exit', (code) => {
-      if (!app.isQuitting && code) reject(new Error(`next start exited ${code}`));
+      const output = data.toString();
+      console.log('[Server]', output);
+      if (output.includes('Ready') || output.includes('started') || output.includes(String(PORT))) {
+        resolve();
+      }
     });
 
-    waitForServer().then(resolve).catch(resolve);
+    serverProcess.stderr.on('data', (data) => {
+      console.error('[Server Error]', data.toString());
+    });
+
+    // Fallback: resolve after 5 seconds even if we don't see the "Ready" message
+    setTimeout(resolve, 5000);
   });
 }
 
-ipcMain.handle('check-for-updates', async () => ({ available: false }));
-ipcMain.handle('generate-report', async () => {
-  const reportData = { generatedAt: new Date().toISOString(), sources: ['HUD FY2026', 'MBTA', 'BPDA', 'CSNDC', 'Princeton Bridge Year'], status: 'complete' };
-  return reportData;
-});
-ipcMain.handle('export-college', async () => ({ exported: true, file: 'dorchester-college-pathway.pdf', url: 'https://example.com/college-export' }));
-ipcMain.handle('restart-app', () => {
-  app.relaunch();
-  app.exit(0);
-});
+function createTray() {
+  // Simple tray with text menu
+  tray = new Tray(nativeImage.createEmpty());
+  tray.setToolTip('DOR101 — Dorchester 101');
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Open DOR101', click: () => { if (mainWindow) mainWindow.show(); } },
+    { type: 'separator' },
+    { label: 'About', click: () => { if (mainWindow) mainWindow.loadURL(`http://localhost:${PORT}/settings`); mainWindow.show(); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { app.quit(); } },
+  ]);
+  tray.setContextMenu(contextMenu);
+  tray.on('click', () => { if (mainWindow) mainWindow.show(); });
+}
 
+// App lifecycle
 app.whenReady().then(async () => {
   await startServer();
-  if (isDev) {
-    try {
-      await waitForServer(8000);
-    } catch {
-      /* next dev may still be compiling */
-    }
-  }
   createWindow();
+  createTray();
 });
 
 app.on('window-all-closed', () => {
+  // On Windows, don't quit when window closes (stay in tray)
+  // But for simplicity, we quit
   app.quit();
 });
 
 app.on('before-quit', () => {
-  app.isQuitting = true;
-  if (serverProcess) serverProcess.kill();
+  if (serverProcess) {
+    serverProcess.kill();
+  }
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) createWindow();
+  if (mainWindow === null) {
+    createWindow();
+  }
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,36 +28,89 @@ export function ExpandableSection({
   sourceUrl,
   sourceName,
 }: ExpandableSectionProps) {
-  const [open, setOpen] = useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)]', className)}>
+    <div className={cn(
+      'border border-[var(--color-border)] rounded-xl overflow-hidden',
+      'bg-[var(--color-bg-secondary)]',
+      'transition-shadow duration-200',
+      isExpanded && 'shadow-md',
+      className
+    )}>
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-[var(--paper)]"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          'w-full flex items-center gap-3 p-4 text-left',
+          'hover:bg-[var(--color-bg-tertiary)] transition-colors',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]'
+        )}
       >
-        {icon && <div className="text-[var(--red)]">{icon}</div>}
+        {icon && (
+          <div className="p-2 rounded-lg bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)]">
+            {icon}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-display font-semibold">{title}</h3>
-            {badge && <span className="badge">{badge}</span>}
+            <h3 className="font-heading font-semibold">{title}</h3>
+            {badge && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] font-medium">
+                {badge}
+              </span>
+            )}
           </div>
-          {preview && !open && <p className="text-sm text-[var(--muted)] truncate mt-0.5">{preview}</p>}
-        </div>
-        <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} />
-      </button>
-      {open && (
-        <div className="px-4 pb-4 border-t border-[var(--line)] pt-3">
-          {children}
-          {sourceUrl && sourceName && (
-            <a href={sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs underline mt-3">
-              Source: {sourceName} <ExternalLink className="w-3 h-3" />
-            </a>
+          {preview && !isExpanded && (
+            <p className="text-sm text-[var(--color-text-muted)] truncate mt-0.5">{preview}</p>
           )}
         </div>
-      )}
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="px-4 pb-4 pt-2 border-t border-[var(--color-border)]">
+              {children}
+              
+              {sourceUrl && sourceName && (
+                <div className="mt-4 pt-3 border-t border-[var(--color-border)]">
+                  <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-primary)] hover:underline"
+                  >
+                    Source: {sourceName}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
+}
+
+interface ExpandableCardProps {
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  stats?: { label: string; value: string }[];
+  children: React.ReactNode;
+  className?: string;
 }
 
 export function ExpandableCard({
@@ -66,39 +120,69 @@ export function ExpandableCard({
   stats,
   children,
   className,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: React.ReactNode;
-  stats?: { label: string; value: string }[];
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const [open, setOpen] = useState(false);
+}: ExpandableCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)]', className)}>
-      <button onClick={() => setOpen(!open)} className="w-full p-4 text-left">
+    <motion.div
+      layout
+      className={cn(
+        'border border-[var(--color-border)] rounded-xl',
+        'bg-[var(--color-bg-secondary)]',
+        'cursor-pointer transition-shadow duration-200',
+        isExpanded && 'shadow-lg',
+        className
+      )}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="p-4">
         <div className="flex items-start gap-3">
-          {icon && <div className="text-[var(--red)]">{icon}</div>}
-          <div className="flex-1">
-            <h3 className="font-display font-semibold">{title}</h3>
-            {subtitle && <p className="text-sm text-[var(--muted)] mt-0.5">{subtitle}</p>}
+          {icon && (
+            <div className="p-2 rounded-lg bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex-shrink-0">
+              {icon}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-heading font-semibold">{title}</h3>
+            {subtitle && (
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>
+            )}
           </div>
-          <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} />
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+          </motion.div>
         </div>
+
         {stats && (
           <div className="flex flex-wrap gap-4 mt-3">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{stat.label}</p>
-                <p className="font-mono text-sm">{stat.value}</p>
+            {stats.map((stat, i) => (
+              <div key={i}>
+                <p className="text-xs text-[var(--color-text-muted)]">{stat.label}</p>
+                <p className="font-mono font-semibold">{stat.value}</p>
               </div>
             ))}
           </div>
         )}
-      </button>
-      {open && <div className="px-4 pb-4 border-t border-[var(--line)] pt-3">{children}</div>}
-    </div>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 pb-4 pt-2 border-t border-[var(--color-border)]">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
