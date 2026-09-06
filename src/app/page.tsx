@@ -14,6 +14,8 @@ import { ProjectNote } from '@/components/layout/ProjectNote';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
+import { PermissionSetup } from '@/components/pwa/PermissionSetup';
+import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
@@ -199,6 +201,9 @@ export default function DashboardPage() {
                 <MapPin className="h-4 w-4" aria-hidden="true" />
                 {t('intro.ctaSecondary')}
               </Link>
+              {/* The desktop app, downloadable as the actual .exe straight from
+                  the latest GitHub release. */}
+              <DownloadAppCard variant="hero" />
             </div>
             <p className="text-[10px] text-white/60">{t('about.photoCredits')}: Sswonk · CC BY-SA 3.0</p>
           </div>
@@ -218,6 +223,10 @@ export default function DashboardPage() {
         </header>
 
         <EmergencyBanner />
+
+        {/* The optional asks: alerts, location, offline storage — one explicit
+            card instead of surprise browser prompts. Dismissible. */}
+        <PermissionSetup variant="banner" />
 
         {/* ── Stats, every one computed ───────────────────── */}
         <section aria-labelledby="glance">

@@ -274,7 +274,11 @@ export async function GET(request: Request) {
     relevanceFilter: 'All stories from the local publishers; others must mention Dorchester or a citywide service.',
   };
 
-  globalCache.set(cacheKey, { articles: merged, results: feedResults, fetchedAt: payload.fetchedAt, snapshot: payload.snapshot }, snapshotNote ? CACHE_TTL.DEFAULT : CACHE_TTL.NEWS);
+  // A snapshot answer is held for one minute only: it exists to keep the page
+  // readable during a publisher outage, not to delay the live feed's return.
+  // The route is asked at most once per panel poll, so this cannot hammer a
+  // publisher that is down — it just means recovery takes ≤60 seconds.
+  globalCache.set(cacheKey, { articles: merged, results: feedResults, fetchedAt: payload.fetchedAt, snapshot: payload.snapshot }, snapshotNote ? 60_000 : CACHE_TTL.NEWS);
 
   return NextResponse.json(payload, {
     // 200 even when some feeds fail: partial news is not an error, and the

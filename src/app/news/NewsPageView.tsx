@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { CircleAlert, ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
@@ -87,7 +87,6 @@ export function NewsPageView() {
   const enabledSources = useAppStore((s) => s.enabledNewsSources);
   const customFeeds = useAppStore((s) => s.customFeeds);
   const setEnabledNewsSources = useAppStore((s) => s.setEnabledNewsSources);
-  const dataEpoch = useAppStore((s) => s.dataEpoch);
   const announce = useAppStore((s) => s.announce);
 
   const [payload, setPayload] = useState<NewsPayload | null>(null);
@@ -95,11 +94,18 @@ export function NewsPageView() {
   const [sinceHours, setSinceHours] = useState(168);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [refreshing, setRefreshing] = useState(false);
+  // Read inside `load` without changing the callback's identity — a new identity
+  // would make useLivePolling treat a data arrival as a reason to fetch again.
+  const hasPayloadRef = useRef(false);
 
   const load = useCallback(
     async (silent = false) => {
-      if (!silent) setState((prev) => (prev === 'ready' ? prev : 'loading'));
-      setRefreshing(true);
+      // A silent poll never tears the list down: the reader keeps the stories
+      // they are reading and the new payload swaps in underneath. Only the very
+      // first load (or a hard retry after failure) shows the skeleton, which is
+      // what keeps this page from flashing on its own refresh cycle.
+      if (!silent && !hasPayloadRef.current) setState('loading');
+      setRefreshing(!silent);
       try {
         const params = new URLSearchParams({
           limit: '60',
@@ -112,6 +118,7 @@ export function NewsPageView() {
         });
         if (!response.ok) throw new Error(String(response.status));
         const json = (await response.json()) as NewsPayload;
+        hasPayloadRef.current = true;
         setPayload(json);
         setState('ready');
         if (silent) announce(t('news.autoRefreshed'), 'polite');
@@ -124,16 +131,16 @@ export function NewsPageView() {
     [announce, customFeeds, enabledSources, lang, sinceHours, t]
   );
 
-  const { intervalMs, enabled: polling } = useLivePolling(() => load(true), { minMs: 120_000 });
-
-  // Initial fetch, auto-refresh and "refresh now" all come from useLivePolling;
-  // this effect only clears the list so stale rows never sit under a new spinner.
-  const filterKey = `${sinceHours}|${enabledSources.join(',')}|${customFeeds.length}`;
-  const [seenFilterKey, setSeenFilterKey] = useState(filterKey);
-  if (filterKey !== seenFilterKey) {
-    setSeenFilterKey(filterKey);
-    setState('loading');
-  }
+  // The server holds each feed mix for 15 minutes, so polling faster than that
+  // just re-downloads the same answer. Five minutes is the fastest the client
+  // asks, and the tab must be visible (useLivePolling) for even that.
+  //
+  // The callback must be identity-stable: useLivePolling re-runs its fetch
+  // effect whenever `refresh` changes, and an inline arrow would hand it a new
+  // function on every render — fetch, re-render, fetch again, forever. That
+  // loop was the page's old "constantly refreshing" behaviour.
+  const loadSilent = useCallback(async () => load(true), [load]);
+  const { intervalMs, enabled: polling } = useLivePolling(loadSilent, { minMs: 300_000 });
 
   const articles = useMemo(() => payload?.articles ?? [], [payload]);
   const counts = useMemo(() => {
@@ -157,7 +164,7 @@ export function NewsPageView() {
           <div>
             <p className="inline-flex items-center gap-1.5 font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
               <Newspaper className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('news.title')}
+              {t('news.kicker')}
             </p>
             <h1 className="mt-1 font-heading text-2xl font-extrabold leading-tight sm:text-3xl">{t('news.title')}</h1>
             <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('news.description')}</p>
@@ -265,34 +272,41 @@ export function NewsPageView() {
               </p>
             )}
 
-            {state === 'ready' && visible.length === 0 && (
+            {state === 'ready' && visible.length === 0 && !refreshing && (
               <p className="mt-4 rounded-2xl border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-text-secondary)]">
                 {t('news.empty')}
               </p>
             )}
 
-            {fresh.length > 0 && (
-              <section className="mt-4" aria-label={t('news.last24h')}>
-                <h2 className="font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('news.last24h')}</h2>
-                <ul className="mt-2 flex flex-col gap-2.5">
-                  {fresh.map((article) => (
-                    <ArticleRow key={article.id} article={article} highlight />
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {older.length > 0 && (
-              <section className="mt-5" aria-label={t('news.title')}>
+            {/* While a filter change refetches, the list keeps showing the stories
+                already on screen (stale-while-revalidate) instead of collapsing to
+                skeletons — the layout never jumps under the reader. */}
+            {state !== 'loading' && state !== 'error' && visible.length > 0 && (
+              <>
                 {fresh.length > 0 && (
-                  <h2 className="font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('common.all')}</h2>
+                  <section className="mt-4" aria-label={t('news.last24h')}>
+                    <h2 className="font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('news.last24h')}</h2>
+                    <ul className="mt-2 flex flex-col gap-2.5">
+                      {fresh.map((article) => (
+                        <ArticleRow key={article.id} article={article} highlight />
+                      ))}
+                    </ul>
+                  </section>
                 )}
-                <ul className="mt-2 flex flex-col gap-2.5">
-                  {older.map((article) => (
-                    <ArticleRow key={article.id} article={article} />
-                  ))}
-                </ul>
-              </section>
+
+                {older.length > 0 && (
+                  <section className="mt-5" aria-label={t('news.title')}>
+                    {fresh.length > 0 && (
+                      <h2 className="font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('common.all')}</h2>
+                    )}
+                    <ul className="mt-2 flex flex-col gap-2.5">
+                      {older.map((article) => (
+                        <ArticleRow key={article.id} article={article} />
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </>
             )}
           </div>
 
@@ -330,10 +344,14 @@ export function NewsPageView() {
               </Link>
             </div>
           </aside>
-        <ProjectNote sources={['dotnews', 'bostongov', 'wbur', 'gbh', 'globe', 'mbta']}>
-          Headlines are read directly from each publisher&apos;s own feed, no more than once every fifteen minutes, and link back to the publisher. Nothing is rewritten, ranked by engagement or paid for. If a feed fails, the page says which one.
-        </ProjectNote>
         </div>
+
+        {/* About this information — a full-width block BELOW the two-column area.
+            It used to sit inside the flex row as a third column, which squeezed it
+            beside the filters sidebar and made its inner grid overlap the list. */}
+        <ProjectNote sources={['dotnews', 'bostongov', 'wbur', 'gbh', 'globe', 'mbta']}>
+          Headlines are read directly from each publisher&apos;s own feed, no more than once every five minutes while the page is open, and link back to the publisher. Nothing is rewritten, ranked by engagement or paid for. If a feed fails, the page says which one.
+        </ProjectNote>
       </div>
     </MainLayout>
   );

@@ -12,7 +12,7 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-const VERSION = 'v4.0.0';
+const VERSION = 'v4.1.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
@@ -100,6 +100,11 @@ self.addEventListener('fetch', (event) => {
   const sameOrigin = url.origin === self.location.origin;
 
   if (sameOrigin) {
+    // The desktop-app download is a redirect straight to the release file on
+    // github.com. The browser must follow it itself — intercepting it here
+    // would pull a ~180 MB executable through the worker and try to file it in
+    // the shell cache.
+    if (url.pathname.startsWith('/api/download')) return;
     // Live data: network first, cached snapshot if the network fails.
     if (url.pathname.startsWith('/api/')) {
       event.respondWith(networkFirst(request, LIVE_CACHE));

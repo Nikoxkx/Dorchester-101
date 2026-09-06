@@ -555,21 +555,29 @@ export default function MarketTrendsPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t('housing.amiCalculator')} · {ami.effectiveYear} income limits</CardTitle>
+            {ami.snapshot && <Badge variant="amber">Snapshot</Badge>}
           </CardHeader>
           <CardContent>
             <p className="mb-3 text-sm text-[var(--color-text-secondary)]">
               {ami.note} Most income-restricted apartments in Boston are set at 30%, 50%, 60%, 70% or 80% of these figures; the lottery listing will say which. Use the{' '}
               <Link href="/tools" className="font-semibold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">income limit check</Link> to see where your household falls.
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {Object.entries(ami.table).map(([household, income]) => (
-                <div key={household} className="rounded-lg bg-[var(--color-bg-tertiary)] p-3 text-center">
-                  <p className="font-heading text-xs text-[var(--color-text-muted)]">{household}</p>
-                  <p className="font-mono text-base font-bold">{format.currency(income)}</p>
-                  <p className="text-[10px] text-[var(--color-text-muted)]">80% = {format.currency(Math.round(income * 0.8))}</p>
-                </div>
-              ))}
-            </div>
+            {Object.keys(ami.table).length > 0 ? (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {Object.entries(ami.table).map(([household, income]) => (
+                  <div key={household} className="rounded-lg bg-[var(--color-bg-tertiary)] p-3 text-center">
+                    <p className="font-heading text-xs text-[var(--color-text-muted)]">{household}</p>
+                    <p className="font-mono text-base font-bold">{format.currency(income)}</p>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">80% = {format.currency(Math.round(income * 0.8))}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-secondary)]">
+                HUD&apos;s income-limit workbook could not be read, so no figure is shown here rather than a stale one. The official table for the Boston metro is one click away:
+                <SourceMark id="hud" withName size="sm" className="mt-2" href={ami.sourceUrl} />
+              </div>
+            )}
             <Cite id="hud" note={ami.basis} href={ami.sourceUrl} className="mt-3" />
           </CardContent>
         </Card>

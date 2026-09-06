@@ -11,11 +11,18 @@ import { cn } from '@/lib/utils';
  * key). Tiles are stitched as a 3×2 grid centred on the parcel, which at zoom
  * 18 covers roughly 230 m × 150 m — enough to see the lot and the block.
  *
+ * Tiles load from either of Esri's two public hosts: `server.` and
+ * `services.arcgisonline.com` serve the same imagery, so a blocked or flaky
+ * host costs one retry per tile instead of a hole in the picture. Only when
+ * every tile has failed on both hosts does the figure admit defeat and show
+ * the coordinates instead.
+ *
  * Attribution is drawn on the image because Esri's terms require it wherever
  * the imagery is shown, not just on the map page.
  */
 const TILE = 256;
 const ZOOM = 18;
+const TILE_HOSTS = ['server.arcgisonline.com', 'services.arcgisonline.com'] as const;
 
 function tileXY(lat: number, lng: number, z: number) {
   const n = 2 ** z;
@@ -26,22 +33,23 @@ function tileXY(lat: number, lng: number, z: number) {
 }
 
 export function SiteImagery({ lat, lng, label, className }: { lat: number; lng: number; label: string; className?: string }) {
-  const [failed, setFailed] = useState(0);
-  // Composite is 3×2 tiles (768×512 px). We want the parcel pixel at the
-  // composite centre (384, 256): choose the top-left tile so that holds, then
-  // translate by the sub-tile remainder.
+  const [failedTiles, setFailedTiles] = useState(0);
+  // Composite is 3×2 tiles (768×512 px) — the same 3:2 shape as the frame, so
+  // the scaled picture fills it edge to edge with no cropped band. The parcel
+  // sits at the composite centre: origin is half a tile left/above its tile
+  // coordinate, then the sub-tile remainder shifts it under the crosshair.
   const { tiles, offsetX, offsetY } = useMemo(() => {
     const { x, y } = tileXY(lat, lng, ZOOM);
-    const originX = x - 1.5; // in tile units
+    const originX = x - 1.5; // in tile units — parcel at the centre of 3 columns
     const originY = y - 1;
     const tx0 = Math.floor(originX);
     const ty0 = Math.floor(originY);
     const list: Array<{ tx: number; ty: number; col: number; row: number }> = [];
-    for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) list.push({ tx: tx0 + col, ty: ty0 + row, col, row });
+    for (let row = 0; row < 2; row++) for (let col = 0; col < 3; col++) list.push({ tx: tx0 + col, ty: ty0 + row, col, row });
     return { tiles: list, offsetX: (originX - tx0) * TILE, offsetY: (originY - ty0) * TILE };
   }, [lat, lng]);
 
-  const unavailable = failed >= tiles.length;
+  const unavailable = failedTiles >= tiles.length;
   const gmaps = `https://www.google.com/maps/@${lat},${lng},19z/data=!3m1!1e3`;
 
   return (
@@ -53,13 +61,23 @@ export function SiteImagery({ lat, lng, label, className }: { lat: number; lng: 
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={`${t.tx}-${t.ty}`}
-                src={`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${ZOOM}/${t.ty}/${t.tx}`}
+                src={`https://${TILE_HOSTS[0]}/ArcGIS/rest/services/World_Imagery/MapServer/tile/${ZOOM}/${t.ty}/${t.tx}`}
                 alt=""
                 width={TILE}
                 height={TILE}
                 loading="lazy"
                 decoding="async"
-                onError={() => setFailed((n) => n + 1)}
+                onError={(event) => {
+                  const img = event.currentTarget;
+                  const tried = Number(img.dataset.try ?? '0');
+                  if (tried < TILE_HOSTS.length - 1) {
+                    // Same tile from Esri's mirror host before giving up on it.
+                    img.dataset.try = String(tried + 1);
+                    img.src = `https://${TILE_HOSTS[tried + 1]}/ArcGIS/rest/services/World_Imagery/MapServer/tile/${ZOOM}/${t.ty}/${t.tx}`;
+                    return;
+                  }
+                  setFailedTiles((n) => n + 1);
+                }}
                 className="absolute max-w-none"
                 style={{ left: t.col * TILE, top: t.row * TILE, width: TILE, height: TILE }}
               />

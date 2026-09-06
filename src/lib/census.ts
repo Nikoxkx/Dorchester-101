@@ -22,7 +22,14 @@ const TIMEOUT_MS = 8_000;
 export const GEO_SUFFIX = 'state:25';
 export const GEO_COUNTY = 'county:025';
 
-export const ACS_VINTAGES = ['2023', '2022', '2021'] as const;
+/**
+ * Newest 5-year vintage first. The loop in `fetchBostonAcs` returns the first
+ * vintage that answers, so a deployed server reads the newest published
+ * release (2020–2024, published December 2025) and falls back one year only if
+ * that table is briefly unavailable — the site never shows a stale year as
+ * "current" just because the list was not updated.
+ */
+export const ACS_VINTAGES = ['2024', '2023', '2022', '2021'] as const;
 
 /**
  * ACS detailed-table variables. Each id was checked against the 2023 variable
@@ -151,7 +158,7 @@ export async function fetchBostonAcs(): Promise<AcsResponse> {
     });
 
     const response: AcsResponse = {
-      vintage: `ACS 5-year 2019-${vintage.slice(2, 4)}`,
+      vintage: `ACS 5-year ${Number(vintage) - 4}–${vintage}`,
       geography: String(row[header.indexOf('NAME')] ?? 'Suffolk County, Massachusetts'),
       retrievedAt: new Date().toISOString(),
       source: 'census-live',
@@ -254,7 +261,7 @@ export interface AcsSeriesPoint {
   medianRentBurden: number | null;
 }
 
-export const ACS_SERIES_VINTAGES = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'] as const;
+export const ACS_SERIES_VINTAGES = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'] as const;
 
 /**
  * Reads the same four headline variables from every published 5-year vintage.

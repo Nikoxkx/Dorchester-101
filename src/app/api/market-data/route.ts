@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deriveMetrics, fetchBostonAcs, fetchBostonAcsSeries, ACS_VARIABLES, type AcsSeriesPoint } from '@/lib/census';
+import { deriveMetrics, fetchBostonAcs, fetchBostonAcsSeries, ACS_VARIABLES, ACS_VINTAGES, type AcsSeriesPoint } from '@/lib/census';
 import { fetchHudFmrs, fetchHudIncomeLimits, fetchMaMinimumWage } from '@/lib/hud';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +43,8 @@ export interface MarketResponse {
     effectiveYear: number;
     note: string;
     sourceUrl: string;
+    /** True when huduser.gov was unreachable and the verified capture is shown. */
+    snapshot?: boolean;
   };
   derived: {
     /** Rent a full-time minimum-wage household can afford at 30% of income. */
@@ -107,6 +109,10 @@ export async function GET() {
       ? Math.round(((metrics.medianGrossRent - affordable) / metrics.medianGrossRent) * 1000) / 10
       : null;
 
+  // Citation year = the vintage that actually answered ("ACS 5-year 2020–2024"
+  // → 2024); the newest published release when nothing did.
+  const citationYear = /\d{4}$/.exec(acs.vintage)?.[0] ?? ACS_VINTAGES[0];
+
   const payload: MarketResponse = {
     generatedAt: new Date().toISOString(),
     geography: acs.geography,
@@ -119,7 +125,7 @@ export async function GET() {
       error: acs.error,
       citation: {
         label: 'U.S. Census Bureau, American Community Survey',
-        url: 'https://data.census.gov/table?g=0500000US25025&y=2023&tid=ACSDT5Y2023.B25064',
+        url: `https://data.census.gov/table?g=0500000US25025&y=${citationYear}&tid=ACSDT5Y${citationYear}.B25064`,
       },
     },
     series: {
@@ -135,8 +141,11 @@ export async function GET() {
         : {},
       basis: `HUD FY${incomeLimits?.fiscalYear ?? 'current'} 50% income limits doubled = area median family income by household size (${incomeLimits?.area ?? 'Boston-Cambridge-Newton, MA-NH Metro'})`,
       effectiveYear: incomeLimits?.fiscalYear ?? new Date().getFullYear(),
-      note: 'Income limits, not rents. HUD publishes these from ACS each spring; the ladder is HUD-derived median family income by household size, live from the publisher workbook.',
+      note: incomeLimits?.snapshot
+        ? 'Income limits, not rents. HUD could not be reached, so this is the verified FY capture; the live workbook returns on the next successful fetch.'
+        : 'Income limits, not rents. HUD publishes these from ACS each spring; the ladder is HUD-derived median family income by household size, live from the publisher workbook.',
       sourceUrl: incomeLimits?.sourceUrl ?? 'https://www.huduser.gov/portal/datasets/il.html',
+      snapshot: incomeLimits?.snapshot ?? false,
     },
     derived: {
       affordableRentAtWage: affordable != null && wage.rateCents != null ? { wageCents: wage.rateCents, monthly: affordable } : null,
