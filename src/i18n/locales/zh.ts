@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': '点按车站查看发车时间',
   'map.stopsTitle': '车站',
   'map.dataCredits': '交通数据：MBTA。底图：OpenStreetMap 贡献者。影像：Esri。',
+  'map.placeDetails': '地点详情',
   'map.stopCount': '多切斯特有 {count} 个站点',
   'map.line.subway': '地铁',
   'map.line.rail': '通勤铁路',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': '不透明',
   'settings.surface.glass': '透明',
   'settings.surfaceNote': '透明模式让多切斯特湾的照片透过面板和菜单显示，文字后方带有模糊效果。文字颜色保持不变，因此在浅色和深色模式下都清晰可读。',
+  'settings.surfaceHint': '菜单中也有：侧栏底部的“透明”开关。',
   'settings.surfaceContrastNote': '已开启高对比度，因此仍使用不透明配色。',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': '安装 DOR101',

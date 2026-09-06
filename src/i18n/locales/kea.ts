@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'Toka una estason pa ve e usidu',
   'map.stopsTitle': 'Parada',
   'map.dataCredits': 'Datu di transporti: MBTA. Mapa báziku: kontrubuidór di OpenStreetMap. Imagen: Esri.',
+  'map.placeDetails': 'Detadju di lugar',
   'map.stopCount': '{count} para na Dorchester',
   'map.line.subway': 'Metró',
   'map.line.rail': 'Tren di subúrbu',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'Sólidu',
   'settings.surface.glass': 'Transparenti',
   'settings.surfaceNote': 'Transparenti ta dexa fotu di Dorchester Bay pasa pa painel i menu, ku un desfoki tras di testu. Kor di testu ka ta muda, pur isu tudu ta fika lejível na modu klaru i skuru.',
+  'settings.surfaceHint': 'Tanbe disponível na menu: interruptor “Transparenti” na fundu di barra lateral.',
   'settings.surfaceContrastNote': 'Altu kontrasti sta ligadu, pur isu paleta sólidu ta uzadu di kualker forma.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Instala DOR101',

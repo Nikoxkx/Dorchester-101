@@ -299,7 +299,7 @@ export default function SettingsPage() {
                 })}
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                {t('settings.surfaceNote')}
+                {t('settings.surfaceNote')} {t('settings.surfaceHint')}
                 {prefs.highContrast && <> {t('settings.surfaceContrastNote')}</>}
               </p>
             </fieldset>

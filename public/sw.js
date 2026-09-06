@@ -12,12 +12,12 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.3.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
 
-const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/manifest.json'];
+const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png', '/manifest.json'];
 const LIVE_MAX_ENTRIES = 40;
 const TILE_MAX_ENTRIES = 480;
 
@@ -110,7 +110,7 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     // Hashed build assets and images are immutable; never re-fetch them.
-    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/img/') || url.pathname.endsWith('.svg')) {
+    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/img/') || url.pathname.startsWith('/sources/') || url.pathname.startsWith('/icons/') || url.pathname.endsWith('.svg') || url.pathname === '/logo.png') {
       event.respondWith(cacheFirst(request, SHELL_CACHE));
       return;
     }

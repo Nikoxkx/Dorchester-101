@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'Chạm vào một ga để xem giờ tàu',
   'map.stopsTitle': 'Trạm',
   'map.dataCredits': 'Dữ liệu giao thông: MBTA. Bản đồ gốc: những người đóng góp OpenStreetMap. Ảnh vệ tinh: Esri.',
+  'map.placeDetails': 'Chi tiết địa điểm',
   'map.stopCount': '{count} điểm dừng ở Dorchester',
   'map.line.subway': 'Tàu điện ngầm',
   'map.line.rail': 'Tàu ngoại ô',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'Đặc',
   'settings.surface.glass': 'Trong suốt',
   'settings.surfaceNote': 'Trong suốt cho phép ảnh vịnh Dorchester hiện qua các bảng và menu, với lớp mờ phía sau chữ. Màu chữ không đổi nên mọi thứ vẫn dễ đọc ở cả chế độ sáng và tối.',
+  'settings.surfaceHint': 'Cũng có trong menu: công tắc “Trong suốt” ở cuối thanh bên.',
   'settings.surfaceContrastNote': 'Độ tương phản cao đang bật nên bảng màu đặc vẫn được dùng.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Cài DOR101',

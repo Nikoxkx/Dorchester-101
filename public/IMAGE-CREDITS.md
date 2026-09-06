@@ -29,6 +29,27 @@ Kept next to the images because a credit that lives only in a build script gets 
   handling as above.
 - **Modifications:** resized, progressive JPEG.
 
+## `img/hoods/*.jpg` — sub-neighborhood photographs
+
+All nine are from Wikimedia Commons and are shown only inside the expanded card for
+that area. Each caption in the UI links to the Commons file page, which carries the
+author and the exact licence (all are CC BY, CC BY-SA or public domain at the time of
+import). Modifications: resized to 1200–1600 px, progressive JPEG.
+
+- `fields-corner.jpg` — Fields Corner: Inbound Red Line train arriving at Fields Corner station, July 2021. Source: `commons.wikimedia.org/wiki/File:Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg`
+- `savin-hill.jpg` — Savin Hill: Dorchester Bay seen from Savin Hill. Source: `commons.wikimedia.org/wiki/File:Dorchester_Bay_from_Savin_Hill.jpg`
+- `uphams-corner.jpg` — Uphams Corner: The S. B. Pierce Building at Uphams Corner. Source: `commons.wikimedia.org/wiki/File:S_B_Pierce_Building,_Uphams_Corner,_Dorchester_MA.jpg`
+- `codman-square.jpg` — Codman Square: Edward Everett Square, at the Columbia Road end of the Codman Square–Uphams corridor; no Commons photograph of Codman Square itself is available yet. Source: `commons.wikimedia.org/wiki/File:Edward_Everett_Square,_Dorchester_MA.jpg`
+- `grove-hall.jpg` — Grove Hall: Blue Hill Avenue near American Legion Highway. Source: `commons.wikimedia.org/wiki/File:Blue_Hill_Avenue_near_American_Legion_Highway_in_Dorchester_(11071878605).jpg`
+- `four-corners.jpg` — Four Corners: Four Corners/Geneva Avenue station on the Fairmount Line, looking inbound. Source: `commons.wikimedia.org/wiki/File:Four_Corners_Geneva_Ave_station,_looking_inbound,_July_2013.JPG`
+- `lower-mills.jpg` — Lower Mills: Ventura Street playground in the Neponset River Reservation, below Lower Mills. Source: `commons.wikimedia.org/wiki/File:Ventura_Street_Playground_Neponset_River_Reservation_Dorchester_Massachusetts.jpg`
+- `ashmont.jpg` — Ashmont: Ashmont station from Peabody Square. Source: `commons.wikimedia.org/wiki/File:Ashmont_station_from_Peabody_Square.jpg`
+- `neponset.jpg` — Neponset: Neponset River Reservation. Source: `commons.wikimedia.org/wiki/File:Neponset_River_Reservation_1_Dorchester_Massachusetts.jpg`
+
+Note: no suitable Commons photograph of Codman Square proper existed at import time; the
+Codman Square card uses Edward Everett Square and says so in its caption. Replace when a
+licensed photo is available.
+
 ## Logos and symbols
 
 - **MBTA route colours and shield shapes** come from the authority's own published
@@ -36,7 +57,7 @@ Kept next to the images because a credit that lives only in a build script gets 
   logo file is copied or redrawn: the shields in the map and the legends are drawn
   here as generic transit badges using the public route colours, which is what the
   data licence covers.
-- **App icon and inline marks** are original work by this project.
+- **App icon / logo** (`logo.png`, `icons/*.png`) is a square crop of `img/dorchester-bay-sunset.jpg` (Sswonk, CC BY-SA 3.0) with the “101 · DORCHESTER” wordmark set over it; a derivative work, so the CC BY-SA credit applies to it too. `icon.svg` remains as a vector fallback.
 - **Typefaces** — Fraunces (variable), Public Sans, Atkinson Hyperlegible, IBM Plex
   Mono, Noto Sans Arabic — are bundled from `@fontsource` packages. Each is SIL Open
   Font License; the licence text ships in the installed package folder.

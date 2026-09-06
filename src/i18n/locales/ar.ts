@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'انقر على محطة لعرض مواعيد المغادرة',
   'map.stopsTitle': 'المحطات',
   'map.dataCredits': 'بيانات النقل: MBTA. الخريطة الأساسية: مساهمو OpenStreetMap. الصور: Esri.',
+  'map.placeDetails': 'تفاصيل المكان',
   'map.stopCount': '{count} محطة في دورتشستر',
   'map.line.subway': 'مترو',
   'map.line.rail': 'قطار الضواحي',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'معتم',
   'settings.surface.glass': 'شفاف',
   'settings.surfaceNote': 'يسمح الوضع الشفاف بظهور صورة خليج دورتشيستر عبر اللوحات والقائمة مع تمويه خلف النص. ألوان النص لا تتغير، لذا يبقى كل شيء مقروءًا في الوضعين الفاتح والداكن.',
+  'settings.surfaceHint': 'متاح أيضًا من القائمة: مفتاح “شفاف” أسفل الشريط الجانبي.',
   'settings.surfaceContrastNote': 'التباين العالي مفعّل، لذا تُستخدم اللوحة المعتمة على أي حال.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'ثبّت DOR101',

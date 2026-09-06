@@ -32,17 +32,16 @@ export function Logo({ size = 'md', showText = true, animated = true, className 
         {/* The mark is a flat civic navy tile: a brand that pulses on a loop steals
             attention from the one thing the header has to offer, which is the
             search field. */}
-        {/* Same artwork as public/icon.svg (the app icon), so the header, the
-            launcher and the OG card all carry one mark. Hand-drawn triple-decker,
-            harbour navy tile, brick door, water line. */}
+        {/* A photograph, not an illustration: the Boston skyline seen across
+            Dorchester Bay at dusk (Wikimedia Commons, Sswonk, CC BY-SA 3.0 — see
+            public/IMAGE-CREDITS.md). The same file is the app icon. */}
         <Image
-          src="/icon.svg"
+          src="/logo.png"
           alt=""
           width={icon}
           height={icon}
           priority
           className="relative z-10 rounded-[22%] shadow-[var(--shadow-sm)]"
-          unoptimized
         />
       </motion.div>
       

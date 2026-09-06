@@ -108,13 +108,14 @@ export function resourcePinIcon(category: ResourceCategory, opts: { selected?: b
 }
 
 export function stationDotIcon(color: string, opts: { interchange?: boolean; selected?: boolean; accessible?: boolean } = {}) {
-  const size = opts.interchange ? 14 : 9;
+  const size = opts.interchange ? 14 : 11;
   return L.divIcon({
     className: 'dor101-icon',
     html: `<span class="stop-dot${opts.selected ? ' is-selected' : ''}${opts.interchange ? ' is-interchange' : ''}"
                  style="--dot:${color};--dot-size:${size}px">${opts.accessible ? '<span class="stop-dot__access" aria-hidden="true"></span>' : ''}</span>`,
     iconSize: [size + 6, size + 6],
     iconAnchor: [(size + 6) / 2, (size + 6) / 2],
+    tooltipAnchor: [0, -(size / 2 + 4)],
   });
 }
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
+import { HousingStartHere, HowToApply } from '@/components/housing/HousingPrimer';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -141,6 +142,8 @@ export default function AffordableHousingPage() {
             </Button>
           </CardContent>
         </Card>
+
+        <HousingStartHere onLearnMore={() => setActiveTab('learn')} />
 
         {/* Tab Navigation */}
         <div className="flex gap-2 border-b border-[var(--color-border)]">
@@ -269,6 +272,7 @@ export default function AffordableHousingPage() {
         {/* Learn Tab */}
         {activeTab === 'learn' && (
           <div className="space-y-6">
+            <HowToApply />
             <Card>
               <CardHeader>
                 <CardTitle>What is Income-Restricted Housing?</CardTitle>

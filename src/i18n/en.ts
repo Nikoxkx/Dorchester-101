@@ -297,6 +297,7 @@ export const en = {
   'map.tapStop': 'Tap a stop for departures',
   'map.stopsTitle': 'Stops',
   'map.dataCredits': 'Transit data: MBTA. Basemap: OpenStreetMap contributors. Imagery: Esri.',
+  'map.placeDetails': 'Place details',
 
   // ── Notifications ─────────────────────────────────────────────────────
   'notifications.title': 'Updates',
@@ -575,6 +576,7 @@ export const en = {
   'settings.surface.glass': 'Transparent',
   'settings.surfaceNote': 'Transparent lets the Dorchester Bay photograph show through the panels and the menu, with a blur behind the text. Text colours never change, so everything stays readable in both light and dark mode.',
   'settings.surfaceContrastNote': 'High contrast is on, so the solid palette is used regardless.',
+  'settings.surfaceHint': 'Also available from the menu: the “Transparent” switch at the bottom of the sidebar.',
 
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Install DOR101',

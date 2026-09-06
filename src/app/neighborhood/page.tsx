@@ -23,6 +23,8 @@ import {
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import Image from 'next/image';
+import { SourceMark } from '@/components/sources/SourceMark';
 import { ExpandableSection, ExpandableCard } from '@/components/ui/ExpandableSection';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -36,6 +38,7 @@ const pageVariants: Variants = {
 const neighborhoods = [
   {
     name: 'Fields Corner',
+    photo: { src: '/img/hoods/fields-corner.jpg', caption: 'Inbound Red Line train arriving at Fields Corner station, July 2021', commonsFile: 'Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg' },
     description: 'Major commercial hub with Red Line access. Strong Vietnamese community.',
     population: '~18,000',
     medianRent: '$2,650/mo',
@@ -48,6 +51,7 @@ const neighborhoods = [
   },
   {
     name: 'Savin Hill',
+    photo: { src: '/img/hoods/savin-hill.jpg', caption: 'Dorchester Bay seen from Savin Hill', commonsFile: 'Dorchester_Bay_from_Savin_Hill.jpg' },
     description: 'Residential area near the beach. Close to UMass Boston.',
     population: '~8,500',
     medianRent: '$2,850/mo',
@@ -60,6 +64,7 @@ const neighborhoods = [
   },
   {
     name: 'Uphams Corner',
+    photo: { src: '/img/hoods/uphams-corner.jpg', caption: 'The S. B. Pierce Building at Uphams Corner', commonsFile: 'S_B_Pierce_Building,_Uphams_Corner,_Dorchester_MA.jpg' },
     description: 'Historic village center. Growing arts and culture scene.',
     population: '~12,000',
     medianRent: '$2,450/mo',
@@ -72,6 +77,7 @@ const neighborhoods = [
   },
   {
     name: 'Codman Square',
+    photo: { src: '/img/hoods/codman-square.jpg', caption: 'Edward Everett Square, at the Columbia Road end of the Codman Square–Uphams corridor; no Commons photograph of Codman Square itself is available yet', commonsFile: 'Edward_Everett_Square,_Dorchester_MA.jpg' },
     description: 'Community-focused area with health center and local businesses.',
     population: '~15,000',
     medianRent: '$2,400/mo',
@@ -84,6 +90,7 @@ const neighborhoods = [
   },
   {
     name: 'Grove Hall',
+    photo: { src: '/img/hoods/grove-hall.jpg', caption: 'Blue Hill Avenue near American Legion Highway', commonsFile: 'Blue_Hill_Avenue_near_American_Legion_Highway_in_Dorchester_(11071878605).jpg' },
     description: 'Vibrant neighborhood with Caribbean and African influences.',
     population: '~14,000',
     medianRent: '$2,350/mo',
@@ -96,6 +103,7 @@ const neighborhoods = [
   },
   {
     name: 'Four Corners',
+    photo: { src: '/img/hoods/four-corners.jpg', caption: 'Four Corners/Geneva Avenue station on the Fairmount Line, looking inbound', commonsFile: 'Four_Corners_Geneva_Ave_station,_looking_inbound,_July_2013.JPG' },
     description: 'Intersection of major streets. Mixed residential and commercial.',
     population: '~10,000',
     medianRent: '$2,300/mo',
@@ -108,6 +116,7 @@ const neighborhoods = [
   },
   {
     name: 'Lower Mills',
+    photo: { src: '/img/hoods/lower-mills.jpg', caption: 'Ventura Street playground in the Neponset River Reservation, below Lower Mills', commonsFile: 'Ventura_Street_Playground_Neponset_River_Reservation_Dorchester_Massachusetts.jpg' },
     description: 'Historic mill area on the Neponset River. Local shops and restaurants.',
     population: '~7,000',
     medianRent: '$2,700/mo',
@@ -120,6 +129,7 @@ const neighborhoods = [
   },
   {
     name: 'Ashmont',
+    photo: { src: '/img/hoods/ashmont.jpg', caption: 'Ashmont station from Peabody Square', commonsFile: 'Ashmont_station_from_Peabody_Square.jpg' },
     description: 'Red Line terminus. Peabody Square commercial district.',
     population: '~11,000',
     medianRent: '$2,600/mo',
@@ -132,6 +142,7 @@ const neighborhoods = [
   },
   {
     name: 'Neponset',
+    photo: { src: '/img/hoods/neponset.jpg', caption: 'Neponset River Reservation', commonsFile: 'Neponset_River_Reservation_1_Dorchester_Massachusetts.jpg' },
     description: 'Waterfront area. Parks and marshlands.',
     population: '~5,000',
     medianRent: '$2,800/mo',
@@ -272,6 +283,28 @@ export default function NeighborhoodPage() {
                 ]}
               >
                 <div className="space-y-4 text-sm">
+                  <figure className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-tertiary)]">
+                    <div className="relative aspect-[16/9] w-full">
+                      <Image
+                        src={hood.photo.src}
+                        alt={hood.photo.caption}
+                        fill
+                        sizes="(min-width: 768px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                    <figcaption className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
+                      <span>{hood.photo.caption}</span>
+                      <a
+                        href={`https://commons.wikimedia.org/wiki/File:${hood.photo.commonsFile}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex items-center gap-1 whitespace-nowrap font-heading font-semibold text-[var(--color-text-secondary)] hover:underline"
+                      >
+                        <SourceMark id="wikimedia" size="xs" asSpan /> Wikimedia Commons · licence &amp; author
+                      </a>
+                    </figcaption>
+                  </figure>
                   <div>
                     <h4 className="font-heading font-semibold mb-1">Demographics</h4>
                     <p className="text-[var(--color-text-muted)]">{hood.demographics}</p>

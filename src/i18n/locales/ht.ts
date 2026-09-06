@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'Touche yon estasyon pou wè depa',
   'map.stopsTitle': 'Arè',
   'map.dataCredits': 'Done transpò: MBTA. Kat debaz: kontribitè OpenStreetMap. Imaj: Esri.',
+  'map.placeDetails': 'Detay kote a',
   'map.stopCount': '{count} kanpe nan Dorchester',
   'map.line.subway': 'Mewo',
   'map.line.rail': 'Tren banliyè',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'Solid',
   'settings.surface.glass': 'Transparan',
   'settings.surfaceNote': 'Transparan kite foto Dorchester Bay la parèt atravè panno yo ak meni an, ak yon flou dèyè tèks la. Koulè tèks yo pa janm chanje, kidonk tout bagay rete lizib nan mòd klè ak fènwa.',
+  'settings.surfaceHint': 'Disponib tou nan meni an: bouton “Transparan” anba bò a.',
   'settings.surfaceContrastNote': 'Gwo kontras aktive, kidonk palèt solid la itilize kanmenm.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Enstale DOR101',

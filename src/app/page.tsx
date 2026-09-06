@@ -338,10 +338,11 @@ export default function DashboardPage() {
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {t('dashboard.footer.verified')}: {format.date(lastReviewedOn(), 'long')} · {meta.intlLocale}
           </p>
-        <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']}>
+        </footer>
+
+        <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']} className="mt-10">
           Every number on this page is computed from a dataset the site ships or from an API that names its own source and date. The directory counts are live from the listing data; the rent figure is the Census Bureau&apos;s; the headlines come from the publishers.
         </ProjectNote>
-        </footer>
       </motion.div>
     </MainLayout>
   );

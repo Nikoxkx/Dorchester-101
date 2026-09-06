@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'Taabo xarun si aad u aragto bixitaannada',
   'map.stopsTitle': 'Barta',
   'map.dataCredits': 'Xogta gaadiidka: MBTA. Khariidadda: wax ku biiriyayaasha OpenStreetMap. Sawirrada: Esri.',
+  'map.placeDetails': 'Faahfaahinta goobta',
   'map.stopCount': '{count} istaag oo ku yaal Dorchester',
   'map.line.subway': 'Metro',
   'map.line.rail': 'Tareen miyi',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'Adag',
   'settings.surface.glass': 'Hufan',
   'settings.surfaceNote': 'Hufan wuxuu u oggolaanayaa sawirka Dorchester Bay inuu ka muuqdo guddiyada iyo liiska, iyadoo qoraalka gadaashiisa la mugdiyeeyay. Midabada qoraalku isma beddelaan, sidaas darteed wax walba waa la akhrisan karaa habka iftiinka iyo kan madow.',
+  'settings.surfaceHint': 'Sidoo kale waxaa laga helaa liiska: furaha “Hufan” ee hoose ee dhinaca.',
   'settings.surfaceContrastNote': 'Iftiin-kala-duwanaanshaha sare waa shid, sidaas darteed midabka adag ayaa la isticmaalayaa.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Rakib DOR101',

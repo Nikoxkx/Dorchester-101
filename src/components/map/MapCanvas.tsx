@@ -14,6 +14,7 @@ import {
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon } from './icons';
+import { cn } from '@/lib/utils';
 import type { ResourceCategory } from '@/data/resources';
 import type { ShieldMode } from './icons';
 
@@ -155,21 +156,17 @@ export function MapCanvas({
         const color = ROUTE_HEX[shape.routeId] ?? '#7A6B5D';
         return shape.paths.map((path, index) => (
           <Fragment key={`${shape.routeId}-${index}`}>
+            <Polyline positions={path} pathOptions={{ color: '#1B2430', opacity: 0.55, weight: 11, lineCap: 'round', className: 'route-casing' }} interactive={false} />
+            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.95, weight: 8.5, lineCap: 'round', className: 'route-casing' }} interactive={false} />
             <Polyline
               positions={path}
-              pathOptions={{ color: '#FFFFFF', opacity: 0.92, weight: 9, lineCap: 'round' }}
-            />
-            <Polyline
-              positions={path}
-              pathOptions={{
-                color,
-                opacity: 0.98,
-                weight: 4.5,
-                lineCap: 'round',
-                className: shape.source === 'mbta-live' ? 'route-flow' : undefined,
-              }}
+              pathOptions={{ color, opacity: 1, weight: 5.5, lineCap: 'round', className: cn('route-core', shape.source !== 'mbta-live' && 'route-timetable') }}
               eventHandlers={{ click: () => onSelectStop(`route:${shape.routeId}`) }}
             />
+            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.35, weight: 1.5, lineCap: 'round', className: 'route-highlight' }} interactive={false} />
+            {shape.source === 'mbta-live' && (
+              <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.85, weight: 3, className: 'route-flow' }} interactive={false} />
+            )}
           </Fragment>
         ));
       })}

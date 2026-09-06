@@ -19,8 +19,11 @@ export function SourceMark({
   withName = false,
   className,
   href,
+  asSpan = false,
 }: {
   id: SourceId;
+  /** Render as a <span> when the badge already sits inside a link. */
+  asSpan?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   withName?: boolean;
   className?: string;
@@ -53,22 +56,35 @@ export function SourceMark({
     />
   );
 
+  const inner = (
+    <>
+      {badge}
+      {withName && (
+        <span className="inline-flex min-w-0 items-center gap-1 font-heading text-xs font-semibold text-[var(--color-text-secondary)]">
+          <span className="truncate">{source.name}</span>
+          {external && !asSpan && <ExternalLink className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />}
+        </span>
+      )}
+      <span className="sr-only">{source.name}</span>
+    </>
+  );
+  const cls = cn('inline-flex items-center gap-2 rounded-lg align-middle no-underline hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]', className);
+  if (asSpan) {
+    return (
+      <span title={`${source.name} — ${source.provides}`} className={cls}>
+        {inner}
+      </span>
+    );
+  }
   return (
     <a
       href={href ?? source.url}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
       title={`${source.name} — ${source.provides}`}
-      className={cn('inline-flex items-center gap-2 rounded-lg align-middle no-underline hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]', className)}
+      className={cls}
     >
-      {badge}
-      {withName && (
-        <span className="inline-flex min-w-0 items-center gap-1 font-heading text-xs font-semibold text-[var(--color-text-secondary)]">
-          <span className="truncate">{source.name}</span>
-          {external && <ExternalLink className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />}
-        </span>
-      )}
-      <span className="sr-only">{source.name}</span>
+      {inner}
     </a>
   );
 }

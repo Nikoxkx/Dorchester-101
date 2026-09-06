@@ -267,6 +267,7 @@ export const locale: Dict = {
   'map.tapStop': 'Toque una estación para ver salidas',
   'map.stopsTitle': 'Paradas',
   'map.dataCredits': 'Datos de transporte: MBTA. Mapa base: colaboradores de OpenStreetMap. Imágenes: Esri.',
+  'map.placeDetails': 'Detalles del lugar',
   'map.stopCount': '{count} paradas en Dorchester',
   'map.line.subway': 'Metro',
   'map.line.rail': 'Tren de cercanías',
@@ -538,6 +539,7 @@ export const locale: Dict = {
   'settings.surface.solid': 'Sólida',
   'settings.surface.glass': 'Transparente',
   'settings.surfaceNote': 'Transparente deja ver la fotografía de la bahía de Dorchester a través de los paneles y el menú, con un desenfoque detrás del texto. Los colores del texto no cambian, así que todo sigue siendo legible en modo claro y oscuro.',
+  'settings.surfaceHint': 'También disponible en el menú: el interruptor “Transparente” al final de la barra lateral.',
   'settings.surfaceContrastNote': 'El alto contraste está activado, así que se usa la paleta sólida de todos modos.',
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Instalar DOR101',
