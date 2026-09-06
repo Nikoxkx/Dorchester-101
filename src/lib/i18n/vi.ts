@@ -121,6 +121,8 @@ export const vi: Record<TranslationKey, string> = {
   'stats.activeProjects': 'Dự án BPDA đang chạy',
   'stats.openWaitlists': 'Danh sách chờ đang mở',
   'stats.foodSites': 'Điểm thực phẩm',
+  'stats.section8': 'Section 8 của BHA (phiếu)',
+  'stats.publicHousing': 'Danh sách chờ nhà ở công BHA',
   'stats.medianSale': 'Giá bán trung vị (ước tính)',
 
   'quick.applyHousing': 'Nộp đơn nhà ở',

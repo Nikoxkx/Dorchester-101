@@ -134,6 +134,8 @@ export const en = {
   'stats.activeProjects': 'Active BPDA projects',
   'stats.openWaitlists': 'Open waitlists',
   'stats.foodSites': 'Food sites',
+  'stats.section8': 'BHA Section 8 (tenant-based)',
+  'stats.publicHousing': 'BHA public housing waitlist',
   'stats.medianSale': 'Median sale price (estimate)',
 
   // ── Quick actions ───────────────────────────────────────────

@@ -121,6 +121,8 @@ export const kea: Record<TranslationKey, string> = {
   'stats.activeProjects': 'Projetu BPDA atibu',
   'stats.openWaitlists': 'Lista di spera abertu',
   'stats.foodSites': 'Lugar di kumida',
+  'stats.section8': 'Seçã 8 BHA (voucher)',
+  'stats.publicHousing': 'Lista di spera kaza públiku BHA',
   'stats.medianSale': 'Presu médiu di benda (estimativa)',
 
   'quick.applyHousing': 'Aplica pa kaza',

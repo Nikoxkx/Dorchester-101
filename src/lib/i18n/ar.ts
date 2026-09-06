@@ -119,6 +119,8 @@ export const ar: Record<TranslationKey, string> = {
   'stats.activeProjects': 'مشاريع BPDA النشطة',
   'stats.openWaitlists': 'قوائم انتظار مفتوحة',
   'stats.foodSites': 'مواقع الطعام',
+  'stats.section8': 'القسم 8 من BHA (قسائم)',
+  'stats.publicHousing': 'قائمة انتظار السكن العام BHA',
   'stats.medianSale': 'وسيط سعر البيع (تقدير)',
 
   'quick.applyHousing': 'تقدّم للسكن',

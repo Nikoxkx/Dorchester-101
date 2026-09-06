@@ -120,6 +120,8 @@ export const ht: Record<TranslationKey, string> = {
   'stats.activeProjects': 'Pwojè BPDA aktif',
   'stats.openWaitlists': 'Lis tann ki louvri',
   'stats.foodSites': 'Kote ki bay manje',
+  'stats.section8': 'Seksyon 8 BHA (vouché)',
+  'stats.publicHousing': 'Lis tann lojman piblik BHA',
   'stats.medianSale': 'Mwayan pri vann (estimasyon)',
 
   'quick.applyHousing': 'Fè demann lojman',

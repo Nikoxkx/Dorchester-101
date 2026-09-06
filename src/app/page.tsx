@@ -33,6 +33,17 @@ interface NewsPayload {
     category: string;
   }[];
 }
+type StatKey = Parameters<ReturnType<typeof useTranslation>['t']>[0];
+
+const STAT_LABEL: Record<string, StatKey> = {
+  rent: 'stats.medianRent',
+  sale: 'stats.medianSale',
+  projects: 'stats.activeProjects',
+  food: 'stats.foodSites',
+  section8: 'stats.section8',
+  'public-housing': 'stats.publicHousing',
+};
+
 interface StatsPayload {
   stats?: {
     id: string;
@@ -109,13 +120,19 @@ export default function DashboardPage() {
                 {stats.data.stats.map((s) => (
                   <StatCard
                     key={s.id}
-                    label={s.label}
+                    label={s.id in STAT_LABEL ? t(STAT_LABEL[s.id]) : s.label}
                     value={
                       s.format === 'currency'
                         ? formatFor.currency(s.value)
                         : s.format === 'percent'
                           ? formatFor.percent(s.value / 100)
-                          : formatFor.number(s.value)
+                          : s.format === 'status'
+                            ? s.status === 'open'
+                              ? t('common.open')
+                              : s.status === 'closed'
+                                ? t('common.closed')
+                                : (s.status ?? '')
+                            : formatFor.number(s.value)
                     }
                     trend={typeof s.trend === 'number' ? { value: s.trend, direction: s.trend >= 0 ? 'up' : 'down' } : undefined}
                     source={s.source}

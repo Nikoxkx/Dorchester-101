@@ -119,6 +119,8 @@ export const zh: Record<TranslationKey, string> = {
   'stats.activeProjects': '进行中的 BPDA 项目',
   'stats.openWaitlists': '开放中的轮候名单',
   'stats.foodSites': '食物供应点',
+  'stats.section8': 'BHA 第8节（住房券）',
+  'stats.publicHousing': 'BHA 公共住房轮候名单',
   'stats.medianSale': '售价中位数（估算）',
 
   'quick.applyHousing': '申请住房',

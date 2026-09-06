@@ -121,6 +121,8 @@ export const so: Record<TranslationKey, string> = {
   'stats.activeProjects': 'Mashruucyo BPDA firfircoon',
   'stats.openWaitlists': 'Liisas sugitaan furan',
   'stats.foodSites': 'Meyealada cuntada',
+  'stats.section8': 'Qaybta 8 BHA (voucher)',
+  'stats.publicHousing': 'Liiska sugitaan guryaha dadweynaha BHA',
   'stats.medianSale': 'Celceliska qiimaha iibka (qiyaas)',
 
   'quick.applyHousing': 'Codso guri',

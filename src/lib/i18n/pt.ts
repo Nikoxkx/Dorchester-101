@@ -121,6 +121,8 @@ export const pt: Record<TranslationKey, string> = {
   'stats.activeProjects': 'Projetos ativos da BPDA',
   'stats.openWaitlists': 'Listas de espera abertas',
   'stats.foodSites': 'Pontos de comida',
+  'stats.section8': 'Section 8 da BHA (vales)',
+  'stats.publicHousing': 'Lista de espera de moradia pública BHA',
   'stats.medianSale': 'Preço mediano de venda (estimativa)',
 
   'quick.applyHousing': 'Pedir moradia',
