@@ -30,9 +30,10 @@ export function StatCard({
     formatNumber(value);
 
   return (
-    <div className="py-3 border-t border-[var(--line)]">
-      <p className="text-[11px] uppercase tracking-wide text-[var(--muted)]">{label}</p>
-      <p className="font-display text-2xl mt-0.5 capitalize">{formatted}</p>
+    <div className="py-4 border-t-2 border-[var(--ink)] relative group hover:bg-[var(--surface)] -mx-2 px-2 transition-colors">
+      <div aria-hidden className="absolute top-0 left-0 w-1 h-full bg-[var(--red)] opacity-60 group-hover:opacity-100 transition-opacity" />
+      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted)] mb-0.5">{label}</p>
+      <p className="font-display text-3xl tracking-[-0.04em] leading-none">{formatted}</p>
       {trend && (
         <p className={cn('text-xs mt-1', trend.value > 0 ? 'text-[var(--red)]' : 'text-[var(--park)]')}>
           {trend.value > 0 ? '+' : ''}{trend.value}% yr

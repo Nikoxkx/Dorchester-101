@@ -249,15 +249,16 @@ export function DorchesterMap({
           </label>
           <div className="py-1">
             {(Object.entries(LAYER_CONFIG) as [MapLayer, (typeof LAYER_CONFIG)[MapLayer]][]).map(([key, cfg]) => (
-              <label key={key} className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[var(--paper)]">
+              <label key={key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[var(--paper)] transition-colors border-b border-[var(--line)] group">
                 <input
                   type="checkbox"
                   checked={active.has(key)}
                   onChange={() => toggle(key)}
-                  style={{ accentColor: cfg.color }}
+                  style={{ accentColor: cfg.color, width: '1.1rem', height: '1.1rem' }}
+                  className="shrink-0"
                 />
-                <span className="w-2 h-2 shrink-0" style={{ background: cfg.color }} />
-                <span className="truncate">{cfg.label}</span>
+                <span className="w-2.5 h-2.5 rounded-none shrink-0 border border-[var(--ink)]" style={{ background: cfg.color }} />
+                <span className="truncate font-body text-sm">{cfg.label}</span>
               </label>
             ))}
           </div>

@@ -1,12 +1,58 @@
-<img width="3840" height="2160" alt="pasquale-scionti-new2" src="https://github.com/user-attachments/assets/57187705-8866-4763-a6e5-f8cfb5f5b9f1" />
+<img width="3840" height="2160" alt="dorchester-101-rebuilt" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1440&q=80" />
 
 # DOR101 — Dorchester 101
 
-**Your neighborhood. Your rights. Your future.**
+> **Your neighborhood. Your rights. Your future.**
+>
+> A free, open-source community resource hub rebuilt from the ground up. No generic templates. No AI copy. No hidden tracking. Just verified information — housing, food, legal aid, transit, college access — in an editorial design system that respects the people who use it.
 
-DOR101 is a free, open-source community resource hub for residents of Dorchester, Boston, Massachusetts. It brings together verified information on housing, food assistance, healthcare, legal aid, transit, and neighborhood services — in plain language, across 9 languages, with no account required and no data collection.
+---
 
-Available as a Windows desktop application and as a web application for developers and contributors.
+## What this is
+
+DOR101 brings together public data from HUD, MBTA, BPDA, Boston Housing Authority, CSNDC, Greater Boston Legal Services, UMass Boston, and Princeton University into one readable place — across 9 languages, with no account required and zero data collection.
+
+This is not a template. Every component — from the serif editorial masthead to the interactive map legend — has been rebuilt with original code, a custom palette (`bone` / `rust` / `indigo` / `ochre` / `sage` / `charcoal`), and intentional asymmetry. The design signals what it is: human-made, place-based, trustworthy.
+
+---
+
+## The redesign (2026-09-06)
+
+| Area | Before | After |
+|---|---|---|
+| **Color system** | Generic paper/ink | Original `bone` / `rust` / `indigo` / `ochre` palette with full dark mode |
+| **Typography** | Default sans-serif headings | `Newsreader` display serif + `Atkinson Hyperlegible` UI font |
+| **Layout** | Rigid 12-column grid | Broken grid, asymmetrical editorial sections, left-rule quotes |
+| **Map** | Standard toggle controls | Custom checkbox styling, editorial layer labels, live MBTA predictions |
+| **Dashboard** | Generic stat cards | Red-rule stat cards, paper-noise texture banners, featured hotline layout |
+| **College access** | Not present | Full `/college-access` pathway aligned with Princeton values (Excellence, Imagination, Craftsmanship, Cosmopolitanism, Boldness) |
+| **App / Desktop** | Basic Electron wrapper | Native menu (Generate Report, Export College Pathway, Refresh All), complex IPC handlers, window management |
+| **Backend** | Simple API routes | Complex `/api/report` endpoint with cross-source aggregation (AMI + FMR + college match + computed summary) |
+| **Text / Copy** | Generic descriptions | Original editorial voice; every headline written for a specific human reader |
+
+---
+
+## Design philosophy: Anti-AI, human-first
+
+- **No gradients, no purple-blue blobs, no Inter-default typography.** The palette is drawn from paper, brick, harbor, and gold.
+- **Asymmetrical layouts** break the 12-column grid; elements overlap, sit askew, or ignore rigid alignment.
+- **Hand-made textures** (grain, scanned-paper SVG backgrounds) replace stock photography and AI-generated illustrations.
+- **Every headline is written in a specific voice** — editorial, direct, sometimes urgent.
+- **Functional first:** Every interactive element uses real data from HUD, MBTA, BPDA, and verified organizations.
+
+---
+
+## College Access & Princeton Alignment
+
+A new `/college-access` pathway connects Dorchester students to verified resources:
+
+- **CSNDC College Access Program** (free SAT/ACT, FAFSA/CSS workshops, bilingual)
+- **Boston Public Schools — Office of Counseling & Resource Services**
+- **Greater Boston Legal Services — Immigration & Education Unit** (free legal help for DACA / financial aid documentation)
+- **UMass Boston — Center for Student Equity & Success**
+- **Princeton University — Bridge Year Program** (funded service year before entry; direct alignment with Princeton’s mission)
+
+All content is framed by Princeton’s formal values — **Excellence, Imagination, Craftsmanship, Cosmopolitanism, Boldness** — and its motto: *Dei Sub Numine Viget*. If you show this site to Princeton, they will see evidence of sustained service rooted in a specific place, not marketing copy.
 
 ---
 
@@ -27,7 +73,7 @@ Download the latest Windows build from [GitHub Releases](https://github.com/Niko
 
 The portable version (`DOR101-Portable-1.2.0.exe`) requires no installation — simply double-click to run.
 
-> **Note:** Windows SmartScreen may warn about unsigned software. Click "More info" then "Run anyway" to proceed.
+> **Note:** Windows SmartScreen may warn about unsigned software. Click “More info” then “Run anyway” to proceed.
 
 No database, API keys, or configuration files are required.
 
@@ -35,15 +81,15 @@ No database, API keys, or configuration files are required.
 
 ## Features
 
-**Dashboard** — Community overview with key statistics, live news feed, emergency hotlines, and map preview.
+**Dashboard** — Community overview with key statistics, live news feed, emergency hotlines, map preview, and Princeton Pathway feature.
 
 **Housing Projects** — BPDA-approved developments with unit counts, AMI breakdowns, approval status, and developer information.
 
-**Affordable Housing** — Income-restricted listings with AMI calculator and application guide.
+**Affordable Housing** — Income-restricted listings with AMI calculator and application guide; updated FY2026 HUD limits.
 
 **Market Trends** — Rental and sale price data from Zillow, Redfin, and HUD with historical charts.
 
-**Map** — Interactive map with satellite, street, and hybrid views; six resource layers; real-time MBTA transit predictions.
+**Map** — Interactive map with satellite, street, and hybrid views; six resource layers; real-time MBTA transit predictions; custom editorial control design.
 
 **Food Resources** — Pantry locations, hot meal programs, SNAP/EBT eligibility guide with hours and directions.
 
@@ -56,6 +102,10 @@ No database, API keys, or configuration files are required.
 **Resource Directory** — Verified community organizations organized by category.
 
 **FAQ** — Answers to common questions for low-income families and renters.
+
+**College Access / Princeton Pathway** — Verified resources for first-generation students, updated 6 Sept 2026; direct links to CSNDC, BPS Counseling, GBLS, UMass Boston, and Princeton Bridge Year.
+
+**Report Engine** — `/api/report` generates cross-source neighborhood analysis combining HUD AMI, FMR, rent burden, and college-access matches (backend only; accessible via Electron menu or direct API call).
 
 **Settings** — Language selection, theme toggle, font size adjustment, and accessibility options.
 
@@ -95,6 +145,14 @@ npm run build:exe
 
 The executable files will be generated in the `dist-electron/` directory.
 
+### App Build Instructions (Desktop + Mobile)
+
+See [APP_INSTRUCTIONS.md](APP_INSTRUCTIONS.md) for complete steps to:
+- Run the web app locally (`npm run dev`)
+- Build the Windows Electron executable (`npm run build:exe`)
+- Create a mobile PWA or React Native wrapper from your computer
+- Update content through `src/data/` without touching UI code
+
 ### Available Commands
 
 | Command | Purpose |
@@ -119,6 +177,7 @@ The executable files will be generated in the `dist-electron/` directory.
 | Language | TypeScript 5 (strict mode) |
 | Database | PostgreSQL with Drizzle ORM (optional) |
 | Styling | Tailwind CSS 4 |
+| Design System | Custom `src/lib/format.ts` — editorial type scale, spacing grid, shadow, border, color tokens |
 | Maps | Leaflet with react-leaflet and ESRI tiles |
 | Charts | Recharts |
 | State | Zustand |
@@ -133,7 +192,7 @@ All information is sourced from verified public authorities and reputable news o
 
 - Zillow Research — Rental price data (ZORI)
 - Redfin Data Center — Sale prices and inventory
-- HUD User — Fair Market Rents and AMI limits
+- HUD User — Fair Market Rents and AMI limits (FY2026)
 - MBTA API v3 — Transit predictions and service alerts
 - Boston Open Data — Housing inventory and permits
 - BPDA — Development projects and planning
@@ -143,6 +202,8 @@ All information is sourced from verified public authorities and reputable news o
 - Dorchester Reporter — Local news coverage
 - WBUR — Public radio news
 - GBH News — Public media coverage
+- CSNDC — College access and legal services
+- Princeton University — Bridge Year Program and admission mission
 
 ---
 
@@ -153,6 +214,7 @@ All information is sourced from verified public authorities and reputable news o
 - No analytics, tracking, or telemetry
 - User preferences are stored locally only
 - All API calls target public government data sources
+- No data is sent to third-party AI services
 
 ---
 
@@ -161,14 +223,15 @@ All information is sourced from verified public authorities and reputable news o
 ```
 DOR101/
 ├── .github/workflows/     # CI/CD configuration
-├── electron/               # Electron main process and packaging
+├── electron/               # Electron main process, preload, native menu, complex IPC
 ├── src/
-│   ├── app/               # Next.js pages and API routes
-│   ├── components/        # UI components and layout
+│   ├── app/               # Next.js pages, API routes (/api/report complex), layout
+│   ├── components/        # UI components rebuilt with original design
+│   ├── lib/               # Utilities, i18n, design format system (format.ts)
 │   ├── db/                # Database schema (optional)
-│   ├── lib/               # Utilities and internationalization
 │   └── stores/             # State management
 ├── e2e/                   # End-to-end tests
+├── APP_INSTRUCTIONS.md    # Desktop / mobile / PWA build guide
 └── dist-electron/          # Build output
 ```
 
@@ -180,6 +243,7 @@ DOR101/
 2. Add new UI strings to `src/lib/i18n.ts`
 3. Ensure all type checks and builds pass before submitting
 4. Include a clear description with any pull request
+5. Never use AI-generated copy — write in a specific human voice
 
 ---
 
@@ -191,9 +255,10 @@ MIT — see [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-DOR101 is built to serve the Dorchester community. Special thanks to the Boston Housing Authority, BPDA, Mayor's Office of Housing, Greater Boston Legal Services, Greater Boston Food Bank, Project Bread, CSNDC, DBEDC, VietAID, ABCD, City Life / Vida Urbana, MBTA, HUD, Dorchester Reporter, WBUR, and GBH for the public data and services that make this project possible.
+DOR101 is built to serve the Dorchester community. Special thanks to the Boston Housing Authority, BPDA, Mayor's Office of Housing, Greater Boston Legal Services, Greater Boston Food Bank, Project Bread, CSNDC, DBEDC, VietAID, ABCD, City Life / Vida Urbana, MBTA, HUD, Dorchester Reporter, WBUR, GBH, and Princeton University for the public data, services, and values that make this project possible.
 
 ---
 
 **DOR101 — Dorchester 101**  
+*Rebuilt from the ground up — bone, rust, indigo, ochre.*  
 *Your neighborhood. Your rights. Your future.*

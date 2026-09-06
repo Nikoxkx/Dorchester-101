@@ -43,7 +43,8 @@ export default function FoodPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4">
+        <header className="relative border-b-3 border-[var(--ink)] pb-6 overflow-hidden">
+          <div aria-hidden className="absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/4 opacity-[0.06] pointer-events-none"><svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" /></svg></div>
           <p className="kicker">Food desk</p>
           <h1 className="font-display text-4xl">{t('food.title')}</h1>
           <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('food.description')}</p>
