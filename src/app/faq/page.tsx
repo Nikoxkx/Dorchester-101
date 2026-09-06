@@ -21,7 +21,7 @@ export default function FAQPage() {
   const FAQ_CATEGORIES = [
   {
     id: 'housing',
-    name: t('faq.housing', 'Housing & Rent'),
+    name: t('faq.topic.housing'),
     faqs: [
       {
         q: 'How do I apply for affordable housing in Dorchester?',

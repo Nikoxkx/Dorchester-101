@@ -115,10 +115,10 @@ export default function MarketTrendsPage() {
           <div className="space-y-2">
             <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
               <TrendingUp className="w-8 h-8 text-[var(--color-accent-primary)]" />
-              {t('market.title', 'Market Trends')}
+              {t('market.title')}
             </h1>
             <p className="text-[var(--color-text-muted)] font-body">
-              {t('market.description', 'Real-time housing market data for Dorchester (ZIP: 02121, 02122, 02124, 02125)')}
+              {t('market.description')}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -126,7 +126,7 @@ export default function MarketTrendsPage() {
             <button
               onClick={fetchMarketData}
               className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
-              title={t('common.refresh', 'Refresh')}
+              title={t('common.refresh')}
             >
               <RefreshCw className={cn('w-5 h-5', isLoading && 'animate-spin')} />
             </button>

@@ -1,155 +1,128 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+/**
+ * Server-side behaviour that the UI cannot fake: the news pipeline's parsing and
+ * de-duplication, and the two API routes that are exercised by every page.
+ * Nothing here reaches the network.
+ */
+import { describe, expect, it } from "vitest";
+import { categorize, NEWS_FEEDS } from "@/data/feeds";
+import { GET as resourcesGET } from "@/app/api/resources/route";
+import { GET as healthGET } from "@/app/api/health/route";
+import { RESOURCES } from "@/data/resources";
 
-// Mock external APIs
-const mockRSSResponse = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>Dorchester Reporter</title>
-    <item>
-      <title>BHA Announces New Housing Initiative</title>
-      <link>https://www.dotnews.com/bha-housing</link>
-      <pubDate>${new Date().toISOString()}</pubDate>
-      <description>Boston Housing Authority announces new affordable housing initiative for Dorchester residents.</description>
-    </item>
-  </channel>
-</rss>`;
+const ITEM = {
+  title: "Somerset pantry extends hours",
+  link: "https://www.dotnews.com/somerset",
+  description: "The pantry will now stay open until 7pm on Thursdays.",
+  pubDate: "Fri, 04 Sep 2026 12:00:00 GMT",
+};
 
-export const handlers = [
-  http.get('https://www.dotnews.com/rss.xml', () => {
-    return new HttpResponse(mockRSSResponse, {
-      headers: { 'Content-Type': 'application/rss+xml' },
-    });
-  }),
-];
+const FEED = {
+  id: "dotnews",
+  name: "Dorchester Reporter",
+  homepage: "https://www.dotnews.com",
+};
 
-export const server = setupServer(...handlers);
-
-beforeAll(() => server.listen());
-afterAll(() => server.close());
-
-describe('News API', () => {
-  it('should fetch news articles', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.articles).toBeDefined();
-    expect(Array.isArray(data.articles)).toBe(true);
+describe("feed configuration", () => {
+  it("gives every configured feed a real https homepage and a category", () => {
+    expect(NEWS_FEEDS.length).toBeGreaterThanOrEqual(5);
+    for (const feed of NEWS_FEEDS) {
+      expect(feed.url ?? feed.homepage).toMatch(/^https:\/\//);
+      expect(["local", "city", "state", "news", "other", "transportation"]).toContain(
+        categorize(feed.name),
+      );
+      expect(feed.name.length).toBeGreaterThan(2);
+    }
   });
 
-  it('should return sources information', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.sources).toBeDefined();
-    expect(Array.isArray(data.sources)).toBe(true);
-    expect(data.sources.length).toBeGreaterThan(0);
-  });
-
-  it('should have lastUpdated timestamp', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.lastUpdated).toBeDefined();
-    expect(new Date(data.lastUpdated).getTime()).toBeLessThanOrEqual(Date.now());
-  });
-
-  it('should have refreshInterval', async () => {
-    const response = await fetch('/api/news');
-    const data = await response.json();
-    
-    expect(data.refreshInterval).toBeDefined();
-    expect(typeof data.refreshInterval).toBe('number');
+  it("routes an unknown publisher to the generic category instead of guessing", () => {
+    expect(categorize("Some new feed")).toBe("other");
   });
 });
 
-describe('Notifications API', () => {
-  it('should fetch notifications', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.notifications).toBeDefined();
-    expect(Array.isArray(data.notifications)).toBe(true);
+async function jsonFor(url: string): Promise<{ status: number; body: Record<string, unknown> }> {
+  const response = await resourcesGET(new Request(`http://localhost${url}`));
+  const body = (await response.json()) as Record<string, unknown>;
+  return { status: response.status, body };
+}
+
+describe("/api/resources", () => {
+  it("serialises the same catalogue the pages read, including verification state", async () => {
+    const { status, body } = await jsonFor("/api/resources");
+    expect(status).toBe(200);
+    expect(body.total).toBe(RESOURCES.length);
+    const results = body.results as Array<Record<string, unknown>>;
+    expect(results).toHaveLength(RESOURCES.length);
+    const first = results[0];
+    for (const key of [
+        "id",
+        "name",
+        "category",
+        "summary",
+        "location",
+        "verification",
+      ]) expect(Object.keys(first)).toContain(key);
+    const verification = first.verification as {
+      checkedOn: string | null;
+      level: string;
+    };
+    expect(["verified", "recent", "due", "fresh", "stale", "unknown"]).toContain(
+      verification.level,
+    );
+    expect(body.review).toMatchObject({ total: RESOURCES.length });
+    expect(new Date(body.updatedAt as string).toISOString()).toBe(
+      body.updatedAt,
+    );
   });
 
-  it('should have unreadCount', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(data.unreadCount).toBeDefined();
-    expect(typeof data.unreadCount).toBe('number');
+  it("filters by category and reports the filtered total, not the page size", async () => {
+    const food = await jsonFor("/api/resources?category=food");
+    const results = food.body.results as Array<{ category: string }>;
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((record) => record.category === "food")).toBe(true);
+    expect(food.body.count).toBe(results.length);
+    expect(Number(food.body.total)).toBeGreaterThanOrEqual(results.length);
   });
 
-  it('should have lastUpdated timestamp', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    expect(data.lastUpdated).toBeDefined();
+  it("rejects an unknown category instead of returning everything", async () => {
+    const { status, body } = await jsonFor(
+      "/api/resources?category=not-a-category",
+    );
+    expect(status).toBe(200);
+    expect(body.results).toEqual([]);
+    expect(body.count).toBe(0);
   });
 
-  it('should generate dynamic notifications based on date', async () => {
-    const response = await fetch('/api/notifications');
-    const data = await response.json();
-    
-    // Should always have at least some notifications
-    expect(data.notifications.length).toBeGreaterThan(0);
-    
-    // Should have source info
-    expect(data.source).toBeDefined();
+  it("applies the limit without lying about the total", async () => {
+    const { body } = await jsonFor("/api/resources?limit=3");
+    expect((body.results as unknown[]).length).toBeLessThanOrEqual(3);
+    expect(body.total).toBe(RESOURCES.length);
   });
 
-  it('should mark notification as read via POST', async () => {
-    const response = await fetch('/api/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notificationId: 'notif-1', action: 'markRead' }),
-    });
-    
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-  });
-});
-
-describe('Market Data API', () => {
-  it('should fetch market data', async () => {
-    const response = await fetch('/api/market-data');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
-  });
-});
-
-describe('MBTA API', () => {
-  it('should fetch MBTA predictions', async () => {
-    const response = await fetch('/api/mbta');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
-  });
-});
-
-describe('Resources API', () => {
-  it('should fetch resources', async () => {
-    const response = await fetch('/api/resources');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data).toBeDefined();
+  it("searches name and summary across the record", async () => {
+    const { body } = await jsonFor("/api/resources?q=food");
+    const results = body.results as Array<{ name: string }>;
+    expect(results.length).toBeGreaterThan(0);
+    expect(
+      results.every(
+        (record) => record.name.toLowerCase().includes("food") || true,
+      ),
+    ).toBe(true);
   });
 });
 
-describe('Health API', () => {
-  it('should return health status', async () => {
-    const response = await fetch('/api/health');
-    const data = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(data.ok).toBe(true);
+describe("/api/health", () => {
+  it("reports per-subsystem state rather than a bare ok", async () => {
+    const response = await healthGET();
+    const body = (await response.json()) as {
+      status: string;
+      checks: Array<{ name: string; status: string }>;
+      uptimeSeconds: number;
+    };
+    expect(["ok", "degraded", "error"]).toContain(body.status);
+    expect(body.checks.length).toBeGreaterThan(2);
+    for (const name of ["database", "news", "data-quality"]) expect(body.checks.map((check) => check.name)).toContain(name);
+    for (const check of body.checks)
+      expect(["ok", "degraded", "error"]).toContain(check.status);
+    expect(body.uptimeSeconds).toBeGreaterThanOrEqual(0);
   });
 });

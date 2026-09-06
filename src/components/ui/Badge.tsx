@@ -1,6 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/hook';
+import type { TranslationKey } from '@/i18n/en';
 
 type BadgeVariant = 'default' | 'green' | 'amber' | 'red' | 'blue';
 
@@ -76,22 +78,28 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<StatusBadgeProps['status'], { label: string; variant: BadgeVariant }> = {
-  available: { label: 'Available', variant: 'green' },
-  waitlist_open: { label: 'Waitlist Open', variant: 'amber' },
-  waitlist_closed: { label: 'Waitlist Closed', variant: 'red' },
-  in_review: { label: 'In Review', variant: 'blue' },
-  under_construction: { label: 'Under Construction', variant: 'amber' },
-  complete: { label: 'Complete', variant: 'green' },
-  planning: { label: 'Planning', variant: 'default' },
-  approved: { label: 'Approved', variant: 'blue' },
+/**
+ * The label is a translation key, not a string. A status badge in Kreyòl has to be
+ * readable by the person deciding whether to apply, and English text inside a
+ * translated page is the leak that makes a multilingual site untrustworthy.
+ */
+const statusConfig: Record<StatusBadgeProps['status'], { key: TranslationKey; variant: BadgeVariant }> = {
+  available: { key: 'status.available', variant: 'green' },
+  waitlist_open: { key: 'status.waitlistOpen', variant: 'amber' },
+  waitlist_closed: { key: 'status.waitlistClosed', variant: 'red' },
+  in_review: { key: 'status.inReview', variant: 'blue' },
+  under_construction: { key: 'status.underConstruction', variant: 'amber' },
+  complete: { key: 'status.complete', variant: 'green' },
+  planning: { key: 'status.planning', variant: 'default' },
+  approved: { key: 'status.approved', variant: 'blue' },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const { t } = useI18n();
   const config = statusConfig[status];
   return (
     <Badge variant={config.variant} className={className}>
-      {config.label}
+      {t(config.key)}
     </Badge>
   );
 }

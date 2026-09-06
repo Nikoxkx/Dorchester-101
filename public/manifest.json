@@ -1,56 +1,115 @@
 {
   "name": "DOR101 — Dorchester 101",
   "short_name": "DOR101",
-  "description": "Your neighborhood. Your rights. Your future. Free housing, food, and community resources for Dorchester residents.",
+  "description": "Free housing, food, health and transit information for Dorchester residents, in nine languages, with each listing's own verification date.",
   "start_url": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "background_color": "#FAFAF8",
   "theme_color": "#1B3A6B",
   "orientation": "any",
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["social", "education", "government", "utilities"],
+  "categories": [
+    "social",
+    "education",
+    "government",
+    "utilities"
+  ],
   "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Affordable Housing",
       "short_name": "Housing",
       "url": "/affordable-housing",
-      "description": "Find income-restricted housing in Dorchester"
+      "description": "Find income-restricted housing in Dorchester",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Food Resources",
       "short_name": "Food",
       "url": "/food",
-      "description": "Find food pantries and meal programs"
+      "description": "Find food pantries and meal programs",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Map",
       "short_name": "Map",
       "url": "/map",
-      "description": "View Dorchester resources map"
+      "description": "View Dorchester resources map",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "News",
       "short_name": "News",
       "url": "/news",
-      "description": "Latest community news"
+      "description": "Latest community news",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "handle_links": "preferred",

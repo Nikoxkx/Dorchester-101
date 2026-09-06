@@ -1,192 +1,359 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
 @import "tailwindcss";
 
+/* ==========================================================================
+   DOR101 design system
+   Palette is drawn from Dorchester material culture: harbor water, brick,
+   sandstone and cobblestone. Transit accents reuse the official MBTA line
+   colours so that route signage on the map matches what people see on a
+   platform in the real world.
+   ========================================================================== */
+
 :root {
-  /* Light Mode Colors */
-  --color-bg-primary: #FAFAF8;
-  --color-bg-secondary: #F0EFEB;
-  --color-bg-tertiary: #E5E3DC;
-  --color-text-primary: #1A1917;
-  --color-text-secondary: #4A4844;
-  --color-text-muted: #7A7672;
-  --color-border: #D4D2CB;
-  --color-accent-primary: #1B3A6B;
-  --color-accent-secondary: #C8102E;
+  /* Surfaces */
+  --color-bg-primary: #FAF7F1;
+  --color-bg-secondary: #F2EDE4;
+  --color-bg-tertiary: #E7E0D3;
+  --color-bg-raised: #FFFDF9;
+  --color-scrim: rgba(20, 33, 51, 0.72);
+
+  /* Ink */
+  --color-text-primary: #17202B;
+  --color-text-secondary: #46505D;
+  --color-text-muted: #6E7683;
+  --color-text-inverse: #FAF7F1;
+  --color-border: #D8D1C4;
+  --color-border-strong: #B9B0A0;
+  --color-shadow: rgba(23, 32, 43, 0.1);
+
+  /* Brand */
+  --color-accent-primary: #14304F;   /* harbour navy */
+  --color-accent-primary-soft: #2C5A86;
+  --color-accent-secondary: #A6362A;  /* Dorchester brick */
   --color-accent-green: #1A6B3A;
-  --color-accent-amber: #B8860B;
-  --color-shadow: rgba(26,25,23,0.08);
-  
-  /* Typography */
-  --font-display: 'Playfair Display', serif;
-  --font-heading: 'DM Sans', sans-serif;
-  --font-body: 'Source Serif 4', serif;
-  --font-mono: 'IBM Plex Mono', monospace;
+  --color-accent-amber: #9A6B10;
+
+  /* MBTA official line colours (api-v3.mbta.com /routes) */
+  --mbta-red: #DA291C;
+  --mbta-orange: #ED8B00;
+  --mbta-blue: #0086C2;
+  --mbta-green: #00953B;
+  --mbta-critical-bus: #FFC72C;
+  --mbta-commuter-rail: #80276C;
+  --mbta-ferry: #00838F;
+  --mbta-bus-bg: #FFFFFF;
+  --mbta-bus-ink: #000000;
+
+  /* Radii - deliberate steps, not one value everywhere */
+  --radius-hair: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(23, 32, 43, 0.06), 0 1px 1px rgba(23, 32, 43, 0.04);
+  --shadow-md: 0 2px 6px rgba(23, 32, 43, 0.07), 0 8px 20px -8px rgba(23, 32, 43, 0.14);
+  --shadow-lg: 0 4px 10px rgba(23, 32, 43, 0.08), 0 20px 44px -14px rgba(23, 32, 43, 0.24);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  /* Type */
+  --font-display: "Fraunces", "Source Serif 4", Georgia, "Noto Serif", serif;
+  --font-heading: "Public Sans", "Inter", "Noto Sans", system-ui, sans-serif;
+  --font-body: "Public Sans", "Noto Sans", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Focus */
+  --focus-ring: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-accent-primary);
+  --focus-offset: 2px;
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+  --ease-out: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in-out: cubic-bezier(0.45, 0.05, 0.3, 1);
+
+  /* Layout */
+  --rail-width: 264px;
+  --rail-width-collapsed: 72px;
+  --header-height: 64px;
 }
 
 .dark {
-  --color-bg-primary: #111110;
-  --color-bg-secondary: #1C1C1A;
-  --color-bg-tertiary: #262623;
-  --color-text-primary: #F5F4F0;
-  --color-text-secondary: #C4C2BC;
-  --color-text-muted: #8A8880;
-  --color-border: #2E2E2B;
-  --color-accent-primary: #4A90E2;
-  --color-accent-secondary: #E84057;
-  --color-accent-green: #3CB371;
-  --color-accent-amber: #E8B84A;
-  --color-shadow: rgba(0,0,0,0.4);
+  --color-bg-primary: #0F1720;
+  --color-bg-secondary: #16202C;
+  --color-bg-tertiary: #1E2A38;
+  --color-bg-raised: #1A2532;
+  --color-scrim: rgba(7, 12, 18, 0.82);
+
+  --color-text-primary: #F2EFE8;
+  --color-text-secondary: #C0C6CE;
+  --color-text-muted: #8A93A0;
+  --color-border: #2A3746;
+  --color-border-strong: #3B4B5E;
+  --color-shadow: rgba(0, 0, 0, 0.5);
+
+  --color-accent-primary: #7FB4E8;
+  --color-accent-primary-soft: #4A86C4;
+  --color-accent-secondary: #E8746A;
+  --color-accent-green: #55C08A;
+  --color-accent-amber: #E5B04C;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.44), 0 12px 28px -10px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 4px 14px rgba(0, 0, 0, 0.5), 0 24px 52px -16px rgba(0, 0, 0, 0.7);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   color-scheme: dark;
 }
 
-/* Force dark backgrounds on all common containers */
-.dark body,
-.dark .leaflet-popup-content-wrapper,
-.dark .leaflet-tooltip {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
+/* ---------------------------------------------------------------- base ---- */
 
-.dark .leaflet-popup-content-wrapper {
-  background: #1C1C1A !important;
-  color: #F5F4F0 !important;
-  border-color: #2E2E2B !important;
-}
-
-.dark .leaflet-popup-tip {
-  background: #1C1C1A !important;
-}
-
-.dark input,
-.dark select,
-.dark textarea {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
-}
-
-.dark input::placeholder {
-  color: var(--color-text-muted);
-}
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  margin: 0;
   font-family: var(--font-body);
-  background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-color: var(--color-bg-primary);
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 600;
-  line-height: 1.3;
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.011em;
+  text-wrap: balance;
 }
 
-.font-display {
-  font-family: var(--font-display);
+p { text-wrap: pretty; }
+
+a { color: var(--color-accent-primary); }
+
+img, svg, video { display: block; max-width: 100%; }
+
+/* ---------------------------------------------------------------- page ---- */
+/* Layered backdrop: real Dorchester photograph, harbour wash and a faint
+   transit-grid. Never a flat solid colour. Sits behind everything, ignores
+   pointer events, and degrades to a pure gradient if the photo is missing
+   (offline desktop build). */
+
+.dor101-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(20, 48, 79, 0.05) 0%,
+      rgba(20, 48, 79, 0.02) 40%,
+      rgba(166, 54, 42, 0.04) 100%),
+    linear-gradient(160deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
 }
 
-.font-heading {
+.dor101-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/img/dorchester-bay-sunset.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  opacity: 0.13;
+  filter: saturate(0.85);
+}
+
+.dor101-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%2314304F' stroke-opacity='0.07' stroke-width='1.5'%3E%3Cpath d='M0 40h120l40 40h60'/%3E%3Cpath d='M0 120h60l40-40'/%3E%3Cpath d='M0 180h40l60-60h60l40-40'/%3E%3Ccircle cx='120' cy='40' r='4'/%3E%3Ccircle cx='60' cy='120' r='4'/%3E%3Ccircle cx='40' cy='180' r='4'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.dark .dor101-backdrop {
+  background:
+    linear-gradient(180deg,
+      rgba(4, 9, 15, 0.72) 0%,
+      rgba(4, 9, 15, 0.86) 60%,
+      rgba(4, 9, 15, 0.94) 100%),
+    linear-gradient(160deg, #0B131C 0%, #0F1720 100%);
+}
+
+.dark .dor101-backdrop::before { opacity: 0.2; filter: saturate(0.7) brightness(0.7); }
+.dark .dor101-backdrop::after { opacity: 0.35; }
+
+.dor101-shell { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------ typography -- */
+
+.font-display { font-family: var(--font-display); font-optical-sizing: auto; }
+.font-heading { font-family: var(--font-heading); }
+.font-body    { font-family: var(--font-body); }
+.font-mono    { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* Scripts that need their own face get it explicitly so Vietnamese tone
+   marks, Arabic shaping and Simplified Chinese never fall back to boxes. */
+:lang(vi) { font-family: "Public Sans", "Noto Sans", sans-serif; font-feature-settings: "liga" 0; }
+:lang(ar) { font-family: "Noto Sans Arabic", "Public Sans", sans-serif; line-height: 1.9; }
+:lang(zh) { font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif; }
+:lang(ht), :lang(kea) { font-family: "Public Sans", "Noto Sans", sans-serif; }
+
+/* ------------------------------------------------------------- controls -- */
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 0;
+  top: -100px;
+  z-index: 200;
+  padding: 12px 20px;
+  background: var(--color-accent-primary);
+  color: #fff;
   font-family: var(--font-heading);
+  font-weight: 700;
+  border-start-end-radius: 0;
+  border-end-end-radius: var(--radius-md);
+  transition: top var(--dur-base) var(--ease-out);
 }
+.skip-link:focus { top: 0; }
 
-.font-body {
-  font-family: var(--font-body);
-}
+/* --------------------------------------------------------------- cards --- */
 
-.font-mono {
-  font-family: var(--font-mono);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
-
-/* Focus styles */
-:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: 2px;
-}
-
-/* Card styles */
 .card {
-  background-color: var(--color-bg-secondary);
+  position: relative;
+  background-color: var(--color-bg-raised);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm), var(--shadow-inset);
+  transition: box-shadow var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-base) var(--ease-out);
 }
 
-.card:hover {
-  box-shadow: 0 4px 24px var(--color-shadow);
+.card:hover { box-shadow: var(--shadow-md); border-color: var(--color-border-strong); }
+
+.card-flat { border-radius: var(--radius-md); box-shadow: none; }
+
+/* Hairline rule used instead of a gradient sliver on a left border */
+.rule-top::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--radius-lg);
+  top: -1px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.55;
 }
 
-/* Status badges */
+/* --------------------------------------------------------------- badges -- */
+
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
   font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
-.badge-green {
-  background-color: rgba(26, 107, 58, 0.15);
-  color: var(--color-accent-green);
+.badge-green { background-color: rgba(26, 107, 58, 0.12); color: var(--color-accent-green); border-color: rgba(26, 107, 58, 0.24); }
+.badge-amber { background-color: rgba(154, 107, 16, 0.13); color: var(--color-accent-amber); border-color: rgba(154, 107, 16, 0.26); }
+.badge-red   { background-color: rgba(166, 54, 42, 0.12); color: var(--color-accent-secondary); border-color: rgba(166, 54, 42, 0.24); }
+.badge-blue  { background-color: rgba(20, 48, 79, 0.1);  color: var(--color-accent-primary);   border-color: rgba(20, 48, 79, 0.2); }
+.badge-neutral { background-color: var(--color-bg-tertiary); color: var(--color-text-secondary); border-color: var(--color-border); }
+
+.dark .badge-blue { background-color: rgba(127, 180, 232, 0.14); border-color: rgba(127, 180, 232, 0.26); }
+
+/* AMI bands */
+.ami-30 { background-color: #14304F; color: #fff; }
+.ami-50 { background-color: #2C5A86; color: #fff; }
+.ami-60 { background-color: #4C80AF; color: #fff; }
+.ami-80 { background-color: #8FB6DA; color: #17202B; }
+.ami-market { background-color: #C9C2B4; color: #17202B; }
+
+/* ------------------------------------------------- transit route shields - */
+
+.shield {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 
-.badge-amber {
-  background-color: rgba(184, 134, 11, 0.15);
-  color: var(--color-accent-amber);
+.shield--subway {
+  width: 1.65em;
+  height: 1.65em;
+  border-radius: 50%;
+  font-size: 0.78em;
+  color: #fff;
+  background: var(--mbta-red);
 }
 
-.badge-red {
-  background-color: rgba(200, 16, 46, 0.15);
-  color: var(--color-accent-secondary);
+.shield--bus {
+  min-width: 2.4em;
+  padding: 0.22em 0.42em;
+  border-radius: var(--radius-sm);
+  font-size: 0.78em;
+  color: var(--mbta-bus-ink);
+  background: var(--mbta-bus-bg);
+  border: 1.5px solid var(--mbta-bus-ink);
 }
 
-.badge-blue {
-  background-color: rgba(27, 58, 107, 0.15);
-  color: var(--color-accent-primary);
+.shield--rail {
+  min-width: 2.2em;
+  padding: 0.22em 0.44em;
+  border-radius: var(--radius-sm);
+  font-size: 0.72em;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--mbta-commuter-rail);
 }
 
-/* AMI band colors */
-.ami-30 { background-color: #1B3A6B; color: white; }
-.ami-50 { background-color: #2E5A99; color: white; }
-.ami-60 { background-color: #4A7BC4; color: white; }
-.ami-80 { background-color: #7BA3E0; color: #1A1917; }
-.ami-market { background-color: #9CA3AF; color: #1A1917; }
+.shield--trolley {
+  width: 1.65em;
+  height: 1.65em;
+  border-radius: 50%;
+  font-size: 0.78em;
+  color: #fff;
+  background: var(--mbta-green);
+}
 
-/* Skeleton loading animation */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
+/* ------------------------------------------------------------- skeleton -- */
+
+@keyframes dor101-shimmer {
+  0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
@@ -198,101 +365,404 @@ h1, h2, h3, h4, h5, h6 {
     var(--color-bg-tertiary) 75%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
+  animation: dor101-shimmer 1.6s var(--ease-in-out) infinite;
+  border-radius: var(--radius-sm);
 }
 
-/* RTL support */
-[dir="rtl"] .rtl\:text-right {
-  text-align: right;
+/* ------------------------------------------------------------- entrance - */
+
+@keyframes dor101-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
-[dir="rtl"] .rtl\:flex-row-reverse {
-  flex-direction: row-reverse;
+.animate-rise { animation: dor101-rise var(--dur-slow) var(--ease-out) both; }
+
+@keyframes dor101-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
 }
 
-/* Reduced motion */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  animation: dor101-live 2.2s var(--ease-in-out) infinite;
+}
+
+/* Marching dashes along an active route: signals "this line is live"
+   without asking the reader to watch a spinning element. */
+@keyframes dor101-dash { to { stroke-dashoffset: -24; } }
+.route-flow { animation: dor101-dash 1.6s linear infinite; }
+
+@keyframes dor101-ripple {
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.ripple { animation: dor101-ripple 1.9s var(--ease-out) infinite; }
+
+/* --------------------------------------------------------------- leaflet -- */
+
+.leaflet-container {
+  font-family: var(--font-heading);
+  background: var(--color-bg-tertiary);
+}
+
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom { z-index: 500; }
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  font-family: var(--font-heading);
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius-sm) 0 0 0 !important;
+  padding: 3px 8px !important;
+  color: #333 !important;
+}
+
+.dark .leaflet-control-attribution {
+  background: rgba(8, 14, 21, 0.78) !important;
+  color: #b9c2cd !important;
+}
+.dark .leaflet-control-attribution a { color: #9fc6ea !important; }
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 2px !important;
+}
+
+.leaflet-popup-content { margin: 0 !important; }
+.leaflet-popup-tip { box-shadow: none !important; }
+
+.map-tooltip {
+  font-family: var(--font-heading) !important;
+  font-weight: 650;
+  border-radius: var(--radius-sm) !important;
+  padding: 4px 9px !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--color-border) !important;
+  font-size: 12px !important;
+}
+
+/* --------------------------------------------------- map marker system -- */
+
+/* DivIcons get no default Leaflet chrome; the whole marker is ours. */
+.dor101-icon { background: transparent; border: none; }
+
+.shield--compact { transform: scale(0.86); }
+
+/* Selected marker gets a ring rather than a bigger shadow: on satellite imagery a
+   shadow reads as a cloud, a ring reads as a choice. */
+.dor101-icon .shield,
+.dor101-icon .pin,
+.dor101-icon .stop-dot { transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); }
+.dor101-icon .shield.is-selected,
+.dor101-icon .pin.is-selected,
+.dor101-icon .stop-dot.is-selected { transform: scale(1.22); filter: drop-shadow(0 0 0 2px var(--color-accent-primary)); }
+.dor101-icon:hover .pin { transform: translateY(-2px) scale(1.06); }
+
+.pin {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 34px;
+}
+.pin__shape { width: 100%; height: 100%; display: block; }
+.pin__glyph {
+  position: absolute;
+  inset: 4px 0 auto 0;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.pin__live {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.stop-dot {
+  display: block;
+  width: var(--dot-size, 9px);
+  height: var(--dot-size, 9px);
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.stop-dot.is-interchange { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 0 3px rgba(0, 0, 0, 0.25); }
+.stop-dot__access::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--mbta-green);
+}
+
+.me-here { position: relative; display: block; width: 26px; height: 26px; }
+.me-here__dot {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-secondary);
+  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.me-here__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-accent-secondary) 45%, transparent);
+  animation: dor101-ripple 2.4s var(--ease-out) infinite;
+}
+
+/* Leaflet's zoom/scroll handling needs a visible focus ring: the map is a real
+   keyboard target (arrows pan, +/- zoom) and a grey rectangle is not one. */
+.leaflet-container:focus-visible {
+  outline: 3px solid var(--color-accent-secondary);
+  outline-offset: -3px;
+}
+.leaflet-container.is-focused { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent-secondary) 40%, transparent); }
+
+html[data-contrast="high"] .leaflet-control-attribution {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000;
+}
+html[data-contrast="high"] .map-tooltip {
+  background: #fff !important;
+  color: #000 !important;
+  border: 2px solid #000 !important;
+}
+html[data-contrast="high"] .pin__shape path,
+html[data-contrast="high"] .shield { stroke: #000; }
+
+.dor101-dock {
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+/* --------------------------------------------------------------- RTL ----- */
+
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+[dir="rtl"] body { letter-spacing: 0; }
+
+/* ---------------------------------------------------------- print -------- */
+
+@media print {
+  .no-print, .dor101-backdrop { display: none !important; }
+  body { background: #fff; color: #000; }
+  .card { box-shadow: none; border-color: #999; break-inside: avoid; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #444; }
+}
+
+/* ------------------------------------------------- accessibility modes --- */
+/* Every one of these is driven by a user setting in the store, never by a
+   hard-coded value in a component. */
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-contrast="high"] {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F2F2F2;
+  --color-bg-tertiary: #E2E2E2;
+  --color-bg-raised: #FFFFFF;
+  --color-text-primary: #000000;
+  --color-text-secondary: #1A1A1A;
+  --color-text-muted: #333333;
+  --color-border: #000000;
+  --color-border-strong: #000000;
+  --color-accent-primary: #002D74;
+  --color-accent-secondary: #8B0000;
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px #000;
+  --shadow-lg: 0 0 0 2px #000;
+}
+
+html[data-contrast="high"].dark {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0A0A0A;
+  --color-bg-tertiary: #171717;
+  --color-bg-raised: #000000;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #F0F0F0;
+  --color-text-muted: #D4D4D4;
+  --color-border: #FFFFFF;
+  --color-border-strong: #FFFFFF;
+  --color-accent-primary: #82CFFF;
+  --color-accent-secondary: #FFAB91;
+}
+
+html[data-contrast="high"] .dor101-backdrop::before,
+html[data-contrast="high"] .dor101-backdrop::after { display: none; }
+
+html[data-links-underlined="true"] a { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: from-font; }
+
+html[data-focus-large="true"] :focus-visible {
+  --focus-ring: 0 0 0 3px var(--color-bg-primary), 0 0 0 6px #B36B00;
+  outline: 3px solid #B36B00;
+  outline-offset: var(--focus-offset);
+}
+
+html[data-dyslexia-font="true"] body,
+html[data-dyslexia-font="true"] h1, html[data-dyslexia-font="true"] h2,
+html[data-dyslexia-font="true"] h3, html[data-dyslexia-font="true"] h4,
+html[data-dyslexia-font="true"] .font-heading,
+html[data-dyslexia-font="true"] .font-display {
+  font-family: "Atkinson Hyperlegible", "Lexend", var(--font-body) !important;
+  letter-spacing: 0.03em;
+  word-spacing: 0.16em;
+}
+
+html[data-text-spacing="true"] body {
+  line-height: 2;
+  letter-spacing: 0.06em;
+  word-spacing: 0.16em;
+}
+html[data-text-spacing="true"] p, html[data-text-spacing="true"] li { margin-block: 1em; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
+/* ------------------------------------------------------------ scrollbars - */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-text-muted); }
+
+/* --------------------------------------------------------------- charts -- */
+
+.recharts-tooltip-wrapper { z-index: 100 !important; }
+.recharts-default-tooltip {
+  border-radius: var(--radius-md) !important;
+  border-color: var(--color-border) !important;
+  font-family: var(--font-heading) !important;
+}
+
+/* Visually hidden but announced by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------- layout ----- */
+
+/*
+ * The rail width lives in one custom property, so the sidebar and the content
+ * offset animate as the same value. Previously the sidebar width, the main
+ * margin and the header's left inset were three independent 200 ms tweens,
+ * which visibly tore the layout apart mid-animation.
+ */
+.dor101-shell {
+  --rail: var(--rail-width);
+  position: relative;
+  min-height: 100vh;
+}
+
+.dor101-shell[data-collapsed='true'] { --rail: var(--rail-width-collapsed); }
+
+.dor101-rail {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--rail);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in oklab, var(--color-bg-secondary) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-inline-end: 1px solid var(--color-border);
+  transition: width var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  will-change: width;
+}
+
+.dor101-content {
+  margin-inline-start: var(--rail);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin var(--dur-slow) var(--ease-out);
+}
+
+.dor101-content > main { flex: 1 1 auto; }
+
+@media (max-width: 1023.98px) {
+  .dor101-shell { --rail: 0px; }
+  .dor101-rail {
+    width: min(280px, 86vw);
+    transform: translateX(calc(-1 * var(--rail-off, 110%)));
+    box-shadow: none;
+  }
+  .dor101-shell[data-mobile-open='true'] .dor101-rail { transform: none; box-shadow: var(--shadow-lg); }
+  html[dir='rtl'] .dor101-rail { --rail-off: -110%; }
+  html[dir='rtl'] .dor101-shell[data-mobile-open='true'] .dor101-rail { transform: none; }
+  .dor101-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: var(--color-scrim);
   }
 }
 
-/* Leaflet map styles */
-.leaflet-container {
-  font-family: var(--font-heading);
+/*
+ * Content that needs JS to be useful is hidden from the HTML stream until the
+ * app boots; the printed and noscript versions stay readable. This is the pair
+ * to the <noscript><style> block in the root layout.
+ */
+.dor101-nojs { display: none; }
+@media print {
+  .dor101-rail, .dor101-scrim { display: none !important; }
+  .dor101-content { margin-inline-start: 0 !important; }
 }
 
-.leaflet-popup-content-wrapper {
-  border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
-  border: 1px solid rgba(0,0,0,0.08) !important;
+/* Focus-first list navigation used by the directory and the map rail. */
+.dor101-row[data-active='true'] {
+  background: color-mix(in oklab, var(--color-accent-primary) 10%, transparent);
 }
 
-.leaflet-popup-content {
-  margin: 0 !important;
-}
+/* ---------------------------------------------------------- print view -- */
+/* A printed DOR101 page is handed to someone without a phone, so the two lines
+   that only make sense on paper stay hidden until someone presses Print. */
+.print-only { display: none; }
 
-.leaflet-popup-tip {
-  box-shadow: none !important;
-}
-
-/* Tooltip styles */
-.map-tooltip {
-  font-family: var(--font-heading) !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-  border: none !important;
-  font-size: 12px !important;
-}
-
-.leaflet-tooltip-top::before {
-  border-top-color: white !important;
-}
-
-/* Hide default Leaflet attribution to keep it clean */
-.leaflet-control-attribution {
-  font-size: 9px !important;
-  background: rgba(255,255,255,0.6) !important;
-  backdrop-filter: blur(4px);
-  border-radius: 4px !important;
-  padding: 2px 6px !important;
-}
-
-.dark .leaflet-control-attribution {
-  background: rgba(0,0,0,0.6) !important;
-  color: #aaa !important;
-}
-
-.dark .leaflet-control-attribution a {
-  color: #aaa !important;
-}
-
-/* Make zoom controls match theme */
-.leaflet-control-zoom a {
-  background: var(--color-bg-primary) !important;
-  color: var(--color-text-primary) !important;
-  border-color: var(--color-border) !important;
-}
-
-.leaflet-control-zoom a:hover {
-  background: var(--color-bg-secondary) !important;
-}
-
-/* Chart tooltip styles */
-.recharts-tooltip-wrapper {
-  z-index: 100 !important;
+@media print {
+  .print-only { display: block; }
 }

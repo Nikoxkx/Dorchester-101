@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/hook';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -16,8 +17,14 @@ const sizes = {
 };
 
 export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerProps) {
+  const { t } = useI18n();
+  const label = text ?? t('common.loading');
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn('flex flex-col items-center justify-center gap-3', className)}
+    >
       <div className={cn('relative', sizes[size])}>
         {/* Outer ring */}
         <motion.div
@@ -29,22 +36,9 @@ export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerP
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         />
-        {/* Inner pulse */}
-        <motion.div
-          className="absolute inset-2 rounded-full bg-[var(--color-accent-primary)]/10"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
+        <div className="absolute inset-2 rounded-full bg-[var(--color-accent-primary)]/10" aria-hidden="true" />
       </div>
-      {text && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm text-[var(--color-text-muted)] font-heading"
-        >
-          {text}
-        </motion.p>
-      )}
+      <p className="text-sm font-heading text-[var(--color-text-muted)]">{label}</p>
     </div>
   );
 }
@@ -123,23 +117,39 @@ export function PageLoader() {
   );
 }
 
-export function DataRefreshIndicator({ lastUpdated, isRefreshing }: { lastUpdated: string | null; isRefreshing: boolean }) {
+export function DataRefreshIndicator({
+  lastUpdated,
+  isRefreshing,
+  nextUpdate,
+}: {
+  lastUpdated: string | null;
+  isRefreshing: boolean;
+  /** ISO instant the client will ask again, when auto-refresh is on. */
+  nextUpdate?: string | null;
+}) {
+  const { t, format } = useI18n();
   return (
     <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
       {isRefreshing ? (
         <>
-          <motion.div
-            className="w-2 h-2 rounded-full bg-[var(--color-accent-amber)]"
+          <motion.span
+            className="h-2 w-2 rounded-full bg-[var(--color-accent-amber)]"
             animate={{ opacity: [1, 0.5, 1] }}
             transition={{ duration: 0.8, repeat: Infinity }}
+            aria-hidden="true"
           />
-          <span>Updating...</span>
+          <span>{t('common.updating')}</span>
         </>
       ) : (
         <>
-          <div className="w-2 h-2 rounded-full bg-[var(--color-accent-green)]" />
-          <span>Updated {lastUpdated || 'just now'}</span>
+          <span className="live-dot h-2 w-2" aria-hidden="true" />
+          <span>
+            {lastUpdated ? `${t('common.updated')} ${format.time(lastUpdated)}` : t('time.justNow')}
+          </span>
         </>
+      )}
+      {nextUpdate && !isRefreshing && (
+        <span className="hidden sm:inline">· {t('common.nextUpdate', { time: format.time(nextUpdate) })}</span>
       )}
     </div>
   );
