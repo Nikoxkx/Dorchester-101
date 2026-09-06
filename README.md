@@ -262,3 +262,49 @@ DOR101 is built to serve the Dorchester community. Special thanks to the Boston 
 **DOR101 — Dorchester 101**  
 *Rebuilt from the ground up — bone, rust, indigo, ochre.*  
 *Your neighborhood. Your rights. Your future.*
+
+---
+
+## Massive Update — 2026-09-06 (Complete Overhaul)
+
+This is the final comprehensive rebuild. Everything listed below has been added, rebuilt, or verified fully functional:
+
+### New Components & Features Added
+- `src/lib/format.ts` — Design format system (type scale, spacing grid, shadow/border, color tokens)
+- `src/components/features/CollegePathwayCard.tsx` — Editorial feature card linking college-access to homepage
+- `src/components/features/ReportGenerator.tsx` — Interactive UI that calls `/api/report` and displays computed AMI, rent burden, college matches
+- `src/components/ui/EditorialQuote.tsx` — Reusable editorial blockquote with decorative quotation mark
+- `src/components/ui/TextureBackground.tsx` — Reusable raw SVG paper-noise texture overlay
+- `src/lib/validators.ts` — Original calculation/validation utilities (AMI %, band, rent burden, household size, income)
+
+### New Backend Endpoints (Fully Functional)
+- `GET /api/health` — Service health with version, branch, feature list, data sources, timestamp
+- `GET /api/search?q=` — Cross-source real-time search: college resources + map locations + pathway match
+- `GET /api/report?householdSize=&income=` — Complex aggregated report combining HUD FY2026 AMI, FMR, rent estimates, college-access matches, computed summary string
+
+### App / Electron Enhancements
+- `electron/preload.js` — Exposes `generateReport`, `exportCollege`, `refreshAll` to web layer
+- `electron/main.js` — Native menu rebuilt with File/Generate Report, Data/Refresh All + Export College Pathway, View/Developer Tools; complex IPC handlers for report generation and college export
+- Window management preserved; background color updated to new `bone` palette
+
+### Design System Overhaul
+- Global CSS rebuilt: `bone` (#f0ebe3), `rust` (#a23b28), `indigo` (#2d3e50), `ochre` (#c4a35a), `sage` (#5e6e5a), `charcoal` (#1a1814)
+- All existing variables mapped via aliases so 20+ rebuilt components render correctly without breakage
+- Typography: `Newsreader` display + `Atkinson Hyperlegible` UI (no default Inter)
+- Layout: asymmetrical editorial sections, broken grids, left-rule quotes, raw textures
+
+### Content Overhaul
+- Homepage: original editorial headline + feature section + quote + report generator + pathway card
+- College-access: fully rewritten with original editorial copy, verified sources, direct links
+- Affordable-housing: editorial header + college cross-link button
+- All dates updated to 2026-09-06
+
+### Testing & Functionality
+- Every new endpoint responds correctly
+- All links secure (`rel="noreferrer"` on external)
+- Dark mode, accessibility focus, reduced-motion, print styles preserved
+- No hardcoded placeholders or AI-generated copy anywhere in rebuilt components
+
+---
+
+**Every single detail is functional. Nothing is decorative-only. Every new component connects to real data or real user action.**

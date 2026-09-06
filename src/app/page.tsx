@@ -15,6 +15,9 @@ import { useTranslation } from '@/lib/i18n';
 import { useAppStore } from '@/stores/appStore';
 import { useApi } from '@/hooks/useApi';
 import { BHA_STATUS } from '@/data/programs';
+import { CollegePathwayCard } from '@/components/features/CollegePathwayCard';
+import { ReportGenerator } from '@/components/features/ReportGenerator';
+import { EditorialQuote } from '@/components/ui/EditorialQuote';
 
 const DorchesterMap = dynamic(
   () => import('@/components/map/DorchesterMap').then((m) => m.DorchesterMap),
