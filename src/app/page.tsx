@@ -1,176 +1,351 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Home, Building2, DollarSign, Apple, Clock, TrendingUp, ArrowRight, MapPin, Calendar, BookOpen, Shield } from 'lucide-react';
-import { getTimeOfDay } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
+import Image from 'next/image';
+import { ArrowRight, BadgeCheck, BookOpen, Calendar, Clock, DollarSign, MapPin, Shield } from 'lucide-react';
+import { MapPreview } from '@/components/map/DorchesterMapLoader';
+import { useI18n } from '@/i18n/hook';
 import { useAppStore } from '@/stores/appStore';
+import { useLivePolling } from '@/hooks/useLivePolling';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
+import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
+import { RESOURCES, lastReviewedOn, reviewBacklog, verificationAge } from '@/data/resources';
+import { TRANSIT_LINES } from '@/data/transit';
+import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
+import type { TranslationKey } from '@/i18n/en';
 
-const DorchesterMap = dynamic(
-  () => import('@/components/map/DorchesterMap').then(m => m.DorchesterMap),
-  { ssr: false, loading: () => <div className="h-64 bg-[var(--color-bg-tertiary)] rounded-lg flex items-center justify-center"><LoadingSpinner /></div> }
-);
+/**
+ * The landing screen.
+ *
+ * Two rules govern what may appear here. Every number is computed in this file from
+ * a dataset the site actually ships (`src/data/*.ts`) or read from an API that names
+ * its own source and date — nothing is typed in as a figure. And the imagery is the
+ * neighbourhood itself rather than a gradient, because a community hub is judged in
+ * one second on whether it looks like the place it is about.
+ */
 
 const pv: Variants = { initial: { opacity: 0, y: 20 }, enter: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 const cv: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
 
-interface NewsArticle { id: string; title: string; source: string; publishedAt: string; category: string }
+interface NewsItem {
+  id: string;
+  title: string;
+  source: string;
+  link: string;
+  publishedAt: string;
+  category: string;
+}
+
+interface MarketResponse {
+  status: 'live' | 'cache' | 'unavailable';
+  asOf?: string;
+  metrics?: { medianGrossRent?: number | null };
+  error?: string;
+}
 
 export default function DashboardPage() {
-  const { language, setLastUpdated } = useAppStore();
-  const { t } = useTranslation(language);
-  const [news, setNews] = useState<NewsArticle[]>([]);
+  const { t, format, meta } = useI18n();
+  const setLastUpdated = useAppStore((s) => s.setLastUpdated);
+  const dataEpoch = useAppStore((s) => s.dataEpoch);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [market, setMarket] = useState<MarketResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-    const h = () => fetchData();
-    window.addEventListener('refreshData', h);
-    return () => window.removeEventListener('refreshData', h);
-  }, []);
-
-  const fetchData = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch('/api/news');
-      const d = await r.json();
-      setNews(d.articles?.slice(0, 3) || []);
-      const now = new Date().toLocaleTimeString();
-      setLastRefresh(now);
-      setLastUpdated(now);
-    } catch { /* swallow */ }
-    setLoading(false);
-  };
+      const [newsRes, marketRes] = await Promise.allSettled([
+        fetch('/api/news?limit=20&sinceHours=168').then((r) => (r.ok ? r.json() : null)),
+        fetch('/api/market-data').then((r) => (r.ok ? r.json() : null)),
+      ]);
+      if (newsRes.status === 'fulfilled' && newsRes.value) {
+        setNews((newsRes.value.articles ?? []).slice(0, 3) as NewsItem[]);
+      }
+      if (marketRes.status === 'fulfilled' && marketRes.value) setMarket(marketRes.value as MarketResponse);
+      const stamp = new Date().toISOString();
+      setLastRefresh(stamp);
+      setLastUpdated(stamp);
+    } finally {
+      setLoading(false);
+    }
+  }, [setLastUpdated]);
 
-  const timeOfDay = getTimeOfDay();
-  const greeting = t(`dashboard.greeting.${timeOfDay}`);
-  const today = new Date().toLocaleDateString(language === 'ar' ? 'ar' : language === 'zh' ? 'zh-CN' : language === 'vi' ? 'vi' : language === 'pt' ? 'pt-BR' : language === 'es' ? 'es' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const fmtTime = (d: string) => { const ms = Date.now() - new Date(d).getTime(); const h = Math.floor(ms / 3600000); return h < 1 ? 'Just now' : h < 24 ? `${h}h ago` : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  // Mount, auto-refresh and Settings' "refresh now" all run through one rule, so
+  // the dashboard cannot hammer the feeds while it sits in a background tab.
+  useLivePolling(load, { minMs: 5 * 60_000 });
+
+  useEffect(() => {
+    const handler = () => void load();
+    window.addEventListener('refreshData', handler);
+    return () => window.removeEventListener('refreshData', handler);
+  }, [load]);
+  void dataEpoch;
+
+  const now = new Date();
+  const greeting = t(`dashboard.greeting.${getTimeOfDayKey(now.getHours())}` as TranslationKey);
+  const foodOpenThisWeek = RESOURCES.filter(
+    (resource) => resource.category === 'food' && resource.hours && isOpenNow(resource.hours, now, BOSTON_TZ)
+  ).length;
+  const foodListed = RESOURCES.filter((resource) => resource.category === 'food').length;
+  const backlog = reviewBacklog(now);
+  const recentlyChecked = [...RESOURCES]
+    .sort((a, b) => new Date(b.verification.checkedOn).getTime() - new Date(a.verification.checkedOn).getTime())
+    .slice(0, 3);
+  const medianRent = market?.metrics?.medianGrossRent ?? null;
 
   return (
     <MainLayout>
-      <motion.div variants={pv} initial="initial" animate="enter" className="max-w-7xl mx-auto space-y-8">
-
-        {/* ── Introduction Banner ──────────────────────────── */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[#2E5A99] text-white p-8 md:p-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Shield className="w-5 h-5" />
-              <span className="text-xs font-heading font-medium uppercase tracking-wider text-white/80">{t('intro.subtitle')}</span>
+      <motion.div variants={pv} initial="initial" animate="enter" className="flex flex-col gap-7 pb-10">
+        {/* ── Photo hero: Dorchester Bay at sunset, not a gradient ── */}
+        <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
+          <Image
+            src="/img/dorchester-bay-sunset.jpg"
+            alt="Dorchester Bay and the Neponset River mouth at sunset"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2a]/92 via-[#0d1b2a]/68 to-[#0d1b2a]/25" aria-hidden="true" />
+          <div className="relative z-10 flex flex-col gap-4 p-6 sm:p-9 lg:max-w-2xl">
+            <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+              <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('intro.subtitle')}
+            </p>
+            <h1 className="font-display text-3xl font-extrabold leading-[1.08] text-white sm:text-4xl md:text-5xl">{t('intro.title')}</h1>
+            <p className="max-w-prose text-sm leading-relaxed text-white/88 sm:text-base">{t('intro.body')}</p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Link
+                href="/resources"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 font-heading text-sm font-bold text-[#14304F] transition-transform active:scale-[0.98]"
+              >
+                {t('intro.cta')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/map"
+                className="inline-flex items-center gap-2 rounded-full border border-white/35 px-4 py-2.5 font-heading text-sm font-bold text-white transition-colors hover:bg-white/12"
+              >
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                {t('intro.ctaSecondary')}
+              </Link>
             </div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">{t('intro.title')}</h1>
-            <p className="text-white/90 leading-relaxed mb-6">{t('intro.body')}</p>
-            <Link href="/resources" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[var(--color-accent-primary)] rounded-lg font-heading font-semibold hover:bg-white/90 transition-colors">
-              {t('intro.cta')} <ArrowRight className="w-4 h-4" />
-            </Link>
+            <p className="text-[10px] text-white/60">{t('about.photoCredits')}: Sswonk · CC BY-SA 3.0</p>
           </div>
         </section>
 
-        {/* ── Greeting ────────────────────────────────────── */}
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* ── Greeting ─────────────────────────────────────── */}
+        <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold">
-              {greeting}, <span className="text-[var(--color-accent-primary)]">{t('dashboard.welcome')}</span>
+            <h2 className="font-heading text-xl font-extrabold leading-tight sm:text-2xl">
+              {greeting}, {t('dashboard.welcome')}
             </h2>
-            <p className="text-[var(--color-text-muted)] font-body">{today} · {t('dashboard.tagline')}</p>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              {format.date(now, 'long')} · {t('dashboard.tagline')}
+            </p>
           </div>
           <DataRefreshIndicator lastUpdated={lastRefresh} isRefreshing={loading} />
         </header>
 
-        {/* ── Emergency Banner ─────────────────────────────── */}
         <EmergencyBanner />
 
-        {/* ── Stats ────────────────────────────────────────── */}
-        <section>
-          <h2 className="font-heading font-semibold text-xl mb-4">{t('dashboard.glance')}</h2>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={cv} initial="hidden" animate="visible">
-            <StatCard icon={<DollarSign className="w-5 h-5" />} label={t('stats.medianRent')} value={2875} format="currency" trend={{ value: 4.5, direction: 'up' }} source="Zillow ZORI" sourceDate="June 1, 2026" color="var(--color-accent-primary)" />
-            <StatCard icon={<Home className="w-5 h-5" />} label={t('stats.incomeRestricted')} value={1342} trend={{ value: 8.2, direction: 'up' }} source="BPDA" sourceDate="June 5, 2026" color="var(--color-accent-green)" />
-            <StatCard icon={<Building2 className="w-5 h-5" />} label={t('stats.activeProjects')} value={24} trend={{ value: 2, direction: 'up' }} source="Boston Plans" sourceDate="June 3, 2026" color="var(--color-accent-amber)" />
-            <StatCard icon={<Clock className="w-5 h-5" />} label={t('stats.openWaitlists')} value={6} trend={{ value: 1, direction: 'up' }} source="BHA/MassAccess" sourceDate="June 5, 2026" color="#6B5B95" />
-            <StatCard icon={<Apple className="w-5 h-5" />} label={t('stats.foodSites')} value={38} source="Greater Boston Food Bank" sourceDate="June 5, 2026" color="#C8102E" />
-            <StatCard icon={<TrendingUp className="w-5 h-5" />} label={t('stats.medianSale')} value={642500} format="currency" trend={{ value: 5.8, direction: 'up' }} source="Redfin" sourceDate="June 3, 2026" color="var(--color-accent-primary)" />
+        {/* ── Stats, every one computed ───────────────────── */}
+        <section aria-labelledby="glance">
+          <h2 id="glance" className="mb-3 font-heading text-lg font-bold sm:text-xl">
+            {t('dashboard.glance')}
+          </h2>
+          <motion.div variants={cv} initial="hidden" animate="visible" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              icon={<DollarSign className="h-5 w-5" aria-hidden="true" />}
+              label={t('stats.medianRent')}
+              value={medianRent ?? 0}
+              format="currency"
+              unavailable={medianRent === null}
+              source="Census ACS 5-year B2510"
+              sourceDate={market?.asOf}
+              accent="var(--color-accent-primary)"
+            />
+            <StatCard
+              icon={<Clock className="h-5 w-5" aria-hidden="true" />}
+              label={t('stats.foodSites')}
+              value={foodOpenThisWeek}
+              hint={t('resources.count', { count: String(foodListed) })}
+              source="DOR101 directory"
+              sourceDate={lastReviewedOn()}
+              accent="var(--color-accent-green)"
+            />
+            <StatCard
+              icon={<BadgeCheck className="h-5 w-5" aria-hidden="true" />}
+              label={t('about.methodology')}
+              value={RESOURCES.length - backlog.needsReview}
+              hint={t('notifications.reviewBacklog', { count: String(backlog.needsReview) })}
+              source="DOR101 verification log"
+              sourceDate={lastReviewedOn()}
+              accent="var(--color-accent-secondary)"
+            />
+            <StatCard
+              icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
+              label={t('map.transitRoutes')}
+              value={TRANSIT_LINES.length}
+              hint={t('map.stopCount', { count: String(TRANSIT_LINES.reduce((total, line) => total + line.dorchesterStops.length, 0)) })}
+              source="MBTA V3"
+              accent="var(--mbta-red)"
+            />
           </motion.div>
         </section>
 
-        {/* ── Quick Links ──────────────────────────────────── */}
-        <section>
-          <h2 className="font-heading font-semibold text-xl mb-4">{t('dashboard.quickAccess')}</h2>
+        {/* ── Quick links ─────────────────────────────────── */}
+        <section aria-labelledby="quick">
+          <h2 id="quick" className="mb-3 font-heading text-lg font-bold sm:text-xl">
+            {t('dashboard.quickAccess')}
+          </h2>
           <QuickLinks />
         </section>
 
-        {/* ── News + Spotlight ─────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2">
-            <Card>
+        {/* ── News + verification log ─────────────────────── */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <section className="lg:col-span-2" aria-label={t('dashboard.latestNews')}>
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle>{t('dashboard.latestNews')}</CardTitle>
-                <Link href="/news" className="text-sm text-[var(--color-accent-primary)] font-heading font-medium hover:underline flex items-center gap-1">{t('dashboard.viewAll')} <ArrowRight className="w-4 h-4" /></Link>
+                <Link
+                  href="/news"
+                  className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[var(--color-accent-primary)] hover:underline"
+                >
+                  {t('dashboard.viewAll')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="animate-pulse flex gap-4 p-3"><div className="flex-1 space-y-2"><div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-3/4" /><div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-1/2" /></div></div>)}</div>
+                {loading && news.length === 0 ? (
+                  <ul className="flex flex-col gap-3" aria-busy="true">
+                    {[0, 1, 2].map((i) => (
+                      <li key={i} className="skeleton h-14 rounded-lg" />
+                    ))}
+                  </ul>
+                ) : news.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-secondary)]">
+                    {t('news.empty')}
+                  </p>
                 ) : (
-                  <div className="space-y-3">{news.map(a => (
-                    <Link key={a.id} href="/news" className="flex items-start gap-4 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-heading font-medium text-sm mb-1 line-clamp-2">{a.title}</h4>
-                        <p className="text-xs text-[var(--color-text-muted)]">{a.source} · {fmtTime(a.publishedAt)}</p>
-                      </div>
-                      <Badge variant="blue">{a.category}</Badge>
-                    </Link>
-                  ))}</div>
+                  <ul className="flex flex-col gap-1">
+                    {news.map((article) => (
+                      <li key={article.id}>
+                        <a
+                          href={article.link}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-[var(--color-bg-tertiary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-heading text-sm font-semibold leading-snug">{article.title}</span>
+                            <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
+                              {article.source} · {format.relative(article.publishedAt)}
+                            </span>
+                          </span>
+                          <Badge variant="blue">{t(`news.category.${article.category}` as TranslationKey)}</Badge>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </CardContent>
             </Card>
           </section>
-          <section>
-            <Card className="h-full bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-[var(--color-accent-primary)]/10">
-              <CardHeader><div className="flex items-center gap-2"><span className="text-lg">✨</span><CardTitle>{t('dashboard.spotlight')}</CardTitle></div></CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-heading font-semibold mb-2">RAFT Emergency Rental Assistance</h4>
-                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">$12M in new funding. Up to $10,000 for rent arrears, first/last month rent, or security deposits.</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-[var(--color-accent-primary)]" /><span className="font-medium">{t('common.ongoing')} — {t('common.applyNow')}</span></div>
-                <Button variant="primary" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />} onClick={() => window.open('https://www.mass.gov/raft', '_blank')}>{t('common.learnMore')} & {t('common.apply')}</Button>
+
+          <section aria-label={t('dashboard.spotlight')}>
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+                  {t('dashboard.spotlight')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <ul className="flex flex-col gap-2">
+                  {recentlyChecked.map((resource) => (
+                    <li key={resource.id}>
+                      <Link
+                        href={`/resources?place=${resource.id}`}
+                        className="group flex items-start gap-2 rounded-lg border border-[var(--color-border)] p-2.5 transition-colors hover:border-[var(--color-accent-primary)]"
+                      >
+                        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+                        <span className="min-w-0">
+                          <span className="block truncate font-heading text-sm font-semibold">{resource.name}</span>
+                          <span className="mt-0.5 block text-[11px] text-[var(--color-text-muted)]">
+                            {t('resources.checkedOn', { date: format.date(resource.verification.checkedOn, 'medium') })}
+                            {verificationAge(resource, now) > 0 ? ` · ${format.number(verificationAge(resource, now))} d` : ''}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[11px] leading-snug text-[var(--color-text-muted)]">{t('resources.intro')}</p>
+                <Link
+                  href="/directory"
+                  className="inline-flex items-center gap-1 font-heading text-xs font-bold text-[var(--color-accent-primary)] hover:underline"
+                >
+                  {t('directory.title')} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
               </CardContent>
             </Card>
           </section>
         </div>
 
-        {/* ── Map Preview ──────────────────────────────────── */}
-        <section>
+        {/* ── Map preview ─────────────────────────────────── */}
+        <section aria-label={t('dashboard.mapTitle')}>
           <Card className="overflow-hidden">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><MapPin className="w-5 h-5 text-[var(--color-accent-primary)]" />{t('dashboard.mapTitle')}</CardTitle>
-              <Link href="/map" className="text-sm text-[var(--color-accent-primary)] font-heading font-medium hover:underline flex items-center gap-1">{t('dashboard.viewFullMap')} <ArrowRight className="w-4 h-4" /></Link>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" />
+                {t('dashboard.mapTitle')}
+              </CardTitle>
+              <Link
+                href="/map"
+                className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[var(--color-accent-primary)] hover:underline"
+              >
+                {t('dashboard.viewFullMap')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </CardHeader>
-            <CardContent className="p-0"><DorchesterMap height="280px" showControls={false} preview={true} /></CardContent>
+            <CardContent className="p-0">
+              <Link href="/map" className="group relative block" aria-label={t('map.clickExplore')}>
+                <MapPreview height="17rem" />
+                <span className="pointer-events-none absolute inset-0 flex items-end justify-start bg-gradient-to-t from-black/45 via-transparent to-transparent p-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1.5 font-heading text-xs font-bold text-[#17202B] shadow-sm transition-transform group-hover:-translate-y-0.5 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-white">
+                    {t('map.clickExplore')} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
+                </span>
+              </Link>
+            </CardContent>
           </Card>
         </section>
 
-        {/* ── Footer ───────────────────────────────────────── */}
-        <footer className="text-center py-8 border-t border-[var(--color-border)]">
-          <p className="text-sm text-[var(--color-text-muted)]">{t('dashboard.footer.line1')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-2">{t('dashboard.footer.line2')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">{t('dashboard.footer.verified')}: {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : language === 'ht' ? 'ht-HT' : language === 'pt' ? 'pt-BR' : language === 'vi' ? 'vi-VN' : language === 'zh' ? 'zh-CN' : language === 'ar' ? 'ar-SA' : language === 'so' ? 'so-SO' : language === 'kea' ? 'kea-CV' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+        <footer className="border-t border-[var(--color-border)] pt-5 text-center">
+          <p className="text-sm text-[var(--color-text-secondary)]">{t('dashboard.footer.line1')}</p>
+          <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">{t('dashboard.footer.line2')}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            {t('dashboard.footer.verified')}: {format.date(lastReviewedOn(), 'long')} · {meta.intlLocale}
+          </p>
         </footer>
       </motion.div>
     </MainLayout>
   );
+}
+
+/**
+ * Greeting bucket from the local hour. Three, not four: 'Good night' is a
+ * farewell, and a page that says it at 11 PM reads like a template that never
+ * thought about the person using it at that hour.
+ */
+function getTimeOfDayKey(hour: number): 'morning' | 'afternoon' | 'evening' {
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'afternoon';
+  return 'evening';
 }

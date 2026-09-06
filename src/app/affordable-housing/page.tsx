@@ -110,10 +110,10 @@ export default function AffordableHousingPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <Home className="w-8 h-8 text-[var(--color-accent-primary)]" />
-            {t('housing.title', 'Affordable Housing')}
+            {t('housing.title')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            {t('housing.description', 'Find income-restricted housing in Dorchester. These units have lower rents for people who qualify based on their income.')}
+            {t('housing.description')}
           </p>
         </header>
 

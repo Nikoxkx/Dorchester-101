@@ -1,56 +1,67 @@
-import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+/**
+ * Vitest setup.
+ *
+ * jsdom gives us a real DOM, localStorage and history. What it does not give
+ * us are the APIs this app leans on that only exist in browsers: matchMedia
+ * (theme and font-size preferences), IntersectionObserver (scroll reveal and
+ * section tracking) and ResizeObserver (the map's invalidateSize handling). Each
+ * is stubbed with the smallest behaviour the components need.
+ */
+import { vi, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
-// Cleanup after each test
 afterEach(() => {
   cleanup();
 });
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (!window.matchMedia) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock;
+class ObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
 
-// Mock sessionStorage
-const sessionStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.sessionStorage = sessionStorageMock;
+if (!("IntersectionObserver" in window)) {
+  Object.defineProperty(window, "IntersectionObserver", {
+    writable: true,
+    configurable: true,
+    value: ObserverStub,
+  });
+}
 
-// Mock CSS custom properties
-Object.defineProperty(document, 'documentElement', {
-  value: {
-    style: {
-      setProperty: jest.fn(),
-      getPropertyValue: jest.fn(),
-    },
-  },
-});
+if (!("ResizeObserver" in window)) {
+  Object.defineProperty(window, "ResizeObserver", {
+    writable: true,
+    configurable: true,
+    value: ObserverStub,
+  });
+}
 
-// Global test utilities
-global.renderWithProviders = (ui: React.ReactElement, { preloadedState = {}, ...renderOptions } = {}) => {
-  // Add any wrapper providers here
-  return render(ui, { ...renderOptions });
-};
+// framer-motion measures layout on mount; keep it from touching the DOM APIs
+// jsdom leaves out.
+if (!Element.prototype.animate) {
+  Element.prototype.animate = vi.fn().mockImplementation(() => ({
+    cancel: vi.fn(),
+    finish: vi.fn(),
+    finished: Promise.resolve(),
+  })) as unknown as typeof Element.prototype.animate;
+}

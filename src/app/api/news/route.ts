@@ -1,306 +1,263 @@
 import { NextResponse } from 'next/server';
 import Parser from 'rss-parser';
+import { z } from 'zod';
+import { globalCache, CACHE_TTL } from '@/lib/cache';
+import { categorize, DEFAULT_NEWS_FEED_IDS, NEWS_FEEDS, type NewsCategorySlug } from '@/data/feeds';
 
-// Initialize RSS parser
+export const dynamic = 'force-dynamic';
+
+/**
+ * News, from the publishers' own feeds.
+ *
+ * Three rules, all of them the opposite of what the first version of this route
+ * did:
+ *  1. Nothing is invented. When feeds fail, the response says which ones failed
+ *     and returns the articles that did arrive; it never substitutes
+ *     pre-written "local" stories.
+ *  2. Nothing is re-published as body text. Titles and the feed's own short
+ *     snippet are passed through, and reading happens at the publisher.
+ *  3. Nothing claims to be verified. `isVerified` was always `true` for every
+ *     article, including the fabricated ones, so it is gone. Age and publisher
+ *     are the two honest signals and both are shown.
+ */
+
 const parser = new Parser({
-  timeout: 10000,
+  timeout: 8000,
   headers: {
-    'User-Agent': 'DOR101/1.0 (Community Resource Hub)',
+    'User-Agent': 'DOR101 community hub (open-source; each fetch is cached for 15 minutes)',
+    Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
   },
+  customFields: { item: [['content:encoded', 'contentEncoded'], ['description', 'descriptionRaw']] as [string, string][] },
 });
 
-// Real RSS feed URLs for Dorchester/Boston news
-const RSS_FEEDS = [
-  {
-    name: 'Dorchester Reporter',
-    url: 'https://www.dotnews.com/rss.xml',
-    category: 'Local',
-    priority: 1,
-  },
-  {
-    name: 'Boston.gov News',
-    url: 'https://www.boston.gov/news/feed',
-    category: 'Government',
-    priority: 2,
-  },
-  {
-    name: 'WBUR Boston',
-    url: 'https://www.wbur.org/rss.xml',
-    category: 'Public Radio',
-    priority: 3,
-  },
-  {
-    name: 'GBH News',
-    url: 'https://www.wgbh.org/rss',
-    category: 'Public Media',
-    priority: 4,
-  },
-  {
-    name: 'Boston Globe Metro',
-    url: 'https://www.bostonglobe.com/rss/cms/?path=/news/metro',
-    category: 'Regional',
-    priority: 5,
-  },
+const query = z.object({
+  /** comma-separated feed ids; empty means the defaults */
+  feeds: z.string().optional(),
+  /** extra feed urls added by the visitor in Settings */
+  custom: z.string().optional(),
+  limit: z.coerce.number().int().min(5).max(80).default(40),
+  sinceHours: z.coerce.number().int().min(1).max(24 * 30).default(24 * 14),
+});
+
+export interface Article {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  sourceId: string;
+  sourceUrl: string;
+  link: string;
+  publishedAt: string;
+  ageHours: number;
+  category: NewsCategorySlug;
+  language: string;
+}
+
+interface FeedResult {
+  id: string;
+  name: string;
+  homepage: string;
+  status: 'ok' | 'failed' | 'empty';
+  count: number;
+  error?: string;
+}
+
+/** Dorchester-relevant, or from a source that is already local by definition. */
+const LOCAL_SOURCE_IDS = new Set(['dotnews', 'boston-gov', 'mbta-alerts-blog']);
+
+const RELEVANCE = [
+  'dorchester', 'fields corner', 'codman square', 'ashmont', 'mattapan', 'savin hill',
+  'uphams corner', 'grove hall', 'lower mills', 'jfk', 'umass', 'columbia point',
+  'neponset', 'blue hills', 'upton', 'washington st', 'martica', 'savill',
+  'boston housing', 'bha', 'mbta', 'red line', 'fairmount', 'section 8',
+  'affordable housing', 'rent', 'eviction', 'tenant', 'shelter', 'homeless',
+  'masshealth', 'snap', 'ebt', 'food pantry', 'food bank', 'bpda',
 ];
 
-// In-memory cache for articles (15 min TTL)
-let articleCache: {
-  articles: any[];
-  fetchedAt: number;
-} = {
-  articles: [],
-  fetchedAt: 0,
-};
-
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
-
-// Keywords to filter for Dorchester-relevant content
-const DORCHESTER_KEYWORDS = [
-  'dorchester', 'boston', 'fields corner', 'codman square', 'ashmont',
-  'savin hill', 'uphams corner', 'grove hall', 'lower mills', 'mattypan',
-  'bha', 'boston housing', 'mbta', 'masshealth', 'section 8',
-  'affordable housing', 'housing authority', 'rent', 'eviction',
-  'food assistance', 'snap', 'ebt', 'homeless', 'shelter',
-  'community development', 'bpda', 'planning & development',
-];
-
-// Check if article is relevant to Dorchester
-function isRelevantToDorchester(title: string, summary: string): boolean {
-  const content = `${title} ${summary}`.toLowerCase();
-  return DORCHESTER_KEYWORDS.some(keyword => content.includes(keyword));
+function isRelevant(title: string, summary: string): boolean {
+  const text = `${title} ${summary}`.toLowerCase();
+  return RELEVANCE.some((word) => text.includes(word));
 }
 
-// Normalize article from RSS feed
-function normalizeArticle(item: any, source: string): any {
-  const now = new Date();
-  const publishedAt = item.pubDate ? new Date(item.pubDate) : now;
-  const daysSincePublished = Math.floor((now.getTime() - publishedAt.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Determine category based on content
-  let category = 'News';
-  const content = `${item.title || ''} ${item.contentSnippet || ''} ${item.content || ''}`.toLowerCase();
-  
-  if (content.includes('housing') || content.includes('rent') || content.includes('bha') || content.includes('affordable')) {
-    category = 'Housing';
-  } else if (content.includes('mbta') || content.includes('bus') || content.includes('subway') || content.includes('train')) {
-    category = 'Transportation';
-  } else if (content.includes('food') || content.includes('snap') || content.includes('pantr') || content.includes('meal')) {
-    category = 'Food Security';
-  } else if (content.includes('health') || content.includes('clinic') || content.includes('hospital') || content.includes('masshealth')) {
-    category = 'Healthcare';
-  } else if (content.includes('community') || content.includes('event') || content.includes('meeting')) {
-    category = 'Community';
-  }
-
-  return {
-    id: `article-${Buffer.from(item.link || item.guid || JSON.stringify(item)).toString('base64').slice(0, 20)}`,
-    title: item.title || 'Untitled',
-    summary: item.contentSnippet || item.content || item.summary || '',
-    source: source,
-    sourceUrl: item.link || '',
-    category: category,
-    publishedAt: publishedAt.toISOString(),
-    isVerified: true,
-    daysSincePublished: daysSincePublished,
-  };
+function snippet(item: { contentSnippet?: string; content?: string; contentEncoded?: string; descriptionRaw?: string }): string {
+  const raw = item.contentSnippet || item.descriptionRaw || item.content || item.contentEncoded || '';
+  const text = raw
+    .replace(/<\s*(script|style)[\s\S]*?<\s*\/\s*\1>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > 320 ? `${text.slice(0, 317).trimEnd()}…` : text;
 }
 
-// Fetch articles from all RSS feeds
-async function fetchAllArticles(): Promise<any[]> {
-  const allArticles: any[] = [];
-  
-  for (const feed of RSS_FEEDS) {
-    try {
-      const feedData = await parser.parseURL(feed.url);
-      const articles = (feedData.items || []).map(item => normalizeArticle(item, feed.name));
-      
-      // Filter for Dorchester relevance
-      const relevantArticles = articles.filter(article => 
-        isRelevantToDorchester(article.title, article.summary)
-      );
-      
-      allArticles.push(...relevantArticles);
-    } catch (error) {
-      console.error(`Failed to fetch ${feed.name}:`, error);
-      // Continue with other feeds
-    }
-  }
-  
-  // Deduplicate by title (keep newest)
-  const seen = new Map<string, any>();
-  allArticles.forEach(article => {
-    const key = article.title.toLowerCase().slice(0, 50);
-    const existing = seen.get(key);
-    if (!existing || new Date(article.publishedAt) > new Date(existing.publishedAt)) {
-      seen.set(key, article);
-    }
-  });
-  
-  return Array.from(seen.values());
-}
-
-// Generate fallback articles when RSS fails
-function generateFallbackArticles(): any[] {
-  const now = new Date();
-  return [
-    {
-      id: 'local-1',
-      title: 'Boston Housing Authority Updates Waitlist Status',
-      summary: 'BHA announces current waitlist availability and application deadlines for Dorchester residents.',
-      source: 'DOR101 Local',
-      sourceUrl: 'https://www.bostonhousing.org',
-      category: 'Housing',
-      publishedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-2',
-      title: 'MBTA Red Line Service Notice',
-      summary: 'Check real-time departure times at Fields Corner, Savin Hill, and Ashmont stations.',
-      source: 'MBTA',
-      sourceUrl: 'https://www.mbta.com',
-      category: 'Transportation',
-      publishedAt: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-3',
-      title: 'Greater Boston Food Bank Distribution Update',
-      summary: 'Weekly food distribution schedule for Codman Square, Uphams Corner, and Fields Corner locations.',
-      source: 'GBFB',
-      sourceUrl: 'https://www.gbfb.org',
-      category: 'Food Security',
-      publishedAt: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-4',
-      title: 'Dorchester Community Events This Week',
-      summary: 'Local resource fairs, neighborhood meetings, and community gatherings in Dorchester.',
-      source: 'DOR101',
-      sourceUrl: '/news',
-      category: 'Community',
-      publishedAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-5',
-      title: 'RAFT Emergency Rental Assistance Available',
-      summary: 'Massachusetts residents can apply for up to $10,000 in emergency rental assistance.',
-      source: 'Mass.gov',
-      sourceUrl: 'https://www.mass.gov/raft',
-      category: 'Housing',
-      publishedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-6',
-      title: 'Affordable Housing Applications Open',
-      summary: 'New affordable housing lottery openings in Dorchester neighborhoods.',
-      source: 'DOR101',
-      sourceUrl: '/affordable-housing',
-      category: 'Housing',
-      publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-7',
-      title: 'MassHealth Enrollment Events in Dorchester',
-      summary: 'Free enrollment assistance available with multilingual staff at local health centers.',
-      source: 'MassHealth',
-      sourceUrl: 'https://www.mass.gov/masshealth',
-      category: 'Healthcare',
-      publishedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-    {
-      id: 'local-8',
-      title: 'Summer Youth Employment Program Applications',
-      summary: 'Boston SYEP accepting applications for youth ages 14-18.',
-      source: 'City of Boston',
-      sourceUrl: 'https://www.boston.gov',
-      category: 'Employment',
-      publishedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      isVerified: true,
-    },
-  ];
-}
-
-export async function GET() {
+async function readFeed(feed: { id: string; name: string; url: string; language: string; homepage?: string }, sinceMs: number) {
+  const articles: Article[] = [];
+  let status: FeedResult['status'] = 'ok';
+  let error: string | undefined;
   try {
-    const now = Date.now();
-    
-    // Check cache
-    if (articleCache.articles.length > 0 && (now - articleCache.fetchedAt) < CACHE_TTL) {
-      const articles = articleCache.articles;
-      articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-      
-      return NextResponse.json({
-        articles,
-        sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
-        lastUpdated: new Date(articleCache.fetchedAt).toISOString(),
-        nextUpdate: new Date(articleCache.fetchedAt + CACHE_TTL).toISOString(),
-        refreshInterval: CACHE_TTL,
-        cached: true,
-      }, {
-        headers: {
-          'Cache-Control': 'public, max-age=300',
-          'X-Articles-Count': articles.length.toString(),
-          'X-Cache-Status': 'HIT',
-        },
+    const parsed = await parser.parseURL(feed.url);
+    for (const item of parsed.items ?? []) {
+      const publishedAt = item.isoDate || item.pubDate;
+      const when = publishedAt ? new Date(publishedAt) : null;
+      if (when && Number.isFinite(when.getTime()) === false) continue;
+      if (when && Date.now() - when.getTime() > sinceMs) continue;
+      const title = (item.title ?? '').trim();
+      if (!title) continue;
+      const summary = snippet(item as never);
+      const link = item.link ?? '';
+      if (!link) continue;
+      if (feed.id !== 'dotnews' && feed.id !== 'boston-gov' && feed.id !== 'mbta-alerts-blog' && !isRelevant(title, summary)) continue;
+      articles.push({
+        id: `a-${Buffer.from(link || title).toString('base64url').slice(0, 24)}`,
+        title,
+        summary,
+        source: feed.name,
+        sourceId: feed.id,
+        sourceUrl: feed.homepage ?? '',
+        link,
+        publishedAt: (when ?? new Date()).toISOString(),
+        ageHours: when ? Math.max(0, Math.round((Date.now() - when.getTime()) / 3_600_000)) : 0,
+        category: categorize(`${title} ${summary}`),
+        language: feed.language,
       });
     }
-    
-    // Fetch fresh articles
-    let articles = await fetchAllArticles();
-    
-    // If no articles from RSS, use fallback
-    if (articles.length === 0) {
-      articles = generateFallbackArticles();
-    }
-    
-    // Update cache
-    articleCache = {
-      articles,
-      fetchedAt: now,
-    };
-    
-    // Sort by publish date (newest first)
-    articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    
-    return NextResponse.json({
-      articles,
-      sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
-      lastUpdated: new Date().toISOString(),
-      nextUpdate: new Date(now + CACHE_TTL).toISOString(),
-      refreshInterval: CACHE_TTL,
-      cached: false,
-    }, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Articles-Count': articles.length.toString(),
-        'X-Cache-Status': 'MISS',
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching news:', error);
-    
-    // Return fallback on error
-    const fallbackArticles = generateFallbackArticles();
-    
-    return NextResponse.json({
-      articles: fallbackArticles,
-      sources: RSS_FEEDS.map(f => ({ name: f.name, url: f.url, category: f.category })),
-      lastUpdated: new Date().toISOString(),
-      nextUpdate: new Date(Date.now() + CACHE_TTL).toISOString(),
-      refreshInterval: CACHE_TTL,
-      cached: false,
-      error: 'Using cached fallback articles',
-    }, {
-      status: 200, // Still return 200 with fallback data
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
-    });
+    if (!articles.length) status = 'empty';
+  } catch (err) {
+    status = 'failed';
+    error = err instanceof Error ? err.message.slice(0, 160) : 'unreachable';
   }
+  return { articles, status, error };
+}
+
+/**
+ * Titles recur across newsrooms. The first publisher to have run the story keeps
+ * it, ordered by feed priority, so a wire story does not appear four times.
+ */
+function fingerprint(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .slice(0, 8)
+    .join(' ');
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const parsed = query.safeParse(Object.fromEntries(url.searchParams));
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid feed query', articles: [], feeds: [] }, { status: 400 });
+  }
+  const { feeds: feedIds, custom, limit, sinceHours } = parsed.data;
+
+  const selected = feedIds
+    ? NEWS_FEEDS.filter((f) => feedIds.split(',').map((s) => s.trim()).includes(f.id))
+    : NEWS_FEEDS.filter((f) => DEFAULT_NEWS_FEED_IDS.includes(f.id));
+
+  const customFeeds = (custom ?? '')
+    .split('|')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((entry, index) => {
+      const [rawUrl, label] = entry.split('::');
+      try {
+        const safe = new URL(rawUrl.trim());
+        if (safe.protocol !== 'https:' && safe.protocol !== 'http:') return null;
+        return {
+          id: `custom-${index}`,
+          name: (label ?? safe.hostname).slice(0, 60),
+          url: safe.toString(),
+          language: 'en',
+          homepage: safe.origin,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((f): f is { id: string; name: string; url: string; language: string; homepage: string } => f !== null);
+
+  const cacheKey = `news:${selected.map((f) => f.id).join('+')}:${customFeeds.map((f) => f.url).join('+')}:${sinceHours}`;
+  const cached = globalCache.get<{ articles: Article[]; results: FeedResult[]; fetchedAt: string }>(cacheKey);
+  if (cached) {
+    return NextResponse.json(
+      {
+        ...cached,
+        articles: cached.articles.slice(0, limit),
+        cached: true,
+        refreshInterval: CACHE_TTL.NEWS,
+        nextUpdate: new Date(new Date(cached.fetchedAt).getTime() + CACHE_TTL.NEWS).toISOString(),
+      },
+      { headers: { 'cache-control': 'public, s-maxage=180, stale-while-revalidate=900', 'X-Cache-Status': 'HIT' } }
+    );
+  }
+
+  const requested = [...selected, ...customFeeds];
+  const results = await Promise.all(requested.map((feed) => readFeed(feed, sinceHours * 3_600_000)));
+
+  const merged: Article[] = [];
+  const feedResults: FeedResult[] = [];
+  const seen = new Set<string>();
+
+  requested.forEach((feed, index) => {
+    const { articles, status, error } = results[index];
+    for (const article of articles) {
+      const key = fingerprint(article.title);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(article);
+    }
+    feedResults.push({
+      id: feed.id,
+      name: feed.name,
+      homepage: 'homepage' in feed ? feed.homepage : '',
+      status: error ? 'failed' : status,
+      count: articles.length,
+      error,
+    });
+  });
+
+  merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  const payload = {
+    articles: merged.slice(0, limit),
+    feeds: feedResults,
+    okFeeds: feedResults.filter((f) => f.status === 'ok').length,
+    requestedFeeds: feedResults.length,
+    fetchedAt: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    nextUpdate: new Date(Date.now() + CACHE_TTL.NEWS).toISOString(),
+    refreshInterval: CACHE_TTL.NEWS,
+    cached: false,
+    relevanceFilter: 'All stories from the local publishers; others must mention Dorchester or a citywide service.',
+  };
+
+  globalCache.set(cacheKey, { articles: merged, results: feedResults, fetchedAt: payload.fetchedAt }, CACHE_TTL.NEWS);
+
+  return NextResponse.json(payload, {
+    // 200 even when some feeds fail: partial news is not an error, and the
+    // per-feed status tells the interface which sentence to show.
+    status: 200,
+    headers: {
+      'cache-control': 'public, s-maxage=180, stale-while-revalidate=900',
+      'X-Cache-Status': 'MISS',
+      'X-Articles-Count': String(merged.length),
+    },
+  });
+}
+
+/** Which feed ids the app should offer as defaults, for the settings screen. */
+export async function HEAD() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'X-Feeds': String(NEWS_FEEDS.length),
+      'X-Default-Feeds': DEFAULT_NEWS_FEED_IDS.join(','),
+      'X-Local-Sources': [...LOCAL_SOURCE_IDS].join(','),
+    },
+  });
 }

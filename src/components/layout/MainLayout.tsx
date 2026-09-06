@@ -1,67 +1,50 @@
 'use client';
 
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { type ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { cn } from '@/lib/utils';
-import { useAppStore, FONT_SIZE_VALUES } from '@/stores/appStore';
+import { SiteFooter } from './SiteFooter';
+import { OfflineBanner } from './OfflineBanner';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
+import { useAppStore } from '@/stores/appStore';
+import { useI18n } from '@/i18n/hook';
+import { cn } from '@/lib/utils';
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
-
-export function MainLayout({ children }: MainLayoutProps) {
-  const { sidebarCollapsed, theme, fontSize, language } = useAppStore();
-
-  // Apply theme
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.toggle('dark', prefersDark);
-    } else {
-      root.classList.toggle('dark', theme === 'dark');
-    }
-  }, [theme]);
-
-  // Apply font size
-  useEffect(() => {
-    document.documentElement.style.fontSize = FONT_SIZE_VALUES[fontSize];
-  }, [fontSize]);
-
-  // Apply RTL for Arabic
-  useEffect(() => {
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-  }, [language]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    if (theme !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => {
-      document.documentElement.classList.toggle('dark', e.matches);
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [theme]);
+/**
+ * Frame for every page.
+ *
+ * Theme, language direction, contrast and motion are not applied here: they are
+ * written to the document once by `DorchesterProviders`, so a page mounted inside
+ * or outside this frame gets identical behaviour. What stays here is geometry —
+ * one CSS variable that both the rail width and the content offset read.
+ */
+export function MainLayout({ children }: { children: ReactNode }) {
+  const collapsed = useAppStore((s) => s.sidebarCollapsed);
+  const mobileOpen = useAppStore((s) => s.mobileNavOpen);
+  const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)]">
+    <div className="dor101-shell" data-collapsed={collapsed ? 'true' : 'false'} data-mobile-open={mobileOpen ? 'true' : 'false'}>
       <Sidebar />
-      <Header />
 
-      <motion.main
-        className={cn('pt-16 min-h-screen transition-all duration-200')}
-        animate={{ marginLeft: sidebarCollapsed ? 64 : 260 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="p-6">{children}</div>
-      </motion.main>
+      {mobileOpen && (
+        <button
+          type="button"
+          className="dor101-scrim lg:hidden"
+          aria-label={t('nav.close')}
+          onClick={() => useAppStore.getState().setMobileNavOpen(false)}
+        />
+      )}
 
-      {/* PWA install prompt */}
+      <div className={cn('dor101-content')}>
+        <Header />
+        <OfflineBanner />
+        <main id="main" tabIndex={-1} className="focus:outline-none">
+          <div className="mx-auto w-full max-w-[86rem] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+        </main>
+        <SiteFooter />
+      </div>
+
       <PWAInstaller />
     </div>
   );

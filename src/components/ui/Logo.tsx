@@ -23,24 +23,14 @@ export function Logo({ size = 'md', showText = true, animated = true, className 
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <motion.div
-        initial={animated ? { scale: 0.8, opacity: 0 } : undefined}
-        animate={animated ? { scale: 1, opacity: 1 } : undefined}
-        transition={{ duration: 0.5 }}
+        initial={animated ? { opacity: 0 } : undefined}
+        animate={animated ? { opacity: 1 } : undefined}
+        transition={{ duration: 0.35 }}
         className="relative"
       >
-        {/* Glow effect */}
-        {animated && (
-          <motion.div
-            animate={{
-              opacity: [0.5, 1, 0.5],
-              scale: [1, 1.05, 1],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#1B3A6B] to-[#4A90E2] blur-lg opacity-50"
-            style={{ width: icon, height: icon }}
-          />
-        )}
-        
+        {/* The mark is a flat civic navy tile: a brand that pulses on a loop steals
+            attention from the one thing the header has to offer, which is the
+            search field. */}
         {/* Main icon */}
         <svg
           width={icon}
@@ -70,7 +60,7 @@ export function Logo({ size = 'md', showText = true, animated = true, className 
             width="72"
             height="72"
             rx="16"
-            fill="url(#logoGradient)"
+            fill="#14304F"
           />
           
           {/* Triple-decker house icon - iconic Dorchester architecture */}
@@ -110,15 +100,16 @@ export function Logo({ size = 'md', showText = true, animated = true, className 
             <path d="M58 30L54 24H62L58 30Z" fill="#C8102E" />
           </g>
           
-          {/* Subtle shine */}
+          {/* Hairline, so the tile still reads as a raised control on a photo */}
           <rect
-            x="4"
-            y="4"
-            width="72"
-            height="36"
-            rx="16"
-            fill="white"
-            opacity="0.1"
+            x="4.75"
+            y="4.75"
+            width="70.5"
+            height="70.5"
+            rx="15.25"
+            fill="none"
+            stroke="white"
+            strokeOpacity="0.22"
           />
         </svg>
       </motion.div>
@@ -133,7 +124,7 @@ export function Logo({ size = 'md', showText = true, animated = true, className 
           <span className={cn('font-display font-bold leading-none', text)}>
             DOR<span className="text-[var(--color-accent-primary)]">101</span>
           </span>
-          <span className="text-[0.6em] text-[var(--color-text-muted)] font-heading tracking-wider">
+          <span className="text-[0.6em] font-heading tracking-wider text-[var(--color-text-muted)]">
             DORCHESTER
           </span>
         </motion.div>
