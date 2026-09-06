@@ -13,9 +13,14 @@ import { globalCache, CACHE_TTL } from './cache';
 const CENSUS_BASE = 'https://api.census.gov/data';
 const TIMEOUT_MS = 8_000;
 
-/** Suffolk County, Massachusetts == the City of Boston. */
+/**
+ * Suffolk County, Massachusetts == the City of Boston.
+ * FIPS 25025 (state 25, county 025). `county:017` would be Middlesex County,
+ * which is not Boston — a wrong-geography bug is worse than no data, so this is
+ * asserted in a unit test alongside the API URL.
+ */
 export const GEO_SUFFIX = 'state:25';
-export const GEO_COUNTY = 'county:017';
+export const GEO_COUNTY = 'county:025';
 
 export const ACS_VINTAGES = ['2023', '2022', '2021'] as const;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AttributionControl,
   MapContainer,
@@ -67,24 +67,39 @@ const DORCHESTER_BOUNDS: [[number, number], [number, number]] = [
   [42.343, -71.02],
 ];
 
-const BASE_LAYERS = {
-  satellite: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution:
-      'Imagery &copy; <a href="https://www.esri.com/legal/software-license" target="_blank" rel="noreferrer noopener">Esri</a>, Maxar, Earthstar Geographics',
-  },
-  street: {
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">OpenStreetMap</a> contributors',
-  },
-  hybrid: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution:
-      'Imagery &copy; Esri, Maxar, Earthstar Geographics; labels &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">OpenStreetMap</a>',
-  },
-} as const;
+/**
+ * Basemaps, newest provider first. Each style lists several endpoints so that a
+ * single tile host going down (or being blocked on a network) degrades to
+ * another real map instead of a blank rectangle. All three are public tile
+ * services; the attribution below each URL is the one shown while it is active.
+ */
+const OSM_STREET = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">OpenStreetMap</a> contributors',
+};
+const ESRI_IMAGERY_SERVICES = {
+  url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  attribution:
+    'Imagery &copy; <a href="https://www.esri.com/legal/software-license" target="_blank" rel="noreferrer noopener">Esri</a>, Maxar, Earthstar Geographics',
+};
+const ESRI_IMAGERY_SERVER = {
+  url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  attribution:
+    'Imagery &copy; <a href="https://www.esri.com/legal/software-license" target="_blank" rel="noreferrer noopener">Esri</a>, Maxar, Earthstar Geographics',
+};
+const ESRI_STREET = {
+  url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+  attribution:
+    'Street map &copy; <a href="https://www.esri.com/legal/software-license" target="_blank" rel="noreferrer noopener">Esri</a>, HERE, Garmin, &copy; OpenStreetMap contributors',
+};
 
-export type MapStyle = keyof typeof BASE_LAYERS;
+export type MapStyle = 'street' | 'satellite' | 'hybrid';
+
+const BASE_LAYERS: Record<MapStyle, Array<{ url: string; attribution: string }>> = {
+  satellite: [ESRI_IMAGERY_SERVICES, ESRI_IMAGERY_SERVER, OSM_STREET],
+  street: [OSM_STREET, ESRI_STREET],
+  hybrid: [ESRI_IMAGERY_SERVICES, ESRI_IMAGERY_SERVER, OSM_STREET],
+};
 
 export const ROUTE_HEX: Record<string, string> = {
   Red: '#DA291C',
@@ -140,15 +155,9 @@ export function MapCanvas({
         focusRequest={focusRequest}
         onBlankClick={onBlankClick}
       />
-      <TileLayer
-        key={`${style}-base`}
-        url={layers.url}
-        attribution={layers.attribution}
-        maxZoom={19}
-        updateWhenIdle={style === 'satellite'}
-      />
+      <ResilientTileLayer providers={layers} maxZoom={19} updateWhenIdle={style === 'satellite'} />
       {style === 'hybrid' && (
-        <TileLayer key="hybrid-labels" url={BASE_LAYERS.street.url} opacity={0.6} maxZoom={19} />
+        <ResilientTileLayer key="hybrid-labels" providers={[OSM_STREET]} maxZoom={19} opacity={0.6} />
       )}
       <AttributionControl position="bottomleft" prefix={false} />
 
@@ -216,6 +225,58 @@ export function MapCanvas({
         <Marker position={userPosition} icon={userLocationIcon()} alt="Your location" interactive={false} />
       )}
     </MapContainer>
+  );
+}
+
+/**
+ * Tile layer that walks through a list of providers when tiles fail to load.
+ *
+ * A provider can be unreachable for many reasons (blocked host, geography,
+ * maintenance). Blindly retrying the same URL shows the user a blank map; trying
+ * the next public basemap keeps the map a map. Attribution switches with it.
+ */
+function ResilientTileLayer({
+  providers,
+  maxZoom,
+  opacity,
+  updateWhenIdle,
+}: {
+  providers: Array<{ url: string; attribution: string }>;
+  maxZoom?: number;
+  opacity?: number;
+  updateWhenIdle?: boolean;
+}) {
+  const [index, setIndex] = useState(0);
+  const errors = useRef(0);
+  const advanced = useRef(false);
+
+  if (index >= providers.length) return null;
+  const provider = providers[index];
+
+  return (
+    <TileLayer
+      key={`${index}-${provider.url}`}
+      url={provider.url}
+      attribution={provider.attribution}
+      maxZoom={maxZoom}
+      opacity={opacity}
+      updateWhenIdle={updateWhenIdle}
+      eventHandlers={{
+        tileerror: () => {
+          errors.current += 1;
+          if (advanced.current || errors.current < 3) return;
+          advanced.current = true;
+          errors.current = 0;
+          setIndex((current) => {
+            const next = Math.min(current + 1, providers.length - 1);
+            if (next === current) return current;
+            // Reset the guard so the next provider gets its own three errors.
+            advanced.current = false;
+            return next;
+          });
+        },
+      }}
+    />
   );
 }
 

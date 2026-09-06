@@ -40,6 +40,23 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 
 ## What's new in 4.0
 
+### Latest fix pass (4.1)
+
+| Area | Change |
+|------|--------|
+| **Live MBTA without an API key** | Arrivals and service alerts now come from the MBTA's **public GTFS-realtime CDN feeds** (`cdn.mbta.com/realtime/*.pb`). The v3 JSON API stays as an optional, faster path — but no longer requires a key; it was returning empty panels because anonymous v3 traffic is capped at 20 requests/minute across all consumers. |
+| **Live HUD and wage data** | The AMI ladder, Fair Market Rent chart and the minimum-wage affordability card are read **from the publisher's own files at request time**: huduser.gov FY workbooks (xlsx) and the Commonwealth's statute page. No figure is copied into the repo, and when a source is unreachable the site says so instead of showing a stale number. |
+| **Verified news feeds** | The news tab reads the four feeds that are actually live: Dorchester Reporter (`/feed/`), City of Boston news (`/rss/news`), WBUR (`rss.wbur.org`) and the Boston Globe's ARC outbound feed. Removed feeds that returned 404 or empty content (GBH, La Colmena, MBTA announcements) rather than shipping dead links. |
+| **Self-healing map basemaps** | Every map and map preview walks a small list of public tile providers (Esri World Imagery on `services`/`server`, OSM streets) and switches automatically when one is unreachable, so a blocked tile host can never leave a blank rectangle. A street-style fallback also covers the satellite/hybrid views. |
+| **Honest stops inventory** | `/api/mbta?type=stops` no longer returns an empty list when the JSON API is throttled — it falls back to the bundled GTFS station reference (labelled `timetable`) and upgrades to the full live list when an MBTA key is configured. |
+| **News never goes blank** | When every requested publisher feed is unreachable (offline preview sandbox, publisher outage), `/api/news` serves a **verified point-in-time snapshot** of the same feeds — real stories, real URLs, real dates, captured 2026-09-06 — and the UI shows an amber "snapshot" note instead of pretending the stories are live. Live data always takes priority. |
+| **Market page survives outages** | HUD FY27 Fair Market Rents for the Boston metro (verified copy of the published workbook) are shown only when huduser.gov is unreachable, marked as a snapshot; the Census metrics continue to say "unavailable" rather than substituting figures. |
+| **Wrong-geography fix** | The Census fetcher was requesting **county 017 (Middlesex)** while the page label and the HUD fetcher said Suffolk County/Boston. It now requests **county 025** for both, with a unit test pinning the FIPS pair. |
+| **Dependency hygiene** | Replaced the deprecated `xlsx` package (unmaintained, advisory-flagged) with `read-excel-file`, upgraded Next.js to 16.3.4 and pruned a stale axios dependency. `npm audit --omit=dev` (the shipped web app) reports **0 vulnerabilities**; `serverExternalPackages` keeps the workbook reader out of the server bundle so the market route compiles. The remaining advisories are all in the dev-only Electron packaging toolchain. |
+| **Map preview never collapses** | The dashboard's `ssr:false` map loader now owns its height, so the pre-hydration skeleton can no longer render a zero-height blank box. |
+
+### 4.0 launch
+
 | Area | Change |
 |------|--------|
 | **Seven colour palettes** | Harbor (default), **Black & white**, Forest, Brick, Slate, Sand and Violet. Each has a light and a dark version, keeps the same contrast ratios, and is applied to the whole site — cards, buttons, charts, map controls — not just the header. Settings → Appearance. |
@@ -80,7 +97,7 @@ Download from [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releas
 * **Affordable housing directory** — income-restricted listings with an AMI calculator that tells you which bracket (30 / 50 / 60 / 80 / 100 %) your household lands in and what you can actually apply for.
 * **Housing projects** — every BPDA-approved and under-construction development in Dorchester with unit counts, income breakdown, developer, approval date, official filing links and, where the developer published one, the site render. Where no render exists the card says so instead of guessing.
 * **Housing primer** — Section 8, BHA public housing, Metrolist, inclusionary units, lotteries and the Massachusetts right-to-counsel pilot, in plain language, with links to the primary sources.
-* **Market trends** — Zillow ZORI rents, Redfin sale prices, HUD Fair Market Rents and the 2025 Boston AMI table, with charts by sub-neighbourhood.
+* **Market trends** — HUD Fair Market Rents and Section 8 income limits read live from huduser.gov, Census ACS (when the Bureau's API key is configured) and the median household income series for Suffolk County from the St. Louis Fed (SAIPE), with an AMI ladder labelled with the fiscal year it came from.
 * **Financial tools** — rent-burden calculator, eligibility screener, document checklist.
 
 <p align="center"><img src="docs/media/banner-fields-corner.jpg" width="100%" alt="Fields Corner station on the Red Line" /></p>
@@ -89,8 +106,8 @@ Download from [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releas
 
 * Satellite, street and hybrid views (Esri World Imagery and OpenStreetMap).
 * Six resource layers — housing, food, health, legal, education, community — with category pins and a **PlaceSheet** panel that never overlaps other map controls.
-* **Live MBTA departures** for the Red Line (Ashmont and Braintree branches), Fairmount Line and the 15, 16, 17, 18, 19, 21, 22, 23, 28 and 210 bus routes, from the MBTA V3 API.
-* Route geometry from MBTA shapes with an offline fallback path for each line.
+* **Live MBTA departures** for the Red Line (Ashmont and Braintree branches), Fairmount Line and the bus routes that serve Dorchester, from the MBTA's public GTFS-realtime feed (the v3 JSON API is used only when a key is configured).
+* Route geometry from MBTA shapes with an offline fallback path for each line, and service alerts from the authority's real-time alert feed.
 * Transit, walking and Apple Maps directions from your location.
 
 <p align="center"><img src="docs/media/banner-ashmont.jpg" width="100%" alt="Ashmont station from Peabody Square" /></p>
@@ -145,9 +162,12 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
 
 | Source | What DOR101 uses it for |
 |--------|-------------------------|
-| **U.S. Census Bureau — ACS 5-year** | Population, income, rent burden, languages spoken |
-| **HUD User** | Fair Market Rents, income limits |
-| **MBTA V3 API** | Live predictions, alerts, stop and shape geometry |
+| **U.S. Census Bureau — ACS 5-year** | Population, income, rent burden, languages spoken (via the Census API when a key is configured; the app reports an honest "unavailable" otherwise) |
+| **HUD User (huduser.gov workbooks)** | Fair Market Rents and Section 8 income limits, read live from the FY xlsx files |
+| **MBTA GTFS-realtime (cdn.mbta.com)** | Live arrivals, service alerts and trip updates — no API key |
+| **MBTA V3 API** | Optional enrichment (full stop/shape inventory, richer fields) when `MBTA_API_KEY` is set |
+| **Federal Reserve Bank of St. Louis (FRED)** | Annual median household income for Suffolk County (Census SAIPE derived series, no key) |
+| **Mass.gov** | The Massachusetts minimum wage and service rate, read from the Commonwealth's statute page |
 | **Boston Housing Authority** | Public housing, Section 8, waitlist status |
 | **Boston Planning & Development Agency** | Development projects, Article 80 filings, IDP units |
 | **Boston.gov / Mayor's Office of Housing** | Metrolist, AMI table, Office of Housing Stability programs |
@@ -157,7 +177,7 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
 | **OpenStreetMap contributors** | Street tiles and geocoding |
 | **Esri World Imagery** | Satellite tiles |
 | **Wikimedia Commons** | Photographs (each with its author and licence in `public/IMAGE-CREDITS.md`) |
-| **Dorchester Reporter, WBUR, GBH, Boston Globe** | News feed (headline, link and excerpt only) |
+| **Dorchester Reporter, City of Boston, WBUR, The Boston Globe** | News feed (headline, link and excerpt only) — the four feeds are individually verified live |
 
 ---
 
@@ -349,9 +369,27 @@ All variables are optional; the site runs with none of them.
 
 ## Image credits & licence
 
-Photographs are from Wikimedia Commons and are credited individually — author, licence and source URL — in [`public/IMAGE-CREDITS.md`](public/IMAGE-CREDITS.md). The hero image and logo use *Boston skyline from Dorchester Bay* by Sswonk, CC BY-SA 3.0. Technology logos in this README are the trademarks of their respective projects and are used for identification only. Source badges in `public/sources/` are original icons drawn for DOR101 and do not reproduce any agency's trademark.
+Photographs are from Wikimedia Commons and are credited individually — author, licence and source URL — in [`public/IMAGE-CREDITS.md`](public/IMAGE-CREDITS.md). The hero image and logo use *Boston skyline from Dorchester Bay* by Sswonk, CC BY-SA 3.0. Section banners in this README are the same Commons photographs with a caption overlay; the caption text is set smaller and letter-spaced so it never collides with the section label. Technology logos in this README are the trademarks of their respective projects and are used for identification only. Source badges in `public/sources/` are original icons drawn for DOR101 and do not reproduce any agency's trademark.
 
-Code is released under the **MIT licence** — see [LICENSE](LICENSE).
+Code is released under the **MIT licence** — see [LICENSE](LICENSE). Third-party components keep their own licences:
+
+| Component | Licence |
+|-----------|---------|
+| [Leaflet](https://github.com/Leaflet/Leaflet) (map engine) | BSD-2-Clause |
+| [react-leaflet](https://github.com/PaulLeCam/react-leaflet) | MIT |
+| [gtfs-realtime-bindings](https://github.com/MobilityData/gtfs-realtime-bindings) (MBTA protobuf feeds) | Apache-2.0 |
+| [protobufjs](https://github.com/protobufjs/protobuf.js) | BSD-3-Clause |
+| [SheetJS `xlsx`](https://github.com/SheetJS/sheetjs) (HUD workbooks) | Apache-2.0 |
+| [Recharts](https://github.com/recharts/recharts) | MIT |
+| [Framer Motion](https://github.com/framer/motion) | MIT |
+| [Lucide icons](https://lucide.dev) | ISC |
+| [Zod](https://zod.dev), [SWR](https://swr.vercel.app), [Zustand](https://github.com/pmndrs/zustand), [date-fns](https://date-fns.org), [Cheerio](https://cheerio.js.org), [rss-parser](https://github.com/rbren/rss-parser) | MIT |
+| Fonts (Public Sans, Fraunces, Atkinson Hyperlegible, IBM Plex Mono, Noto Sans Arabic) | SIL Open Font License 1.1 (fontsource packages) |
+| **OpenStreetMap** | Tiles © OpenStreetMap contributors, ODbL; attribution is shown on every map |
+| **Esri World Imagery / World Street Map** | Esri terms of use; attribution is shown on every map |
+| Wikimedia Commons photographs | CC BY-SA 3.0 / CC BY 2.0 as credited in `public/IMAGE-CREDITS.md` |
+
+Map and chart attribution is rendered in-app, not only in this file, so the licences travel with the data.
 
 ---
 

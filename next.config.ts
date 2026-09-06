@@ -63,7 +63,7 @@ const securityHeaders = [
       // tile layer is the only cross-origin image source allowed.
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org",
+      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org",
       "font-src 'self'",
       "connect-src 'self'",
       ...(isDev ? [] : [`frame-ancestors 'self'`]),
@@ -94,6 +94,11 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "recharts", "date-fns"],
   },
+  // The xlsx reader is only used inside server API routes. Keeping it outside
+  // the server bundle stops Turbopack from statically resolving unzipper's
+  // lazy, optional `require('@aws-sdk/client-s3')`, which is not installed and
+  // would otherwise make the market-data route fail to compile.
+  serverExternalPackages: ["read-excel-file"],
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

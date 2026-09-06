@@ -3,6 +3,7 @@ import Parser from 'rss-parser';
 import { z } from 'zod';
 import { globalCache, CACHE_TTL } from '@/lib/cache';
 import { categorize, DEFAULT_NEWS_FEED_IDS, NEWS_FEEDS, type NewsCategorySlug } from '@/data/feeds';
+import { NEWS_SNAPSHOT, NEWS_SNAPSHOT_AS_OF } from '@/data/news-snapshot';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,13 +58,13 @@ interface FeedResult {
   id: string;
   name: string;
   homepage: string;
-  status: 'ok' | 'failed' | 'empty';
+  status: 'ok' | 'failed' | 'empty' | 'snapshot';
   count: number;
   error?: string;
 }
 
 /** Dorchester-relevant, or from a source that is already local by definition. */
-const LOCAL_SOURCE_IDS = new Set(['dotnews', 'boston-gov', 'mbta-alerts-blog']);
+const LOCAL_SOURCE_IDS = new Set(['dotnews', 'boston-gov']);
 
 const RELEVANCE = [
   'dorchester', 'fields corner', 'codman square', 'ashmont', 'mattapan', 'savin hill',
@@ -110,7 +111,7 @@ async function readFeed(feed: { id: string; name: string; url: string; language:
       const summary = snippet(item as never);
       const link = item.link ?? '';
       if (!link) continue;
-      if (feed.id !== 'dotnews' && feed.id !== 'boston-gov' && feed.id !== 'mbta-alerts-blog' && !isRelevant(title, summary)) continue;
+      if (!LOCAL_SOURCE_IDS.has(feed.id) && !isRelevant(title, summary)) continue;
       articles.push({
         id: `a-${Buffer.from(link || title).toString('base64url').slice(0, 24)}`,
         title,
@@ -183,7 +184,7 @@ export async function GET(request: Request) {
     .filter((f): f is { id: string; name: string; url: string; language: string; homepage: string } => f !== null);
 
   const cacheKey = `news:${selected.map((f) => f.id).join('+')}:${customFeeds.map((f) => f.url).join('+')}:${sinceHours}`;
-  const cached = globalCache.get<{ articles: Article[]; results: FeedResult[]; fetchedAt: string }>(cacheKey);
+  const cached = globalCache.get<{ articles: Article[]; results: FeedResult[]; fetchedAt: string; snapshot: { asOf: string; note: string } | null }>(cacheKey);
   if (cached) {
     return NextResponse.json(
       {
@@ -223,6 +224,42 @@ export async function GET(request: Request) {
   });
 
   merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+  // ── Last-resort offline snapshot ──────────────────────────────────────
+  // If every requested built-in feed failed or returned nothing, serve the
+  // verified point-in-time capture instead of an empty page, and say so.
+  let snapshotNote: string | null = null;
+  if (merged.length === 0) {
+    const sinceMs = sinceHours * 3_600_000;
+    const builtinIds = new Set(requested.filter((f) => 'id' in f).map((f) => f.id));
+    const snapshotArticles = NEWS_SNAPSHOT.filter((article) => {
+      if (!builtinIds.has(article.sourceId)) return false;
+      const when = new Date(article.publishedAt).getTime();
+      if (!Number.isFinite(when) || Date.now() - when > sinceMs) return false;
+      if (!LOCAL_SOURCE_IDS.has(article.sourceId) && !isRelevant(article.title, article.summary)) return false;
+      return true;
+    });
+    snapshotArticles
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .forEach((article) => {
+        const key = fingerprint(article.title);
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push({ ...article, ageHours: Math.max(0, Math.round((Date.now() - new Date(article.publishedAt).getTime()) / 3_600_000)) } satisfies Article);
+      });
+    if (merged.length > 0) {
+      snapshotNote = `Live feeds were unreachable, so these stories are a verified snapshot captured ${NEWS_SNAPSHOT_AS_OF}; visit a publisher for the latest.`;
+      for (const feed of feedResults) {
+        if (!builtinIds.has(feed.id) || feed.status !== 'failed' && feed.status !== 'empty') continue;
+        const count = merged.filter((article) => article.sourceId === feed.id).length;
+        if (count === 0) continue;
+        feed.status = 'snapshot';
+        feed.count = count;
+        feed.error = undefined;
+      }
+    }
+  }
+
   const payload = {
     articles: merged.slice(0, limit),
     feeds: feedResults,
@@ -233,10 +270,11 @@ export async function GET(request: Request) {
     nextUpdate: new Date(Date.now() + CACHE_TTL.NEWS).toISOString(),
     refreshInterval: CACHE_TTL.NEWS,
     cached: false,
+    snapshot: snapshotNote ? { asOf: NEWS_SNAPSHOT_AS_OF, note: snapshotNote } : null,
     relevanceFilter: 'All stories from the local publishers; others must mention Dorchester or a citywide service.',
   };
 
-  globalCache.set(cacheKey, { articles: merged, results: feedResults, fetchedAt: payload.fetchedAt }, CACHE_TTL.NEWS);
+  globalCache.set(cacheKey, { articles: merged, results: feedResults, fetchedAt: payload.fetchedAt, snapshot: payload.snapshot }, snapshotNote ? CACHE_TTL.DEFAULT : CACHE_TTL.NEWS);
 
   return NextResponse.json(payload, {
     // 200 even when some feeds fail: partial news is not an error, and the

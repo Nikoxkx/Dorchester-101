@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
+import { CircleAlert, ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { SourceMark } from '@/components/sources/SourceMark';
@@ -63,7 +63,7 @@ interface FeedResult {
   id: string;
   name: string;
   homepage: string;
-  status: 'ok' | 'failed' | 'empty';
+  status: 'ok' | 'failed' | 'empty' | 'snapshot';
   count: number;
   error?: string;
 }
@@ -78,6 +78,7 @@ interface NewsPayload {
   nextUpdate: string | null;
   refreshInterval: number;
   cached: boolean;
+  snapshot?: { asOf: string; note: string } | null;
   relevanceFilter: boolean;
 }
 
@@ -160,6 +161,12 @@ export function NewsPageView() {
             </p>
             <h1 className="mt-1 font-heading text-2xl font-extrabold leading-tight sm:text-3xl">{t('news.title')}</h1>
             <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('news.description')}</p>
+            {payload?.snapshot && (
+              <p role="status" className="mt-2 inline-flex max-w-prose items-start gap-1.5 rounded-lg border border-[var(--color-accent-amber)]/40 bg-[var(--color-accent-amber)]/10 px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)]">
+                <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-accent-amber)]" aria-hidden="true" />
+                {payload.snapshot.note}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <DataRefreshIndicator
@@ -214,7 +221,7 @@ export function NewsPageView() {
                     background:
                       result?.status === 'ok'
                         ? 'var(--mbta-green)'
-                        : result?.status === 'empty'
+                        : result?.status === 'empty' || result?.status === 'snapshot'
                           ? 'var(--color-accent-amber)'
                           : 'var(--color-text-muted)',
                   }}
