@@ -1,108 +1,62 @@
-/// DOR101 Service Worker — v1.1.0
-/// Provides offline caching, background sync, and install support
-/// Updated: Always fetch fresh content from network
+const CACHE = 'dor101-v2';
+const APP_SHELL = ['/', '/manifest.json', '/icon.svg'];
 
-const RUNTIME_CACHE = 'dor101-runtime-' + Date.now();
-
-// Core app shell files to cache on install
-const APP_SHELL = [
-  '/',
-  '/manifest.json',
-  '/icon.svg',
-];
-
-// API routes to cache with network-first strategy
-const API_ROUTES = [
-  '/api/news',
-  '/api/market-data',
-  '/api/notifications',
-  '/api/mbta',
-  '/api/resources',
-];
-
-// Install — cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(RUNTIME_CACHE).then((cache) => {
-      return cache.addAll(APP_SHELL);
-    })
+    caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).catch(() => undefined),
   );
   self.skipWaiting();
 });
 
-// Activate — clean ALL old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => caches.delete(key))
-      );
-    }).then(() => {
-      // Force reload all clients
-      self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'RELOAD_PAGE' });
-        });
-      });
-    })
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+    ),
   );
   self.clients.claim();
 });
 
-// Fetch — ALWAYS network first, never serve stale content
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests (except fonts & tiles)
-  if (url.origin !== self.location.origin &&
-      !url.hostname.includes('fonts.googleapis.com') &&
-      !url.hostname.includes('fonts.gstatic.com') &&
-      !url.hostname.includes('arcgisonline.com') &&
-      !url.hostname.includes('openstreetmap.org') &&
-      !url.hostname.includes('cartocdn.com')) {
-    return;
-  }
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const tileHost =
+    url.hostname.includes('arcgisonline.com') ||
+    url.hostname.includes('openstreetmap.org') ||
+    url.hostname.includes('cartocdn.com') ||
+    url.hostname.includes('fonts.gstatic.com') ||
+    url.hostname.includes('fonts.googleapis.com');
 
-  // ALWAYS use network-first strategy for fresh content
+  if (!sameOrigin && !tileHost) return;
+
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Clone and cache the fresh response
         if (response.ok) {
-          const clone = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(request, clone);
-          });
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
         }
         return response;
       })
-      .catch(() => {
-        // Only fall back to cache if network fails completely
-        return caches.match(request).then((cached) => {
-          return cached || new Response(
-            'Network error - please refresh',
-            { 
+      .catch(() =>
+        caches.match(request).then(
+          (cached) =>
+            cached ||
+            new Response('Offline — reconnect and try again.', {
+              status: 503,
               headers: { 'Content-Type': 'text/plain' },
-              status: 503 
-            }
-          );
-        });
-      })
+            }),
+        ),
+      ),
   );
 });
 
-// Handle messages from main thread
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
   if (event.data && event.data.type === 'CLEAR_CACHE') {
-    caches.keys().then((keys) => {
-      keys.forEach((key) => caches.delete(key));
-    });
+    caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
   }
 });

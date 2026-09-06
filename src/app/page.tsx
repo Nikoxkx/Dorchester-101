@@ -1,176 +1,153 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Home, Building2, DollarSign, Apple, Clock, TrendingUp, ArrowRight, MapPin, Calendar, BookOpen, Shield } from 'lucide-react';
-import { getTimeOfDay } from '@/lib/utils';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
+import { QuickLinks } from '@/components/dashboard/QuickLinks';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { RedLineStrip } from '@/components/transit/RedLineStrip';
+import { Badge } from '@/components/ui/Badge';
+import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
+import { getTimeOfDay, localeForLanguage } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import { useAppStore } from '@/stores/appStore';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { StatCard } from '@/components/dashboard/StatCard';
-import { QuickLinks } from '@/components/dashboard/QuickLinks';
-import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
+import { useApi } from '@/hooks/useApi';
+import { BHA_STATUS } from '@/data/programs';
 
 const DorchesterMap = dynamic(
-  () => import('@/components/map/DorchesterMap').then(m => m.DorchesterMap),
-  { ssr: false, loading: () => <div className="h-64 bg-[var(--color-bg-tertiary)] rounded-lg flex items-center justify-center"><LoadingSpinner /></div> }
+  () => import('@/components/map/DorchesterMap').then((m) => m.DorchesterMap),
+  { ssr: false, loading: () => <div className="h-64 bg-[var(--surface)] flex items-center justify-center"><LoadingSpinner /></div> },
 );
 
-const pv: Variants = { initial: { opacity: 0, y: 20 }, enter: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
-const cv: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
-
-interface NewsArticle { id: string; title: string; source: string; publishedAt: string; category: string }
+interface NewsPayload { articles?: { id: string; title: string; source: string; publishedAt: string; category: string }[] }
+interface StatsPayload {
+  stats?: {
+    id: string;
+    label: string;
+    value: number;
+    format: 'number' | 'currency' | 'percent' | 'status';
+    trend?: number;
+    source?: string;
+    sourceDate?: string;
+    status?: string;
+  }[];
+}
 
 export default function DashboardPage() {
   const { language, setLastUpdated } = useAppStore();
   const { t } = useTranslation(language);
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+  const news = useApi<NewsPayload>('/api/news');
+  const stats = useApi<StatsPayload>('/api/stats');
+
+  const today = useMemo(
+    () => new Date().toLocaleDateString(localeForLanguage(language), {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    }),
+    [language],
+  );
 
   useEffect(() => {
-    fetchData();
-    const h = () => fetchData();
-    window.addEventListener('refreshData', h);
-    return () => window.removeEventListener('refreshData', h);
-  }, []);
+    if (news.data) setLastUpdated(new Date().toLocaleTimeString());
+  }, [news.data, setLastUpdated]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const r = await fetch('/api/news');
-      const d = await r.json();
-      setNews(d.articles?.slice(0, 3) || []);
-      const now = new Date().toLocaleTimeString();
-      setLastRefresh(now);
-      setLastUpdated(now);
-    } catch { /* swallow */ }
-    setLoading(false);
-  };
-
-  const timeOfDay = getTimeOfDay();
-  const greeting = t(`dashboard.greeting.${timeOfDay}`);
-  const today = new Date().toLocaleDateString(language === 'ar' ? 'ar' : language === 'zh' ? 'zh-CN' : language === 'vi' ? 'vi' : language === 'pt' ? 'pt-BR' : language === 'es' ? 'es' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const fmtTime = (d: string) => { const ms = Date.now() - new Date(d).getTime(); const h = Math.floor(ms / 3600000); return h < 1 ? 'Just now' : h < 24 ? `${h}h ago` : new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  const greeting = t(`dashboard.greeting.${getTimeOfDay()}`);
+  const articles = news.data?.articles?.slice(0, 4) || [];
 
   return (
     <MainLayout>
-      <motion.div variants={pv} initial="initial" animate="enter" className="max-w-7xl mx-auto space-y-8">
-
-        {/* ── Introduction Banner ──────────────────────────── */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[#2E5A99] text-white p-8 md:p-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Shield className="w-5 h-5" />
-              <span className="text-xs font-heading font-medium uppercase tracking-wider text-white/80">{t('intro.subtitle')}</span>
-            </div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">{t('intro.title')}</h1>
-            <p className="text-white/90 leading-relaxed mb-6">{t('intro.body')}</p>
-            <Link href="/resources" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[var(--color-accent-primary)] rounded-lg font-heading font-semibold hover:bg-white/90 transition-colors">
-              {t('intro.cta')} <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* ── Greeting ────────────────────────────────────── */}
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold">
-              {greeting}, <span className="text-[var(--color-accent-primary)]">{t('dashboard.welcome')}</span>
-            </h2>
-            <p className="text-[var(--color-text-muted)] font-body">{today} · {t('dashboard.tagline')}</p>
-          </div>
-          <DataRefreshIndicator lastUpdated={lastRefresh} isRefreshing={loading} />
+      <div className="space-y-8">
+        <header className="border-b-2 border-[var(--ink)] pb-4">
+          <p className="masthead-date">{today}</p>
+          <h1 className="font-display text-4xl md:text-5xl mt-1">{t('intro.title')}</h1>
+          <p className="text-[var(--ink-soft)] mt-2 max-w-2xl">{t('intro.body')}</p>
+          <p className="text-sm text-[var(--muted)] mt-1">{greeting}. {t('dashboard.tagline')}</p>
         </header>
 
-        {/* ── Emergency Banner ─────────────────────────────── */}
         <EmergencyBanner />
 
-        {/* ── Stats ────────────────────────────────────────── */}
-        <section>
-          <h2 className="font-heading font-semibold text-xl mb-4">{t('dashboard.glance')}</h2>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={cv} initial="hidden" animate="visible">
-            <StatCard icon={<DollarSign className="w-5 h-5" />} label={t('stats.medianRent')} value={2875} format="currency" trend={{ value: 4.5, direction: 'up' }} source="Zillow ZORI" sourceDate="June 1, 2026" color="var(--color-accent-primary)" />
-            <StatCard icon={<Home className="w-5 h-5" />} label={t('stats.incomeRestricted')} value={1342} trend={{ value: 8.2, direction: 'up' }} source="BPDA" sourceDate="June 5, 2026" color="var(--color-accent-green)" />
-            <StatCard icon={<Building2 className="w-5 h-5" />} label={t('stats.activeProjects')} value={24} trend={{ value: 2, direction: 'up' }} source="Boston Plans" sourceDate="June 3, 2026" color="var(--color-accent-amber)" />
-            <StatCard icon={<Clock className="w-5 h-5" />} label={t('stats.openWaitlists')} value={6} trend={{ value: 1, direction: 'up' }} source="BHA/MassAccess" sourceDate="June 5, 2026" color="#6B5B95" />
-            <StatCard icon={<Apple className="w-5 h-5" />} label={t('stats.foodSites')} value={38} source="Greater Boston Food Bank" sourceDate="June 5, 2026" color="#C8102E" />
-            <StatCard icon={<TrendingUp className="w-5 h-5" />} label={t('stats.medianSale')} value={642500} format="currency" trend={{ value: 5.8, direction: 'up' }} source="Redfin" sourceDate="June 3, 2026" color="var(--color-accent-primary)" />
-          </motion.div>
+        <section className="grid md:grid-cols-[1.3fr_0.7fr] gap-8">
+          <div>
+            <div className="flex items-end justify-between mb-2">
+              <h2 className="font-display text-2xl">{t('dashboard.glance')}</h2>
+              <DataRefreshIndicator lastUpdated={stats.loading ? null : 'sourced'} isRefreshing={stats.loading} />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-x-8">
+              {(stats.data?.stats || []).map((s) => (
+                <StatCard
+                  key={s.id}
+                  label={s.label}
+                  value={s.value}
+                  format={s.format}
+                  status={s.status}
+                  trend={typeof s.trend === 'number' ? { value: s.trend, direction: s.trend >= 0 ? 'up' : 'down' } : undefined}
+                  source={s.source}
+                  sourceDate={s.sourceDate}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-[var(--muted)] mt-3">
+              BHA tenant-based Section 8 is <strong>{BHA_STATUS.section8TenantBased}</strong> as of {BHA_STATUS.asOf}. Public housing waitlists are {BHA_STATUS.publicHousing}.
+            </p>
+          </div>
+          <aside className="desk-panel p-4">
+            <RedLineStrip />
+            <Link href="/map" className="text-sm underline mt-4 inline-block">{t('dashboard.viewFullMap')}</Link>
+          </aside>
         </section>
 
-        {/* ── Quick Links ──────────────────────────────────── */}
         <section>
-          <h2 className="font-heading font-semibold text-xl mb-4">{t('dashboard.quickAccess')}</h2>
+          <h2 className="font-display text-2xl mb-3">{t('dashboard.quickAccess')}</h2>
           <QuickLinks />
         </section>
 
-        {/* ── News + Spotlight ─────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('dashboard.latestNews')}</CardTitle>
-                <Link href="/news" className="text-sm text-[var(--color-accent-primary)] font-heading font-medium hover:underline flex items-center gap-1">{t('dashboard.viewAll')} <ArrowRight className="w-4 h-4" /></Link>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="animate-pulse flex gap-4 p-3"><div className="flex-1 space-y-2"><div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-3/4" /><div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-1/2" /></div></div>)}</div>
-                ) : (
-                  <div className="space-y-3">{news.map(a => (
-                    <Link key={a.id} href="/news" className="flex items-start gap-4 p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-heading font-medium text-sm mb-1 line-clamp-2">{a.title}</h4>
-                        <p className="text-xs text-[var(--color-text-muted)]">{a.source} · {fmtTime(a.publishedAt)}</p>
-                      </div>
-                      <Badge variant="blue">{a.category}</Badge>
-                    </Link>
-                  ))}</div>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+        <div className="grid lg:grid-cols-[1.4fr_0.6fr] gap-8">
           <section>
-            <Card className="h-full bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-[var(--color-accent-primary)]/10">
-              <CardHeader><div className="flex items-center gap-2"><span className="text-lg">✨</span><CardTitle>{t('dashboard.spotlight')}</CardTitle></div></CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-heading font-semibold mb-2">RAFT Emergency Rental Assistance</h4>
-                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">$12M in new funding. Up to $10,000 for rent arrears, first/last month rent, or security deposits.</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm"><Calendar className="w-4 h-4 text-[var(--color-accent-primary)]" /><span className="font-medium">{t('common.ongoing')} — {t('common.applyNow')}</span></div>
-                <Button variant="primary" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />} onClick={() => window.open('https://www.mass.gov/raft', '_blank')}>{t('common.learnMore')} & {t('common.apply')}</Button>
-              </CardContent>
-            </Card>
+            <div className="flex items-end justify-between border-b border-[var(--ink)] pb-2 mb-3">
+              <h2 className="font-display text-2xl">{t('dashboard.latestNews')}</h2>
+              <Link href="/news" className="text-sm underline">{t('dashboard.viewAll')}</Link>
+            </div>
+            {news.loading && <LoadingSpinner text={t('common.loading')} />}
+            {!news.loading && articles.length === 0 && (
+              <p className="text-sm text-[var(--muted)]">Feeds are quiet. Try the Dorchester Reporter directly.</p>
+            )}
+            <ul>
+              {articles.map((a) => (
+                <li key={a.id} className="py-3 border-b border-[var(--line)]">
+                  <Link href="/news" className="block">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="red">{a.category}</Badge>
+                      <span className="text-[11px] text-[var(--muted)]">{a.source}</span>
+                    </div>
+                    <p className="font-display text-lg leading-snug">{a.title}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
+          <aside className="desk-panel p-4 space-y-3">
+            <p className="kicker">RAFT</p>
+            <h3 className="font-display text-xl">Emergency rent help is $7,000 / year, not $10,000</h3>
+            <p className="text-sm text-[var(--ink-soft)]">
+              Massachusetts cut the RAFT cap in 2023. Apply through Metro Housing|Boston. Bring a notice to quit if you have one.
+            </p>
+            <a href="https://www.mass.gov/raft" target="_blank" rel="noreferrer" className="inline-block bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">
+              mass.gov/raft
+            </a>
+          </aside>
         </div>
 
-        {/* ── Map Preview ──────────────────────────────────── */}
         <section>
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><MapPin className="w-5 h-5 text-[var(--color-accent-primary)]" />{t('dashboard.mapTitle')}</CardTitle>
-              <Link href="/map" className="text-sm text-[var(--color-accent-primary)] font-heading font-medium hover:underline flex items-center gap-1">{t('dashboard.viewFullMap')} <ArrowRight className="w-4 h-4" /></Link>
-            </CardHeader>
-            <CardContent className="p-0"><DorchesterMap height="280px" showControls={false} preview={true} /></CardContent>
-          </Card>
+          <div className="flex items-end justify-between mb-2">
+            <h2 className="font-display text-2xl">{t('dashboard.mapTitle')}</h2>
+            <Link href="/map" className="text-sm underline">{t('dashboard.viewFullMap')}</Link>
+          </div>
+          <div className="border border-[var(--line)] overflow-hidden">
+            <DorchesterMap height="280px" showControls={false} preview />
+          </div>
         </section>
-
-        {/* ── Footer ───────────────────────────────────────── */}
-        <footer className="text-center py-8 border-t border-[var(--color-border)]">
-          <p className="text-sm text-[var(--color-text-muted)]">{t('dashboard.footer.line1')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-2">{t('dashboard.footer.line2')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">{t('dashboard.footer.verified')}: {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : language === 'ht' ? 'ht-HT' : language === 'pt' ? 'pt-BR' : language === 'vi' ? 'vi-VN' : language === 'zh' ? 'zh-CN' : language === 'ar' ? 'ar-SA' : language === 'so' ? 'so-SO' : language === 'kea' ? 'kea-CV' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-        </footer>
-      </motion.div>
+      </div>
     </MainLayout>
   );
 }

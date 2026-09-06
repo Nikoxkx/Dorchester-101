@@ -1,40 +1,25 @@
 'use client';
 
-import { Phone } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAppStore } from '@/stores/appStore';
-import { useTranslation } from '@/lib/i18n';
+import { HOTLINES } from '@/data/programs';
+import { telHref } from '@/lib/utils';
 
 export function EmergencyBanner() {
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
-
   return (
-    <div className={cn(
-      'bg-[var(--color-accent-primary)] text-white rounded-xl p-4 md:p-6',
-      'flex flex-col md:flex-row md:items-center justify-between gap-4'
-    )}>
-      <div className="flex items-start gap-4">
-        <div className="p-3 bg-white/20 rounded-lg">
-          <Phone className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="font-heading font-semibold text-lg mb-1">{t('emergency.title')}</h3>
-          <p className="text-white/90 text-sm">{t('emergency.body')}</p>
-        </div>
+    <section className="hotline-bar bg-[var(--red)] text-white -mx-4 md:-mx-7 px-4 md:px-7 py-4">
+      <p className="kicker text-white/80 mb-2">Need help today</p>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {HOTLINES.map((h) => (
+          <a
+            key={h.id}
+            href={telHref(h.phone)}
+            className="block border border-white/40 px-3 py-2 hover:bg-white hover:text-[var(--red-dark)]"
+          >
+            <p className="text-[11px] uppercase tracking-wide opacity-80">{h.name}</p>
+            <p className="font-mono text-lg font-bold">{h.phone}</p>
+            <p className="text-xs">{h.blurb}</p>
+          </a>
+        ))}
       </div>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <a href="tel:18006458333" className={cn('flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg', 'bg-white text-[var(--color-accent-primary)] font-heading font-medium', 'hover:bg-white/90 transition-colors')}>
-          <Phone className="w-4 h-4" />
-          <span>1-800-645-8333</span>
-          <span className="text-xs opacity-75">({t('emergency.foodLabel')})</span>
-        </a>
-        <a href="tel:211" className={cn('flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg', 'bg-white/20 text-white font-heading font-medium', 'hover:bg-white/30 transition-colors')}>
-          <Phone className="w-4 h-4" />
-          <span>2-1-1</span>
-          <span className="text-xs opacity-75">({t('emergency.allLabel')})</span>
-        </a>
-      </div>
-    </div>
+    </section>
   );
 }

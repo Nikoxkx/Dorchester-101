@@ -1,148 +1,44 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useAppStore } from '@/stores/appStore';
-
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock as any;
+import { beforeEach, describe, expect, it } from 'vitest';
+import { FONT_SIZE_VALUES, useAppStore } from '@/stores/appStore';
 
 describe('useAppStore', () => {
   beforeEach(() => {
-    localStorageMock.getItem.mockReturnValue(null);
-    localStorageMock.setItem.mockClear();
-  });
-
-  describe('language', () => {
-    it('should default to English', () => {
-      const { result } = renderHook(() => useAppStore());
-      expect(result.current.language).toBe('en');
-    });
-
-    it('should set language', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.setLanguage('es');
-      });
-      expect(result.current.language).toBe('es');
-    });
-
-    it('should persist language to localStorage', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.setLanguage('ht');
-      });
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'dor101-language',
-        expect.any(String)
-      );
+    useAppStore.setState({
+      theme: 'system',
+      language: 'en',
+      fontSize: 'medium',
+      sidebarCollapsed: false,
+      lastUpdated: null,
+      reduceMotion: false,
     });
   });
 
-  describe('theme', () => {
-    it('should default to system', () => {
-      const { result } = renderHook(() => useAppStore());
-      expect(result.current.theme).toBe('system');
-    });
-
-    it('should set theme to light', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.setTheme('light');
-      });
-      expect(result.current.theme).toBe('light');
-    });
-
-    it('should set theme to dark', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.setTheme('dark');
-      });
-      expect(result.current.theme).toBe('dark');
-    });
+  it('defaults to English and system theme', () => {
+    const state = useAppStore.getState();
+    expect(state.language).toBe('en');
+    expect(state.theme).toBe('system');
+    expect(state.sidebarCollapsed).toBe(false);
   });
 
-  describe('mapStyle', () => {
-    it('should default to satellite', () => {
-      const { result } = renderHook(() => useAppStore());
-      expect(result.current.mapStyle).toBe('satellite');
-    });
-
-    it('should set mapStyle', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.setMapStyle('street');
-      });
-      expect(result.current.mapStyle).toBe('street');
-    });
+  it('sets language', () => {
+    useAppStore.getState().setLanguage('es');
+    expect(useAppStore.getState().language).toBe('es');
   });
 
-  describe('notifications', () => {
-    it('should start with empty read notifications', () => {
-      const { result } = renderHook(() => useAppStore());
-      expect(result.current.readNotifications).toEqual([]);
-    });
-
-    it('should mark notification as read', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.markNotificationRead('notif-1');
-      });
-      expect(result.current.readNotifications).toContain('notif-1');
-    });
-
-    it('should not duplicate read notifications', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.markNotificationRead('notif-1');
-        result.current.markNotificationRead('notif-1');
-      });
-      expect(result.current.readNotifications.filter(n => n === 'notif-1')).toHaveLength(1);
-    });
+  it('sets theme', () => {
+    useAppStore.getState().setTheme('dark');
+    expect(useAppStore.getState().theme).toBe('dark');
   });
 
-  describe('sidebar state', () => {
-    it('should default to expanded', () => {
-      const { result } = renderHook(() => useAppStore());
-      expect(result.current.sidebarExpanded).toBe(true);
-    });
-
-    it('should toggle sidebar', () => {
-      const { result } = renderHook(() => useAppStore());
-      act(() => {
-        result.current.toggleSidebar();
-      });
-      expect(result.current.sidebarExpanded).toBe(false);
-    });
-  });
-});
-
-describe('AppStore Persistence', () => {
-  it('should load language from localStorage', () => {
-    localStorageMock.getItem.mockImplementation((key: string) => {
-      if (key === 'dor101-language') {
-        return JSON.stringify({ state: { language: 'es' } });
-      }
-      return null;
-    });
-    
-    const { result } = renderHook(() => useAppStore());
-    // Note: Due to SSR handling, this might not work in tests
-    // In real usage, language would be loaded from persisted state
+  it('toggles sidebar', () => {
+    useAppStore.getState().toggleSidebar();
+    expect(useAppStore.getState().sidebarCollapsed).toBe(true);
+    useAppStore.getState().toggleSidebar();
+    expect(useAppStore.getState().sidebarCollapsed).toBe(false);
   });
 
-  it('should save all preferences to localStorage', () => {
-    const { result } = renderHook(() => useAppStore());
-    act(() => {
-      result.current.setLanguage('vi');
-      result.current.setTheme('dark');
-      result.current.setMapStyle('hybrid');
-    });
-    
-    expect(localStorageMock.setItem).toHaveBeenCalledTimes(3);
+  it('maps font sizes to CSS pixels', () => {
+    expect(FONT_SIZE_VALUES.medium).toBe('16px');
+    expect(FONT_SIZE_VALUES['extra-large']).toBe('20px');
   });
 });
