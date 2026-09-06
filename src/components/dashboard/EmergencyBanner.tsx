@@ -2,67 +2,44 @@
 
 import { HOTLINES } from '@/data/programs';
 import { telHref } from '@/lib/utils';
-import { useAppStore } from '@/stores/appStore';
-import { useTranslation } from '@/lib/i18n';
-import { Phone } from 'lucide-react';
 
-/**
- * EmergencyBanner — hotlines. System red appears here because it carries
- * meaning (emergency), and the surface stays flat and opaque (content layer):
- * red numbers on light ground keep WCAG AA; the call buttons are solid
- * accessible red with white text.
- */
 export function EmergencyBanner() {
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
   const featured = HOTLINES[0];
   const rest = HOTLINES.slice(1);
 
   return (
-    <section
-      aria-label={t('emergency.title')}
-      className="content-card squircle overflow-hidden"
-      style={{ background: 'color-mix(in srgb, var(--red-fill) 7%, var(--canvas))' }}
-    >
-      <div className="p-5 md:p-7">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
-          <div className="min-w-0">
-            <p className="kicker text-danger">{t('emergency.title')}</p>
-            <p className="text-subhead text-text-2 mt-1.5 max-w-xl">{t('emergency.body')}</p>
-          </div>
-          <a
-            href={telHref(featured.phone)}
-            className="shrink-0 inline-flex items-center gap-2.5 rounded-full px-6 h-12 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{ background: 'var(--red-text)' }}
-          >
-            <Phone className="w-4.5 h-4.5" strokeWidth={2} aria-hidden />
-            <span className="text-start leading-tight">
-              <span className="block text-caption2 font-semibold uppercase tracking-wider opacity-80">
-                {featured.name}
-              </span>
-              <span className="block text-title3 num">{featured.phone}</span>
-            </span>
-          </a>
-        </div>
+    <section className="relative overflow-hidden bg-[var(--red)] text-[var(--paper)] -mx-4 md:-mx-7 px-4 md:px-7 py-6 border-y-4 border-[var(--ink)]" aria-label="Emergency hotlines">
+      {/* Raw paper texture overlay — original, not stock */}
+      <div aria-hidden className="absolute inset-0 opacity-[0.1] pointer-events-none select-none" style={{
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'5\'/%3E%3C/filter%3E%3Crect width=\'200\' height=\'200\' fill=\'%23fff\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+        backgroundSize: '200px 200px'
+      }} />
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-5">
-          {rest.map((h) => (
-            <a
-              key={h.id}
-              href={telHref(h.phone)}
-              className="content-card group flex items-start gap-3 p-3.5 rounded-[var(--radius-sm)] transition-colors hover:bg-[var(--surface-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-            >
-              <Phone className="w-4 h-4 mt-0.5 shrink-0 text-danger" strokeWidth={2} aria-hidden />
-              <span className="min-w-0">
-                <span className="block text-caption2 font-semibold uppercase tracking-wider text-text-2">
-                  {h.name}
-                </span>
-                <span className="block text-body font-bold text-danger num">{h.phone}</span>
-                <span className="block text-caption text-text-2 mt-0.5 leading-snug">{h.blurb}</span>
-              </span>
-            </a>
-          ))}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-6">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/70 mb-2">Emergency — 24 hours</p>
+          <h2 className="font-display text-[clamp(2.5rem,5vw,5rem)] leading-[0.9] tracking-[-0.05em]">Need help<br /><span className="italic">today</span></h2>
         </div>
+        <a
+          href={telHref(featured.phone)}
+          className="shrink-0 bg-[var(--bone)] text-[var(--rust-dark)] px-6 py-4 font-bold text-base hover:bg-white transition-colors inline-block w-fit shadow-soft"
+        >
+          {featured.name} — {featured.phone}
+        </a>
+      </div>
+
+      <div className="relative z-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {rest.map((h) => (
+          <a
+            key={h.id}
+            href={telHref(h.phone)}
+            className="group border border-white/30 bg-white/5 hover:bg-white/10 px-3 py-3 transition-colors"
+          >
+            <p className="font-mono text-[10px] uppercase tracking-wide opacity-70">{h.name}</p>
+            <p className="font-display text-xl font-semibold leading-none mt-1 group-hover:underline decoration-2 underline-offset-4">{h.phone}</p>
+            <p className="text-xs opacity-90 mt-1">{h.blurb}</p>
+          </a>
+        ))}
       </div>
     </section>
   );

@@ -1,57 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { SiteFooter } from './SiteFooter';
 import { BottomNav } from './BottomNav';
-import { CommandPalette } from './CommandPalette';
-import { SavedSheet } from './SavedSheet';
-import { Toaster } from '@/components/glass/Toaster';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
 import { UpdateNotifier } from '@/components/UpdateNotifier';
 import { useAppStore, FONT_SIZE_VALUES } from '@/stores/appStore';
-import { useCommandPalette } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { springSheet } from '@/lib/motion';
 
-/**
- * MainLayout — the two-layer contract made physical:
- *   · content scrolls in <main>, flat and opaque
- *   · glass (sidebar, header, tab bar, palette, sheets, toasts) floats above
- * All offsets use logical properties so Arabic mirrors without special cases.
- */
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, theme, fontSize, language, reduceMotion, reduceTransparency } =
-    useAppStore();
+  const { sidebarCollapsed, theme, fontSize, language, reduceMotion } = useAppStore();
   const isMobile = useIsMobile();
   const [drawer, setDrawer] = useState(false);
-  const [prevMobile, setPrevMobile] = useState(isMobile);
-  if (isMobile !== prevMobile) {
-    setPrevMobile(isMobile);
-    if (!isMobile) setDrawer(false);
-  }
-  const setPaletteOpen = useCommandPalette((s) => s.setOpen);
-  const reduce = useReducedMotion();
 
   useEffect(() => {
     const root = document.documentElement;
-    const apply = (dark: boolean) => root.classList.toggle('dark', dark);
     if (theme === 'system') {
-      apply(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
     } else {
-      apply(theme === 'dark');
+      root.classList.toggle('dark', theme === 'dark');
     }
-  }, [theme]);
-
-  useEffect(() => {
-    if (theme !== 'system') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) =>
-      document.documentElement.classList.toggle('dark', e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
   }, [theme]);
 
   useEffect(() => {
@@ -60,7 +30,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language === 'kea' ? 'kea' : language;
+    document.documentElement.lang = language;
   }, [language]);
 
   useEffect(() => {
@@ -68,80 +38,44 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [reduceMotion]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('reduce-transparency', reduceTransparency);
-  }, [reduceTransparency]);
-
-  // Command palette shortcut — Cmd/Ctrl+K, plus "/" when nothing is focused.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPaletteOpen(true);
-      }
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => {
+      document.documentElement.classList.toggle('dark', e.matches);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [setPaletteOpen]);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [theme]);
 
-  // Electron "Generate Report" menu → the print pipeline (printable page).
   useEffect(() => {
-    const onReport = () => window.print();
-    window.addEventListener('generate-report', onReport);
-    return () => window.removeEventListener('generate-report', onReport);
-  }, []);
+    if (!isMobile) setDrawer(false);
+  }, [isMobile]);
+
+  const sidebarWidth = isMobile ? 0 : sidebarCollapsed ? 56 : 232;
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-screen bg-[var(--paper)]">
       {!isMobile && <Sidebar />}
-
-      <AnimatePresence>
-        {isMobile && drawer && (
-          <>
-            <motion.button
-              key="drawer-scrim"
-              aria-label="Close menu"
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm no-print"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setDrawer(false)}
-            />
-            <motion.div
-              key="drawer-panel"
-              className="fixed inset-y-0 start-0 z-[60] w-[min(300px,86vw)]"
-              initial={reduce ? { opacity: 0 } : { x: '-100%' }}
-              animate={reduce ? { opacity: 1 } : { x: 0 }}
-              exit={reduce ? { opacity: 0 } : { x: '-100%' }}
-              transition={springSheet}
-            >
-              <Sidebar mobile onNavigate={() => setDrawer(false)} />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      <Header onMenu={isMobile ? () => setDrawer(true) : undefined} />
-
+      {isMobile && drawer && (
+        <div className="fixed inset-0 z-50">
+          <button className="absolute inset-0 bg-black/50" aria-label="Close menu" onClick={() => setDrawer(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-[min(280px,86vw)]">
+            <Sidebar mobile onNavigate={() => setDrawer(false)} />
+          </div>
+        </div>
+      )}
+      <Header sidebarWidth={sidebarWidth} onMenu={isMobile ? () => setDrawer(true) : undefined} />
       <main
         id="main"
-        className="pt-14 min-h-dvh"
-        style={{
-          marginInlineStart: isMobile ? 0 : sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-w)',
-          paddingBottom: isMobile ? 'calc(var(--bottom-nav) + 16px)' : 0,
-        }}
+        className="pt-14 min-h-screen"
+        style={{ marginLeft: sidebarWidth, paddingBottom: isMobile ? 80 : 0 }}
       >
-        <div className="max-w-6xl mx-auto px-4 md:px-7 py-5 md:py-7">
+        <div className="p-4 md:p-7 max-w-6xl">
           {children}
           <SiteFooter />
         </div>
       </main>
-
       {isMobile && <BottomNav onMore={() => setDrawer(true)} />}
-
-      <CommandPalette />
-      <SavedSheet />
-      <Toaster />
       <PWAInstaller />
       <UpdateNotifier />
     </div>

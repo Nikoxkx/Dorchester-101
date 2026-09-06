@@ -1,40 +1,47 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency, formatNumber } from '@/lib/utils';
 
 interface StatCardProps {
+  icon?: React.ReactNode;
   label: string;
-  value: string;
+  value: number;
+  format?: 'number' | 'currency' | 'percent' | 'status';
   trend?: { value: number; direction: 'up' | 'down' | 'neutral' };
   source?: string;
   sourceDate?: string;
+  color?: string;
+  status?: string;
 }
 
-/**
- * StatCard — content layer: flat, opaque, full contrast.
- * Source and as-of date sit with the number, not in a footnote.
- */
-export function StatCard({ label, value, trend, source, sourceDate }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  format = 'number',
+  trend,
+  source,
+  sourceDate,
+  status,
+}: StatCardProps) {
+  const formatted =
+    format === 'currency' ? formatCurrency(value) :
+    format === 'percent' ? `${value}%` :
+    format === 'status' ? (status || '').replace(/_/g, ' ') :
+    formatNumber(value);
+
   return (
-    <div className="content-card squircle p-4">
-      <p className="text-caption font-semibold uppercase tracking-wider text-text-2">{label}</p>
-      <p className="text-title1 font-bold tracking-tight text-1 mt-1 num leading-none">{value}</p>
+    <div className="py-4 border-t-2 border-[var(--ink)] relative group hover:bg-[var(--surface)] -mx-2 px-2 transition-colors">
+      <div aria-hidden className="absolute top-0 left-0 w-1 h-full bg-[var(--red)] opacity-60 group-hover:opacity-100 transition-opacity" />
+      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted)] mb-0.5">{label}</p>
+      <p className="font-display text-3xl tracking-[-0.04em] leading-none">{formatted}</p>
       {trend && (
-        <p
-          className={cn(
-            'text-caption font-semibold mt-1.5 num',
-            trend.direction === 'up' ? 'text-warning' : trend.direction === 'down' ? 'text-success' : 'text-text-2',
-          )}
-        >
-          {trend.value > 0 ? '+' : ''}
-          {trend.value}%{' '}
-          <span className="font-normal text-text-3">yr</span>
+        <p className={cn('text-xs mt-1', trend.value > 0 ? 'text-[var(--red)]' : 'text-[var(--park)]')}>
+          {trend.value > 0 ? '+' : ''}{trend.value}% yr
         </p>
       )}
       {source && (
-        <p className="text-caption2 text-text-3 mt-2.5 leading-snug">
-          {source}
-          {sourceDate ? ` · ${sourceDate}` : ''}
+        <p className="text-[10px] text-[var(--muted)] mt-2">
+          {source}{sourceDate ? ` · ${sourceDate}` : ''}
         </p>
       )}
     </div>

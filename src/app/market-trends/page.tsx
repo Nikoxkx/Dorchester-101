@@ -1,264 +1,140 @@
 'use client';
 
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
+import { formatCurrency } from '@/lib/utils';
+import { useApi } from '@/hooks/useApi';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
-import { useLiveApi } from '@/hooks/useLiveApi';
-import { formatFor } from '@/lib/i18n';
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-} from 'recharts';
-import { Info } from 'lucide-react';
 
-interface MarketPayload {
-  medianRent: Record<string, { value: number; change1y: number; source: { provider: string }; lastUpdate: string }>;
-  hudFairMarketRent: Record<string, { value: number; effectiveDate: string }>;
-  medianSalePrice: Record<string, { value: number; change1y: number; source: { provider: string }; lastUpdate: string }>;
-  inventory: { totalListings: number; newListings30d: number; avgDaysOnMarket: number; lastUpdate: string };
+interface MarketData {
+  disclaimer: string;
+  medianRent: Record<string, { value: number; change1y: number }>;
+  medianSalePrice: Record<string, { value: number; change1y: number }>;
   historicalRent2BR: { month: string; value: number }[];
   historicalSalePrice: { month: string; value: number }[];
-  disclaimer: string;
+  inventory: { totalListings: number; avgDaysOnMarket: number };
+  rentBurdenAnalysis: {
+    dorchesterMedianIncome: number;
+    avgRent2BR: number;
+    rentBurdenPercent: number;
+    affordableRentAt30Percent: number;
+  };
 }
-
-const RENT_KEYS = ['studio', 'oneBed', 'twoBed', 'threeBed', 'fourBed'] as const;
-const SALE_KEYS = ['all', 'condo', 'singleFamily', 'multiFamily'] as const;
 
 export default function MarketTrendsPage() {
+  const { language } = useAppStore();
+  const { t } = useTranslation(language);
+  const { data, loading, error, reload } = useApi<{ data: MarketData; lastUpdated: string }>('/api/market-data');
+  const market = data?.data;
+
+  if (loading || !market) {
+    return <MainLayout><div className="min-h-[40vh] flex items-center justify-center"><LoadingSpinner size="lg" text="Loading published figures…" /></div></MainLayout>;
+  }
+
+  const rentData = [
+    { name: 'Studio', rent: market.medianRent.studio.value, change: market.medianRent.studio.change1y },
+    { name: '1BR', rent: market.medianRent.oneBed.value, change: market.medianRent.oneBed.change1y },
+    { name: '2BR', rent: market.medianRent.twoBed.value, change: market.medianRent.twoBed.change1y },
+    { name: '3BR', rent: market.medianRent.threeBed.value, change: market.medianRent.threeBed.change1y },
+  ];
+
   return (
     <MainLayout>
-      <MarketView />
+      <div className="space-y-8">
+        <header className="border-b-2 border-[var(--ink)] pb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="kicker">Estimates</p>
+            <h1 className="font-display text-4xl">{t('market.title')}</h1>
+            <p className="text-[var(--muted)] mt-2">{t('market.description')}</p>
+          </div>
+          <DataRefreshIndicator lastUpdated={data ? new Date(data.lastUpdated).toLocaleTimeString() : null} isRefreshing={loading} />
+        </header>
+
+        <p className="text-sm border border-[var(--line)] p-3 bg-[var(--surface)]">{market.disclaimer}</p>
+        {error && <button onClick={reload} className="underline">{t('common.retry')}</button>}
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 border-y border-[var(--line)] py-4">
+          <div>
+            <p className="text-[11px] uppercase text-[var(--muted)]">2BR rent</p>
+            <p className="font-display text-3xl">{formatCurrency(market.medianRent.twoBed.value)}</p>
+            <p className="text-xs">{market.medianRent.twoBed.change1y}% yr</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase text-[var(--muted)]">Median sale</p>
+            <p className="font-display text-3xl">{formatCurrency(market.medianSalePrice.all.value)}</p>
+            <p className="text-xs">{market.medianSalePrice.all.change1y}% yr</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase text-[var(--muted)]">Days on market</p>
+            <p className="font-display text-3xl">{market.inventory.avgDaysOnMarket}</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase text-[var(--muted)]">Active listings</p>
+            <p className="font-display text-3xl">{market.inventory.totalListings}</p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="desk-panel p-4">
+            <h2 className="font-display text-xl mb-3">2BR rent, 24 months</h2>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={market.historicalRent2BR}>
+                  <CartesianGrid strokeDasharray="2 2" stroke="var(--line)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
+                  <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                  <Area type="monotone" dataKey="value" stroke="#c8102e" fill="#c8102e22" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="desk-panel p-4">
+            <h2 className="font-display text-xl mb-3">Sale price, 24 months</h2>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={market.historicalSalePrice}>
+                  <CartesianGrid strokeDasharray="2 2" stroke="var(--line)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
+                  <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                  <Area type="monotone" dataKey="value" stroke="#1e3a5f" fill="#1e3a5f22" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="desk-panel p-4">
+          <h2 className="font-display text-xl mb-3">{t('market.rentByType')}</h2>
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rentData} layout="vertical">
+                <CartesianGrid strokeDasharray="2 2" stroke="var(--line)" />
+                <XAxis type="number" tickFormatter={(v) => `$${v}`} />
+                <YAxis dataKey="name" type="category" width={50} />
+                <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                <Bar dataKey="rent" fill="#1e3a5f" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <section className="desk-panel p-5 space-y-3">
+          <h2 className="font-display text-2xl">{t('market.affordability')}</h2>
+          <p className="text-sm leading-relaxed">
+            A Dorchester household at the published median income of <strong>{formatCurrency(market.rentBurdenAnalysis.dorchesterMedianIncome)}</strong> paying <strong>{formatCurrency(market.rentBurdenAnalysis.avgRent2BR)}</strong> for a 2BR spends <strong>{market.rentBurdenAnalysis.rentBurdenPercent}%</strong> of income on rent. HUD’s 30% line would be {formatCurrency(market.rentBurdenAnalysis.affordableRentAt30Percent)} a month.
+          </p>
+          <div className="flex gap-3">
+            <a href="/affordable-housing" className="bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">Housing desk</a>
+            <a href="/tools" className="border border-[var(--ink)] px-4 py-2 text-sm font-bold">Calculator</a>
+          </div>
+        </section>
+      </div>
     </MainLayout>
   );
-}
-
-function MarketView() {
-  const { language } = useAppStore();
-  const { t, formatFor } = useTranslation(language);
-  const { data, loading, error } = useLiveApi<MarketPayload>('/api/market-data', { channels: ['data'] });
-
-  const rentRows = RENT_KEYS.filter((k) => data?.medianRent?.[k]);
-  const saleRows = SALE_KEYS.filter((k) => data?.medianSalePrice?.[k]);
-
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-large font-bold tracking-tight text-1">{t('market.title')}</h1>
-        <p className="text-title3 text-text-2 mt-1.5 max-w-2xl leading-snug">{t('market.description')}</p>
-      </header>
-
-      {loading && !data && (
-        <div className="space-y-3" aria-hidden>
-          <div className="skeleton h-24" />
-          <div className="skeleton h-72" />
-        </div>
-      )}
-      {error && !data && (
-        <div role="alert" className="content-card squircle p-6 text-center">
-          <p className="text-body font-semibold text-1">{t('common.error')}</p>
-          <p className="text-subhead text-text-2 mt-1">{t('common.errorHint')}</p>
-        </div>
-      )}
-
-      {data && (
-        <>
-          {/* Published-estimate notice — honesty before aesthetics */}
-          <div className="content-card squircle p-4 flex items-start gap-3">
-            <Info className="w-4.5 h-4.5 text-text-2 shrink-0 mt-0.5" strokeWidth={2} aria-hidden />
-            <p className="text-footnote text-text-2 leading-relaxed">
-              {data.disclaimer} {t('market.estimateNote')}.
-            </p>
-          </div>
-
-          {/* Snapshot table — content layer, sources on every row */}
-          <section aria-label={t('market.currentSnapshot')}>
-            <h2 className="text-title2 font-bold text-1 mb-2.5">{t('market.currentSnapshot')}</h2>
-            <div className="grid md:grid-cols-2 gap-3">
-              <div className="content-card squircle overflow-x-auto">
-                <table className="data-table">
-                  <caption className="sr-only-x">{t('market.rentByType')}</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('market.rentByType')}</th>
-                      <th scope="col" className="text-end">{t('common.perMonth')}</th>
-                      <th scope="col" className="text-end">{t('market.yoy')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rentRows.map((k) => {
-                      const row = data.medianRent[k];
-                      return (
-                        <tr key={k}>
-                          <td className="font-semibold text-1">{t(rentLabel(k))}</td>
-                          <td className="text-end num font-semibold text-1">{formatFor.currency(row.value)}</td>
-                          <td className="text-end num text-warning">{row.change1y > 0 ? '+' : ''}{formatFor.percent(row.change1y / 100)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <SourceLine
-                  provider={data.medianRent.twoBed.source.provider}
-                  date={data.medianRent.twoBed.lastUpdate}
-                />
-              </div>
-
-              <div className="content-card squircle overflow-x-auto">
-                <table className="data-table">
-                  <caption className="sr-only-x">{t('stats.medianSale')}</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('stats.medianSale')}</th>
-                      <th scope="col" className="text-end">{t('common.free').replace(/./g, '') || '—'}</th>
-                      <th scope="col" className="text-end">{t('market.yoy')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {saleRows.map((k) => {
-                      const row = data.medianSalePrice[k];
-                      return (
-                        <tr key={k}>
-                          <td className="font-semibold text-1">{t(saleLabel(k))}</td>
-                          <td className="text-end num font-semibold text-1">{formatFor.currency(row.value)}</td>
-                          <td className="text-end num text-warning">{row.change1y > 0 ? '+' : ''}{formatFor.percent(row.change1y / 100)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <SourceLine
-                  provider={data.medianSalePrice.all.source.provider}
-                  date={data.medianSalePrice.all.lastUpdate}
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Charts — canvas stays flat; source and as-of date above each chart */}
-          <section className="grid lg:grid-cols-2 gap-3">
-            <div className="content-card squircle p-5">
-              <h3 className="text-subhead font-bold text-1">{t('market.rentByType')} — 2BR</h3>
-              <SourceLine provider={data.medianRent.twoBed.source.provider} date={data.medianRent.twoBed.lastUpdate} inline />
-              <div className="h-60 mt-3" role="img" aria-label={`2BR rent trend chart, ending ${formatFor.currency(data.medianRent.twoBed.value)} per month`}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.historicalRent2BR} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                    <CartesianGrid stroke="var(--separator)" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 11, fill: 'var(--text-2)' }}
-                      tickFormatter={(m: string) => m.slice(2)}
-                      tickLine={false}
-                      axisLine={{ stroke: 'var(--separator-strong)' }}
-                    />
-                    <YAxis
-                      domain={['dataMin - 100', 'dataMax + 100']}
-                      tick={{ fontSize: 11, fill: 'var(--text-2)' }}
-                      tickFormatter={(v: number) => `$${Math.round(v / 100) / 10}k`}
-                      tickLine={false}
-                      axisLine={false}
-                      width={44}
-                    />
-                    <Tooltip
-                      formatter={(v) => [formatFor.currency(Number(v)), '']}
-                      contentStyle={{
-                        background: 'var(--canvas)',
-                        border: '1px solid var(--separator-strong)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 12,
-                      }}
-                    />
-                    <Line type="monotone" dataKey="value" stroke="var(--ink)" strokeWidth={2.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="content-card squircle p-5">
-              <h3 className="text-subhead font-bold text-1">{t('stats.medianSale')}</h3>
-              <SourceLine provider={data.medianSalePrice.all.source.provider} date={data.medianSalePrice.all.lastUpdate} inline />
-              <div className="h-60 mt-3" role="img" aria-label={`Median sale price chart, ending ${formatFor.currency(data.medianSalePrice.all.value)}`}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.historicalSalePrice} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                    <CartesianGrid stroke="var(--separator)" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 11, fill: 'var(--text-2)' }}
-                      tickFormatter={(m: string) => m.slice(2)}
-                      tickLine={false}
-                      axisLine={{ stroke: 'var(--separator-strong)' }}
-                    />
-                    <YAxis
-                      domain={['dataMin - 15000', 'dataMax + 15000']}
-                      tick={{ fontSize: 11, fill: 'var(--text-2)' }}
-                      tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`}
-                      tickLine={false}
-                      axisLine={false}
-                      width={44}
-                    />
-                    <Tooltip
-                      formatter={(v) => [formatFor.currency(Number(v)), '']}
-                      contentStyle={{
-                        background: 'var(--canvas)',
-                        border: '1px solid var(--separator-strong)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 12,
-                      }}
-                    />
-                    <Line type="monotone" dataKey="value" stroke="var(--ink)" strokeWidth={2.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </section>
-
-          {/* HUD FMR — what vouchers cover */}
-          <section aria-label={t('market.fmrTitle')} className="content-card squircle p-5">
-            <h3 className="text-subhead font-bold text-1">{t('market.fmrTitle')}</h3>
-            <p className="text-caption text-text-2 mt-1">{t('market.fmrNote')}</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-4">
-              {RENT_KEYS.filter((k) => data.hudFairMarketRent?.[k]).map((k) => (
-                <div key={k} className="bg-[var(--surface)] rounded-[var(--radius-sm)] p-3">
-                  <p className="text-caption2 font-semibold uppercase tracking-wider text-text-2">{t(rentLabel(k))}</p>
-                  <p className="text-body font-bold text-1 num mt-1">{formatFor.currency(data.hudFairMarketRent[k].value)}</p>
-                </div>
-              ))}
-            </div>
-            <SourceLine provider="HUD User" date={data.hudFairMarketRent.twoBed.effectiveDate} />
-          </section>
-        </>
-      )}
-    </div>
-  );
-}
-
-function SourceLine({ provider, date, inline }: { provider: string; date: string; inline?: boolean }) {
-  const { language } = useAppStore();
-  const { t, formatFor } = useTranslation(language);
-  return (
-    <p className={inline ? 'text-caption2 text-text-3 mt-0.5' : 'text-caption2 text-text-3 px-4 py-2.5 border-t border-separator'}>
-      {t('common.source')}: {provider} · {t('common.asOf')} {formatFor.date(date)}
-    </p>
-  );
-}
-
-type TKey = Parameters<ReturnType<typeof useTranslation>['t']>[0];
-
-function rentLabel(k: string): TKey {
-  const map: Record<string, TKey> = {
-    studio: 'market.studio',
-    oneBed: 'market.br1',
-    twoBed: 'market.br2',
-    threeBed: 'market.br3',
-    fourBed: 'market.br4',
-  };
-  return map[k] ?? 'market.br2';
-}
-
-function saleLabel(k: string): TKey {
-  const map: Record<string, TKey> = {
-    all: 'common.all',
-    condo: 'market.condo',
-    singleFamily: 'market.singleFamily',
-    multiFamily: 'market.multiFamily',
-  };
-  return map[k] ?? 'common.all';
 }

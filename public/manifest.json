@@ -1,26 +1,23 @@
 {
-  "name": "DOR101 — Dorchester resources, live",
+  "name": "DOR101 — Dorchester desk",
   "short_name": "DOR101",
-  "description": "Housing, food, transit, and rights for Dorchester residents. Sourced, dated, offline-friendly. No account, no tracking.",
+  "description": "Housing, food, transit, and rights for Dorchester residents.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#E9EBE4",
+  "theme_color": "#C8102E",
   "orientation": "any",
   "scope": "/",
   "lang": "en",
-  "dir": "auto",
+  "dir": "ltr",
   "categories": ["government", "utilities", "social"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Affordable Housing", "short_name": "Housing", "url": "/affordable-housing" },
+    { "name": "Housing", "short_name": "Housing", "url": "/affordable-housing" },
     { "name": "Food", "short_name": "Food", "url": "/food" },
-    { "name": "Map", "short_name": "Map", "url": "/map" },
-    { "name": "News", "short_name": "News", "url": "/news" }
+    { "name": "Map", "short_name": "Map", "url": "/map" }
   ]
 }

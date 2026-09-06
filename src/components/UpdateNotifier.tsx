@@ -1,19 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
-import { springSheet } from '@/lib/motion';
-import { useAppStore } from '@/stores/appStore';
-import { useTranslation } from '@/lib/i18n';
 
-/** Electron auto-update banner — glass, non-blocking, restart on user's terms. */
 export function UpdateNotifier() {
   const [available, setAvailable] = useState(false);
   const [ready, setReady] = useState(false);
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
-  const reduce = useReducedMotion();
 
   useEffect(() => {
     const api = window.electron;
@@ -25,40 +16,30 @@ export function UpdateNotifier() {
     });
   }, []);
 
+  if (!available && !ready) return null;
+
   return (
-    <AnimatePresence>
-      {(available || ready) && (
-        <motion.div
-          role="status"
-          className="glass glass-regular glass-edge squircle fixed bottom-20 md:bottom-6 end-4 z-50 w-[min(22rem,calc(100vw-2rem))] p-4 no-print"
-          style={{ borderRadius: 'var(--radius-md)' }}
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
-          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
-          transition={springSheet}
-        >
-          <p className="kicker">{t('update.desktop')}</p>
-          {available && (
-            <>
-              <p className="text-subhead font-bold text-1 mt-1">{t('update.downloading')}</p>
-              <p className="text-caption text-text-2 mt-1">{t('update.nextRestart')}</p>
-            </>
-          )}
-          {ready && (
-            <>
-              <p className="text-subhead font-bold text-1 mt-1">{t('update.ready')}</p>
-              <p className="text-caption text-text-2 mt-1">{t('update.restartHint')}</p>
-              <button
-                className="mt-3 inline-flex items-center gap-2 bg-ink text-canvas rounded-full px-4 py-2 text-subhead font-semibold hover:opacity-85 transition-opacity"
-                onClick={() => window.electron?.restartApp()}
-              >
-                <RefreshCw className="w-4 h-4" strokeWidth={2} aria-hidden />
-                {t('update.restartNow')}
-              </button>
-            </>
-          )}
-        </motion.div>
+    <div className="fixed bottom-20 md:bottom-6 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] bg-[var(--surface)] border border-[var(--ink)] p-4 shadow-lg">
+      {available && (
+        <>
+          <p className="kicker">Desktop</p>
+          <p className="font-display text-lg">Downloading an update</p>
+          <p className="text-sm text-[var(--muted)] mt-1">It will install the next time you restart.</p>
+        </>
       )}
-    </AnimatePresence>
+      {ready && (
+        <>
+          <p className="kicker">Desktop</p>
+          <p className="font-display text-lg">Update ready</p>
+          <p className="text-sm text-[var(--muted)] mt-1">Restart to open the new build.</p>
+          <button
+            className="mt-3 bg-[var(--red)] text-white px-4 py-2 text-sm font-bold"
+            onClick={() => window.electron?.restartApp()}
+          >
+            Restart now
+          </button>
+        </>
+      )}
+    </div>
   );
 }
