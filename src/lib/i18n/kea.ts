@@ -13,7 +13,6 @@ export const kea: Record<TranslationKey, string> = {
   'nav.tools': 'Ferramenta dinheru',
   'nav.news': 'Notísia',
   'nav.resources': 'Rekursu',
-  'nav.college': 'Koleju',
   'nav.faq': 'Pergunta frequenti',
   'nav.settings': 'Konfigurason',
   'nav.collapse': 'Encolhe bar lateral',
@@ -286,6 +285,7 @@ export const kea: Record<TranslationKey, string> = {
   'news.offline': 'Sem internet — ta muesta ultimu artigu ki baixadu.',
   'news.new': 'Nobu',
 
+  'resources.education': 'Edukason',
   'resources.title': 'Diretóriu di rekursu',
   'resources.description': 'Organizason konfirmadu ki ta sérvi Dorchester, pa kategoria.',
   'resources.notSure': 'Ka saba inda ki kamundu komeça?',
@@ -295,8 +295,6 @@ export const kea: Record<TranslationKey, string> = {
   'resources.verifyNote': 'Númeru di telefon konfirmadu pa DOR101. Txoma antis di biaja.',
   'resources.saved': 'Organizason guardada',
 
-  'college.title': 'Koleju',
-  'college.description': 'Ajuda grátis pa aplica na koleju i paga estudu.',
 
   'faq.title': 'Pergunta i resposta',
   'faq.description': 'Resposta kláru pa pesoa ki prome ves sta trata kaza, kumida, i servisús.',

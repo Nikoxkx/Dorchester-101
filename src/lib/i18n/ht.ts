@@ -13,7 +13,6 @@ export const ht: Record<TranslationKey, string> = {
   'nav.tools': 'Zouti lajan',
   'nav.news': 'Nouvèl',
   'nav.resources': 'Resous',
-  'nav.college': 'Lekòl segondè',
   'nav.faq': 'Kesyon moun poze',
   'nav.settings': 'Paramèt',
   'nav.collapse': 'Fenmen bar resan an',
@@ -287,6 +286,7 @@ export const ht: Record<TranslationKey, string> = {
   'news.offline': 'Pa gen entènèt — n ap montre dènye atik yo ki sere.',
   'news.new': 'Nouvo',
 
+  'resources.education': 'Edikasyon',
   'resources.title': 'Anyè resous',
   'resources.description': 'Òganizasyon verifye ki sèvi Dorchester, pa kategori.',
   'resources.notSure': 'Ou pa konnen kote pou ou kòmanse?',
@@ -296,8 +296,6 @@ export const ht: Record<TranslationKey, string> = {
   'resources.verifyNote': 'Nimewo telefòn verifye pa DOR101. Rele avan ou vwayaje.',
   'resources.saved': 'Òganizasyon sere',
 
-  'college.title': 'Lekòl segondè',
-  'college.description': 'Èd gratis pou aplike nan lekòl segondè epi peye l.',
 
   'faq.title': 'Kesyon ak repons',
   'faq.description': 'Repons klè pou moun ki ap navige lojman, manje, ak sèvis pou premye fwa.',

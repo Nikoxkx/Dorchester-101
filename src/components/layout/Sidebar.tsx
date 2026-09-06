@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import {
   Home, Building2, DollarSign, Map, Apple, Info, Calculator,
   Newspaper, BookOpen, Settings, PanelLeftClose, PanelLeftOpen,
-  HelpCircle, TrendingUp, GraduationCap,
+  HelpCircle, TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -25,7 +25,6 @@ export const navItems: { href: string; icon: typeof Home; labelKey: TranslationK
   { href: '/tools', icon: Calculator, labelKey: 'nav.tools' },
   { href: '/news', icon: Newspaper, labelKey: 'nav.news' },
   { href: '/resources', icon: BookOpen, labelKey: 'nav.resources' },
-  { href: '/college-access', icon: GraduationCap, labelKey: 'nav.college' },
   { href: '/faq', icon: HelpCircle, labelKey: 'nav.faq' },
 ];
 

@@ -13,7 +13,6 @@ export const zh: Record<TranslationKey, string> = {
   'nav.tools': '理财工具',
   'nav.news': '新闻',
   'nav.resources': '资源',
-  'nav.college': '上大学',
   'nav.faq': '常见问题',
   'nav.settings': '设置',
   'nav.collapse': '收起侧栏',
@@ -278,6 +277,7 @@ export const zh: Record<TranslationKey, string> = {
   'news.offline': '离线中——显示最近下载的文章。',
   'news.new': '新',
 
+  'resources.education': '教育',
   'resources.title': '资源名录',
   'resources.description': '为多切斯特服务的经过核实的机构，按类别排列。',
   'resources.notSure': '不知道从哪里开始？',
@@ -287,8 +287,6 @@ export const zh: Record<TranslationKey, string> = {
   'resources.verifyNote': '联系方式由 DOR101 核实。出行前请先致电。',
   'resources.saved': '机构已收藏',
 
-  'college.title': '上大学',
-  'college.description': '免费帮助申请大学和支付学费。',
 
   'faq.title': '常见问题',
   'faq.description': '为第一次接触住房、食物和服务系统的人提供直接了当的答案。',

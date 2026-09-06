@@ -13,7 +13,6 @@ export const vi: Record<TranslationKey, string> = {
   'nav.tools': 'Công cụ tài chính',
   'nav.news': 'Tin tức',
   'nav.resources': 'Nguồn hỗ trợ',
-  'nav.college': 'Đại học',
   'nav.faq': 'Hỏi đáp',
   'nav.settings': 'Cài đặt',
   'nav.collapse': 'Thu thanh bên',
@@ -288,6 +287,7 @@ export const vi: Record<TranslationKey, string> = {
   'news.offline': 'Ngoại tuyến — hiển thị các bài đã tải gần nhất.',
   'news.new': 'Mới',
 
+  'resources.education': 'Giáo dục',
   'resources.title': 'Danh bạ nguồn hỗ trợ',
   'resources.description': 'Các tổ chức đã xác minh phục vụ Dorchester, theo loại.',
   'resources.notSure': 'Chưa biết bắt đầu từ đâu?',
@@ -297,8 +297,6 @@ export const vi: Record<TranslationKey, string> = {
   'resources.verifyNote': 'Thông tin liên lạc do DOR101 xác minh. Gọi trước khi đi.',
   'resources.saved': 'Đã lưu tổ chức',
 
-  'college.title': 'Đại học',
-  'college.description': 'Trợ giúp miễn phí để vào đại học và trả học phí.',
 
   'faq.title': 'Hỏi đáp',
   'faq.description': 'Trả lời thẳng thắn cho người lần đầu tìm hiểu nhà ở, thực phẩm và dịch vụ.',

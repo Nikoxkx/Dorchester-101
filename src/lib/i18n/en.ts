@@ -19,7 +19,6 @@ export const en = {
   'nav.tools': 'Financial Tools',
   'nav.news': 'News',
   'nav.resources': 'Resources',
-  'nav.college': 'College Access',
   'nav.faq': 'FAQ',
   'nav.settings': 'Settings',
   'nav.collapse': 'Collapse sidebar',
@@ -313,6 +312,7 @@ export const en = {
   'news.new': 'New',
 
   // ── Resources directory ─────────────────────────────────────
+  'resources.education': 'Education',
   'resources.title': 'Resource Directory',
   'resources.description': 'Verified organizations serving Dorchester, by category.',
   'resources.notSure': 'Not sure where to start?',
@@ -322,9 +322,6 @@ export const en = {
   'resources.verifyNote': 'Contact details verified by DOR101. Call before traveling.',
   'resources.saved': 'Organization saved',
 
-  // ── College access ──────────────────────────────────────────
-  'college.title': 'College Access',
-  'college.description': 'Free help applying to college and paying for it.',
 
   // ── FAQ ─────────────────────────────────────────────────────
   'faq.title': 'Questions & Answers',

@@ -13,7 +13,6 @@ export const pt: Record<TranslationKey, string> = {
   'nav.tools': 'Ferramentas financeiras',
   'nav.news': 'Notícias',
   'nav.resources': 'Recursos',
-  'nav.college': 'Acesso à faculdade',
   'nav.faq': 'Perguntas frequentes',
   'nav.settings': 'Ajustes',
   'nav.collapse': 'Recolher barra lateral',
@@ -288,6 +287,7 @@ export const pt: Record<TranslationKey, string> = {
   'news.offline': 'Sem internet — mostrando as últimas matérias baixadas.',
   'news.new': 'Novo',
 
+  'resources.education': 'Educação',
   'resources.title': 'Diretório de recursos',
   'resources.description': 'Organizações verificadas que atendem Dorchester, por categoria.',
   'resources.notSure': 'Não sabe por onde começar?',
@@ -297,8 +297,6 @@ export const pt: Record<TranslationKey, string> = {
   'resources.verifyNote': 'Contatos verificados pela DOR101. Ligue antes de ir.',
   'resources.saved': 'Organização salva',
 
-  'college.title': 'Acesso à faculdade',
-  'college.description': 'Ajuda gratuita para entrar na faculdade e pagá-la.',
 
   'faq.title': 'Perguntas e respostas',
   'faq.description': 'Respostas diretas para quem está navegando na moradia, comida e serviços pela primeira vez.',

@@ -13,7 +13,6 @@ export const ar: Record<TranslationKey, string> = {
   'nav.tools': 'أدوات مالية',
   'nav.news': 'الأخبار',
   'nav.resources': 'الخدمات',
-  'nav.college': 'الجامعة',
   'nav.faq': 'الأسئلة الشائعة',
   'nav.settings': 'الإعدادات',
   'nav.collapse': 'تصغير الشريط الجانبي',
@@ -278,6 +277,7 @@ export const ar: Record<TranslationKey, string> = {
   'news.offline': 'غير متصل — نعرض آخر المقالات المنزّلة.',
   'news.new': 'جديد',
 
+  'resources.education': 'التعليم',
   'resources.title': 'دليل الخدمات',
   'resources.description': 'مؤسسات موثقة تخدم دورتشستر، حسب الفئة.',
   'resources.notSure': 'لا تعرف من أين تبدأ؟',
@@ -287,8 +287,6 @@ export const ar: Record<TranslationKey, string> = {
   'resources.verifyNote': 'بيانات التواصل تحقق منها DOR101. اتصل قبل التنقل.',
   'resources.saved': 'حُفظت المؤسسة',
 
-  'college.title': 'الجامعة',
-  'college.description': 'مساعدة مجانية للتقديم للجامعة وتغطية التكاليف.',
 
   'faq.title': 'أسئلة وأجوبة',
   'faq.description': 'إجابات مباشرة لمن يتعامل مع السكن والطعام والخدمات لأول مرة.',

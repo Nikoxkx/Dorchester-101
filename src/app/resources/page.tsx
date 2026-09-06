@@ -20,7 +20,7 @@ const CATEGORY_KEYS: Record<ResourceCategory, Parameters<ReturnType<typeof useTr
   healthcare: 'resources.title',
   food: 'nav.food',
   employment: 'resources.title',
-  education: 'nav.college',
+  education: 'resources.education',
   family: 'resources.title',
   childcare: 'resources.title',
   disability: 'resources.title',
@@ -148,7 +148,7 @@ const CATEGORY_LABELS: Partial<Record<ResourceCategory, Parameters<ReturnType<ty
   housing: 'nav.affordable',
   legal: 'quick.legalHelp',
   food: 'nav.food',
-  education: 'nav.college',
+  education: 'resources.education',
   employment: 'resources.title',
 };
 

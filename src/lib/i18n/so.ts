@@ -13,7 +13,6 @@ export const so: Record<TranslationKey, string> = {
   'nav.tools': 'Qalabka lacagta',
   'nav.news': 'Wararka',
   'nav.resources': 'Adeegyada',
-  'nav.college': 'Jaamacadda',
   'nav.faq': 'Su’aalaha badan',
   'nav.settings': 'Habaynta',
   'nav.collapse': 'Yaree dhinaca',
@@ -288,6 +287,7 @@ export const so: Record<TranslationKey, string> = {
   'news.offline': 'Internet ma jiro — maqaallada u dambeeyay baa muuqda.',
   'news.new': 'Cusub',
 
+  'resources.education': 'Waxbarasho',
   'resources.title': 'Tuulada adeegyada',
   'resources.description': 'Hay’adaha la hubiyay ee Dorchester adeegaga, qayb kasta.',
   'resources.notSure': 'Ma garanayso xaggee laga bilaabo?',
@@ -297,8 +297,6 @@ export const so: Record<TranslationKey, string> = {
   'resources.verifyNote': 'Taleefannada DOR101 ayay hubiyeen. Wac ka hor safarka.',
   'resources.saved': 'Hay’adda la kaydiyay',
 
-  'college.title': 'Jaamacadda',
-  'college.description': 'Caawimo bilaash ah jaamacadda galitaanka iyo bixinta lacagta.',
 
   'faq.title': 'Su’aalo iyo jawaabo',
   'faq.description': 'Jawaabo cad oga qofka marki ugu horreysa guri, cunto, iyo adeego socod.',

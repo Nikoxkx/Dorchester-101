@@ -13,7 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useLiveApi } from '@/hooks/useLiveApi';
 import { getTimeOfDay } from '@/lib/utils';
 import { RAFT_PROGRAM } from '@/data/programs';
-import { ArrowRight, GraduationCap, RadioTower } from 'lucide-react';
+import { ArrowRight, RadioTower } from 'lucide-react';
 
 const DorchesterMap = dynamic(
   () => import('@/components/map/DorchesterMap').then((m) => m.DorchesterMap),
@@ -144,19 +144,6 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-4">
             <LiveTransit compact />
-            <Link
-              href="/college-access"
-              className="content-card squircle group flex items-start gap-3 p-4 transition-colors hover:bg-[var(--surface-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-            >
-              <span className="w-9 h-9 rounded-full grid place-items-center bg-[var(--surface-2)] shrink-0">
-                <GraduationCap className="w-4.5 h-4.5 text-1" strokeWidth={2} aria-hidden />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-subhead font-bold text-1">{t('college.title')}</span>
-                <span className="block text-caption text-text-2 mt-0.5 leading-snug">{t('college.description')}</span>
-              </span>
-              <ArrowRight className="w-4 h-4 mt-1 shrink-0 text-text-3 group-hover:text-1 transition-colors rtl:rotate-180" aria-hidden />
-            </Link>
           </div>
         </section>
 

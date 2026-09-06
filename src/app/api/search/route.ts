@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getMapLocations } from '@/data/map';
-import { COLLEGE_RESOURCES } from '@/data/college';
 import { COMMUNITY_RESOURCES } from '@/data/resources';
 import { HOUSING_LISTINGS } from '@/data/housing';
 import { FOOD_SITES } from '@/data/food';
@@ -65,19 +64,6 @@ export async function GET(req: Request) {
       });
     }
   }
-
-  // College resources
-  COLLEGE_RESOURCES.dorchesterSpecific.forEach((r) => {
-    if (match(r.name, r.description)) {
-      hits.push({
-        id: `college-${r.name.slice(0, 12)}`,
-        title: r.name,
-        snippet: r.description.slice(0, 140),
-        href: '/college-access',
-        category: r.type,
-      });
-    }
-  });
 
   // Map locations
   getMapLocations().forEach((loc) => {
