@@ -1,23 +1,41 @@
 {
-  "name": "DOR101 — The Dot desk",
+  "name": "DOR101 — Dorchester, Boston",
   "short_name": "DOR101",
-  "description": "The free neighborhood desk for Dorchester, Boston — housing, food, transit, and tenant rights, verified and dated.",
+  "description": "Income-restricted housing, food programs, rent help, transit, and tenant rights for Dorchester, Boston — real numbers, dated sources, nine languages, no account.",
+  "id": "/",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#F6F7F4",
-  "theme_color": "#D7261E",
-  "orientation": "any",
   "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1748e2",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["government", "utilities", "social", "local"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Housing", "short_name": "Housing", "url": "/affordable-housing" },
-    { "name": "Food", "short_name": "Food", "url": "/food" },
-    { "name": "Map", "short_name": "Map", "url": "/map" }
+    {
+      "name": "Housing",
+      "short_name": "Housing",
+      "url": "/affordable-housing",
+      "description": "Income-restricted rentals, waitlists, AMI bands"
+    },
+    {
+      "name": "Food",
+      "short_name": "Food",
+      "url": "/food",
+      "description": "Pantries, free meals, SNAP help"
+    },
+    {
+      "name": "Map",
+      "short_name": "Map",
+      "url": "/map",
+      "description": "Programs and transit across Dorchester"
+    }
   ]
 }

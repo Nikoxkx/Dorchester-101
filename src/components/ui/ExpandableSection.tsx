@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ExternalLink } from 'lucide-react';
+import { ChevronDown, ExternalLink } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 
 interface ExpandableSectionProps {
@@ -30,13 +30,13 @@ export function ExpandableSection({
   const [open, setOpen] = useState(defaultExpanded);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-xl overflow-hidden card-hover', className)}>
+    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-[2px] overflow-hidden card-hover', className)}>
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         className="w-full flex items-center gap-3 p-4 text-left hover:bg-[var(--paper)] transition-colors"
       >
-        {icon && <div className="text-[var(--red)]">{icon}</div>}
+        {icon && <div className="text-[var(--ink-soft)]">{icon}</div>}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-display font-semibold">{title}</h3>
@@ -78,10 +78,10 @@ export function ExpandableCard({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-xl overflow-hidden card-hover', className)}>
+    <div className={cn('border border-[var(--line)] bg-[var(--surface)] rounded-[2px] overflow-hidden card-hover', className)}>
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full p-4 text-left transition-colors hover:bg-[var(--paper)]">
         <div className="flex items-start gap-3">
-          {icon && <div className="text-[var(--red)]">{icon}</div>}
+          {icon && <div className="text-[var(--ink-soft)]">{icon}</div>}
           <div className="flex-1">
             <h3 className="font-display font-semibold">{title}</h3>
             {subtitle && <p className="text-sm text-[var(--muted)] mt-0.5">{subtitle}</p>}

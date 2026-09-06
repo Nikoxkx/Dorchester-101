@@ -18,7 +18,7 @@ export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerP
   return (
     <div className={cn('flex flex-col items-center justify-center gap-2', className)}>
       <div
-        className={cn('rounded-full border-[var(--line)] border-t-[var(--red)] animate-spin', sizes[size])}
+        className={cn('rounded-full border-[var(--line)] border-t-[var(--blue)] animate-spin', sizes[size])}
         role="status"
         aria-label={text || 'Loading'}
       />

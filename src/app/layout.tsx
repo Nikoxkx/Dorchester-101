@@ -1,21 +1,24 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 // Self-hosted fonts (@fontsource) — no runtime Google Fonts dependency.
-import "@fontsource/archivo/400.css";
-import "@fontsource/archivo/500.css";
-import "@fontsource/archivo/600.css";
-import "@fontsource/archivo/700.css";
-import "@fontsource/archivo/800.css";
-import "@fontsource/archivo/900.css";
-import "@fontsource/atkinson-hyperlegible/400.css";
-import "@fontsource/atkinson-hyperlegible/700.css";
+import "@fontsource/barlow-condensed/500.css";
+import "@fontsource/barlow-condensed/600.css";
+import "@fontsource/barlow-condensed/700.css";
+import "@fontsource/barlow-condensed/800.css";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-sans/700.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/ibm-plex-mono/600.css";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 
 export const metadata: Metadata = {
-  title: "DOR101 — The Dot desk",
+  title: "DOR101 · Dorchester, Boston — neighborhood resources",
   description:
-    "The free neighborhood desk for Dorchester, Boston: income-restricted housing, food pantries, rent help, transit, and tenant rights. Real phone numbers, dated sources, no account, no tracking.",
+    "Income-restricted housing, food programs, rent help, transit, and tenant rights in Dorchester, Boston. Real phone numbers, dated sources, nine languages, no account, no tracking.",
   keywords: [
     "Dorchester",
     "Boston",
@@ -29,6 +32,8 @@ export const metadata: Metadata = {
     "Ashmont",
     "tenant rights",
     "food pantry",
+    "RAFT",
+    "Fair Market Rent",
   ],
   authors: [{ name: "DOR101 Community Project" }],
   applicationName: "DOR101",
@@ -41,8 +46,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "DOR101",
-    title: "DOR101 — The Dot desk",
-    description: "Housing, food, transit, and rights for Dorchester — the Dot, decoded.",
+    title: "DOR101 · Dorchester, Boston",
+    description: "Housing, food, transit, and rights for Dorchester — one neighborhood, every program that touches it.",
     locale: "en_US",
   },
   robots: { index: true, follow: true },
@@ -51,15 +56,15 @@ export const metadata: Metadata = {
     apple: [{ url: "/icon.svg" }],
   },
   other: {
-    "msapplication-TileColor": "#0f2820",
+    "msapplication-TileColor": "#111a2c",
     "format-detection": "telephone=no",
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#d7261e" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1713" },
+    { media: "(prefers-color-scheme: light)", color: "#1748e2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1420" },
   ],
   width: "device-width",
   initialScale: 1,

@@ -1,4 +1,4 @@
-const CACHE = 'dor101-v3';
+const CACHE = 'dor101-v4';
 const APP_SHELL = ['/', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', (event) => {

@@ -61,7 +61,7 @@ The app requires no database, no API keys, and collects no data.
 
 ## 5. Use it on a phone (PWA)
 
-The desk is installable as a Progressive Web App:
+DOR101 is installable as a Progressive Web App:
 
 ```bash
 npm run build

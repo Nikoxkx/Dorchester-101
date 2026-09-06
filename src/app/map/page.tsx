@@ -6,6 +6,7 @@ import { LoadingSpinner, DataRefreshIndicator } from '@/components/ui/LoadingSpi
 import { useApi } from '@/hooks/useApi';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
+import { AlertTriangle } from '@/components/ui/icons';
 
 const DorchesterMap = dynamic(
   () => import('@/components/map/DorchesterMap').then((m) => m.DorchesterMap),
@@ -28,24 +29,31 @@ export default function MapPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-3 pb-5 border-b border-[var(--line)]">
+      <div className="space-y-6">
+        {/* Page head */}
+        <div className="flex flex-wrap items-end justify-between gap-4 pb-6 border-b-2 border-[var(--charcoal)]">
           <div>
-            <p className="kicker mb-3">Live board</p>
-            <h1 className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('map.title')}</h1>
-            <p className="text-sm text-[var(--ink-soft)] mt-3">{t('map.subtitle')}</p>
+            <p className="masthead-date mb-3">03 — MBTA · service alerts · live trains</p>
+            <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(2rem,4.5vw,3.4rem)] text-[var(--charcoal)]">
+              {t('map.title')}
+            </h1>
+            <p className="text-sm text-[var(--ink-soft)] mt-3 max-w-2xl">{t('map.subtitle')}</p>
           </div>
           <DataRefreshIndicator lastUpdated={data ? (data.live ? 'MBTA live' : 'MBTA down') : null} isRefreshing={loading} />
         </div>
 
+        {/* Live alerts */}
         {(data?.alerts || []).slice(0, 4).map((alert) => (
-          <div key={alert.id} className="border-l-4 border-[var(--ochre)] bg-[var(--wax)] px-4 py-3 text-sm rounded-r-lg">
-            <p className="font-bold text-[var(--charcoal)]">{alert.header}</p>
-            <p className="text-xs text-[var(--ink-soft)] mt-1">{alert.description}</p>
+          <div key={alert.id} className="flex items-start gap-3 border border-[var(--amber)]/45 bg-[var(--amber)]/8 px-4 py-3 text-sm">
+            <AlertTriangle className="w-4 h-4 mt-0.5 text-[var(--amber)] shrink-0" />
+            <div>
+              <p className="font-bold text-[var(--charcoal)]">{alert.header}</p>
+              <p className="text-xs text-[var(--ink-soft)] mt-0.5">{alert.description}</p>
+            </div>
           </div>
         ))}
 
-        <div className="rounded-2xl overflow-hidden border border-[var(--line)] shadow-[0_14px_40px_var(--shadow)]">
+        <div className="border border-[var(--line)]">
           <DorchesterMap height="620px" />
         </div>
       </div>

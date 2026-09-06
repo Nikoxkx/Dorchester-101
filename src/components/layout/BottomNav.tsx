@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Apple, DollarSign, Home, Map, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HomeIcon, HousingIcon, FoodIcon, MapIcon, MoreIcon } from '@/components/ui/icons';
 
 const items = [
-  { href: '/', icon: Home, label: 'Home' },
-  { href: '/affordable-housing', icon: DollarSign, label: 'Housing' },
-  { href: '/food', icon: Apple, label: 'Food' },
-  { href: '/map', icon: Map, label: 'Map' },
+  { href: '/', icon: HomeIcon, label: 'Home' },
+  { href: '/affordable-housing', icon: HousingIcon, label: 'Housing' },
+  { href: '/food', icon: FoodIcon, label: 'Food' },
+  { href: '/map', icon: MapIcon, label: 'Map' },
 ];
 
 export function BottomNav({ onMore }: { onMore: () => void }) {
@@ -17,7 +17,7 @@ export function BottomNav({ onMore }: { onMore: () => void }) {
 
   return (
     <nav
-      className="bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--paper)] border-t border-[var(--line)] grid grid-cols-5 backdrop-blur bg-opacity-90"
+      className="bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--paper)]/95 backdrop-blur border-t border-[var(--line)] grid grid-cols-5"
       aria-label="Primary"
     >
       {items.map((item) => {
@@ -29,20 +29,21 @@ export function BottomNav({ onMore }: { onMore: () => void }) {
             href={item.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-bold uppercase tracking-wide',
-              active ? 'text-[var(--red)]' : 'text-[var(--muted)]',
+              'flex flex-col items-center justify-center gap-1 py-2.5 text-[10px]',
+              'font-display font-semibold uppercase tracking-[0.08em]',
+              active ? 'text-[var(--blue)]' : 'text-[var(--muted)]',
             )}
           >
-            <Icon className="w-5 h-5" strokeWidth={active ? 2.6 : 2} />
+            <Icon className="w-5 h-5" strokeWidth={active ? 2.2 : 1.7} />
             {item.label}
           </Link>
         );
       })}
       <button
         onClick={onMore}
-        className="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]"
+        className="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-display font-semibold uppercase tracking-[0.08em] text-[var(--muted)]"
       >
-        <MoreHorizontal className="w-5 h-5" />
+        <MoreIcon className="w-5 h-5" />
         More
       </button>
     </nav>

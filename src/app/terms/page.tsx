@@ -6,13 +6,13 @@ export default function TermsPage() {
   return (
     <MainLayout>
       <article className="max-w-2xl space-y-4 text-sm leading-relaxed">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Legal</p>
-          <h1 className="font-display text-[clamp(2rem,4vw,3.25rem)] font-black leading-none text-[var(--charcoal)]">Terms</h1>
-          <p className="text-[var(--muted)] mt-3">Last written September 2026.</p>
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">11/12 — Legal · plain language</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">Terms</h1>
+          <p className="text-[var(--muted)] mt-3.5">Last written September 2026.</p>
         </header>
         <p>
-          This site is a public-information desk for Dorchester. It is not a city office, a housing
+          This site is a public-information directory for Dorchester. It is not a city office, a housing
           authority, a law firm, or a newsroom of record — it is neighbors keeping the numbers straight.
         </p>
         <h2 className="font-display text-2xl pt-2">No legal advice</h2>
@@ -29,7 +29,7 @@ export default function TermsPage() {
         </p>
         <h2 className="font-display text-2xl pt-2">Use</h2>
         <p>
-          You may read, share, and fork the desk. Do not scrape it in a way that knocks over the MBTA or city endpoints we proxy.
+          You may read, share, and fork DOR101. Do not scrape it in a way that knocks over the MBTA or city endpoints we proxy.
         </p>
       </article>
     </MainLayout>

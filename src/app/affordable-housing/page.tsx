@@ -51,11 +51,11 @@ export default function AffordableHousingPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Housing desk</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">Affordable <span className="text-[var(--red)]">housing</span></h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
-            Income-restricted apartments across the Dot — every listing checked against BPDA, BHA,
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">01 — Housing · AMI bands · waitlists · applications</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">Affordable <span className="text-[#1748e2] dark:text-[#6f96ff]">housing</span></h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">
+            Income-restricted apartments across Dorchester — every listing checked against BPDA, BHA,
             or HUD records, with a real phone and an application link. If a waitlist is open, it
             says so here. Rents, AMI math, and lotteries included.
           </p>
@@ -134,7 +134,7 @@ export default function AffordableHousingPage() {
                 <p className="text-sm">{listing.notes}</p>
                 <p className="text-sm text-[var(--muted)]">Transit: {listing.transitAccess}</p>
                 <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <a href={telHref(listing.propertyManagerPhone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--red)]">{listing.propertyManagerPhone}</a>
+                  <a href={telHref(listing.propertyManagerPhone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--blue)]">{listing.propertyManagerPhone}</a>
                   <a href={listing.applyUrl} target="_blank" rel="noreferrer" className="cta cta-dark cta-sm">Apply / open source</a>
                   {listing.applicationDeadline && (
                     <span className="text-xs text-[var(--muted)]">Deadline: {new Date(listing.applicationDeadline).toLocaleDateString()}</span>
@@ -213,7 +213,7 @@ export default function AffordableHousingPage() {
               <p className="font-display text-5xl mt-2">{amiPercentage}%</p>
               <p className="mt-1">of AMI — {amiBand}</p>
               <p className="text-sm mt-4">You can usually apply at this band or higher. A 50% AMI household can often apply for 50, 60, and 80% units.</p>
-              <Button className="mt-4" onClick={() => setTab('listings')}>See the desk list</Button>
+              <Button className="mt-4" onClick={() => setTab('listings')}>See all listings</Button>
             </div>
           </div>
         )}

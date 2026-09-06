@@ -39,7 +39,7 @@ export function StatCard({
       <div>
         <div className="flex items-center justify-between gap-2">
           <p className="text-[10px] font-display font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{label}</p>
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--red)] shrink-0" aria-hidden />
+          <span className="w-2 h-2 bg-[var(--blue)] shrink-0" aria-hidden />
         </div>
         <p className="font-display text-[2rem] font-black tracking-[-0.02em] text-[var(--charcoal)] leading-none mt-2">
           {formatted}

@@ -36,7 +36,7 @@ export async function GET() {
         value: DEVELOPMENT_PROJECTS.length,
         format: 'number',
         source: 'bostonplans.org filings in this directory',
-        sourceDate: '2026-09-06',
+        sourceDate: '2026-09-05',
       },
       {
         id: 'food',

@@ -5,7 +5,6 @@ import { RED_LINE } from '@/data/map';
 export function RedLineStrip() {
   return (
     <div className="py-2">
-      <p className="kicker mb-3">Ashmont branch</p>
       <div className="relative pl-4">
         <div className="absolute left-[7px] top-1 bottom-1 w-[3px] bg-[var(--mbta)]" />
         <ol className="space-y-3">

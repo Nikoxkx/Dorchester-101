@@ -1,21 +1,23 @@
 # DOR101 v2.0.0 — Windows Release
 
-**Release date:** September 6, 2026
+**Release date:** September 5, 2026
 **Platform:** Windows 10/11 (64-bit)
 
 ## About this release
 
-v2.0.0 is the ground-up visual and content rebuild of the Dot desk:
+v2.0.0 is the full ground-up rebuild of DOR101 into the "street index"
+identity:
 
-- New identity: rowhouse mark, community-greenline palette, Archivo +
-  Atkinson Hyperlegible type
-- Rebuilt dashboard with a verified "on the desk today" board and a
-  household snapshot report engine
-- Every page restyled and re-spaced (housing, food, projects, market
-  estimates, neighborhood guide, tools, news, directory, FAQ, settings, map)
-- Content refocused on the desk's core mission: verified housing, food,
-  transit, and tenant-rights information for Dorchester residents
-- Desktop menus updated (Desk → Refresh All / Generate Report / Front Desk)
+- New mark: cobalt address plate with a knocked-out slab-serif D
+- New palette: porcelain paper, ink navy, cobalt wayfinding blue, signal gold
+- New type system: Barlow Condensed display + IBM Plex Sans body + IBM Plex
+  Mono meta (self-hosted)
+- New layout architecture: full-width top navigation replaces the side rail;
+  renumbered mastheads; print-style borders; hand-drawn icon set
+- Dashboard rebuilt as a program-status board; report engine, map layers,
+  charts, and every page restyled around the same grammar
+- Content kept fresh: program figures centralized in `src/data/programs.ts`
+  with per-record verification dates
 
 ## Downloads
 
@@ -49,3 +51,4 @@ v2.0.0 is the ground-up visual and content rebuild of the Dot desk:
 - SmartScreen may warn that the app is unsigned: **More info → Run anyway**
 - No account, API key, or database setup is required
 - All preferences (language, theme, font size) are stored locally
+- Menus: **Directory → Refresh All / Generate Report / Home**

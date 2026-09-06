@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Clock, Navigation, X } from 'lucide-react';
+import { Clock, Navigation, X } from '@/components/ui/icons';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn, telHref } from '@/lib/utils';
 import {
@@ -156,7 +156,7 @@ export function DorchesterMap({
             <Polyline positions={RED_LINE.stops.map((s) => [s.lat, s.lng] as [number, number])} color={RED_LINE.color} weight={4} />
             <Polyline positions={FAIRMOUNT_LINE.stops.map((s) => [s.lat, s.lng] as [number, number])} color={FAIRMOUNT_LINE.color} weight={4} />
           </MapContainer>
-          <div className="absolute inset-x-0 bottom-0 bg-[var(--ink)]/85 text-[var(--paper)] p-4">
+          <div className="absolute inset-x-0 bottom-0 bg-[var(--charcoal)]/95 text-[var(--paper)] p-4">
             <p className="font-display text-lg">Open the full map</p>
             <p className="text-xs opacity-80">{locations.length} pins · Red Line · Fairmount</p>
           </div>
@@ -225,7 +225,7 @@ export function DorchesterMap({
       </MapContainer>
 
       {showControls && (
-        <div className="absolute top-3 right-3 z-[1000] w-56 bg-[var(--surface)] border border-[var(--ink)] text-sm">
+        <div className="absolute top-3 right-3 z-[1000] w-56 bg-[var(--surface)] border border-[var(--line)] bg-[var(--surface)] text-sm shadow-[0_8px_28px_var(--shadow)]">
           <div className="px-3 py-2 border-b border-[var(--line)]">
             <p className="kicker">Layers</p>
           </div>
@@ -236,7 +236,7 @@ export function DorchesterMap({
                 onClick={() => setStyle(style)}
                 className={cn(
                   'flex-1 py-1 text-[11px] uppercase tracking-wide border',
-                  mapStyle === style ? 'bg-[var(--ink)] text-[var(--paper)] border-[var(--ink)]' : 'border-[var(--line)]',
+                  mapStyle === style ? 'bg-[var(--charcoal)] text-[var(--paper)] border-[var(--charcoal)]' : 'border-[var(--line)]',
                 )}
               >
                 {style}
@@ -257,7 +257,7 @@ export function DorchesterMap({
                   style={{ accentColor: cfg.color, width: '1.1rem', height: '1.1rem' }}
                   className="shrink-0"
                 />
-                <span className="w-2.5 h-2.5 rounded-none shrink-0 border border-[var(--ink)]" style={{ background: cfg.color }} />
+                <span className="w-2.5 h-2.5 shrink-0" style={{ background: cfg.color }} />
                 <span className="truncate font-body text-sm">{cfg.label}</span>
               </label>
             ))}
@@ -269,7 +269,7 @@ export function DorchesterMap({
       )}
 
       {showControls && showRoutes && (
-        <div className="absolute bottom-3 left-3 z-[1000] bg-[var(--surface)] border border-[var(--ink)] px-3 py-2 text-xs">
+        <div className="absolute bottom-3 left-3 z-[1000] bg-[var(--surface)] border border-[var(--line)] px-3 py-2 text-xs shadow-[0_8px_28px_var(--shadow)]">
           <div className="flex items-center gap-2 mb-1">
             <span className="block w-5 h-[3px]" style={{ background: RED_LINE.color }} />
             {RED_LINE.name}
@@ -282,7 +282,7 @@ export function DorchesterMap({
       )}
 
       {selected && (
-        <div className="absolute top-3 left-3 z-[1001] w-80 max-h-[calc(100%-1.5rem)] overflow-y-auto bg-[var(--surface)] border border-[var(--ink)]">
+        <div className="absolute top-3 left-3 z-[1001] w-80 max-h-[calc(100%-1.5rem)] overflow-y-auto bg-[var(--surface)] border border-[var(--line)] shadow-[0_8px_28px_var(--shadow)]">
           <div className="px-4 py-3 border-b border-[var(--line)] flex justify-between gap-2">
             <div>
               <p className="kicker">{LAYER_CONFIG[selected.type].label}</p>
@@ -330,13 +330,13 @@ export function DorchesterMap({
               href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}&travelmode=transit`}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 text-center bg-[var(--red)] text-white py-2 text-sm font-bold"
+              className="flex-1 text-center bg-[var(--blue)] text-white py-2 text-sm font-bold"
             >
               <Navigation className="w-3.5 h-3.5 inline mr-1" />
               Directions
             </a>
             {selected.detailLink && (
-              <Link href={selected.detailLink} className="flex-1 text-center border border-[var(--ink)] py-2 text-sm font-bold">
+              <Link href={selected.detailLink} className="flex-1 text-center border border-[var(--charcoal)] py-2 text-sm font-bold">
                 More
               </Link>
             )}

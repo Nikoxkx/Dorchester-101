@@ -2,66 +2,55 @@
 
 import { HOTLINES } from '@/data/programs';
 import { telHref } from '@/lib/utils';
-import { PhoneCall } from 'lucide-react';
+import { PhoneIcon } from '@/components/ui/icons';
 
 export function EmergencyBanner() {
   const featured = HOTLINES[0];
   const rest = HOTLINES.slice(1);
 
   return (
-    <section
-      className="relative overflow-hidden bg-[var(--red)] text-white rounded-2xl shadow-[0_14px_36px_rgba(215,38,30,0.25)]"
-      aria-label="Emergency hotlines"
-    >
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.08] pointer-events-none select-none"
-        style={{
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'5\'/%3E%3C/filter%3E%3Crect width=\'200\' height=\'200\' fill=\'%23fff\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-          backgroundSize: '200px 200px',
-        }}
-      />
-
-      <div className="relative z-10 p-5 md:p-8">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
-          <div>
-            <p className="flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-[0.2em] text-white/75 mb-2">
-              <PhoneCall className="w-3.5 h-3.5" /> Emergency — free, 24 hours, any language
-            </p>
-            <h2 className="font-display text-[clamp(1.9rem,4vw,3rem)] font-black leading-none tracking-[-0.02em]">
-              Need help <span className="text-[#FFC94D]">today</span>?
-            </h2>
-            <p className="text-sm text-white/85 mt-2 max-w-xl">
-              Call these hotlines first. They speak your language and connect you to food, housing, and legal help immediately.
-            </p>
-          </div>
-          <a
-            href={telHref(featured.phone)}
-            className="shrink-0 inline-flex flex-col items-start bg-white text-[var(--red)] rounded-xl px-5 py-3.5 hover:bg-[var(--wax)] transition-colors w-fit"
-          >
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-70">{featured.name}</span>
-            <span className="font-display text-2xl md:text-3xl font-black leading-tight tracking-tight">{featured.phone}</span>
-            <span className="text-[11px] opacity-75 mt-0.5">{featured.hours} · {featured.blurb}</span>
-          </a>
+    <section aria-label="Emergency hotlines" className="desk-panel-ink">
+      <div className="signal-stripe" aria-hidden="true" />
+      <div className="p-5 md:p-7 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <p className="flex items-center gap-2 text-[10px] font-mono font-medium uppercase tracking-[0.22em] text-[var(--paper)]/65 mb-2.5">
+            <PhoneIcon className="w-3.5 h-3.5" /> Free · 24 hours · every language
+          </p>
+          <h2 className="font-display text-[clamp(1.7rem,3.4vw,2.6rem)] font-bold uppercase leading-[0.95] tracking-[0.01em] text-[var(--paper)]">
+            Need help <span className="text-[var(--yellow)]">now?</span>
+          </h2>
+          <p className="text-sm text-[var(--paper)]/75 mt-2 max-w-xl">
+            Call a hotline first. The person on the other end finds food, shelter, and
+            legal help with you — and interpreters are available.
+          </p>
         </div>
-
-        <div className="grid sm:grid-cols-3 gap-3 mt-5">
-          {rest.map((h) => (
+        <a
+          href={telHref(featured.phone)}
+          className="inline-flex items-baseline gap-3 bg-[var(--yellow)] text-[#111a2c] px-5 py-3.5 hover:bg-white transition-colors w-fit"
+        >
+          <span>
+            <span className="block text-[10px] font-mono font-semibold uppercase tracking-[0.16em] opacity-70">{featured.name}</span>
+            <span className="stat-num text-[1.9rem] md:text-[2.2rem]">{featured.phone}</span>
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide opacity-75 leading-tight">24/7<br />press to call</span>
+        </a>
+      </div>
+      <ul className="border-t border-[var(--paper)]/15 grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--paper)]/15">
+        {rest.map((h) => (
+          <li key={h.id}>
             <a
-              key={h.id}
               href={telHref(h.phone)}
-              className="group border border-white/25 bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 transition-colors"
+              className="group block px-5 py-4 hover:bg-[var(--paper)]/8 transition-colors"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-80">{h.name}</p>
-              <p className="font-display text-xl font-extrabold leading-tight mt-0.5 group-hover:underline underline-offset-4 decoration-2">
+              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--paper)]/60">{h.name}</p>
+              <p className="stat-num text-[1.4rem] text-[var(--paper)] mt-1 group-hover:text-[var(--yellow)] transition-colors">
                 {h.phone}
               </p>
-              <p className="text-xs opacity-90 mt-1">{h.hours} — {h.blurb}</p>
+              <p className="text-[11.5px] text-[var(--paper)]/65 mt-0.5">{h.hours} — {h.blurb}</p>
             </a>
-          ))}
-        </div>
-      </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

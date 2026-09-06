@@ -36,13 +36,13 @@ export default function NeighborhoodPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Walking tour</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('neighborhood.title')}</h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('neighborhood.description')}</p>
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">06 — Guide · streets · squares · MBTA access</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('neighborhood.title')}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">{t('neighborhood.description')}</p>
         </header>
 
-        <ExpandableSection title="About the Dot" preview={`Settled ${data.overview.settled}, annexed ${data.overview.annexed}`} defaultExpanded>
+        <ExpandableSection title="About Dorchester" preview={`Settled ${data.overview.settled}, annexed ${data.overview.annexed}`} defaultExpanded>
           <p className="text-sm leading-relaxed mb-3">
             Dorchester is older than Boston. The town was settled in 1630 and annexed in 1870. It is not a Census place — treat population figures as planning estimates. ZIP codes {data.overview.zipCodes.join(', ')}. About {data.overview.approxSqMiles} square miles of triple-deckers, squares, and the Red Line.
           </p>

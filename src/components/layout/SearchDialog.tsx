@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Search, X } from 'lucide-react';
+import { Search, X } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import type { SearchHit } from '@/data/search';

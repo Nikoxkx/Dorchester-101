@@ -45,11 +45,11 @@ export default function MarketTrendsPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="border-b-2 border-[var(--ink)] pb-4 flex items-end justify-between gap-3">
+        <header className="pb-7 border-b-2 border-[var(--charcoal)] flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="kicker">Estimates</p>
-            <h1 className="font-display text-4xl">{t('market.title')}</h1>
-            <p className="text-[var(--muted)] mt-2">{t('market.description')}</p>
+            <p className="masthead-date mb-3">05 — Market · estimates from public listings</p>
+            <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('market.title')}</h1>
+            <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">{t('market.description')}</p>
           </div>
           <DataRefreshIndicator lastUpdated={data ? new Date(data.lastUpdated).toLocaleTimeString() : null} isRefreshing={loading} />
         </header>
@@ -88,7 +88,7 @@ export default function MarketTrendsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                  <Area type="monotone" dataKey="value" stroke="#DA291C" fill="#DA291C20" strokeWidth={2} />
+                  <Area type="monotone" dataKey="value" stroke="#1748E2" fill="#1748E21A" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -102,7 +102,7 @@ export default function MarketTrendsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => String(v).slice(5)} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v / 1000}k`} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                  <Area type="monotone" dataKey="value" stroke="#1E6FA5" fill="#1E6FA522" strokeWidth={2} />
+                  <Area type="monotone" dataKey="value" stroke="#167A4D" fill="#167A4D24" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -118,7 +118,7 @@ export default function MarketTrendsPage() {
                 <XAxis type="number" tickFormatter={(v) => `$${v}`} />
                 <YAxis dataKey="name" type="category" width={50} />
                 <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                <Bar dataKey="rent" fill="#1E6FA5" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="rent" fill="#1748E2" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

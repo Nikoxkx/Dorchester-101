@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   const fmr = HUD_FMR_FY2026;
   const rentBurdenPercent = Math.round(((fmr.twoBed / income) * 100) * 10) / 10;
 
-  // Desk matches — resources a household in this band can actually use
+  // Directory matches — resources a household in this band can actually use
   const matchingListings = HOUSING_LISTINGS.filter(
     (l) => l.amiRequired >= Math.min(30, amiPct) && l.amiRequired <= Math.max(amiPct, 30),
   ).length;
@@ -63,14 +63,14 @@ export async function GET(req: Request) {
       rentEstimateSource: DORCHESTER_RENT_ESTIMATES.source,
       rentEstimateAsOf: DORCHESTER_RENT_ESTIMATES.asOf,
     },
-    desk: {
+    directory: {
       listingsNearBand: matchingListings,
       openWaitlists,
       projectsTracked: DEVELOPMENT_PROJECTS.length,
       foodSitesInDirectory: foodSitesOpen,
       legalAidOrgs: freeLegalAid,
     },
-    computedSummary: `A household of ${householdSize} earning $${income.toLocaleString()} a year sits at ${amiPct}% of the Boston-metro AMI (${band} band). A 2BR at the FY2026 Fair Market Rent of $${fmr.twoBed.toLocaleString()} would take ${rentBurdenPercent}% of gross income${rentBurdenPercent > 30 ? ` — above the HUD 30% guideline` : ''}. ${matchingListings} income-restricted listings in the desk directory sit near this band, with ${openWaitlists} currently taking applications.`,
+    computedSummary: `A household of ${householdSize} earning $${income.toLocaleString()} a year sits at ${amiPct}% of the Boston-metro AMI (${band} band). A 2BR at the FY2026 Fair Market Rent of $${fmr.twoBed.toLocaleString()} would take ${rentBurdenPercent}% of gross income${rentBurdenPercent > 30 ? ` — above the HUD 30% guideline` : ''}. ${matchingListings} income-restricted listings in the directory sit near this band, with ${openWaitlists} currently taking applications.`,
   };
 
   return NextResponse.json({ success: true, data: stats, timestamp: new Date().toISOString() });

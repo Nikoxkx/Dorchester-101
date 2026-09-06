@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -10,44 +11,27 @@ interface LogoProps {
 }
 
 const sizes = {
-  sm: { icon: 26, text: 'text-base' },
-  md: { icon: 34, text: 'text-xl' },
-  lg: { icon: 46, text: 'text-2xl' },
-  xl: { icon: 64, text: 'text-4xl' },
+  sm: { icon: 22, text: 'text-lg' },
+  md: { icon: 28, text: 'text-[1.6rem]' },
+  lg: { icon: 40, text: 'text-[2.1rem]' },
+  xl: { icon: 56, text: 'text-[2.9rem]' },
 };
 
-// The DOR101 mark: three Dorchester rowhouses on a pine tile.
-export function DOR101Mark({ width = 34 }: { width?: number }) {
+/** The DOR101 plate: cobalt square with a knocked-out slab-serif D. */
+export function DOR101Mark({ width = 28 }: { width?: number }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const maskId = `dor-d-${uid}`;
   return (
-    <svg width={width} height={width} viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="15" fill="#0E4C3F" />
-      {/* bodies */}
-      <g fill="#F6F7F4">
-        <rect x="7" y="34" width="16" height="24" />
-        <rect x="24" y="34" width="16" height="24" />
-        <rect x="41" y="34" width="16" height="24" />
-      </g>
-      {/* gables */}
-      <g fill="#F6F7F4">
-        <polygon points="7,34 15,18 23,34" />
-        <polygon points="24,34 32,12 40,34" />
-        <polygon points="41,34 49,16 57,34" />
-      </g>
-      {/* punched windows */}
-      <g fill="#0E4C3F">
-        <rect x="9.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-        <rect x="17.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-        <rect x="26.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-        <rect x="34.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-        <rect x="43.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-        <rect x="51.4" y="37.5" width="3.2" height="3.2" rx="0.6" />
-      </g>
-      {/* doors */}
-      <g fill="#E4572E">
-        <rect x="13.8" y="44" width="3.4" height="12.4" rx="1" />
-        <rect x="30.8" y="44" width="3.4" height="12.4" rx="1" />
-        <rect x="47.8" y="44" width="3.4" height="12.4" rx="1" />
-      </g>
+    <svg width={width} height={width} viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="2" y="2" width="60" height="60" rx="11" fill="#1748E2" />
+      {/* White D overlay, punched by the counter via a mask */}
+      <mask id={maskId}>
+        <rect x="0" y="0" width="64" height="64" fill="#000" />
+        <rect x="17" y="13" width="11" height="38" fill="#fff" />
+        <path d="M28 13 A19 19 0 0 1 28 51 Z" fill="#fff" />
+        <ellipse cx="35.5" cy="32" rx="5.5" ry="11.5" fill="#000" />
+      </mask>
+      <rect x="2" y="2" width="60" height="60" rx="11" fill="#f4f6f8" mask={`url(#${maskId})`} />
     </svg>
   );
 }
@@ -57,17 +41,13 @@ export function Logo({ size = 'md', showText = true, className, invert = false }
 
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>
-      <span className="shrink-0 block">
+      <span className="shrink-0 block drop-shadow-[0_1px_0_rgba(17,26,44,0.25)]">
         <DOR101Mark width={icon} />
       </span>
       {showText && (
-        <span className="flex flex-col leading-none min-w-0">
-          <span className={cn('font-display font-extrabold tracking-[-0.02em] truncate', text, invert ? 'text-[#EDF4EF]' : 'text-[var(--charcoal)]')}>
-            DOR101
-          </span>
-          <span className={cn('text-[9px] uppercase tracking-[0.24em] font-heading font-bold mt-1', invert ? 'text-[#8FB0A2]' : 'text-[var(--ink-soft)]')}>
-            The Dot desk
-          </span>
+        <span className={cn('font-display font-bold tracking-[0.02em] leading-none truncate', text)}>
+          <span className={invert ? 'text-[#eef2f7]' : 'text-[var(--charcoal)]'}>DOR</span>
+          <span className={invert ? 'text-[#f4c400]' : 'text-[#1748e2]'}>101</span>
         </span>
       )}
     </div>

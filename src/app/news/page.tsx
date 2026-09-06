@@ -8,7 +8,7 @@ import { getRelativeTime } from '@/lib/utils';
 import { useApi } from '@/hooks/useApi';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
-import { Bookmark, ExternalLink } from 'lucide-react';
+import { Bookmark, ExternalLink } from '@/components/ui/icons';
 
 interface Article {
   id: string;
@@ -50,16 +50,16 @@ export default function NewsPage() {
     <MainLayout>
       <div className="grid lg:grid-cols-[1fr_280px] gap-8 items-start">
         <div className="space-y-6 min-w-0">
-          <header className="pb-6 border-b border-[var(--line)]">
+          <header className="pb-7 border-b-2 border-[var(--charcoal)]">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="kicker mb-3">The desk wire</p>
-                <h1 className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('news.title')}</h1>
+                <p className="masthead-date mb-3">08 — News · matched to Dorchester</p>
+                <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('news.title')}</h1>
               </div>
               <DataRefreshIndicator lastUpdated={data ? new Date(data.lastUpdated).toLocaleTimeString() : null} isRefreshing={loading} />
             </div>
-            <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
-              {t('news.description')} Every story is keyword-matched to the Dot — we don&apos;t
+            <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">
+              {t('news.description')} Every story is keyword-matched to Dorchester — we don&apos;t
               scrape the whole city, and we don&apos;t republish paywalled text.
             </p>
           </header>
@@ -93,11 +93,11 @@ export default function NewsPage() {
                 {a.summary && <p className="text-sm text-[var(--ink-soft)] mt-1.5 leading-relaxed">{a.summary}</p>}
                 <div className="flex gap-5 mt-3 text-xs font-bold">
                   {a.sourceUrl && (
-                    <a href={a.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-[var(--red)]">
+                    <a href={a.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-[var(--blue)]">
                       Read at source <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
-                  <button onClick={() => toggle(a.id)} className={`inline-flex items-center gap-1 underline underline-offset-2 hover:text-[var(--red)] ${saved.includes(a.id) ? 'text-[var(--sage)]' : ''}`}>
+                  <button onClick={() => toggle(a.id)} className={`inline-flex items-center gap-1 underline underline-offset-2 hover:text-[var(--blue)] ${saved.includes(a.id) ? 'text-[var(--sage)]' : ''}`}>
                     <Bookmark className="w-3 h-3" />
                     {saved.includes(a.id) ? 'Saved on this device' : 'Save'}
                   </button>
@@ -124,7 +124,7 @@ export default function NewsPage() {
             <ul className="space-y-2.5">
               {(data?.sources || []).map((s) => (
                 <li key={s.name}>
-                  <a href={s.url} target="_blank" rel="noreferrer" className="text-sm font-bold underline underline-offset-2 hover:text-[var(--red)]">
+                  <a href={s.url} target="_blank" rel="noreferrer" className="text-sm font-bold underline underline-offset-2 hover:text-[var(--blue)]">
                     {s.name}
                   </a>
                 </li>
@@ -137,13 +137,13 @@ export default function NewsPage() {
             <p className="font-display text-2xl font-black text-[var(--charcoal)]">{saved.length}</p>
             <p className="text-xs text-[var(--muted)] mt-1">Stories you bookmarked on this device.</p>
             {saved.length > 0 && (
-              <button onClick={() => { setSaved([]); localStorage.removeItem('dor101-news-saved'); }} className="text-xs font-bold underline underline-offset-2 mt-2 hover:text-[var(--red)]">
+              <button onClick={() => { setSaved([]); localStorage.removeItem('dor101-news-saved'); }} className="text-xs font-bold underline underline-offset-2 mt-2 hover:text-[var(--blue)]">
                 Clear bookmarks
               </button>
             )}
           </div>
 
-          <div className="bg-[var(--red)] text-white rounded-xl p-4">
+          <div className="bg-[var(--red)] text-white rounded-[2px] p-4">
             <p className="text-[10px] font-display font-bold uppercase tracking-[0.18em] text-white/80">Something urgent?</p>
             <p className="font-display text-lg font-black mt-1">Call 2-1-1</p>
             <p className="text-xs text-white/85 mt-1">Free, 24/7, any language — housing, food, heat, or just a person to talk to.</p>

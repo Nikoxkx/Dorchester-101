@@ -4,12 +4,12 @@ import { FOOD_SITES } from './food';
 export type MapLayer = 'housing' | 'food' | 'transit' | 'health' | 'legal' | 'community';
 
 export const LAYER_CONFIG: Record<MapLayer, { color: string; label: string; desc: string }> = {
-  housing: { color: '#155E8F', label: 'Housing', desc: 'CDCs and housing offices' },
+  housing: { color: '#1748E2', label: 'Housing', desc: 'CDCs and housing offices' },
   food: { color: '#E4572E', label: 'Food', desc: 'Pantries and meals' },
   transit: { color: '#DA291C', label: 'Transit', desc: 'Red Line and Fairmount' },
-  health: { color: '#217A4C', label: 'Health', desc: 'Clinics and hospital' },
-  legal: { color: '#7C4DA1', label: 'Legal', desc: 'Legal aid' },
-  community: { color: '#0F766E', label: 'Community', desc: 'Libraries and squares' },
+  health: { color: '#0F766E', label: 'Health', desc: 'Clinics and hospital' },
+  legal: { color: '#5B2EA6', label: 'Legal', desc: 'Legal aid' },
+  community: { color: '#D19E00', label: 'Community', desc: 'Libraries and squares' },
 };
 
 export const RED_LINE = {

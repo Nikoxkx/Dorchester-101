@@ -43,20 +43,20 @@ export default function FoodPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Food desk</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('food.title')}</h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('food.description')}</p>
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">02 — Food · pantries · hot meals · SNAP</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('food.title')}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">{t('food.description')}</p>
         </header>
 
-        <section className="relative overflow-hidden bg-[var(--red)] text-white rounded-2xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <section className="relative overflow-hidden bg-[var(--red)] text-white rounded-[2px] p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div>
             <p className="text-[10px] font-display font-bold uppercase tracking-[0.2em] text-white/75">Free · confidential · no questions</p>
             <h2 className="font-display text-3xl md:text-4xl font-black mt-1 leading-none">{t('food.needFoodToday')}</h2>
             <p className="mt-2 text-white/85 text-sm max-w-xl leading-relaxed">{t('food.callHotline')}</p>
           </div>
           <div className="shrink-0">
-            <a href="tel:18006458333" className="inline-block bg-white text-[var(--red)] rounded-xl px-6 py-4 font-display font-black text-2xl md:text-3xl hover:bg-[var(--wax)] transition-colors shadow-lg">
+            <a href="tel:18006458333" className="inline-block bg-white text-[var(--red)] rounded-[2px] px-6 py-4 font-display font-black text-2xl md:text-3xl hover:bg-[var(--wax)] transition-colors shadow-lg">
               1-800-645-8333
             </a>
             <p className="text-xs mt-2 text-white/80 text-center">Mon–Fri 8 AM–5 PM · 180+ languages</p>
@@ -68,9 +68,9 @@ export default function FoodPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Name, square, address…"
-            className="flex-1 px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm outline-none focus:border-[var(--ink)]"
+            className="flex-1 px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-[2px] text-sm outline-none focus:border-[var(--ink)]"
           />
-          <select value={type} onChange={(e) => setType(e.target.value)} className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-lg text-sm outline-none focus:border-[var(--ink)]">
+          <select value={type} onChange={(e) => setType(e.target.value)} className="px-4 py-2.5 bg-[var(--paper)] border border-[var(--line)] rounded-[2px] text-sm outline-none focus:border-[var(--ink)]">
             <option value="">All types</option>
             <option value="Food Pantry">Pantries</option>
             <option value="Hot Meals">Hot meals</option>
@@ -132,7 +132,7 @@ export default function FoodPage() {
             </div>
             <div className="flex flex-wrap items-center gap-4 mt-4">
               <a href={data.snap.applyUrl} target="_blank" rel="noreferrer" className="cta cta-primary cta-md">Apply on DTAConnect</a>
-              <a href={telHref(data.snap.phone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--red)]">{data.snap.phone}</a>
+              <a href={telHref(data.snap.phone)} className="text-sm font-bold underline underline-offset-2 hover:text-[var(--blue)]">{data.snap.phone}</a>
             </div>
           </section>
         )}

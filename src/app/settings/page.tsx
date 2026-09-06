@@ -3,7 +3,7 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useAppStore, FONT_SIZE_VALUES, type FontSize, type Language, type Theme } from '@/stores/appStore';
 import { availableLanguages, useTranslation } from '@/lib/i18n';
-import { Check, Info, Moon, ShieldCheck, Sun, Trash2 } from 'lucide-react';
+import { Check, Info, Moon, ShieldCheck, Sun, Trash2 } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 
 const THEMES: Theme[] = ['light', 'dark', 'system'];
@@ -35,10 +35,10 @@ export default function SettingsPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">This device only</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('settings.title')}</h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">Settings · this device only</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('settings.title')}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">
             {t('settings.description')} Nothing here is uploaded — preferences live in this
             browser&apos;s local storage and leave with it.
           </p>
@@ -65,7 +65,7 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-[var(--muted)] mt-4">Arabic switches the whole desk to right-to-left. Other languages fall back to English where a phrase hasn&apos;t been translated yet.</p>
+            <p className="text-[11px] text-[var(--muted)] mt-4">Arabic switches the whole interface to right-to-left. Other languages fall back to English where a phrase hasn&apos;t been translated yet.</p>
           </section>
 
           <section className="desk-card p-5">
@@ -91,7 +91,7 @@ export default function SettingsPage() {
             </div>
 
             <h2 className="font-display text-xl font-extrabold mt-6 mb-1">{t('settings.fontSize')}</h2>
-            <p className="text-xs text-[var(--muted)] mb-4">Make the desk easier to read.</p>
+            <p className="text-xs text-[var(--muted)] mb-4">Make the interface easier to read.</p>
             <div className="flex gap-2 items-center">
               {SIZES.map((s) => (
                 <button

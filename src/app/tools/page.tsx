@@ -45,10 +45,10 @@ export default function ToolsPage() {
   return (
     <MainLayout>
       <div className="max-w-4xl space-y-8">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Pencil math</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('tools.title')}</h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">07 — Tools · calculators that never leave your device</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('tools.title')}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">
             {t('tools.description')} Nothing here sends your numbers anywhere — the math runs in
             this browser, on this device.
           </p>
@@ -81,12 +81,12 @@ export default function ToolsPage() {
                 <p className="text-sm mt-3 text-[var(--ink-soft)] leading-relaxed">
                   {rentBurden.status === 'affordable' && 'Within the HUD guideline — this rent leaves room for everything else.'}
                   {rentBurden.status === 'cost-burdened' && 'Above the 30% guideline. Look for income-restricted units, RAFT, or a rent negotiation before signing.'}
-                  {rentBurden.status === 'severely-burdened' && 'Severely cost-burdened. Housing help exists — start with the desk list and the RAFT program.'}
+                  {rentBurden.status === 'severely-burdened' && 'Severely cost-burdened. Housing help exists — start with the housing listings and the RAFT program.'}
                 </p>
               </div>
               {rentBurden.status !== 'affordable' && (
                 <Button className="mt-5" variant="primary" onClick={() => { window.location.href = '/affordable-housing'; }}>
-                  Housing desk
+                  Housing guide
                 </Button>
               )}
             </div>

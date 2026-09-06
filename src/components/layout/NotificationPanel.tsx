@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, X } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 
 interface Notification {

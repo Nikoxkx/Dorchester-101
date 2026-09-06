@@ -33,7 +33,7 @@ export function UpdateNotifier() {
           <p className="font-display text-lg">Update ready</p>
           <p className="text-sm text-[var(--muted)] mt-1">Restart to open the new build.</p>
           <button
-            className="mt-3 bg-[var(--red)] text-white px-4 py-2 text-sm font-bold"
+            className="mt-3 bg-[var(--blue)] text-white px-4 py-2 text-sm font-semibold uppercase tracking-[0.06em]"
             onClick={() => window.electron?.restartApp()}
           >
             Restart now

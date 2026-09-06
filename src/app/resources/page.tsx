@@ -52,10 +52,10 @@ export default function ResourcesPage() {
   return (
     <MainLayout>
       <div className="space-y-7">
-        <header className="pb-6 border-b border-[var(--line)]">
-          <p className="kicker mb-3">Verified directory</p>
-          <h1 className="font-display text-[clamp(2.4rem,5vw,4.25rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('resources.title')}</h1>
-          <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">
+        <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+          <p className="masthead-date mb-3">09 — Directory · legal aid · clinics · community orgs</p>
+          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('resources.title')}</h1>
+          <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">
             {t('resources.description')} Each entry carries the date it was last checked — if we
             couldn&apos;t verify a number, it isn&apos;t here.
           </p>
@@ -63,7 +63,7 @@ export default function ResourcesPage() {
 
         <aside className="desk-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="w-11 h-11 rounded-xl bg-[var(--red)] text-white flex items-center justify-center font-display text-lg font-black shrink-0">211</span>
+            <span className="w-11 h-11 rounded-[2px] bg-[var(--blue)] text-white flex items-center justify-center font-display text-lg font-black shrink-0">211</span>
             <div>
               <p className="font-display text-lg font-bold text-[var(--charcoal)]">{t('resources.notSure')}</p>
               <p className="text-sm text-[var(--ink-soft)] mt-0.5">{t('resources.call211')}</p>
@@ -76,7 +76,7 @@ export default function ResourcesPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t('resources.search', 'Search organizations or services...')}
-          className="w-full px-4 py-3 bg-[var(--paper)] border border-[var(--line)] rounded-xl text-sm outline-none focus:border-[var(--charcoal)]"
+          className="w-full px-4 py-3 bg-[var(--paper)] border border-[var(--line)] rounded-[2px] text-sm outline-none focus:border-[var(--charcoal)]"
           aria-label="Search resources"
         />
         <div className="flex flex-wrap gap-1.5">
@@ -112,7 +112,7 @@ export default function ResourcesPage() {
               {org.eligibility && <p className="text-xs border-t border-[var(--line)] pt-2">Eligibility: {org.eligibility}</p>}
               <div className="flex justify-between items-center text-xs">
                 <span className="text-[var(--muted)]">Verified {org.lastVerified}</span>
-                {org.website && <a href={org.website} target="_blank" rel="noreferrer" className="underline font-bold hover:text-[var(--red)]">Website</a>}
+                {org.website && <a href={org.website} target="_blank" rel="noreferrer" className="underline font-bold hover:text-[var(--blue)]">Website</a>}
               </div>
             </article>
           ))}

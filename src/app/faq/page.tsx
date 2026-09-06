@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, PhoneCall } from 'lucide-react';
+import { ChevronDown, PhoneCall } from '@/components/ui/icons';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn, telHref } from '@/lib/utils';
@@ -35,17 +35,17 @@ export default function FAQPage() {
     <MainLayout>
       <div className="grid lg:grid-cols-[1fr_280px] gap-8 items-start">
         <div className="space-y-6 min-w-0">
-          <header className="pb-6 border-b border-[var(--line)]">
-            <p className="kicker mb-3">Straight answers</p>
-            <h1 className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] font-black leading-[0.95] tracking-[-0.03em] text-[var(--charcoal)]">{t('faq.title')}</h1>
-            <p className="text-[var(--ink-soft)] mt-4 max-w-2xl leading-relaxed">{t('faq.description')}</p>
+          <header className="pb-7 border-b-2 border-[var(--charcoal)]">
+            <p className="masthead-date mb-3">10 — FAQ · rights · programs · fine print</p>
+            <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[0.005em] text-[clamp(1.9rem,4vw,3rem)] text-[var(--charcoal)]">{t('faq.title')}</h1>
+            <p className="text-[15px] leading-relaxed text-[var(--ink-soft)] mt-3.5 max-w-2xl">{t('faq.description')}</p>
           </header>
 
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('faq.searchPlaceholder')}
-            className="w-full px-4 py-3 bg-[var(--paper)] border border-[var(--line)] rounded-xl text-sm outline-none focus:border-[var(--charcoal)]"
+            className="w-full px-4 py-3 bg-[var(--paper)] border border-[var(--line)] rounded-[2px] text-sm outline-none focus:border-[var(--charcoal)]"
             aria-label="Search questions"
           />
 
@@ -87,14 +87,14 @@ export default function FAQPage() {
                         <article key={id} className="desk-card overflow-hidden">
                           <button onClick={() => setOpen(open === id ? null : id)} aria-expanded={open === id} className="w-full p-4 text-left flex justify-between gap-3 hover:bg-[var(--wax)] transition-colors">
                             <span className="font-display font-bold text-[var(--charcoal)]">{faq.q}</span>
-                            <ChevronDown className={cn('w-4 h-4 shrink-0 transition-transform text-[var(--red)]', open === id && 'rotate-180')} />
+                            <ChevronDown className={cn('w-4 h-4 shrink-0 transition-transform text-[var(--muted)]', open === id && 'rotate-180')} />
                           </button>
                           {open === id && (
                             <div className="px-4 pb-4 border-t border-[var(--line)] pt-3">
                               <div className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{faq.a}</div>
                               <div className="flex flex-wrap gap-4 mt-3 text-xs font-bold">
                                 {faq.sources.map((s) => (
-                                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-[var(--red)]">{s.name}</a>
+                                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-[var(--blue)]">{s.name}</a>
                                 ))}
                               </div>
                             </div>
@@ -110,8 +110,8 @@ export default function FAQPage() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-20">
-          <div className="bg-[var(--charcoal)] text-[var(--paper)] rounded-xl p-5">
-            <p className="flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-[0.18em] text-[#E8B54A]">
+          <div className="bg-[var(--charcoal)] text-[var(--paper)] rounded-[2px] p-5">
+            <p className="flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-[0.18em] text-[var(--yellow)]">
               <PhoneCall className="w-3.5 h-3.5" /> Need a person?
             </p>
             <p className="font-display text-xl font-black mt-2 leading-tight">Ask someone who does this all day.</p>
@@ -121,7 +121,7 @@ export default function FAQPage() {
             {HOTLINES.map((h) => (
               <a key={h.id} href={telHref(h.phone)} className="block group">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">{h.name}</p>
-                <p className="font-display text-xl font-extrabold text-[var(--charcoal)] group-hover:text-[var(--red)] transition-colors">{h.phone}</p>
+                <p className="font-display text-xl font-extrabold text-[var(--charcoal)] group-hover:text-[var(--blue)] transition-colors">{h.phone}</p>
                 <p className="text-[11px] text-[var(--muted)]">{h.hours} · {h.blurb}</p>
               </a>
             ))}

@@ -52,8 +52,8 @@ function createWindow() {
     height: 820,
     minWidth: 880,
     minHeight: 560,
-    title: 'DOR101 — The Dot desk',
-    backgroundColor: '#f6f7f4',
+    title: 'DOR101 — Dorchester, Boston',
+    backgroundColor: '#f4f6f8',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -85,12 +85,12 @@ function createWindow() {
         ],
       },
       {
-        label: 'Desk',
+        label: 'Directory',
         submenu: [
           { label: 'Refresh All', click: () => mainWindow && mainWindow.webContents.send('refresh-all') },
           { label: 'Generate Report', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
           { type: 'separator' },
-          { label: 'Front Desk', click: () => mainWindow && mainWindow.loadURL(`http://127.0.0.1:${PORT}/`) },
+          { label: 'Home', click: () => mainWindow && mainWindow.loadURL(`http://127.0.0.1:${PORT}/`) },
         ],
       },
       {

@@ -30,15 +30,15 @@ function buildTranslations(): Record<string, Dict> {
 
     // ── Introduction ────────────────────────────────────
     'intro.title':         'DOR101',
-    'intro.subtitle':      'Dorchester desk',
+    'intro.subtitle':      'Dorchester, Boston',
     'intro.body':          'Phone numbers, waitlist status, SNAP math, and the Red Line — for Fields Corner, Codman, Ashmont, and the rest of the Dot. No account. We cite the agency, not a rumor.',
-    'intro.cta':           'Open the desk',
+    'intro.cta':           'Open the directory',
 
     // ── Dashboard ───────────────────────────────────────
     'dashboard.greeting.morning':   'Good morning',
     'dashboard.greeting.afternoon': 'Good afternoon',
     'dashboard.greeting.evening':   'Good evening',
-    'dashboard.welcome':            'This is the desk',
+    'dashboard.welcome':            'Dorchester in one place',
     'dashboard.tagline':            'Housing, food, transit, rights.',
     'dashboard.glance':             'Dorchester at a Glance',
     'dashboard.quickAccess':        'Quick Access',
@@ -47,7 +47,7 @@ function buildTranslations(): Record<string, Dict> {
     'dashboard.spotlight':          'Spotlight',
     'dashboard.mapTitle':           'Dorchester Resources Map',
     'dashboard.viewFullMap':        'View Full Map',
-    'dashboard.footer.line1':       'DOR101 — Dorchester desk. Free. No tracking.',
+    'dashboard.footer.line1':       'DOR101 — free, no tracking, no account.',
     'dashboard.footer.line2':       'Figures come from Boston.gov, BPDA, BHA, HUD, MBTA, and the organizations named on each page.',
     'dashboard.footer.verified':    'Each page dates its own sources.',
 
@@ -245,7 +245,7 @@ function buildTranslations(): Record<string, Dict> {
     'settings.noAccount':     'No account required',
     'settings.about':         'About DOR101',
     'settings.version':       'Version 2.0.0',
-    'settings.aboutDesc':     'A public-information desk for Dorchester. Confirm waitlists and hours with the agency before you act.',
+    'settings.aboutDesc':     'A public-information directory for Dorchester. Confirm waitlists and hours with the agency before you act.',
     'settings.viewSources':   'View Data Sources',
     'settings.resetPrefs':    'Clear saved preferences on this device',
     'resources.search':       'Search organizations or services…',

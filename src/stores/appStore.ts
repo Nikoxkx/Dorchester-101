@@ -11,15 +11,12 @@ interface AppState {
   theme: Theme;
   language: Language;
   fontSize: FontSize;
-  sidebarCollapsed: boolean;
   lastUpdated: string | null;
   reduceMotion: boolean;
   
   setTheme: (theme: Theme) => void;
   setLanguage: (language: Language) => void;
   setFontSize: (fontSize: FontSize) => void;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (collapsed: boolean) => void;
   setLastUpdated: (time: string) => void;
   setReduceMotion: (reduce: boolean) => void;
 }
@@ -77,15 +74,12 @@ export const useAppStore = create<AppState>()(
       theme: 'system',
       language: 'en',
       fontSize: 'medium',
-      sidebarCollapsed: false,
-      lastUpdated: null,
+            lastUpdated: null,
       reduceMotion: false,
       
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
       setFontSize: (fontSize) => set({ fontSize }),
-      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setLastUpdated: (time) => set({ lastUpdated: time }),
       setReduceMotion: (reduce) => set({ reduceMotion: reduce }),
     }),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/components/ui/icons';
 
 export function Modal({
   open,
@@ -43,7 +43,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative mx-auto mt-16 bg-[var(--paper)] border border-[var(--line)] rounded-2xl shadow-2xl overflow-hidden"
+        className="relative mx-auto mt-16 bg-[var(--paper)] border border-[var(--line)] rounded-[2px] shadow-2xl overflow-hidden"
         style={{ width: `min(${wide ? '640px' : '480px'}, calc(100% - 24px))` }}
       >
         {title && (

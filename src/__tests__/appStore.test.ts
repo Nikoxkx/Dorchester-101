@@ -7,7 +7,6 @@ describe('useAppStore', () => {
       theme: 'system',
       language: 'en',
       fontSize: 'medium',
-      sidebarCollapsed: false,
       lastUpdated: null,
       reduceMotion: false,
     });
@@ -17,7 +16,6 @@ describe('useAppStore', () => {
     const state = useAppStore.getState();
     expect(state.language).toBe('en');
     expect(state.theme).toBe('system');
-    expect(state.sidebarCollapsed).toBe(false);
   });
 
   it('sets language', () => {
@@ -28,13 +26,6 @@ describe('useAppStore', () => {
   it('sets theme', () => {
     useAppStore.getState().setTheme('dark');
     expect(useAppStore.getState().theme).toBe('dark');
-  });
-
-  it('toggles sidebar', () => {
-    useAppStore.getState().toggleSidebar();
-    expect(useAppStore.getState().sidebarCollapsed).toBe(true);
-    useAppStore.getState().toggleSidebar();
-    expect(useAppStore.getState().sidebarCollapsed).toBe(false);
   });
 
   it('maps font sizes to CSS pixels', () => {
