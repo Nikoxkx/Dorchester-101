@@ -6,22 +6,39 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export type Theme = 'light' | 'dark' | 'system';
 export type Language = 'en' | 'es' | 'ht' | 'pt' | 'vi' | 'kea' | 'so' | 'zh' | 'ar';
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
+export type FavoriteKind = 'project' | 'listing' | 'food' | 'resource';
+
+export interface FavoriteItem {
+  id: string;
+  kind: FavoriteKind;
+  title: string;
+  href: string;
+  savedAt: string;
+}
 
 interface AppState {
   theme: Theme;
   language: Language;
   fontSize: FontSize;
   sidebarCollapsed: boolean;
-  lastUpdated: string | null;
   reduceMotion: boolean;
-  
+  reduceTransparency: boolean;
+  favorites: FavoriteItem[];
+  lastUpdated: string | null;
+
   setTheme: (theme: Theme) => void;
   setLanguage: (language: Language) => void;
   setFontSize: (fontSize: FontSize) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
-  setLastUpdated: (time: string) => void;
   setReduceMotion: (reduce: boolean) => void;
+  setReduceTransparency: (reduce: boolean) => void;
+  setLastUpdated: (time: string) => void;
+
+  toggleFavorite: (item: Omit<FavoriteItem, 'savedAt'>) => boolean;
+  isFavorite: (id: string) => boolean;
+  removeFavorite: (id: string) => void;
+  clearFavorites: () => void;
 }
 
 export const LANGUAGE_INFO: Record<Language, { name: string; nativeName: string; flag: string; rtl?: boolean }> = {
@@ -36,14 +53,15 @@ export const LANGUAGE_INFO: Record<Language, { name: string; nativeName: string;
   ar: { name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', rtl: true },
 };
 
+/** Base root font-size per user setting. The whole rem type scale follows it. */
 export const FONT_SIZE_VALUES: Record<FontSize, string> = {
-  'small': '14px',
-  'medium': '16px',
-  'large': '18px',
+  small: '14px',
+  medium: '16px',
+  large: '18px',
   'extra-large': '20px',
 };
 
-// Custom storage that handles SSR
+// Local-only storage — privacy-first: nothing a user chooses ever leaves the device.
 const customStorage = {
   getItem: (name: string): string | null => {
     if (typeof window === 'undefined') return null;
@@ -58,7 +76,7 @@ const customStorage = {
     try {
       localStorage.setItem(name, value);
     } catch {
-      // Ignore storage errors
+      // Ignore storage errors (private mode, quota)
     }
   },
   removeItem: (name: string): void => {
@@ -73,25 +91,44 @@ const customStorage = {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       theme: 'system',
       language: 'en',
       fontSize: 'medium',
       sidebarCollapsed: false,
-      lastUpdated: null,
       reduceMotion: false,
-      
+      reduceTransparency: false,
+      favorites: [],
+      lastUpdated: null,
+
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
       setFontSize: (fontSize) => set({ fontSize }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setReduceMotion: (reduceMotion) => set({ reduceMotion }),
+      setReduceTransparency: (reduceTransparency) => set({ reduceTransparency }),
       setLastUpdated: (time) => set({ lastUpdated: time }),
-      setReduceMotion: (reduce) => set({ reduceMotion: reduce }),
+
+      toggleFavorite: (item) => {
+        const exists = get().favorites.some((f) => f.id === item.id);
+        if (exists) {
+          set((s) => ({ favorites: s.favorites.filter((f) => f.id !== item.id) }));
+          return false;
+        }
+        set((s) => ({
+          favorites: [...s.favorites, { ...item, savedAt: new Date().toISOString() }],
+        }));
+        return true;
+      },
+      isFavorite: (id) => get().favorites.some((f) => f.id === id),
+      removeFavorite: (id) =>
+        set((s) => ({ favorites: s.favorites.filter((f) => f.id !== id) })),
+      clearFavorites: () => set({ favorites: [] }),
     }),
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-    }
-  )
+    },
+  ),
 );

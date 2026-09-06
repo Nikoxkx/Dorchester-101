@@ -50,10 +50,11 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
+    autoHideMenuBar: false,
     minWidth: 880,
     minHeight: 560,
-    title: 'DOR101 — Dorchester desk',
-    backgroundColor: '#f0ebe3',
+    title: 'DOR101 — Dorchester resources, live',
+    backgroundColor: '#000000',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -90,7 +91,7 @@ function createWindow() {
         label: 'Data',
         submenu: [
           { label: 'Refresh All', click: () => mainWindow && mainWindow.webContents.send('refresh-all') },
-          { label: 'Export College Pathway', click: () => mainWindow && mainWindow.webContents.send('export-college') },
+          { label: 'Print current page', click: () => mainWindow && mainWindow.webContents.send('generate-report') },
         ],
       },
       {

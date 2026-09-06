@@ -1,130 +1,296 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { formatCurrency, telHref } from '@/lib/utils';
-import { useApi } from '@/hooks/useApi';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from '@/stores/toastStore';
+import { useShare } from '@/lib/share';
+import { GlassButton, GlassSegmented } from '@/components/glass/GlassControls';
+import { FOOD_SITES, type FoodSite } from '@/data/food';
+import { isOpenNow } from '@/lib/hours';
+import { telHref } from '@/lib/utils';
+import { formatFor } from '@/lib/i18n';
+import {
+  Heart, Phone, Globe, Share2, MapPin, ShoppingCart, Search, Clock3, Printer,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface FoodPayload {
-  sites: {
-    id: string;
-    name: string;
-    type: string;
-    address: string;
-    neighborhood: string;
-    phone: string;
-    website: string | null;
-    hours: Record<string, string>;
-    languages: string[];
-    foodTypes: string[];
-    requirements: string;
-    openNow: boolean;
-    lastVerified: string;
-  }[];
-  snap: { maxMonthly: Record<number, number>; applyUrl: string; phone: string; sourceUrl: string; fiscalYear: string };
-}
+type SiteFilter = 'all' | 'Food Pantry' | 'Hot Meals' | 'Mobile Market';
 
 export default function FoodPage() {
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
-  const { data, loading, error, reload } = useApi<FoodPayload>('/api/food');
-  const [q, setQ] = useState('');
-  const [type, setType] = useState('');
-
-  const sites = (data?.sites || []).filter((s) => {
-    const hay = `${s.name} ${s.neighborhood} ${s.address}`.toLowerCase();
-    return hay.includes(q.toLowerCase()) && (!type || s.type === type);
-  });
-
   return (
     <MainLayout>
-      <div className="space-y-8">
-        <header className="relative border-b-3 border-[var(--ink)] pb-6 overflow-hidden">
-          <div aria-hidden className="absolute top-0 right-0 w-24 h-24 -translate-y-1/2 translate-x-1/4 opacity-[0.06] pointer-events-none"><svg viewBox="0 0 200 200" className="w-full h-full"><rect width="200" height="200" fill="var(--ink)" /></svg></div>
-          <p className="kicker">Food desk</p>
-          <h1 className="font-display text-4xl">{t('food.title')}</h1>
-          <p className="text-[var(--muted)] mt-2 max-w-2xl">{t('food.description')}</p>
-        </header>
+      <FoodView />
+    </MainLayout>
+  );
+}
 
-        <section className="bg-[var(--red)] text-white p-5">
-          <h2 className="font-display text-2xl">{t('food.needFoodToday')}</h2>
-          <p className="mt-1 text-white/90">{t('food.callHotline')}</p>
-          <a href="tel:18006458333" className="inline-block mt-4 bg-white text-[var(--red)] px-4 py-2 font-mono font-bold text-xl">
-            1-800-645-8333
-          </a>
-          <p className="text-xs mt-2 text-white/80">Mon–Fri 8 AM–5 PM · 180+ languages</p>
-        </section>
+function FoodView() {
+  const { language } = useAppStore();
+  const { t, formatFor } = useTranslation(language);
 
-        <div className="flex flex-col sm:flex-row gap-2">
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<SiteFilter>('all');
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return FOOD_SITES.filter((s) => {
+      if (filter !== 'all' && s.type !== filter) return false;
+      if (!q) return true;
+      return `${s.name} ${s.neighborhood} ${s.address} ${s.foodTypes.join(' ')}`.toLowerCase().includes(q);
+    });
+  }, [query, filter]);
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-large font-bold tracking-tight text-1">{t('food.title')}</h1>
+        <p className="text-title3 text-text-2 mt-1.5 max-w-2xl leading-snug">{t('food.description')}</p>
+      </header>
+
+      <section aria-label={t('food.needFoodToday')} className="content-card squircle p-5">
+        <p className="kicker text-danger">{t('food.needFoodToday')}</p>
+        <p className="text-subhead text-text-2 mt-1.5 max-w-2xl">{t('food.callHotline')}</p>
+        <a
+          href="tel:18006458333"
+          className="mt-4 inline-flex items-center gap-2.5 h-12 px-6 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
+          style={{ background: 'var(--red-text)' }}
+        >
+          <Phone className="w-4.5 h-4.5" strokeWidth={2} aria-hidden />
+          <span className="num text-title3">1-800-645-8333</span>
+        </a>
+        <p className="text-caption2 text-text-3 mt-2.5">
+          {t('common.source')}: Project Bread FoodSource Hotline
+        </p>
+      </section>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2 no-print">
+        <label className="glass glass-clear glass-edge flex items-center gap-2 rounded-full h-10 px-4 flex-1 min-w-56 max-w-md">
+          <Search className="w-4 h-4 text-text-3 shrink-0" aria-hidden />
           <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Name, square, address…"
-            className="flex-1 px-3 py-2 bg-[var(--surface)] border border-[var(--line)] text-sm"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('common.search')}
+            aria-label={t('common.search')}
+            className="w-full bg-transparent outline-none text-subhead text-1 placeholder:text-text-3"
           />
-          <select value={type} onChange={(e) => setType(e.target.value)} className="px-3 py-2 bg-[var(--surface)] border border-[var(--line)] text-sm">
-            <option value="">All types</option>
-            <option value="Food Pantry">Pantries</option>
-            <option value="Hot Meals">Hot meals</option>
-            <option value="Mobile Market">Mobile</option>
-          </select>
+        </label>
+        <GlassSegmented<SiteFilter>
+          ariaLabel={t('food.title')}
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: t('food.filters.all') },
+            { value: 'Food Pantry', label: t('food.filters.pantry') },
+            { value: 'Hot Meals', label: t('food.filters.meals') },
+          ]}
+        />
+        <GlassButton
+          size="md"
+          onClick={() => window.print()}
+          icon={<Printer className="w-4 h-4" aria-hidden />}
+        >
+          {t('common.print')}
+        </GlassButton>
+      </div>
+
+      {/* Results */}
+      <p className="text-caption font-semibold uppercase tracking-wider text-text-3" aria-live="polite">
+        {formatFor.number(results.length)} {t('common.results')}
+      </p>
+      {results.length === 0 ? (
+        <div className="content-card squircle p-10 text-center">
+          <p className="text-body font-semibold text-1">{t('common.empty')}</p>
+          <p className="text-subhead text-text-2 mt-1.5">{t('projects.tryDifferent')}</p>
         </div>
-
-        {loading && <LoadingSpinner />}
-        {error && <button onClick={reload} className="underline">{t('common.retry')}</button>}
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {sites.map((site) => (
-            <article key={site.id} className="desk-panel p-4 flex flex-col gap-3">
-              <div>
-                <h2 className="font-display text-xl">{site.name}</h2>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="red">{site.type}</Badge>
-                  <Badge variant={site.openNow ? 'green' : 'default'}>{site.openNow ? 'Open now' : 'See hours'}</Badge>
-                </div>
-              </div>
-              <p className="text-sm">{site.address}<br /><span className="text-[var(--muted)]">{site.neighborhood}</span></p>
-              <a href={telHref(site.phone)} className="underline text-sm">{site.phone}</a>
-              <dl className="text-xs text-[var(--muted)] grid grid-cols-2 gap-x-4">
-                {Object.entries(site.hours).map(([day, hours]) => (
-                  <div key={day} className="flex justify-between gap-2">
-                    <dt className="capitalize">{day.slice(0, 3)}</dt>
-                    <dd>{hours}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="text-sm">{site.requirements}</p>
-              <p className="text-[11px] text-[var(--muted)]">Verified {site.lastVerified}</p>
-              {site.website && (
-                <a href={site.website} target="_blank" rel="noreferrer" className="text-sm underline">Website</a>
-              )}
-            </article>
+      ) : (
+        <ul className="grid md:grid-cols-2 gap-3">
+          {results.map((s) => (
+            <li key={s.id}>
+              <FoodCard site={s} />
+            </li>
           ))}
-        </div>
+        </ul>
+      )}
 
-        {data?.snap && (
-          <section className="desk-panel p-5">
-            <h2 className="font-display text-2xl mb-2">{t('food.snapTitle')} · {data.snap.fiscalYear}</h2>
-            <p className="text-sm mb-3">Massachusetts uses 200% of poverty for the gross test. Maximum allotment, not a promise of that amount:</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-              {Object.entries(data.snap.maxMonthly).map(([size, amt]) => (
-                <div key={size} className="border border-[var(--line)] p-2">
-                  <p className="text-[11px] uppercase text-[var(--muted)]">{size} person</p>
-                  <p className="font-mono">{formatCurrency(Number(amt))}/mo</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-3 mt-4">
-              <a href={data.snap.applyUrl} target="_blank" rel="noreferrer" className="bg-[var(--red)] text-white px-4 py-2 text-sm font-bold">DTAConnect</a>
-              <a href={telHref(data.snap.phone)} className="underline text-sm">{data.snap.phone}</a>
-            </div>
-          </section>
+      {/* SNAP guide */}
+      <section aria-label={t('food.snapTitle')} className="content-card squircle p-5 md:p-6 print-block">
+        <h2 className="text-title2 font-bold text-1 flex items-center gap-2.5">
+          <ShoppingCart className="w-5 h-5" strokeWidth={2} aria-hidden />
+          {t('food.snapTitle')}
+        </h2>
+        <p className="text-subhead text-text-2 mt-2 max-w-3xl leading-relaxed">{t('food.snapBody')}</p>
+        <div className="flex flex-wrap gap-2 mt-4 no-print">
+          <a
+            href="https://www.mass.gov/snap-benefits"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-ink text-canvas text-subhead font-semibold hover:opacity-85"
+          >
+            {t('common.applyNow')}
+          </a>
+          <a
+            href="tel:18775137733"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-full glass glass-clear glass-edge text-subhead font-semibold text-1"
+          >
+            <Phone className="w-4 h-4" strokeWidth={2} aria-hidden />
+            <span className="num">DTA: 1-877-513-7333</span>
+          </a>
+        </div>
+        <p className="text-caption2 text-text-3 mt-4">
+          {t('common.source')}: Massachusetts DTA · SNAP FY2026 amounts verified 2026-09-06
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function FoodCard({ site }: { site: FoodSite }) {
+  const { language } = useAppStore();
+  const { t, formatFor } = useTranslation(language);
+  const toast = useToast();
+  const share = useShare();
+  const { favorites, toggleFavorite } = useAppStore();
+  const saved = favorites.some((f) => f.id === `food-${site.id}`);
+  const open = isOpenNow(site.hours);
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+  const todayName = days[new Date().getDay()];
+
+  const mapsUrl = site.lat
+    ? `https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.address)}`;
+
+  return (
+    <article className="content-card squircle p-5 h-full flex flex-col print-block">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-body font-bold text-1 leading-snug">{site.name}</h2>
+          <p className="text-caption text-text-2 mt-0.5">
+            {t(`food.type.${site.type === 'Food Pantry' ? 'pantry' : site.type === 'Hot Meals' ? 'meals' : site.type === 'Mobile Market' ? 'mobile' : 'hotline'}` as const)}
+            {' · '}
+            {site.neighborhood}
+          </p>
+        </div>
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 text-caption2 font-bold uppercase tracking-wider shrink-0',
+            open ? 'text-success' : 'text-text-3',
+          )}
+        >
+          <span aria-hidden className={cn('dot', open ? 'dot-open' : 'dot-pending')} />
+          {open ? t('common.open') : t('common.closed')}
+        </span>
+      </div>
+
+      <p className="text-footnote text-text-1 mt-3">{site.address}</p>
+
+      <div className="mt-3">
+        <p className="text-caption2 font-semibold uppercase tracking-wider text-text-2 flex items-center gap-1.5">
+          <Clock3 className="w-3.5 h-3.5" aria-hidden />
+          {t('food.hoursTitle')}
+        </p>
+        <ul className="mt-1 space-y-0.5">
+          {days.map((d) => {
+            const hours = site.hours[d];
+            if (!hours || /closed/i.test(hours)) return null;
+            const isToday = d === todayName;
+            return (
+              <li
+                key={d}
+                className={cn(
+                  'flex justify-between gap-3 text-caption num',
+                  isToday ? 'font-bold text-1' : 'text-text-2',
+                )}
+              >
+                <span>{formatFor.date(new Date(2026, 0, 4 + days.indexOf(d)), { weekday: 'short' })}</span>
+                <span>{hours}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="text-caption2 text-text-3 mt-1.5">{t('food.hoursNote')}</p>
+      </div>
+
+      {site.requirements && (
+        <p className="text-caption text-text-2 mt-3">
+          <span className="font-semibold text-1">{t('food.requirements')}: </span>
+          {site.requirements}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {site.foodTypes.slice(0, 4).map((f) => (
+          <span key={f} className="text-caption2 font-semibold bg-[var(--surface-2)] text-text-2 rounded-full px-2.5 py-1">
+            {f}
+          </span>
+        ))}
+        {site.acceptsEbt && (
+          <span className="text-caption2 font-semibold bg-success-fill/15 text-success rounded-full px-2.5 py-1">
+            {t('food.acceptsEbt')}
+          </span>
         )}
       </div>
-    </MainLayout>
+
+      <div className="flex flex-wrap items-center gap-2 mt-4 no-print">
+        <a
+          href={telHref(site.phone)}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full glass glass-clear glass-edge text-footnote font-semibold text-1"
+        >
+          <Phone className="w-3.5 h-3.5" strokeWidth={2} aria-hidden />
+          <span className="num">{site.phone}</span>
+        </a>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full glass glass-clear glass-edge text-footnote font-semibold text-1"
+        >
+          <MapPin className="w-3.5 h-3.5" strokeWidth={2} aria-hidden />
+          {t('common.directions')}
+        </a>
+        {site.website && (
+          <a
+            href={site.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-full glass glass-clear glass-edge text-1"
+            aria-label={`${t('common.website')} — ${site.name}`}
+          >
+            <Globe className="w-4 h-4" strokeWidth={2} aria-hidden />
+          </a>
+        )}
+        <span className="ms-auto flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              const added = toggleFavorite({
+                id: `food-${site.id}`,
+                kind: 'food',
+                title: site.name,
+                href: '/food',
+              });
+              toast(added ? t('food.saved') : t('saved.removed'), 'success');
+            }}
+            className="p-2.5 rounded-full glass glass-clear glass-edge text-1 hover:bg-[var(--glass-clear-hover)]"
+            aria-label={`${saved ? t('saved.remove') : t('common.save')} — ${site.name}`}
+            aria-pressed={saved}
+          >
+            <Heart className={cn('w-4 h-4', saved && 'fill-danger text-danger')} strokeWidth={2} aria-hidden />
+          </button>
+          <button
+            onClick={() => void share({ title: site.name, text: `${site.name} — ${site.address}`, url: mapsUrl })}
+            className="p-2.5 rounded-full glass glass-clear glass-edge text-1 hover:bg-[var(--glass-clear-hover)]"
+            aria-label={`${t('common.share')} — ${site.name}`}
+          >
+            <Share2 className="w-4 h-4" strokeWidth={2} aria-hidden />
+          </button>
+        </span>
+      </div>
+
+      <p className="text-caption2 text-text-3 mt-3">
+        {t('common.lastVerified')}: {formatFor.date(site.lastVerified)}
+      </p>
+    </article>
   );
 }
