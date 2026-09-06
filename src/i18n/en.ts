@@ -297,6 +297,7 @@ export const en = {
   'map.tapStop': 'Tap a stop for departures',
   'map.stopsTitle': 'Stops',
   'map.dataCredits': 'Transit data: MBTA. Basemap: OpenStreetMap contributors. Imagery: Esri.',
+  'map.placeDetails': 'Place details',
 
   // ── Notifications ─────────────────────────────────────────────────────
   'notifications.title': 'Updates',
@@ -511,6 +512,9 @@ export const en = {
   'faq.lastChecked': 'Checked {date}',
   'faq.count': '{count} questions',
   'faq.topic.housing': 'Housing and rent',
+  'faq.stillBody': 'Call 2-1-1 any hour for a person who can point you to the right office, in your language. Or browse every listing in the directory.',
+  'faq.call211': 'Call 2-1-1',
+  'faq.viewAll': 'Open the directory',
 
   // ── Settings ──────────────────────────────────────────────────────────
   'settings.title': 'Settings',
@@ -570,6 +574,21 @@ export const en = {
   'settings.mapSatelliteNote': 'Tiles are loaded from the tile provider when you are online.',
   'settings.customFeedLabel': 'Short name',
   'settings.detectedNone': 'No device preference detected',
+  'settings.surface': 'Surface',
+  'settings.surface.solid': 'Solid',
+  'settings.surface.glass': 'Transparent',
+  'settings.surfaceNote': 'Transparent lets the Dorchester Bay photograph show through the panels and the menu, with a blur behind the text. Text colours never change, so everything stays readable in both light and dark mode.',
+  'settings.surfaceContrastNote': 'High contrast is on, so the solid palette is used regardless.',
+  'settings.surfaceHint': 'Also available from the menu: the “Transparent” switch at the bottom of the sidebar.',
+  'settings.palette': 'Colour palette',
+  'settings.palette.harbor': 'Harbor (default)',
+  'settings.palette.midnight': 'Black & white',
+  'settings.palette.forest': 'Forest',
+  'settings.palette.brick': 'Brick',
+  'settings.palette.slate': 'Slate',
+  'settings.palette.sand': 'Sand',
+  'settings.palette.violet': 'Violet',
+  'settings.paletteNote': 'Every palette has a light and a dark version and keeps the same contrast ratios, so text stays readable whichever you pick. Transit line colours never change: they are the MBTA’s.',
 
   // ── PWA and updates ───────────────────────────────────────────────────
   'pwa.install': 'Install DOR101',
@@ -681,6 +700,24 @@ export const en = {
   'feed.transitName.mbta-predictions': 'Arrival predictions',
   'feed.transitName.mbta-alerts': 'Service alerts',
   'feed.transitName.mbta-cr': 'Commuter Rail times',
+  'glance.rent.summary': 'Median gross rent (rent plus utilities) for all renter households, from the Census Bureau\'s American Community Survey.',
+  'glance.rent.income': 'Median household income: {value} a year.',
+  'glance.rent.renters': '{value} of households rent rather than own.',
+  'glance.rent.burden': '{value} of renters spend more than 30% of income on rent.',
+  'glance.rent.wage': 'A full-time minimum-wage worker can afford about {value} a month.',
+  'glance.rent.geography': 'Figures are for Boston; Dorchester rents are usually a little lower than the citywide median.',
+  'glance.food.summary': 'Food pantries, hot-meal programs and community fridges in the DOR101 directory with published hours this week.',
+  'glance.food.listed': '{count} food sites listed in Dorchester.',
+  'glance.food.openNow': '{count} open right now, Boston time.',
+  'glance.food.noId': 'Most pantries do not ask for ID or proof of income; each listing says if one does.',
+  'glance.food.snap': 'SNAP, WIC and HIP eligibility guides are on the Food page.',
+  'glance.verify.summary': 'Every listing is checked by a resident against the organisation\'s own published information, and the date of that check is shown on the listing.',
+  'glance.verify.total': '{count} organisations in the directory.',
+  'glance.verify.fresh': '{count} checked within the last 90 days.',
+  'glance.verify.backlog': '{count} due for a fresh check; those listings carry a visible warning.',
+  'glance.verify.how': 'Wrong number or closed door? Use “Report a problem” on any listing and it is fixed in public.',
+  'glance.transit.summary': 'MBTA rail and trolley lines that stop inside Dorchester. The map adds every bus route and live departure times.',
+  'glance.transit.live': 'Departure times come straight from the MBTA and refresh every 30 seconds while the map is open.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

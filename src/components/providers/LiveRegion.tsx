@@ -69,7 +69,11 @@ export function LiveRegionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!lastAnnouncement || lastAnnouncement.id === seenId.current) return;
     seenId.current = lastAnnouncement.id;
-    if (enabled) push(lastAnnouncement.message, lastAnnouncement.politeness);
+    if (!enabled) return;
+    // Defer one tick: screen readers need the region to be empty then filled,
+    // and React's lint rule (rightly) flags a synchronous setState in an effect.
+    const id = window.setTimeout(() => push(lastAnnouncement.message, lastAnnouncement.politeness), 0);
+    return () => window.clearTimeout(id);
   }, [lastAnnouncement, enabled, push]);
 
   useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);

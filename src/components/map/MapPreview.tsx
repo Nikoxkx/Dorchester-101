@@ -1,21 +1,20 @@
 'use client';
 
-import { AttributionControl, MapContainer, Polyline, TileLayer } from 'react-leaflet';
-import { Fragment } from 'react';
+import { AttributionControl, MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { TRANSIT_LINES } from '@/data/transit';
 
 /**
- * The map as a card preview: real tiles, real geometry, no controls.
+ * The map as a card preview: real tiles, no symbols, no controls.
  *
- * It is deliberately not a screenshot and not a second copy of the interactive
- * map. Dragging, zooming and popups are switched off so a preview inside a card
- * cannot trap a scroll gesture, and the attribution stays visible because the
- * tile providers require it even at this size.
+ * Deliberately just imagery. Route lines and markers are SVG overlays in a
+ * Leaflet pane that ignores the card's overflow clipping while the page scrolls,
+ * so on the dashboard they used to bleed over neighbouring content; the full,
+ * interactive map is one tap away and draws them properly. Dragging, zooming and
+ * popups are off so the preview cannot trap a scroll gesture.
  */
 export function MapPreview({ height = '15rem' }: { height?: string }) {
   return (
-    <div style={{ height }} className="relative w-full overflow-hidden">
+    <div style={{ height }} className="dor101-map-preview relative isolate w-full overflow-hidden">
       <MapContainer
         center={[42.3065, -71.064]}
         zoom={13}
@@ -34,18 +33,6 @@ export function MapPreview({ height = '15rem' }: { height?: string }) {
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           attribution="Imagery &copy; Esri, Maxar, Earthstar Geographics"
         />
-        {TRANSIT_LINES.filter((line) => line.fallbackPath).map((line) => (
-          <Fragment key={line.id}>
-            <Polyline
-              positions={line.fallbackPath!}
-              pathOptions={{ color: '#FFFFFF', opacity: 0.8, weight: 6 }}
-            />
-            <Polyline
-              positions={line.fallbackPath!}
-              pathOptions={{ color: `#${line.color.replace('#', '')}`, opacity: 0.95, weight: 3 }}
-            />
-          </Fragment>
-        ))}
         <AttributionControl position="bottomright" prefix={false} />
       </MapContainer>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ import {
   Search,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from "@/components/ui/Badge";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
 import { useI18n } from "@/i18n/hook";
@@ -70,7 +71,9 @@ export function ResourcesView() {
 
   // /resources?place=foodsolving or a search term from the header's palette lands
   // the reader on the record they asked for instead of the top of an unfiltered list.
-  useEffect(() => {
+  const [seenParams, setSeenParams] = useState<string | null>(null);
+  if (searchParams.toString() !== seenParams) {
+    setSeenParams(searchParams.toString());
     const place = searchParams.get("place");
     const q = searchParams.get("q");
     if (place) {
@@ -83,7 +86,7 @@ export function ResourcesView() {
     } else if (q) {
       setQuery(q);
     }
-  }, [searchParams]);
+  }
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -540,7 +543,7 @@ export function ResourcesView() {
                                   : t("time.opensOn", {
                                       day: format.weekday(
                                         new Date(
-                                          Date.now() +
+                                          now.getTime() +
                                             status.opensOnDayOffset *
                                               86_400_000,
                                         ),
@@ -569,6 +572,9 @@ export function ResourcesView() {
           <div className="mt-2.5">
             <ReportProblem />
           </div>
+        <ProjectNote sources={['dor101', 'bostongov', 'masslegal', 'bha']}>
+          Program descriptions are written from the official page or printed schedule of each organisation and re-checked on the date shown. Legal rights summaries follow MassLegalHelp; nothing here is legal advice.
+        </ProjectNote>
         </section>
       </div>
     </MainLayout>

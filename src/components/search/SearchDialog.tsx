@@ -105,13 +105,15 @@ export function SearchDialog() {
     if (!open) return;
     if (debounce.current) window.clearTimeout(debounce.current);
     if (term.trim().length < 2) {
-      setPayload(null);
-      setLoading(false);
-      setFailed(false);
+      debounce.current = window.setTimeout(() => {
+        setPayload(null);
+        setLoading(false);
+        setFailed(false);
+      }, 0);
       return;
     }
-    setLoading(true);
     debounce.current = window.setTimeout(async () => {
+      setLoading(true);
       controller.current?.abort();
       const ctrl = new AbortController();
       controller.current = ctrl;

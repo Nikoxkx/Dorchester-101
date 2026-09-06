@@ -76,6 +76,7 @@ export function useReadAloud(): ReadAloudApi {
     [voices, langPrefix]
   );
 
+  const speakNextRef = useRef<() => void>(() => {});
   const speakNext = useCallback(() => {
     if (!supported) return;
     const synth = window.speechSynthesis;
@@ -93,13 +94,16 @@ export function useReadAloud(): ReadAloudApi {
       utterance.lang = chosen.lang;
     }
     utterance.rate = rate;
-    utterance.onend = () => speakNext();
+    utterance.onend = () => speakNextRef.current();
     utterance.onerror = () => {
       queueRef.current = [];
       setSpeaking(false);
     };
     synth.speak(utterance);
   }, [langPrefix, matching, rate, supported, voiceURI, voices]);
+  useEffect(() => {
+    speakNextRef.current = speakNext;
+  }, [speakNext]);
 
   const speak = useCallback(
     (text: string) => {
@@ -146,12 +150,14 @@ export function useReadAloud(): ReadAloudApi {
   );
 
   // Route changes and reduced-motion preferences both expect speech to stop.
+  // A language change mid-sentence should stop speech; the state reset is
+  // deferred a tick so it is not a synchronous setState inside the effect.
   useEffect(() => {
-    if (supported) window.speechSynthesis.cancel();
     queueRef.current = [];
-    setSpeaking(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+    if (supported) window.speechSynthesis.cancel();
+    const id = window.setTimeout(() => setSpeaking(false), 0);
+    return () => window.clearTimeout(id);
+  }, [language, supported]);
 
   return {
     supported,

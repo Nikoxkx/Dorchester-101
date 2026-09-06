@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Layers,
   Apple,
   Building2,
   ListChecks,
@@ -95,6 +96,8 @@ export function Sidebar() {
   const setMobileOpen = useAppStore((s) => s.setMobileNavOpen);
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
+  const surface = useAppStore((s) => s.surface);
+  const setSurface = useAppStore((s) => s.setSurface);
 
   // A drawer that stays open after the tap is a drawer that hides the page.
   useEffect(() => {
@@ -174,6 +177,36 @@ export function Sidebar() {
           label={t(THEME_LABEL[theme])}
           onCycle={() => setTheme(THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length])}
         />
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={surface === 'glass'}
+          onClick={() => setSurface(surface === 'glass' ? 'solid' : 'glass')}
+          title={isCompact ? t('settings.surface.glass') : undefined}
+          className={cn(
+            'flex items-center gap-3 w-full px-3 py-2.5 rounded-[var(--radius-md)]',
+            'text-sm font-heading font-medium transition-colors hover:bg-[var(--color-bg-tertiary)]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]',
+            isCompact && 'justify-center px-2'
+          )}
+        >
+          <Layers className="w-5 h-5 shrink-0" aria-hidden="true" />
+          {!isCompact && (
+            <span className="flex flex-1 items-center justify-between gap-2">
+              {t('settings.surface.glass')}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'relative inline-block h-4 w-7 rounded-full border transition-colors',
+                  surface === 'glass' ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]' : 'border-[var(--color-border-strong)] bg-[var(--color-bg-tertiary)]'
+                )}
+              >
+                <span className={cn('absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow transition-all', surface === 'glass' ? 'start-3.5' : 'start-0.5')} />
+              </span>
+            </span>
+          )}
+        </button>
 
         <button
           type="button"

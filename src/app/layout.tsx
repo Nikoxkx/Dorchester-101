@@ -50,13 +50,13 @@ export const metadata: Metadata = {
     url: "/",
     locale: "en_US",
     alternateLocale: ["es_MX", "fr_HT", "pt_BR", "vi_VN", "zh_CN", "ar"],
-    images: [{ url: "/api/og", width: 1200, height: 630, alt: "DOR101 — Dorchester resource map and service directory" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, type: "image/png", alt: "DOR101 — Boston skyline across Dorchester Bay; free housing, food, transit and legal help for Dorchester" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "DOR101 — Dorchester 101",
     description: "Free housing, food, and community resources for Dorchester residents.",
-    images: ["/api/og"],
+    images: ["/og.png"],
   },
   robots: {
     index: true,
@@ -65,8 +65,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-256.png", sizes: "256x256", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
@@ -109,7 +109,50 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <style>{`.dor101-js-only { display: none !important; } .dor101-nojs { display: block !important; }`}</style>
         </noscript>
       </head>
-      <body className="antialiased dor101-backdrop">
+      <body className="antialiased">
+        {/* Structured data for search engines: a WebSite (with sitelinks search) and
+            the Organization behind it. Kept in the root layout so every page carries it. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "DOR101 — Dorchester 101",
+                alternateName: "DOR101",
+                url: SITE_URL,
+                description: "Free housing, food, transit and legal help for Dorchester residents, in nine languages.",
+                inLanguage: ["en", "es", "ht", "pt", "vi", "zh", "ar", "so", "kea"],
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/resources?q={search_term_string}` },
+                  "query-input": "required name=search_term_string",
+                },
+                publisher: { "@id": `${SITE_URL}/#org` },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "@id": `${SITE_URL}/#org`,
+                name: "DOR101 Community Project",
+                url: SITE_URL,
+                logo: `${SITE_URL}/icons/logo-1024.png`,
+                image: `${SITE_URL}/og.png`,
+                sameAs: ["https://github.com/Nikoxkx/Dorchester-101"],
+                areaServed: { "@type": "Place", name: "Dorchester, Boston, Massachusetts" },
+                nonprofitStatus: "Nonprofit501c3",
+              },
+            ]),
+          }}
+        />
+        {/*
+          The photographic backdrop is its own fixed, pointer-transparent layer.
+          It must never be the <body>: a fixed body with `pointer-events: none`
+          pins the whole document to the viewport (no scrolling) and swallows
+          every click in the page.
+        */}
+        <div className="dor101-backdrop" aria-hidden="true" />
         <DorchesterProviders>{children}</DorchesterProviders>
         <ServiceWorkerRegistration />
       </body>

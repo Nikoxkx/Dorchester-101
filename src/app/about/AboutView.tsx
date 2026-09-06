@@ -16,6 +16,9 @@ import { APP_VERSION, CONTACT_EMAIL, REPO_URL, SITE_URL, hasEmailContact } from 
 import { NEWS_FEEDS, TRANSIT_FEEDS } from '@/data/feeds';
 import { RESOURCES, lastReviewedOn, reviewBacklog, verificationLevel } from '@/data/resources';
 import { TRANSIT_DATA_AS_OF } from '@/data/transit';
+import { SourceMark } from '@/components/sources/SourceMark';
+import { FEED_SOURCE, SOURCES, type SourceId } from '@/data/sources';
+import { Compass, GitFork as Github, Heart, Target } from 'lucide-react';
 import type { TranslationKey } from '@/i18n/en';
 
 /**
@@ -36,7 +39,7 @@ interface Meta {
 }
 
 interface MarketStatus {
-  hudFmr?: 'installed' | 'not-installed' | string;
+  hudFmr?: { status?: 'available' | 'not-installed' | string };
   source?: string;
 }
 
@@ -128,6 +131,62 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
           </figure>
         </div>
 
+        {/* ── What this is, who made it, what it is for ─────────────── */}
+        <section aria-labelledby="mission" className="dor101-glass rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-5">
+          <h2 id="mission" className="flex items-center gap-2 font-heading text-lg font-bold">
+            <Compass className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" />
+            What DOR101 is
+          </h2>
+          <div className="mt-3 grid gap-5 md:grid-cols-3">
+            <div>
+              <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
+                <Target className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> The goal
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                One place where a Dorchester resident can find housing help, food, transit and legal rights <em>tonight</em>, in their own language, without an account, an ad, or a
+                phone tree. The measure of success is whether someone who opens this on a library computer at 4:45 PM finds a pantry that is still open and a bus that gets them there.
+              </p>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
+                <Heart className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> Who made it
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Dorchester residents and volunteers, under the name <strong>DOR101 Community Project</strong>. It is not a city service, a non-profit&apos;s product or a startup. The people who
+                verify listings are the people who use them: tenants, parents, case workers, students. Contributors are listed in the repository&apos;s commit history, where credit belongs.
+              </p>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
+                <Github className="h-4 w-4" aria-hidden="true" /> How it is run
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Open source under the MIT licence. The code, the listing data and every correction are public. There is no analytics, no tracking, no third-party script; fonts and icons ship from
+                this server. It also runs as a Windows desktop app for machines with no reliable internet.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            <p className="font-heading font-bold text-[var(--color-text-primary)]">Three promises, and what they mean in practice</p>
+            <ol className="mt-1.5 list-decimal space-y-1 ps-5">
+              <li><strong>Nothing invented.</strong> A number that cannot be traced to a public dataset or a named organisation is not shown. Where data is missing the page says “unavailable”.</li>
+              <li><strong>Nothing hidden.</strong> Every listing prints the date it was last checked. Every feed and API is named on this page with how often it is read.</li>
+              <li><strong>Nothing sold.</strong> No organisation pays to appear, nothing is ranked by payment, and no visitor data leaves this browser.</li>
+            </ol>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <a href={REPO_URL} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3.5 py-2 font-heading text-xs font-bold text-white">
+              <Github className="h-3.5 w-3.5" aria-hidden="true" /> Source code on GitHub
+            </a>
+            <a href={`${REPO_URL}/issues`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3.5 py-2 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]">
+              Report an issue
+            </a>
+            <a href={`${REPO_URL}/blob/main/README.md`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3.5 py-2 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]">
+              How to contribute
+            </a>
+          </div>
+        </section>
+
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
           <h2 className="font-heading text-base font-bold">{t('about.maintained')}</h2>
           <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.maintainedBody')}</p>
@@ -176,9 +235,13 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 {NEWS_FEEDS.map((feed) => (
                   <tr key={feed.id} className="border-b border-[var(--color-border)]/60 align-top">
                     <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold">
-                      <a href={feed.homepage} target="_blank" rel="noreferrer noopener" className="hover:underline">
-                        {feed.name}
-                      </a>
+                      {FEED_SOURCE[feed.id] ? (
+                        <SourceMark id={FEED_SOURCE[feed.id]} size="xs" withName href={feed.homepage} />
+                      ) : (
+                        <a href={feed.homepage} target="_blank" rel="noreferrer noopener" className="hover:underline">
+                          {feed.name}
+                        </a>
+                      )}
                     </th>
                     <td className="py-1.5 pe-3 leading-snug text-[var(--color-text-secondary)]">{t(`feed.news.${feed.id}` as TranslationKey)}</td>
                     <td className="py-1.5 tabular-nums text-[var(--color-text-muted)]">
@@ -189,23 +252,24 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 {TRANSIT_FEEDS.map((feed) => (
                   <tr key={feed.id} className="border-b border-[var(--color-border)]/60 align-top">
                     <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold">
-                      MBTA {feed.endpoint}
+                      <SourceMark id="mbta" size="xs" withName href={`https://api-v3.mbta.com/docs/swagger/index.html#/${feed.endpoint.replace(/^\//, '')}`} />
+                      <span className="ms-1 font-mono text-[10px] text-[var(--color-text-muted)]">{feed.endpoint}</span>
                     </th>
                     <td className="py-1.5 pe-3 leading-snug text-[var(--color-text-secondary)]">{t(`feed.transit.${feed.id}` as TranslationKey)}</td>
                     <td className="py-1.5 tabular-nums text-[var(--color-text-muted)]">{t('map.updatedEvery', { seconds: String(feed.cadenceSeconds) })}</td>
                   </tr>
                 ))}
                 <tr className="border-b border-[var(--color-border)]/60 align-top">
-                  <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold">U.S. Census Bureau ACS</th>
+                  <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold"><SourceMark id="census" size="xs" withName /></th>
                   <td className="py-1.5 pe-3 leading-snug text-[var(--color-text-secondary)]">
                     {t('stats.medianRent')} · {t('stats.medianSale')}
                   </td>
                   <td className="py-1.5 tabular-nums text-[var(--color-text-muted)]">{t('about.referenceAsOf', { date: format.date(TRANSIT_DATA_AS_OF, 'medium') })}</td>
                 </tr>
                 <tr className="align-top">
-                  <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold">HUD Fair Market Rents</th>
+                  <th scope="row" className="py-1.5 pe-3 text-start font-heading font-semibold"><SourceMark id="hud" size="xs" withName /></th>
                   <td className="py-1.5 pe-3 leading-snug text-[var(--color-text-secondary)]">
-                    {market?.hudFmr === 'installed' ? t('market.currentSnapshot') : t('error.dataUnavailable')}
+                    {market?.hudFmr?.status === 'available' ? t('market.currentSnapshot') : t('error.dataUnavailable')}
                   </td>
                   <td className="py-1.5 tabular-nums text-[var(--color-text-muted)]">{t('map.updatedEvery', { seconds: String(minutes(CACHE_TTL.MARKET_DATA) * 60) })}</td>
                 </tr>
@@ -217,6 +281,25 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
             {meta ? (meta.apiKey === 'configured' ? t('about.keyConfigured') : t('about.keyAnonymous')) : t('map.predictionsLoading')}
             {meta?.endpoint ? ` · ${meta.endpoint}` : ''} · {t('map.stopCount', { count: String(meta?.stops ?? 0) })}
           </p>
+        </section>
+
+        <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
+          <h2 className="font-heading text-base font-bold">Every publisher this site cites</h2>
+          <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            Each badge is a link. The monograms are drawn by this project in the publisher&apos;s public colour; their real logos are trademarks and are not redistributed in an open-source repository.
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {(Object.keys(SOURCES) as SourceId[]).map((id) => (
+              <li key={id} className="flex items-start gap-2.5 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-2.5">
+                <SourceMark id={id} size="md" />
+                <div className="min-w-0 text-xs leading-snug">
+                  <p className="font-heading font-bold">{SOURCES[id].name}</p>
+                  <p className="mt-0.5 text-[var(--color-text-secondary)]">{SOURCES[id].provides}</p>
+                  <p className="mt-0.5 text-[var(--color-text-muted)]">{SOURCES[id].cadence}{SOURCES[id].licence ? ` · ${SOURCES[id].licence}` : ''}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">

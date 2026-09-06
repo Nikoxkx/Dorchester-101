@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { Calculator, DollarSign, Home, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Calculator, DollarSign, Home, FileText, AlertTriangle, CheckCircle, KeyRound, ListChecks, CalendarClock } from 'lucide-react';
+import { BenefitsScreener, EvictionTimeline, MoveInCostTool } from '@/components/tools/ExtraTools';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand, BOSTON_AMI_2025 } from '@/lib/utils';
@@ -18,7 +20,7 @@ const pageVariants: Variants = {
 export default function ToolsPage() {
   const { language } = useAppStore();
   const { t } = useTranslation(language);
-  const [activeTab, setActiveTab] = useState<'rent' | 'ami' | 'documents'>('rent');
+  const [activeTab, setActiveTab] = useState<'rent' | 'ami' | 'movein' | 'benefits' | 'eviction' | 'documents'>('rent');
   
   // Rent burden calculator state
   const [monthlyIncome, setMonthlyIncome] = useState(4500);
@@ -47,22 +49,25 @@ export default function ToolsPage() {
             Financial Tools
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Free calculators to help you understand your housing options and eligibility.
+            Six calculators built from published rules — HUD income limits, the federal 30% rent-burden standard, Massachusetts tenant law and each benefit program&apos;s own thresholds. Everything runs in your browser; nothing you type is stored or sent.
           </p>
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-[var(--color-border)]">
+        <div role="tablist" aria-label="Tools" className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
           {[
             { id: 'rent', label: 'Rent Burden', icon: DollarSign },
             { id: 'ami', label: 'AMI Calculator', icon: Home },
+            { id: 'movein', label: 'Move-in Cost', icon: KeyRound },
+            { id: 'benefits', label: 'Benefits Screener', icon: ListChecks },
+            { id: 'eviction', label: 'Eviction Timeline', icon: CalendarClock },
             { id: 'documents', label: 'Document Checklist', icon: FileText },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 font-heading font-medium text-sm',
+                'flex shrink-0 items-center gap-2 px-3 py-3 font-heading font-medium text-sm whitespace-nowrap',
                 'border-b-2 -mb-px transition-colors',
                 activeTab === tab.id
                   ? 'border-[var(--color-accent-primary)] text-[var(--color-accent-primary)]'
@@ -284,6 +289,10 @@ export default function ToolsPage() {
         )}
 
         {/* Document Checklist */}
+        {activeTab === 'movein' && <MoveInCostTool />}
+        {activeTab === 'benefits' && <BenefitsScreener />}
+        {activeTab === 'eviction' && <EvictionTimeline />}
+
         {activeTab === 'documents' && (
           <Card>
             <CardHeader>
@@ -351,6 +360,9 @@ export default function ToolsPage() {
             </CardContent>
           </Card>
         )}
+        <ProjectNote sources={['hud', 'massgov', 'census']}>
+          The calculators run entirely in your browser; nothing you type is sent anywhere. Income limits are HUD&apos;s Boston-metro figures for the year shown, and the 30% rent-burden rule is the federal standard.
+        </ProjectNote>
       </motion.div>
     </MainLayout>
   );

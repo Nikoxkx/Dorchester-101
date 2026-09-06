@@ -73,7 +73,7 @@
     "typescript": "5.9.3",
     "vitest": "^3.0.0"
   },
-  "version": "1.2.0",
+  "version": "4.0.0",
   "description": "DOR101 \u2014 Dorchester 101: Free community resources for Dorchester residents",
   "author": "DOR101 Community Project",
   "license": "MIT",

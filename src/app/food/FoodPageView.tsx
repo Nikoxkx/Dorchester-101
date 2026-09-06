@@ -13,6 +13,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
@@ -83,20 +84,26 @@ export default function FoodPageView() {
   const searchParams = useSearchParams();
   const favorites = useAppStore((s) => s.favorites);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
-  const [query, setQuery] = useState("");
+  // Deep links (?q=, ?place=) seed the search box; later URL changes are applied
+  // during render by comparing against the last seen params, no effect needed.
+  const seedFromParams = (params: URLSearchParams) => {
+    const place = params.get("place");
+    if (place) {
+      const record = FOOD.find((item) => item.id === place);
+      if (record) return record.name;
+    }
+    return params.get("q") ?? "";
+  };
+  const [query, setQuery] = useState(() => seedFromParams(searchParams));
+  const [seenParams, setSeenParams] = useState(searchParams.toString());
+  if (searchParams.toString() !== seenParams) {
+    setSeenParams(searchParams.toString());
+    const seeded = seedFromParams(searchParams);
+    if (seeded) setQuery(seeded);
+  }
   const [kind, setKind] = useState<FoodKind | "all">("all");
   const [openOnly, setOpenOnly] = useState(false);
   const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const q = searchParams.get("q");
-    if (q) setQuery(q);
-    const place = searchParams.get("place");
-    if (place) {
-      const record = FOOD.find((item) => item.id === place);
-      if (record) setQuery(record.name);
-    }
-  }, [searchParams]);
 
   // Opening status is a moving target, so the page re-checks it every minute
   // instead of freezing whatever the first render happened to see.
@@ -390,7 +397,7 @@ export default function FoodPageView() {
                                   : t("time.opensOn", {
                                       day: format.weekday(
                                         new Date(
-                                          Date.now() +
+                                          now.getTime() +
                                             status.opensOnDayOffset *
                                               86_400_000,
                                         ),
@@ -479,6 +486,9 @@ export default function FoodPageView() {
           <div className="mt-2.5">
             <ReportProblem />
           </div>
+        <ProjectNote sources={['gbfb', 'dta', 'bostongov', 'dor101']}>
+          Pantry hours and eligibility on this page are checked by hand against each organisation&apos;s own posted schedule and the Greater Boston Food Bank partner list; the date of the last check is printed on every card, and “open now” is computed from those hours in Boston time. SNAP rules follow the Massachusetts Department of Transitional Assistance.
+        </ProjectNote>
         </section>
       </div>
     </MainLayout>

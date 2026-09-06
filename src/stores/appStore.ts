@@ -8,6 +8,16 @@ export type Theme = 'light' | 'dark' | 'system';
 export type Language = LanguageCode;
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 export type MapStyle = 'satellite' | 'street' | 'hybrid';
+/**
+ * Surface treatment. `solid` is the default opaque UI; `glass` lets the
+ * Dorchester photograph show through every panel and the menu rail with a blur
+ * behind the text. Contrast is protected in CSS: text colours never change and
+ * every glass surface keeps at least ~70% of its base colour.
+ */
+export type Surface = 'solid' | 'glass';
+/** Colour palette for the whole interface. Each has a light and a dark variant. */
+export type Palette = 'harbor' | 'midnight' | 'forest' | 'brick' | 'slate' | 'sand' | 'violet';
+export const PALETTES: Palette[] = ['harbor', 'midnight', 'forest', 'brick', 'slate', 'sand', 'violet'];
 
 export const FONT_SIZE_VALUES: Record<FontSize, string> = {
   small: '15px',
@@ -78,6 +88,8 @@ interface AppState {
   mobileNavOpen: boolean;
   lastUpdated: string | null;
   mapStyle: MapStyle;
+  surface: Surface;
+  palette: Palette;
   accessibility: AccessibilityPrefs;
   speechRate: number;
   /**
@@ -113,6 +125,8 @@ interface AppState {
   toggleMobileNav: () => void;
   setLastUpdated: (time: string) => void;
   setMapStyle: (style: MapStyle) => void;
+  setSurface: (surface: Surface) => void;
+  setPalette: (palette: Palette) => void;
   setAccessibility: <K extends keyof AccessibilityPrefs>(key: K, value: AccessibilityPrefs[K]) => void;
   toggleAccessibility: (key: keyof Pick<AccessibilityPrefs, 'underlineLinks' | 'largeFocus' | 'legibleFont' | 'textSpacing' | 'announceUpdates'>) => void;
   setAccessibilityAuto: (key: 'reduceMotion' | 'highContrast') => void;
@@ -170,6 +184,8 @@ export const useAppStore = create<AppState>()(
       mobileNavOpen: false,
       lastUpdated: null,
       mapStyle: 'satellite',
+      surface: 'solid',
+      palette: 'harbor',
       accessibility: DEFAULT_ACCESSIBILITY,
       speechRate: 1,
       speechVoiceURI: null,
@@ -197,6 +213,8 @@ export const useAppStore = create<AppState>()(
       toggleMobileNav: () => set((s) => ({ mobileNavOpen: !s.mobileNavOpen })),
       setLastUpdated: (lastUpdated) => set({ lastUpdated }),
       setMapStyle: (mapStyle) => set({ mapStyle }),
+      setSurface: (surface) => set({ surface }),
+      setPalette: (palette) => set({ palette }),
 
       setAccessibility: (key, value) =>
         set((s) => ({ accessibility: { ...s.accessibility, [key]: value } })),
@@ -245,6 +263,8 @@ export const useAppStore = create<AppState>()(
           fontSize: 'medium',
           sidebarCollapsed: false,
           mapStyle: 'satellite',
+          surface: 'solid',
+          palette: 'harbor',
           accessibility: DEFAULT_ACCESSIBILITY,
           speechRate: 1,
           speechVoiceURI: null,
@@ -268,6 +288,8 @@ export const useAppStore = create<AppState>()(
         fontSize: s.fontSize,
         sidebarCollapsed: s.sidebarCollapsed,
         mapStyle: s.mapStyle,
+        surface: s.surface,
+        palette: s.palette,
         accessibility: s.accessibility,
         speechRate: s.speechRate,
         speechVoiceURI: s.speechVoiceURI,

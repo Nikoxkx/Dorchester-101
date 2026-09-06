@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
-import { useAppStore, type FontSize, type MapStyle } from '@/stores/appStore';
+import { useAppStore, type FontSize, type MapStyle, PALETTES, type Palette } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
@@ -52,6 +52,17 @@ const SECTION_IDS = ['language', 'appearance', 'accessibility', 'data', 'feeds',
 type SectionId = (typeof SECTION_IDS)[number];
 
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
+
+/** Preview swatches — the same hexes as the palette blocks in globals.css. */
+const PALETTE_SWATCH: Record<Palette, { light: { bg: string; card: string; accent: string }; dark: { bg: string; card: string; accent: string } }> = {
+  harbor: { light: { bg: '#FAF7F1', card: '#F2EDE4', accent: '#14304F' }, dark: { bg: '#0F1720', card: '#16202C', accent: '#7FB4E8' } },
+  midnight: { light: { bg: '#FFFFFF', card: '#F4F4F5', accent: '#111111' }, dark: { bg: '#000000', card: '#0B0B0D', accent: '#E8E8ED' } },
+  forest: { light: { bg: '#F7F8F3', card: '#ECEFE4', accent: '#1F5A3A' }, dark: { bg: '#0C1511', card: '#121E18', accent: '#7FD3A3' } },
+  brick: { light: { bg: '#FBF6F2', card: '#F3EAE3', accent: '#8E2E22' }, dark: { bg: '#170F0D', card: '#201513', accent: '#F09A8C' } },
+  slate: { light: { bg: '#F5F7F9', card: '#ECEFF3', accent: '#2F4A66' }, dark: { bg: '#0E1216', card: '#151A20', accent: '#9CC0E4' } },
+  sand: { light: { bg: '#FBF5E9', card: '#F3EAD6', accent: '#7A4E0F' }, dark: { bg: '#17130C', card: '#201A11', accent: '#E9BE6A' } },
+  violet: { light: { bg: '#F8F6FC', card: '#EFEBF7', accent: '#4A2E8A' }, dark: { bg: '#100C1A', card: '#171226', accent: '#B9A3F2' } },
+};
 const SIZE_KEY: Record<FontSize, TranslationKey> = {
   small: 'size.small',
   medium: 'size.medium',
@@ -83,10 +94,12 @@ export default function SettingsPage() {
   // the in-page rail should follow scrolling.
   useEffect(() => {
     const hash = window.location.hash.replace('#', '') as SectionId;
-    if (SECTION_IDS.includes(hash)) {
+    if (!SECTION_IDS.includes(hash)) return;
+    const id = window.setTimeout(() => {
       setActiveSection(hash);
-      window.setTimeout(() => sectionRefs.current[hash]?.scrollIntoView({ block: 'start' }), 60);
-    }
+      sectionRefs.current[hash]?.scrollIntoView({ block: 'start' });
+    }, 60);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -265,6 +278,73 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
+            </fieldset>
+
+            <fieldset className="lg:col-span-2">
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.palette')}
+              </legend>
+              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-7">
+                {PALETTES.map((value) => {
+                  const active = store.palette === value;
+                  const sw = PALETTE_SWATCH[value][prefs.dark ? 'dark' : 'light'];
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer rounded-[var(--radius-md)] border p-2 text-center text-xs font-heading transition-colors',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                      )}
+                    >
+                      <input type="radio" name="palette" className="sr-only" checked={active} onChange={() => store.setPalette(value)} />
+                      <span aria-hidden="true" className="mx-auto mb-1.5 flex h-8 w-full overflow-hidden rounded-md border border-black/10" style={{ background: sw.bg }}>
+                        <span className="m-1 flex-1 rounded-sm" style={{ background: sw.card }} />
+                        <span className="my-1 me-1 w-3 rounded-sm" style={{ background: sw.accent }} />
+                      </span>
+                      <span className="block truncate">{t(`settings.palette.${value}` as TranslationKey)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.paletteNote')}</p>
+            </fieldset>
+
+            <fieldset>
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.surface')}
+              </legend>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['solid', 'glass'] as const).map((value) => {
+                  const active = store.surface === value;
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer rounded-[var(--radius-md)] border px-2 py-2 text-center text-xs font-heading transition-colors',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                      )}
+                    >
+                      <input type="radio" name="surface" className="sr-only" checked={active} onChange={() => store.setSurface(value)} />
+                      <span className="flex items-center justify-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'inline-block h-3.5 w-3.5 rounded-[3px] border border-[var(--color-border-strong)]',
+                            value === 'glass' ? 'bg-[linear-gradient(135deg,rgba(20,48,79,0.55),rgba(166,54,42,0.35))] opacity-70' : 'bg-[var(--color-accent-primary)]'
+                          )}
+                        />
+                        {t(`settings.surface.${value}` as TranslationKey)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+                {t('settings.surfaceNote')} {t('settings.surfaceHint')}
+                {prefs.highContrast && <> {t('settings.surfaceContrastNote')}</>}
+              </p>
             </fieldset>
 
             <fieldset>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { deriveMetrics, fetchBostonAcs, ACS_VARIABLES } from '@/lib/census';
+import { deriveMetrics, fetchBostonAcs, fetchBostonAcsSeries, ACS_VARIABLES, type AcsSeriesPoint } from '@/lib/census';
 import { BOSTON_AMI_2025 } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +34,8 @@ export interface MarketResponse {
     error?: string;
     citation: { label: string; url: string };
   };
+  /** Headline figures for every published 5-year vintage, for the trend chart. */
+  series: { status: 'live' | 'cache' | 'unavailable'; points: AcsSeriesPoint[]; retrievedAt: string; note: string };
   hudFmr:
     | { status: 'available'; fiscalYear: string; effectiveDate: string; publishedAt?: string; units: Record<string, number>; source: string; sourceUrl: string }
     | { status: 'not-installed'; hint: string; sourceUrl: string };
@@ -91,7 +93,7 @@ async function readFmr(): Promise<MarketResponse['hudFmr']> {
 }
 
 export async function GET() {
-  const [acs, hudFmr] = await Promise.all([fetchBostonAcs(), readFmr()]);
+  const [acs, series, hudFmr] = await Promise.all([fetchBostonAcs(), fetchBostonAcsSeries(), readFmr()]);
   const metrics = deriveMetrics(acs.estimates);
 
   const raw: MarketResponse['acs']['raw'] = {};
@@ -119,8 +121,14 @@ export async function GET() {
       error: acs.error,
       citation: {
         label: 'U.S. Census Bureau, American Community Survey',
-        url: 'https://data.census.gov/table?g=0500000US25025&y=2023&tid=ACSDT5Y2023.B25058',
+        url: 'https://data.census.gov/table?g=0500000US25025&y=2023&tid=ACSDT5Y2023.B25064',
       },
+    },
+    series: {
+      status: series.source === 'census-live' ? 'live' : series.source === 'census-cache' ? 'cache' : 'unavailable',
+      points: series.points,
+      retrievedAt: series.retrievedAt,
+      note: 'Each point is a 5-year ACS estimate for Suffolk County. Consecutive vintages overlap by four years, so read the line as a trend, not as year-on-year change.',
     },
     hudFmr,
     ami: {

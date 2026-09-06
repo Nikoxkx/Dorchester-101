@@ -19,21 +19,36 @@ export const GEO_COUNTY = 'county:017';
 
 export const ACS_VINTAGES = ['2023', '2022', '2021'] as const;
 
+/**
+ * ACS detailed-table variables. Each id was checked against the 2023 variable
+ * list (api.census.gov/data/2023/acs/acs5/variables.html). The previous set
+ * had several wrong ids — B25047 is *plumbing facilities*, B25003_002 is
+ * *owner*-occupied, B25058 is *contract* not gross rent — which is how a
+ * dashboard reports a plausible number that means something else.
+ */
 export const ACS_VARIABLES = {
   medianHouseholdIncome: 'B19013_001E',
-  medianContractRent: 'B25047_001E',
-  medianGrossRent: 'B25058_001E',
-  medianOwnerCostsMortgage: 'B25070_001E',
+  medianContractRent: 'B25058_001E',
+  medianGrossRent: 'B25064_001E',
+  medianOwnerCostsMortgage: 'B25088_002E',
   medianPropertyValue: 'B25077_001E',
-  renterOccupiedUnits: 'B25003_002E',
-  ownerOccupiedUnits: 'B25003_001E',
-  occupiedUnitsTotal: 'B25002_001E',
-  rentBurdenTotal: 'B25071_001E',
-  rentBurden30to35: 'B25071_007E',
-  rentBurden35to40: 'B25071_008E',
-  rentBurden40to50: 'B25071_009E',
-  rentBurden50Plus: 'B25071_010E',
-  grossRentMedian: 'B25058_001E',
+  occupiedUnitsTotal: 'B25003_001E',
+  ownerOccupiedUnits: 'B25003_002E',
+  renterOccupiedUnits: 'B25003_003E',
+  /** Gross rent as a percentage of household income, B25070: bins 002–010. */
+  rentBurdenTotal: 'B25070_001E',
+  rentBurdenUnder10: 'B25070_002E',
+  rentBurden10to15: 'B25070_003E',
+  rentBurden15to20: 'B25070_004E',
+  rentBurden20to25: 'B25070_005E',
+  rentBurden25to30: 'B25070_006E',
+  rentBurden30to35: 'B25070_007E',
+  rentBurden35to40: 'B25070_008E',
+  rentBurden40to50: 'B25070_009E',
+  rentBurden50Plus: 'B25070_010E',
+  rentBurdenNotComputed: 'B25070_011E',
+  /** Median of that same distribution, as a single percentage. */
+  medianRentBurden: 'B25071_001E',
 } as const;
 
 export interface AcsEstimate {
@@ -56,18 +71,25 @@ interface RawRow extends Array<string> {}
 
 const LABELS: Record<string, string> = {
   B19013_001E: 'Median household income',
-  B25047_001E: 'Median contract rent',
-  B25058_001E: 'Median gross rent',
-  B25070_001E: 'Median owner costs with a mortgage',
-  B25077_001E: 'Median selected home value',
-  B25003_001E: 'Owner-occupied housing units',
-  B25003_002E: 'Renter-occupied housing units',
-  B25002_001E: 'Occupied housing units',
-  B25071_001E: 'Renter households, income basis',
-  B25071_007E: 'Renter households paying 30-35% of income on rent',
-  B25071_008E: 'Renter households paying 35-40% of income on rent',
-  B25071_009E: 'Renter households paying 40-50% of income on rent',
-  B25071_010E: 'Renter households paying 50% or more of income on rent',
+  B25058_001E: 'Median contract rent',
+  B25064_001E: 'Median gross rent',
+  B25088_002E: 'Median monthly owner costs, with a mortgage',
+  B25077_001E: 'Median value, owner-occupied units',
+  B25003_001E: 'Occupied housing units',
+  B25003_002E: 'Owner-occupied housing units',
+  B25003_003E: 'Renter-occupied housing units',
+  B25070_001E: 'Renter households (rent-burden universe)',
+  B25070_002E: 'Rent under 10% of income',
+  B25070_003E: 'Rent 10–14.9% of income',
+  B25070_004E: 'Rent 15–19.9% of income',
+  B25070_005E: 'Rent 20–24.9% of income',
+  B25070_006E: 'Rent 25–29.9% of income',
+  B25070_007E: 'Rent 30–34.9% of income',
+  B25070_008E: 'Rent 35–39.9% of income',
+  B25070_009E: 'Rent 40–49.9% of income',
+  B25070_010E: 'Rent 50% or more of income',
+  B25070_011E: 'Rent burden not computed',
+  B25071_001E: 'Median gross rent as a percentage of household income',
 };
 
 /**
@@ -157,6 +179,10 @@ export interface DerivedMetrics {
   burden40: number | null;
   /** Months of income needed for a deposit-plus-first-month move-in. */
   moveInCost: number | null;
+  /** Median gross rent as a share of income, straight from B25071. */
+  medianRentBurden: number | null;
+  /** Full B25070 distribution as shares of computed households, for the chart. */
+  burdenDistribution: Array<{ bin: string; share: number; households: number }> | null;
 }
 
 export function deriveMetrics(estimates: Record<string, AcsEstimate>): DerivedMetrics {
@@ -165,7 +191,10 @@ export function deriveMetrics(estimates: Record<string, AcsEstimate>): DerivedMe
   const total = v('occupiedUnitsTotal');
   const renterShare = renter !== null && total ? Math.round((renter / total) * 1000) / 10 : null;
 
-  const burdenBase = v('rentBurdenTotal');
+  // The denominator excludes households whose burden ACS could not compute
+  // (no cash rent, zero income); including them understates every share.
+  const notComputed = v('rentBurdenNotComputed') ?? 0;
+  const burdenBase = v('rentBurdenTotal') !== null ? (v('rentBurdenTotal') as number) - notComputed : null;
   const b30 = [v('rentBurden30to35'), v('rentBurden35to40'), v('rentBurden40to50'), v('rentBurden50Plus')];
   const b40 = [v('rentBurden40to50'), v('rentBurden50Plus')];
   const sum = (xs: Array<number | null>): number | null => {
@@ -178,7 +207,25 @@ export function deriveMetrics(estimates: Record<string, AcsEstimate>): DerivedMe
   const income = v('medianHouseholdIncome');
   const moveInCost = grossRent && income ? Math.round(((grossRent * 1 + grossRent) / (income / 12)) * 10) / 10 : null;
 
+  const bins: Array<[string, keyof typeof ACS_VARIABLES]> = [
+    ['< 10%', 'rentBurdenUnder10'],
+    ['10–15%', 'rentBurden10to15'],
+    ['15–20%', 'rentBurden15to20'],
+    ['20–25%', 'rentBurden20to25'],
+    ['25–30%', 'rentBurden25to30'],
+    ['30–35%', 'rentBurden30to35'],
+    ['35–40%', 'rentBurden35to40'],
+    ['40–50%', 'rentBurden40to50'],
+    ['50%+', 'rentBurden50Plus'],
+  ];
+  const burdenDistribution =
+    burdenBase && bins.every(([, key]) => v(key) !== null)
+      ? bins.map(([bin, key]) => ({ bin, households: v(key) as number, share: Math.round(((v(key) as number) / burdenBase) * 1000) / 10 }))
+      : null;
+
   return {
+    medianRentBurden: v('medianRentBurden'),
+    burdenDistribution,
     medianGrossRent: grossRent,
     medianContractRent: v('medianContractRent'),
     medianIncome: income,
@@ -189,4 +236,56 @@ export function deriveMetrics(estimates: Record<string, AcsEstimate>): DerivedMe
     burden40: pct(sum(b40)),
     moveInCost,
   };
+}
+
+/** One point per ACS vintage for the trend chart. Nothing is interpolated. */
+export interface AcsSeriesPoint {
+  vintage: string;
+  /** Last year of the 5-year window, e.g. 2023 for "2019–2023". */
+  year: number;
+  medianGrossRent: number | null;
+  medianIncome: number | null;
+  medianHomeValue: number | null;
+  medianRentBurden: number | null;
+}
+
+export const ACS_SERIES_VINTAGES = ['2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'] as const;
+
+/**
+ * Reads the same four headline variables from every published 5-year vintage.
+ * Consecutive vintages overlap by four years, so the line is smooth by
+ * construction and should be read as a trend, not as year-on-year change; the
+ * page says so beside the chart.
+ */
+export async function fetchBostonAcsSeries(): Promise<{ points: AcsSeriesPoint[]; source: 'census-live' | 'census-cache' | 'unavailable'; retrievedAt: string }> {
+  const cacheKey = 'census:bos:series';
+  const cached = globalCache.get<{ points: AcsSeriesPoint[]; retrievedAt: string }>(cacheKey);
+  const vars = ['B25064_001E', 'B19013_001E', 'B25077_001E', 'B25071_001E'];
+  const select = ['NAME', ...vars].join(',');
+
+  const results = await Promise.all(
+    ACS_SERIES_VINTAGES.map(async (vintage) => {
+      const url = `${CENSUS_BASE}/${vintage}/acs/acs5?get=${select}&for=${GEO_COUNTY}&in=${GEO_SUFFIX}`;
+      const result = await fetchJson(url);
+      if (!result) return null;
+      const [header, row] = [result.data[0], result.data[1]];
+      const at = (variable: string) => normalizeAcsValue(row[header.indexOf(variable)]);
+      return {
+        vintage: `${Number(vintage) - 4}–${vintage}`,
+        year: Number(vintage),
+        medianGrossRent: at('B25064_001E'),
+        medianIncome: at('B19013_001E'),
+        medianHomeValue: at('B25077_001E'),
+        medianRentBurden: at('B25071_001E'),
+      } satisfies AcsSeriesPoint;
+    })
+  );
+  const points = results.filter((p): p is AcsSeriesPoint => p !== null);
+  const retrievedAt = new Date().toISOString();
+  if (points.length >= 3) {
+    globalCache.set(cacheKey, { points, retrievedAt }, CACHE_TTL.MARKET_DATA);
+    return { points, source: 'census-live', retrievedAt };
+  }
+  if (cached) return { ...cached, source: 'census-cache' };
+  return { points: [], source: 'unavailable', retrievedAt };
 }

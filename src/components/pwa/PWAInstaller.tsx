@@ -17,7 +17,7 @@ export function PWAInstaller() {
   const { t } = useTranslation(language);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(() => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches);
 
   useEffect(() => {
     // Register service worker
@@ -44,11 +44,6 @@ export function PWAInstaller() {
     };
 
     window.addEventListener('beforeinstallprompt', handler);
-
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setInstalled(true);
-    }
 
     window.addEventListener('appinstalled', () => {
       setInstalled(true);

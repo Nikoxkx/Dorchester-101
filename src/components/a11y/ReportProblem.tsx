@@ -42,20 +42,12 @@ export function ReportProblem({ triggerClass }: { triggerClass?: string }) {
   const [open, setOpen] = useState(false);
   const placeId = useId();
   const detailId = useId();
-  const [place, setPlace] = useState('');
-  const [detail, setDetail] = useState('');
-  const [hadDraft, setHadDraft] = useState(false);
+  const [initialDraft] = useState(() => (typeof window === 'undefined' ? null : readDraft()));
+  const [place, setPlace] = useState(initialDraft?.place ?? '');
+  const [detail, setDetail] = useState(initialDraft?.detail ?? '');
+  const [hadDraft, setHadDraft] = useState(Boolean(initialDraft && (initialDraft.place || initialDraft.detail)));
   const [copied, setCopied] = useState(false);
   const firstField = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const draft = readDraft();
-    if (draft && (draft.place || draft.detail)) {
-      setPlace(draft.place);
-      setDetail(draft.detail);
-      setHadDraft(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (open) window.setTimeout(() => firstField.current?.focus(), 40);

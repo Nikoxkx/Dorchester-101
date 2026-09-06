@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { MapCanvas, type MapPin, type MapStyle, type MapStop, type ShapeData } from './MapCanvas';
 import { Shield } from './Shield';
+import { CategoryPin } from './CategoryPin';
+import { PlaceSheet } from './PlaceSheet';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore, useReduceMotion } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
@@ -76,7 +78,7 @@ export function DorchesterMap() {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [focus, setFocus] = useState<Focus>({ kind: 'rail', routeId: 'Red' });
   const [hiddenRails, setHiddenRails] = useState<string[]>([]);
   const [categories, setCategories] = useState<ResourceCategory[]>(['food', 'health', 'community', 'housing']);
@@ -101,8 +103,6 @@ export function DorchesterMap() {
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  useEffect(() => setMounted(true), []);
-
   // One clock drives every countdown so the departures list, the "updated" stamp
   // and the open/closed badges cannot disagree with each other.
   useEffect(() => {
@@ -110,7 +110,6 @@ export function DorchesterMap() {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [live, liveArrivals.length]);
-  void now;
 
   /* ── route geometry ──────────────────────────────────────────── */
   const shapeRoutes = useMemo(() => {
@@ -119,12 +118,17 @@ export function DorchesterMap() {
   }, [hiddenRails, focus]);
 
   useEffect(() => {
-    if (shapeRoutes.length === 0) {
-      setShapes([]);
-      return;
-    }
     let cancelled = false;
-    setStatus('loading');
+    // Kick off on the next tick so state resets happen outside the effect body.
+    const kick = window.setTimeout(() => {
+      if (cancelled) return;
+      if (shapeRoutes.length === 0) {
+        setShapes([]);
+        return;
+      }
+      setStatus('loading');
+    }, 0);
+    if (shapeRoutes.length === 0) return () => { cancelled = true; window.clearTimeout(kick); };
     fetch(`/api/mbta?type=shapes&route=${encodeURIComponent(shapeRoutes.join(','))}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((payload: { shapes?: Record<string, ShapeData>; reference?: { source?: DataSource } }) => {
@@ -147,6 +151,7 @@ export function DorchesterMap() {
       });
     return () => {
       cancelled = true;
+      window.clearTimeout(kick);
     };
   }, [shapeRoutes, dataEpoch]);
 
@@ -258,7 +263,8 @@ export function DorchesterMap() {
   // The first read is issued by useLivePolling; this only resets the badge so a
   // panel never shows yesterday's "live" dot while its new request is in flight.
   useEffect(() => {
-    setLive(false);
+    const id = window.setTimeout(() => setLive(false), 0);
+    return () => window.clearTimeout(id);
   }, [stopParam, focus.routeId]);
 
   /* ── selection ───────────────────────────────────────────────── */
@@ -311,6 +317,9 @@ export function DorchesterMap() {
   useEffect(() => {
     if (appliedParams.current) return;
     appliedParams.current = true;
+    const id = window.setTimeout(() => applyUrlParams(), 0);
+    return () => window.clearTimeout(id);
+    function applyUrlParams() {
     const stopParamFromUrl = searchParams.get('stop');
     const placeParam = searchParams.get('place');
     const routeParam = searchParams.get('route');
@@ -330,6 +339,7 @@ export function DorchesterMap() {
       }
     }
     if (placeParam && RESOURCES.some((r) => r.id === placeParam)) selectPin(placeParam);
+    }
   }, [searchParams, selectPin]);
 
   /* ── map affordances ─────────────────────────────────────────── */
@@ -397,7 +407,7 @@ export function DorchesterMap() {
       .slice(0, selectedStopId ? 8 : 10)
       .map((arrival) => ({
         ...arrival,
-        minutes: format.minutesAway(arrival.arrivalAt),
+        minutes: Math.max(0, Math.round((new Date(arrival.arrivalAt).getTime() - now) / 60000)),
         clock: format.time(arrival.arrivalAt),
       }));
   }, [liveArrivals, selectedStopId, format, now]);
@@ -518,7 +528,7 @@ export function DorchesterMap() {
       {/* ── map + details ───────────────────────────────────────── */}
       <div className="grid items-stretch gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="relative min-h-[20rem] overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
-          <div className={cn('w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')}>
+          <div className={cn('relative w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')} data-sheet-open={selectedPinId || selectedStopId ? 'true' : undefined}>
             {!mounted ? (
               <div className="flex h-full items-end bg-[var(--color-bg-tertiary)] p-4">
                 <div className="skeleton h-full w-full rounded-xl opacity-70" />
@@ -542,6 +552,15 @@ export function DorchesterMap() {
                 }}
               />
             )}
+            <PlaceSheet
+              target={selectedPinId ? { kind: 'place', id: selectedPinId } : selectedStopId ? { kind: 'stop', id: selectedStopId } : null}
+              arrivals={liveArrivals}
+              arrivalsLive={transitSource === 'mbta-live'}
+              userPosition={userPosition}
+              onClose={clearSelection}
+              onSelectStop={selectStop}
+              onLocate={locate}
+            />
           </div>
 
           {/* Layer chips dock to the map frame's own header row, not to the canvas,
@@ -708,11 +727,16 @@ export function DorchesterMap() {
                 transition={{ duration: reduceMotion ? 0 : 0.2 }}
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 p-3"
               >
-                <PlaceCard
-                  id={selectedResource.id}
-                  onClose={clearSelection}
-                  openOnly={openOnly}
-                />
+                <div className="flex items-start gap-2">
+                  <CategoryPin category={selectedResource.category} size={22} />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-heading text-sm font-bold leading-tight">{selectedResource.name}</h2>
+                    <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">{selectedResource.neighborhood} · {t(`map.${selectedResource.category}` as 'map.food')}</p>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] leading-snug text-[var(--color-text-secondary)]">
+                  Photo, hours, nearest stations, walking time, fare and directions are in the panel on the map.
+                </p>
               </motion.section>
             ) : (
               <motion.section
@@ -885,89 +909,6 @@ function MapButton({
   );
 }
 
-/**
- * Place card for the details column. Reads the same record the /resources page
- * renders, so a corrected phone number shows up in both places at once.
- */
-function PlaceCard({ id, onClose, openOnly: _openOnly }: { id: string; onClose: () => void; openOnly: boolean }) {
-  const { t, format, pickContent, meta } = useI18n();
-  const resource = RESOURCES.find((r) => r.id === id);
-  if (!resource) return null;
-  const statusNow = resource.hours ? statusFor(resource.hours, new Date(), BOSTON_TZ) : null;
-  const today = resource.hours ? resource.hours[(new Date().getDay() + 6) % 7] : [];
-  const summary = pickContent(resource.summary);
-
-  return (
-    <>
-      <header className="flex items-start justify-between gap-2">
-        <div>
-          <h2 className="font-heading text-sm font-bold leading-tight">{resource.name}</h2>
-          <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">{t(`map.${resource.category}` as 'map.food')}</p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t('common.close')}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </header>
-      {summary.value && (
-        <p className="mt-1.5 text-xs leading-snug text-[var(--color-text-secondary)]" dir="auto">
-          {summary.value}
-        </p>
-      )}
-      {summary.fellBack && (
-        <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
-          {t('lang.untranslated', { language: meta.name })}
-        </p>
-      )}
-      {statusNow && (
-        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-2 py-0.5 font-heading text-[11px] font-bold">
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: statusNow.state === 'open' ? 'var(--mbta-green)' : statusNow.state === 'closing-soon' ? 'var(--color-accent-amber)' : 'var(--color-text-muted)' }}
-            aria-hidden="true"
-          />
-          {t(STATUS_KEYS[statusNow.state])}
-          {statusNow.state !== 'closed' && 'closesAt' in statusNow
-            ? ` · ${format.time(new Date(statusNow.closesAt))}`
-            : 'opensAt' in statusNow
-              ? ` · ${t('map.first', { time: format.time(new Date(statusNow.opensAt)) })}`
-              : ''}
-        </p>
-      )}
-      {today.length > 0 && (
-        <p className="mt-1.5 text-[11px] text-[var(--color-text-muted)]">
-          {format.weekday(new Date(), 'short')} {today.map((window) => formatWindow(window)).join(', ')}
-        </p>
-      )}
-      <p className="mt-2 text-xs">{resource.address}</p>
-      {resource.phone && (
-        <a
-          href={`tel:${resource.phone.replace(/[^\d+]/g, '')}`}
-          className="mt-1 block font-heading text-xs font-bold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2"
-        >
-          {resource.phone}
-        </a>
-      )}
-      {resource.accessibility?.stepFree && (
-        <p className="mt-1.5 text-[11px] text-[var(--color-text-secondary)]">
-          {t('map.wheelchair')}
-          {resource.accessibility.note ? `: ${resource.accessibility.note}` : ''}
-        </p>
-      )}
-      <Link
-        href={resource.detailHref ?? `/resources?place=${resource.id}`}
-        className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-primary)] px-3 py-1.5 font-heading text-[11px] font-bold text-white transition-transform active:scale-[0.97]"
-      >
-        {t('map.openRecord')}
-      </Link>
-    </>
-  );
-}
-
 function MapLegend({
   source,
   hiddenRails,
@@ -1043,7 +984,7 @@ function MapLegend({
         <ul className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
           {CATEGORIES.map((category) => (
             <li key={category} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 shrink-0 rounded-full border border-white/80 shadow-sm" style={{ background: pinTone(category) }} aria-hidden="true" />
+              <CategoryPin category={category} size={14} />
               {t(`map.${category}` as 'map.food')}
             </li>
           ))}
@@ -1062,17 +1003,6 @@ function MapLegend({
       </div>
     </div>
   );
-}
-
-function pinTone(category: ResourceCategory): string {
-  return {
-    housing: 'var(--color-accent-primary)',
-    food: 'var(--color-accent-green)',
-    health: 'var(--color-accent-secondary)',
-    legal: 'var(--color-accent-amber)',
-    community: 'var(--color-accent-primary-soft)',
-    school: 'var(--mbta-green)',
-  }[category];
 }
 
 /** Bundled geometry is only used for rail; a bus line without a feed has none. */

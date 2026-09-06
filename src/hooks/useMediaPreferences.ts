@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 /**
  * Live media-query reader.
@@ -12,21 +12,17 @@ import { useEffect, useState } from 'react';
  * picked up without a reload.
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('matchMedia' in window)) {
-      setMatches(false);
-      return;
-    }
-    const list = window.matchMedia(query);
-    setMatches(list.matches);
-    const onChange = (event: MediaQueryListEvent) => setMatches(event.matches);
-    list.addEventListener('change', onChange);
-    return () => list.removeEventListener('change', onChange);
-  }, [query]);
-
-  return matches ?? false;
+  const subscribe = useCallback(
+    (cb: () => void) => {
+      if (typeof window === 'undefined' || !('matchMedia' in window)) return () => {};
+      const list = window.matchMedia(query);
+      list.addEventListener('change', cb);
+      return () => list.removeEventListener('change', cb);
+    },
+    [query]
+  );
+  const getSnapshot = useCallback(() => (typeof window !== 'undefined' && 'matchMedia' in window ? window.matchMedia(query).matches : false), [query]);
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
 export function usePrefersReducedMotion(): boolean {
