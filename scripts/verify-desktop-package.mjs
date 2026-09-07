@@ -69,15 +69,15 @@ let server = null;
 
 main()
   .then((code) => {
-    teardown();
-    process.exit(code);
+    return teardown().then(() => process.exit(code));
   })
   .catch((error) => {
-    teardown();
-    console.error('');
-    console.error(`✖ ${error.message}`);
-    if (verbose && error.stack) console.error(error.stack);
-    process.exit(1);
+    return teardown().then(() => {
+      console.error('');
+      console.error(`✖ ${error.message}`);
+      if (verbose && error.stack) console.error(error.stack);
+      process.exit(1);
+    });
   });
 
 async function main() {
@@ -464,10 +464,30 @@ function probe(url, expectedType) {
 async function teardown() {
   if (server && server.exitCode === null) server.kill('SIGKILL');
   // On Windows, file handles may remain locked briefly after process termination.
-  // Wait for the OS to fully release locks before attempting to delete.
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  if (!keep) fs.rmSync(stagingRoot, { recursive: true, force: true });
-  else console.log(`staging kept at ${stagingRoot}`);
+  // Implement retry logic with exponential backoff to handle EBUSY errors.
+  if (!keep) {
+    let attempts = 0;
+    const maxAttempts = 5;
+    const initialDelay = 200;
+
+    while (attempts < maxAttempts) {
+      try {
+        fs.rmSync(stagingRoot, { recursive: true, force: true });
+        return;
+      } catch (error) {
+        attempts++;
+        if (error.code === 'EBUSY' && attempts < maxAttempts) {
+          // Exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms
+          const delay = initialDelay * Math.pow(2, attempts - 1);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          throw error;
+        }
+      }
+    }
+  } else {
+    console.log(`staging kept at ${stagingRoot}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
