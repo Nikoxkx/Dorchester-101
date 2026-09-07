@@ -232,8 +232,14 @@ export default function MarketTrendsPage() {
             <div>
               <p className="font-heading font-semibold">{t('error.dataUnavailable')}</p>
               <p className="text-[var(--color-text-secondary)]">
-                {acs.error ?? t('error.dataUnavailableBody')} The Census API at <code className="font-mono text-xs">api.census.gov</code> could not be reached from this
-                server. Figures reappear on the next successful fetch; nothing is substituted in the meantime.
+                {acs.error ?? t('error.dataUnavailableBody')} None of the Census endpoints answered this request:{' '}
+                <code className="font-mono text-xs">api.census.gov</code>, <code className="font-mono text-xs">data.census.gov</code> or the ACS mirror. Figures
+                reappear on the next successful fetch; nothing is substituted in the meantime.
+              </p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                Operators: <code className="font-mono text-xs">api.census.gov</code> has required a key on every call since 12 May 2026. Set{' '}
+                <code className="font-mono text-xs">CENSUS_API_KEY</code> to use the fastest reader; without it the site reads the same tables from{' '}
+                <code className="font-mono text-xs">data.census.gov</code>.
               </p>
             </div>
           </div>
@@ -243,11 +249,26 @@ export default function MarketTrendsPage() {
         <section aria-labelledby="snapshot">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h2 id="snapshot" className="font-heading text-lg font-bold sm:text-xl">{t('market.currentSnapshot')}</h2>
-            <Badge variant={acs.status === 'live' ? 'green' : acs.status === 'cache' ? 'amber' : 'red'}>
-              {acs.status === 'live' ? 'Live from Census' : acs.status === 'cache' ? 'Cached copy' : 'Unavailable'}
+            <Badge variant={acs.status === 'live' ? 'green' : acs.status === 'cache' ? 'amber' : acs.status === 'snapshot' ? 'amber' : 'red'}>
+              {acs.status === 'live'
+                ? 'Live from Census'
+                : acs.status === 'cache'
+                  ? 'Cached copy'
+                  : acs.status === 'snapshot'
+                    ? 'Verified capture'
+                    : 'Unavailable'}
             </Badge>
             <span className="text-xs text-[var(--color-text-muted)]">{data.geography} · {acs.vintage}</span>
           </div>
+          {acs.snapshot && (
+            <p role="status" className="mb-3 flex items-start gap-2 rounded-xl border border-[var(--color-accent-amber)]/40 bg-[var(--color-accent-amber)]/10 px-3 py-2 text-xs text-[var(--color-text-secondary)]">
+              <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-accent-amber)]" aria-hidden="true" />
+              <span>
+                The Census Bureau could not be reached just now, so these are the published {acs.vintage} estimates for Suffolk County, captured{' '}
+                {format.date(acs.retrievedAt, 'medium')}. Live figures return on the next successful fetch.
+              </span>
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {metrics.map((metric) => (
               <Card key={metric.label} className="dor101-glass">
@@ -269,7 +290,13 @@ export default function MarketTrendsPage() {
               </Card>
             ))}
           </div>
-          <Cite id="census" asOf={asOf} note={`${acs.vintage}, tables B25064, B25077, B19013, B25003`} href={acs.citation.url} className="mt-2" />
+          <Cite
+            id="census"
+            asOf={asOf}
+            note={`${acs.vintage}, tables B25064, B25077, B19013, B25003${acs.access ? ` · read from ${acs.access}` : ''}`}
+            href={acs.citation.url}
+            className="mt-2"
+          />
         </section>
 
         {/* ── Trend over vintages ──────────────────────────────── */}

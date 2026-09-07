@@ -187,12 +187,12 @@ export const en = {
   'dashboard.footer.accessibility': 'Accessibility statement',
 
   // ── Stats ─────────────────────────────────────────────────────────────
-  'stats.medianRent': 'Median two bedroom rent',
+  'stats.medianRent': 'Median gross rent',
   'stats.incomeRestricted': 'Income restricted units',
   'stats.activeProjects': 'Active BPDA projects',
   'stats.openWaitlists': 'Open waitlists',
   'stats.foodSites': 'Food sites open this week',
-  'stats.medianSale': 'Median home sale price',
+  'stats.medianSale': 'Median home value',
   'stats.trendUp': 'up {value} since last quarter',
   'stats.trendDown': 'down {value} since last quarter',
   'stats.trendFlat': 'unchanged since last quarter',

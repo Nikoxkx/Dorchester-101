@@ -39,12 +39,19 @@ export function formatCurrency(value: number, lang: string, opts: { cents?: bool
   }).format(value);
 }
 
+/**
+ * `value` is a fraction, exactly as `Intl.NumberFormat` expects: 0.635 renders
+ * "63.5%". It used to divide by 100 itself, which meant every caller that
+ * passed a fraction — six of the seven in the app — printed a figure a hundred
+ * times too small: the market page showed a 63.5% renter share as "0.6%" and a
+ * 31% median rent burden as "0.3%".
+ */
 export function formatPercent(value: number, lang: string, digits = 0): string {
   return nf(languageMeta(lang).intlLocale, {
     style: 'percent',
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(value / 100);
+  }).format(value);
 }
 
 export function formatDate(value: string | number | Date, lang: string, style: 'short' | 'medium' | 'long' = 'long'): string {
