@@ -78,7 +78,13 @@ module.exports = {
     icon: 'electron/assets/icon.ico',
     requestedExecutionLevel: 'asInvoker',
     sign: null,
-    signAndEditExecutable: false,
+    // rcedit stamps icon.ico and the version info into DOR101.exe itself.
+    // With this off, only the installer/portable shells carry our icon and the
+    // installed exe (hence its Desktop/Start-Menu shortcuts) shows Electron's
+    // default icon. Editing is native on Windows and macOS; a Linux cross-build
+    // needs wine for rcedit (see BUILD.md). Signing stays off: `sign: null`
+    // plus CSC_IDENTITY_AUTO_DISCOVERY=false in scripts/build-exe.mjs.
+    signAndEditExecutable: true,
     verifyUpdateCodeSignature: false,
   },
 

@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { isDesktopApp } from '@/lib/desktop';
 
 export function UpdateNotifier() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
-  const [isElectron] = useState(() => typeof window !== 'undefined' && (window as any).electron !== undefined);
+  const [isElectron] = useState(isDesktopApp);
 
   useEffect(() => {
     if (!isElectron) return;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { globalCache, CACHE_TTL } from '@/lib/cache';
-import { REPO_URL } from '@/lib/site';
+import { APP_VERSION, REPO_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,29 +14,42 @@ export const dynamic = 'force-dynamic';
  * come straight from GitHub's CDN and the site never proxies a 180 MB exe.
  *
  * When GitHub cannot be reached (offline preview, outage) the route answers
- * from the pinned release below — real, published asset URLs — so the button
- * still works and the payload says `fallback: true` honestly.
+ * from a fallback derived from the version this tree builds (package.json via
+ * APP_VERSION) instead of a hand-pinned release, so the number shown can never
+ * lag behind the code again; the payload says `fallback: true` honestly.
  */
 
 const GITHUB_LATEST = 'https://api.github.com/repos/Nikoxkx/Dorchester-101/releases/latest';
 
-/** Last release that actually carries Windows assets (verified 2026-09-06). */
-const PINNED_RELEASE = {
-  tag: 'v1.2.0',
-  name: 'DOR101 v1.2.0',
-  publishedAt: '2026-06-10T23:29:15Z',
-  pageUrl: `${REPO_URL}/releases/tag/v1.2.0`,
-  installer: {
-    name: 'DOR101.Setup.1.2.0.exe',
-    url: 'https://github.com/Nikoxkx/Dorchester-101/releases/download/v1.2.0/DOR101.Setup.1.2.0.exe',
-    sizeBytes: 182_573_364,
-  },
-  portable: {
-    name: 'DOR101-Portable-1.2.0.exe',
-    url: 'https://github.com/Nikoxkx/Dorchester-101/releases/download/v1.2.0/DOR101-Portable-1.2.0.exe',
-    sizeBytes: 182_350_503,
-  },
-} as const;
+/**
+ * Offline fallback, derived from the current version. The asset names mirror
+ * the `artifactName` patterns in electron/builder.config.js
+ * (`DOR101 Setup ${version}.exe` / `DOR101-Portable-${version}.exe`), so once
+ * the matching release is published these URLs are exactly the real ones.
+ * The live GitHub path above still wins whenever the server can reach it.
+ */
+function currentReleaseFallback(): DownloadInfo {
+  const tag = `v${APP_VERSION}`;
+  const installerName = `DOR101 Setup ${APP_VERSION}.exe`;
+  const portableName = `DOR101-Portable-${APP_VERSION}.exe`;
+  return {
+    tag,
+    name: `DOR101 ${tag}`,
+    publishedAt: new Date().toISOString(),
+    pageUrl: `${REPO_URL}/releases/tag/${tag}`,
+    installer: {
+      name: installerName,
+      url: `${REPO_URL}/releases/download/${tag}/${encodeURIComponent(installerName)}`,
+      sizeBytes: null,
+    },
+    portable: {
+      name: portableName,
+      url: `${REPO_URL}/releases/download/${tag}/${encodeURIComponent(portableName)}`,
+      sizeBytes: null,
+    },
+    fallback: true,
+  };
+}
 
 export interface ExeAsset {
   name: string;
@@ -101,7 +114,7 @@ async function resolve(): Promise<DownloadInfo> {
     globalCache.set('download:latest', info, 5 * 60_000);
     return info;
   } catch {
-    const info: DownloadInfo = { ...PINNED_RELEASE, fallback: true };
+    const info = currentReleaseFallback();
     globalCache.set('download:latest', info, CACHE_TTL.DEFAULT);
     return info;
   }

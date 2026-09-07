@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Monitor, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isDesktopApp } from '@/lib/desktop';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/lib/i18n';
 
@@ -18,6 +19,10 @@ export function PWAInstaller() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [installed, setInstalled] = useState(() => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches);
+  // The banner offers "install the app" plus a .exe download — both pointless
+  // inside the desktop app itself. The service worker registration above still
+  // runs; only the banner is suppressed.
+  const [inDesktop] = useState(isDesktopApp);
 
   useEffect(() => {
     // Register service worker
@@ -72,7 +77,7 @@ export function PWAInstaller() {
     localStorage.setItem('dor101-install-dismissed', 'true');
   };
 
-  if (installed || !showBanner) return null;
+  if (installed || !showBanner || inDesktop) return null;
 
   return (
     <AnimatePresence>
