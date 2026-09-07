@@ -20,6 +20,7 @@ export interface I18n {
     number: (v: number) => string;
     decimal: (v: number, digits?: number) => string;
     currency: (v: number, opts?: { cents?: boolean }) => string;
+    /** `v` is a fraction: `percent(0.635, 1)` → "63.5%". */
     percent: (v: number, digits?: number) => string;
     date: (v: string | number | Date, style?: 'short' | 'medium' | 'long') => string;
     time: (v: string | number | Date) => string;

@@ -1,8 +1,27 @@
 import { NextResponse } from 'next/server';
-import { deriveMetrics, fetchBostonAcs, fetchBostonAcsSeries, ACS_VARIABLES, ACS_VINTAGES, type AcsSeriesPoint } from '@/lib/census';
+import {
+  deriveMetrics,
+  fetchBostonAcs,
+  fetchBostonAcsSeries,
+  ACS_VARIABLES,
+  ACS_VINTAGES,
+  hasCensusApiKey,
+  type AcsSeriesPoint,
+} from '@/lib/census';
 import { fetchHudFmrs, fetchHudIncomeLimits, fetchMaMinimumWage } from '@/lib/hud';
 
 export const dynamic = 'force-dynamic';
+/**
+ * A cold read asks the Census Bureau for every vintage of four tables. Vercel's
+ * default function budget is 10 s, which is not enough for that on a slow day,
+ * so the budget is raised here rather than the request being cut off halfway.
+ */
+export const maxDuration = 30;
+
+/** `AcsResponse.source` is finer-grained than the page needs; this is the mapping. */
+type AcsStatus = 'live' | 'cache' | 'snapshot' | 'unavailable';
+const statusOf = (source: string, snapshot?: boolean): AcsStatus =>
+  snapshot ? 'snapshot' : source === 'census-cache' ? 'cache' : source === 'unavailable' ? 'unavailable' : 'live';
 
 /**
  * Housing-cost data for the market page.
@@ -24,16 +43,22 @@ export interface MarketResponse {
   generatedAt: string;
   geography: string;
   acs: {
-    status: 'live' | 'cache' | 'unavailable';
+    status: AcsStatus;
     vintage: string;
     retrievedAt: string;
     metrics: ReturnType<typeof deriveMetrics>;
     raw: Record<string, { value: number | null; marginOfError: number | null; label: string }>;
     error?: string;
+    /** Which Census endpoint produced these figures, named for the citation. */
+    access?: string;
+    /** True when nothing live answered and the committed capture is shown. */
+    snapshot?: boolean;
+    /** True when this instance had a `CENSUS_API_KEY` to use. */
+    keyConfigured: boolean;
     citation: { label: string; url: string };
   };
   /** Headline figures for every published 5-year vintage, for the trend chart. */
-  series: { status: 'live' | 'cache' | 'unavailable'; points: AcsSeriesPoint[]; retrievedAt: string; note: string };
+  series: { status: AcsStatus; points: AcsSeriesPoint[]; retrievedAt: string; note: string; access?: string };
   hudFmr:
     | { status: 'available'; fiscalYear: string; effectiveDate: string; publishedAt?: string; units: Record<string, number>; source: string; sourceUrl: string; snapshot?: boolean }
     | { status: 'not-installed'; hint: string; sourceUrl: string };
@@ -117,21 +142,25 @@ export async function GET() {
     generatedAt: new Date().toISOString(),
     geography: acs.geography,
     acs: {
-      status: acs.source === 'census-live' ? 'live' : acs.source === 'census-cache' ? 'cache' : 'unavailable',
+      status: statusOf(acs.source, acs.snapshot),
       vintage: acs.vintage,
       retrievedAt: acs.retrievedAt,
       metrics,
       raw,
       error: acs.error,
+      access: acs.access,
+      snapshot: acs.snapshot ?? false,
+      keyConfigured: hasCensusApiKey(),
       citation: {
         label: 'U.S. Census Bureau, American Community Survey',
         url: `https://data.census.gov/table?g=0500000US25025&y=${citationYear}&tid=ACSDT5Y${citationYear}.B25064`,
       },
     },
     series: {
-      status: series.source === 'census-live' ? 'live' : series.source === 'census-cache' ? 'cache' : 'unavailable',
+      status: statusOf(series.source),
       points: series.points,
       retrievedAt: series.retrievedAt,
+      access: series.access,
       note: 'Each point is a 5-year ACS estimate for Suffolk County. Consecutive vintages overlap by four years, so read the line as a trend, not as year-on-year change.',
     },
     hudFmr,

@@ -50,7 +50,7 @@ interface NewsItem {
 interface MarketResponse {
   geography?: string;
   acs?: {
-    status: 'live' | 'cache' | 'unavailable';
+    status: 'live' | 'cache' | 'snapshot' | 'unavailable';
     vintage?: string;
     retrievedAt?: string;
     metrics?: {
@@ -60,6 +60,8 @@ interface MarketResponse {
       burden30?: number | null;
       burden40?: number | null;
     };
+    /** True when the Bureau was unreachable and the committed capture is shown. */
+    snapshot?: boolean;
     error?: string;
   };
   derived?: { affordableRentAtWage?: { wageCents: number; monthly: number } | null; gapPercent?: number | null };
@@ -240,7 +242,11 @@ export default function DashboardPage() {
               value={medianRent ?? 0}
               format="currency"
               unavailable={medianRent === null}
-              source={market?.acs?.vintage && market.acs.vintage !== 'unavailable' ? `Census ${market.acs.vintage}, B25064` : 'Census ACS 5-year, B25064'}
+              source={
+                market?.acs?.vintage && market.acs.vintage !== 'unavailable'
+                  ? `Census ${market.acs.vintage}, B25064${market.acs.snapshot ? ' (verified capture)' : ''}`
+                  : 'Census ACS 5-year, B25064'
+              }
               sourceDate={market?.acs?.status === 'unavailable' ? undefined : market?.acs?.retrievedAt}
               accent="var(--color-accent-primary)"
               details={rentDetails}

@@ -332,7 +332,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                     <span className="ms-1.5 text-[10px] uppercase text-[var(--color-text-muted)]">{language.code2}</span>
                   </span>
                   <span className="shrink-0 font-heading text-xs font-bold tabular-nums">
-                    {format.percent(coverage.percent)}
+                    {format.percent(coverage.percent / 100)}
                     <span className="ms-1 font-normal text-[var(--color-text-muted)]">{t('lang.coverageValue', { percent: String(coverage.translated), total: String(TOTAL_KEYS) })}</span>
                   </span>
                 </li>
