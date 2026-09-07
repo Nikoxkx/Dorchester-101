@@ -66,7 +66,11 @@ node scripts/build-exe.mjs --help
   electron-builder's NSIS tools all download from the npm registry and GitHub
   releases.
 - **Windows is not required.** electron-builder cross-builds the Windows targets
-  on macOS and Linux too; you just cannot run the result there.
+  on macOS and Linux too; you just cannot run the result there. A Linux
+  cross-build additionally needs `wine` on the PATH: rcedit (which stamps the
+  icon and version info into the exe, `signAndEditExecutable: true`) is a
+  Windows binary that electron-builder runs through wine off-Windows. Windows
+  and macOS builds need nothing extra.
 
 No API keys, no database, no Docker. Every data source the app uses is either
 bundled or a public API called at runtime.
@@ -133,7 +137,7 @@ reach users.
 | `Could not run npm.cmd: spawnSync npm.cmd EINVAL` | Fixed in current `scripts/lib/npm-spawn.mjs`: the build runs npm as a Node script (`npm-cli.js`), and if it must use `npm.cmd` it always sets `shell: true`. Pull the latest tree and re-run `npm run build:exe`. Do not stay on Node 18. |
 | Build fails downloading `electron-v…-win32-x64.zip` | GitHub releases are unreachable (corporate proxy, offline). Retry on a normal connection; the download is cached in `node_modules/.cache/electron-builder` after the first success |
 | Windows SmartScreen warns "Unknown publisher" | Expected: the build is unsigned. **More info → Run anyway** |
-| `electron-builder` complains about a signing certificate | Should not happen — the config sets `signAndEditExecutable: false` and the script sets `CSC_IDENTITY_AUTO_DISCOVERY=false` |
+| `electron-builder` complains about a signing certificate | Should not happen — the config sets `sign: null` and the script sets `CSC_IDENTITY_AUTO_DISCOVERY=false`; `signAndEditExecutable: true` only runs rcedit (icon/version stamping), it does not sign |
 | NSIS "invalid icon" | The icon must be `electron/assets/icon.ico`, not the `.png` |
 | The app opens to a blank window | Run `dist-electron/win-unpacked/DOR101.exe` from a terminal to see the server log, then `npm run verify:desktop` to reproduce it outside Electron |
 | The exe shows an old version of the site | The build reused a stale `.next`. Run `npm run build:exe` without `--skip-build`; the script prints the build id it packaged |
@@ -148,8 +152,12 @@ Configuration lives in `electron/builder.config.js`.
 - **Output:** `dist-electron/`
 - **Targets:** NSIS installer and portable, x64
 - **Icons:** `electron/assets/icon.ico` (also copied beside the exe for the window
-  and tray icons)
-- **Signing:** off
+  and tray icons). It is the same artwork the website ships: regenerate both
+  desktop icon files from `public/icons/logo-1024.png` with
+  `node scripts/gen-desktop-icons.js` after changing the website icon set.
+- **Signing:** off. The exe still gets its icon and version info stamped by
+  rcedit (`signAndEditExecutable: true`); on a Linux cross-build that step
+  needs wine.
 
 The packaged app is a plain directory, not an asar archive: `electron/main.js`
 spawns `next start` with `resources/app` as its working directory, and a child
