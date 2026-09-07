@@ -1,157 +1,89 @@
-# Dorchester 101 - Desktop Application Build Guide
+# Dorchester 101 — the Windows desktop app
 
-## Overview
+DOR101 ships as a website and as a Windows desktop app. The desktop app is the
+same Next.js application running locally inside an Electron window: no account,
+no configuration, no database, and no browser required.
 
-Dorchester 101 is now packaged as a standalone Windows desktop application (.exe) using **Electron** and **electron-builder**. Users can download a single file and run it immediately without any additional setup.
-
-## Features
-
-- ✅ **One-file download**: Single .exe installer or portable executable
-- ✅ **Auto-updates**: Seamless background updates without user interaction
-- ✅ **No installation required**: Portable version runs directly
-- ✅ **All features included**: Full web app functionality in desktop wrapper
-- ✅ **Offline-capable**: Can work offline for cached content
-
-## Building the Desktop App
-
-### Development
+**To build the exe yourself, see [BUILD.md](BUILD.md).** The short version:
 
 ```bash
-npm run dev:electron
+npm run build:exe
 ```
 
-This starts:
-1. Next.js dev server on http://localhost:3000
-2. Electron window connected to the dev server
+## Downloads
 
-### Production Build (Windows)
+From [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releases/latest),
+or from the download button on the site itself, which resolves the newest release
+for you:
 
-**Installer (.exe + Setup):**
-```bash
-npm run build:electron:win
+| File | Use it when |
+|------|-------------|
+| `DOR101 Setup <version>.exe` | You want Start Menu and Desktop shortcuts, and an uninstaller |
+| `DOR101-Portable-<version>.exe` | You are on a library or shelter computer, or a USB stick — no install, no admin rights |
+
+Both are about 180 MB. They contain the whole application, so nothing else needs
+to be downloaded or installed to run them.
+
+## Installing
+
+1. Download `DOR101 Setup <version>.exe` and double-click it.
+2. Choose an installation directory, or accept the default.
+3. Click **Install**.
+4. Launch **DOR101** from the Desktop shortcut or the Start Menu.
+
+Windows SmartScreen may warn that the publisher is unknown, because the build is
+not code-signed. Choose **More info → Run anyway**.
+
+## Running the portable build
+
+1. Put `DOR101-Portable-<version>.exe` anywhere — Desktop, a USB drive, a shared
+   folder.
+2. Double-click it. Nothing is written to the registry and no admin rights are
+   needed.
+
+## What runs on your machine
+
 ```
-Output: `dist/Dorchester 101-1.0.0.exe` (NSIS installer)
-
-**Portable (No Installation):**
-```bash
-npm run build:electron:win
-```
-Output: `dist/Dorchester 101-1.0.0-portable.exe` (Run directly)
-
-### Publishing to GitHub Releases (Auto-Updates)
-
-```bash
-npm run build:electron:win:publish
+DOR101.exe  (Electron window)
+    │
+    └── next start  on 127.0.0.1, a port chosen at launch
+            └── the production build of this website (.next/)
 ```
 
-This will:
-1. Build the app
-2. Create release artifacts
-3. Upload to GitHub Releases automatically
-4. Users will be notified of updates on next launch
+The desktop app runs the real site locally, including its server-rendered API
+routes — live MBTA predictions, news feeds and HUD/Census market data are fetched
+by that local server, so those pages need an internet connection. Everything the
+site ships offline (the directory, the map places, hotlines, FAQ) is inside the
+package and works with no signal at all.
 
-**Prerequisites:**
-- GitHub personal access token (PAT) with `public_repo` scope
-- Set environment variable: `GH_TOKEN=your_token`
+The server binds to `127.0.0.1` only. Nothing is exposed to the rest of the
+network, and closing the window stops the server.
 
-## Automatic Updates
+Your language, theme and font-size choices are stored locally on your device.
 
-The app checks for updates:
-- On every launch
-- Every hour while running
-- Silently downloads updates in the background
-- Notifies user when ready to install
+## Updates
 
-Users will see a notification in the bottom-right corner:
-1. "Update Available" - downloading
-2. "Update Ready to Install" - click "Restart Now" to apply
-
-## Release Distribution
-
-### GitHub Releases
-Files are automatically published to GitHub Releases:
-- `Dorchester 101-1.0.0.exe` - NSIS installer
-- `Dorchester 101-1.0.0-portable.exe` - Portable (no install)
-- `latest.yml` - Auto-updater manifest
-
-### Direct Download
-Users can download directly from: https://github.com/Nikoxkx/Dorchester-101/releases
-
-### One-Click Setup
-1. User downloads `.exe`
-2. Double-click to run
-3. Choose install or run directly
-4. App launches immediately
-
-## Code Signing (Optional)
-
-To trust the app without SmartScreen warnings:
-
-1. Acquire a Windows code signing certificate (EV recommended)
-2. Update `scripts/sign.js` with your certificate path
-3. Set environment variables:
-   ```
-   CERTIFICATE_FILE=path/to/cert.pfx
-   CERTIFICATE_PASSWORD=your_password
-   ```
-4. Run `npm run build:electron:win:publish`
+There is no auto-updater in the current build. When a new version is published,
+download it from the link above — the site's download button always points at the
+newest release. Installing over an existing installation keeps your preferences.
 
 ## Troubleshooting
 
-### Electron fails to find Next.js build
-- Ensure `npm run build` completes before building Electron
-- Check `out/` directory exists
+| Symptom | What to do |
+|---------|------------|
+| Blank window on launch | Quit DOR101 completely and start it again. If it persists, run `win-unpacked\DOR101.exe` from a terminal to see the server log |
+| "Unknown publisher" warning | Expected for an unsigned build: **More info → Run anyway** |
+| A page shows no live data | Those pages need a connection. The rest of the app works offline |
+| Live transit or news is stale | The local server polls on its own schedule; reopen the page, or check that the MBTA/Census feeds are up |
 
-### Auto-updater not working
-- Verify GitHub Releases have the latest `latest.yml`
-- Check `GH_TOKEN` environment variable is set
-- Ensure version in `package.json` is incremented
+## For maintainers
 
-### App window is blank on launch
-- Clear Electron cache: `~/.config/Dorchester 101/`
-- Try portable version first
-- Check dev console: press `Ctrl+Shift+I`
+| Task | Where |
+|------|-------|
+| Build the exe | [BUILD.md](BUILD.md) — `npm run build:exe` |
+| Check a package without installing it | `npm run verify:desktop` |
+| Publish a release | `scripts/publish-release.ps1`, or push a `v*` tag |
+| Electron main process | `electron/main.js` |
+| Packaging configuration | `electron/builder.config.js` |
 
-## Architecture
-
-```
-Electron Main Process
-    ↓
-Browser Window (BrowserView)
-    ↓
-Next.js App (Static Export)
-    ↓
-Web APIs / Backend
-```
-
-- **electron/main.js**: Electron entry point, window management, auto-updates
-- **electron/preload.js**: IPC bridge between main and renderer
-- **next.config.js**: Configured for static export (`output: 'export'`)
-- **src/components/UpdateNotifier.tsx**: Update UI notifications
-
-## Performance Optimizations
-
-- Static site export (no server needed)
-- Minimal Electron overhead (~150MB with app)
-- Lazy-loading components
-- Cached data for offline capability
-
-## Migration from Web to Desktop
-
-The same Next.js codebase serves both:
-- **Web**: Deploy to Vercel / traditional hosting
-- **Desktop**: Package with Electron
-
-No code duplication required.
-
-## Next Steps
-
-1. **Create release workflow** (GitHub Actions) to automate builds
-2. **Add code signing** for production releases
-3. **Test on target machines** (Windows 10+)
-4. **Gather feedback** from Dorchester users
-5. **Monitor crash reports** and auto-update metrics
-
----
-
-For questions or issues, open a GitHub issue: https://github.com/Nikoxkx/Dorchester-101/issues
+Report problems at <https://github.com/Nikoxkx/Dorchester-101/issues>.

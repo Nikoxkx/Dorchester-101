@@ -12,8 +12,9 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "electron:dev": "electron electron/main.js --dev",
-    "build:exe": "next build && npx electron-builder --config electron/builder.config.js --win",
-    "build:portable": "next build && npx electron-builder --config electron/builder.config.js --win portable"
+    "build:exe": "node scripts/build-exe.mjs",
+    "build:portable": "node scripts/build-exe.mjs --portable-only",
+    "verify:desktop": "node scripts/verify-desktop-package.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

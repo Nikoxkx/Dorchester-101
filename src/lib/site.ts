@@ -7,6 +7,13 @@
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export const SITE_NAME = 'DOR101';
+/**
+ * Injected from package.json by next.config.ts (`env.NEXT_PUBLIC_APP_VERSION`),
+ * so the version shown in the UI, the version /api/health reports and the
+ * version in the packaged exe filename cannot drift apart. The literal below is
+ * only reached outside a Next build — the unit tests, which load this module
+ * directly.
+ */
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '4.0.0';
 
 /**

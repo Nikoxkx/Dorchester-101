@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  # Build an exe on demand, without tagging: Actions → Release → Run workflow.
+  # Same script as `npm run build:exe` on a laptop; the artifacts land on the
+  # run's summary page instead of a release.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,11 +24,27 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Builds the website, then packages it. See scripts/build-exe.mjs.
       - run: npm run build:exe
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
+      # Boots the packaged app and requests the routes the desktop build needs.
+      # A failure here means the exe would open to a blank window.
+      - run: npm run verify:desktop
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DOR101-Windows
+          path: |
+            dist-electron/DOR101 Setup *.exe
+            dist-electron/DOR101-Portable-*.exe
+            dist-electron/SHA256SUMS.txt
+          retention-days: 30
+
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
             dist-electron/DOR101 Setup *.exe

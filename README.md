@@ -101,6 +101,10 @@ Download from [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releas
 
 > Windows SmartScreen may warn that the build is unsigned. Choose **More info → Run anyway**. No database, API key or configuration is required.
 
+Building the exe yourself is one command — see [BUILD.md](BUILD.md). Details on
+installing, running and troubleshooting the desktop app are in
+[README-DESKTOP.md](README-DESKTOP.md).
+
 ---
 
 ## Features
@@ -316,8 +320,9 @@ npm run dev          # http://localhost:3000
 | `npm run test` | Vitest unit tests incl. i18n parity |
 | `npm run test:e2e` | Playwright end-to-end |
 | `npm run electron:dev` | Run the desktop shell against the dev server |
-| `npm run build:exe` | Windows installer (`dist-electron/`) |
-| `npm run build:portable` | Windows portable exe |
+| `npm run build:exe` | Windows installer + portable exe (`dist-electron/`) — see [BUILD.md](BUILD.md) |
+| `npm run build:portable` | Portable exe only |
+| `npm run verify:desktop` | Boot the packaged app and check the routes it needs |
 
 ### Adding a translated string
 

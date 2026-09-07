@@ -1,13 +1,21 @@
 # Upload Windows EXE files to an existing GitHub release via API
 # Requires: gh auth login  OR  GH_TOKEN environment variable
+#
+# The version defaults to package.json, which is what scripts/build-exe.mjs
+# names the artifacts after.
 
 param(
-  [string]$Version = "1.0.0",
+  [string]$Version,
   [string]$Repo = "Nikoxkx/Dorchester-101"
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+Set-Location $Root
+
+if (-not $Version) {
+  $Version = (Get-Content (Join-Path $Root "package.json") -Raw | ConvertFrom-Json).version
+}
 $Tag = "v$Version"
 
 $files = @(
