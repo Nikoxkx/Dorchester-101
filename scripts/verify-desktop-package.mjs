@@ -461,8 +461,11 @@ function probe(url, expectedType) {
   });
 }
 
-function teardown() {
+async function teardown() {
   if (server && server.exitCode === null) server.kill('SIGKILL');
+  // On Windows, file handles may remain locked briefly after process termination.
+  // Wait for the OS to fully release locks before attempting to delete.
+  await new Promise(resolve => setTimeout(resolve, 1000));
   if (!keep) fs.rmSync(stagingRoot, { recursive: true, force: true });
   else console.log(`staging kept at ${stagingRoot}`);
 }
