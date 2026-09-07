@@ -8,6 +8,19 @@ on:
   # Same script as `npm run build:exe` on a laptop; the artifacts land on the
   # run's summary page instead of a release.
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Also publish to a GitHub Release named v<version from package.json>'
+        type: boolean
+        default: false
+      target:
+        description: 'Which Windows target to build'
+        type: choice
+        default: 'both'
+        options:
+          - both
+          - installer
+          - portable
 
 permissions:
   contents: write
@@ -20,33 +33,84 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      # Read once: the artifact filenames, the release tag and the summary all
+      # have to agree with what build-exe.mjs names the files.
+      - name: Read the app version
+        id: meta
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "sha=$(git rev-parse --short HEAD)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - run: npm ci
 
       # Builds the website, then packages it. See scripts/build-exe.mjs.
-      - run: npm run build:exe
+      - name: Build the website and package it
+        shell: pwsh
+        run: npm run build:exe ${{ inputs.target == 'installer' && '--installer-only' || inputs.target == 'portable' && '--portable-only' || '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       # Boots the packaged app and requests the routes the desktop build needs.
-      # A failure here means the exe would open to a blank window.
-      - run: npm run verify:desktop
+      # A failure here means the exe would open to a blank window — worth
+      # knowing, but not worth discarding a five-minute build over, so the log
+      # is captured and the artifacts below upload either way.
+      - name: Verify the packaged app boots
+        id: verify
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          npm run verify:desktop 2>&1 | Tee-Object -FilePath verify-desktop.log
+          exit $LASTEXITCODE
 
-      - uses: actions/upload-artifact@v4
+      # Uploads even when verification failed, with the log beside the binaries
+      # so the failure is diagnosable without re-running anything.
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: DOR101-Windows
           path: |
             dist-electron/DOR101 Setup *.exe
             dist-electron/DOR101-Portable-*.exe
             dist-electron/SHA256SUMS.txt
+            verify-desktop.log
+          if-no-files-found: warn
           retention-days: 30
 
-      - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Tags always publish; a manual run publishes when the box was ticked.
+      - name: Publish to GitHub Releases
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.publish_release == true
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', steps.meta.outputs.version) }}
+          name: DOR101 ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', steps.meta.outputs.version) }}
           files: |
             dist-electron/DOR101 Setup *.exe
             dist-electron/DOR101-Portable-*.exe
+            dist-electron/SHA256SUMS.txt
           generate_release_notes: true
+          # Deliberately not fail_on_unmatched_files: a single-target build
+          # legitimately leaves one of those globs empty, and failing the run
+          # after a successful five-minute build is the exact mistake this
+          # workflow is being fixed for.
+
+      # The summary is what a human actually reads after a manual run.
+      - name: Write run summary
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = @(
+            "## DOR101 v${{ steps.meta.outputs.version }} — Windows build",
+            '',
+            "- Website build id: ``${{ steps.meta.outputs.sha }}``",
+            "- Verification: $(if ('${{ steps.verify.outcome }}' -eq 'success') { '**passed**' } else { '**failed** — see verify-desktop.log in the artifacts' })"
+          )
+          if (Test-Path dist-electron/SHA256SUMS.txt) {
+            $summary += '', '```', (Get-Content dist-electron/SHA256SUMS.txt), '```'
+          }
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
