@@ -72,7 +72,17 @@ test.describe('Navigation', () => {
 
   test('following a nav link loads the destination', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: /Housing projects/i }).first().click();
+    const link = page.getByRole('link', { name: /Housing projects/i }).first();
+
+    // Below the `lg` breakpoint the rail is a drawer that starts closed, so the
+    // link exists in the DOM but is off-canvas. Opening it is what a person on
+    // a phone actually does.
+    if (!(await link.isVisible())) {
+      await page.getByRole('button', { name: /open menu/i }).click();
+    }
+
+    await expect(link).toBeVisible();
+    await link.click();
     await page.waitForURL('**/projects');
     await expect(page.getByRole('heading', { level: 1 }).first()).toContainText(/Housing projects/i);
   });
@@ -85,19 +95,20 @@ test.describe('Navigation', () => {
 
 test.describe('Language', () => {
   test('the language switcher offers English and Spanish', async ({ page }) => {
-    // On /settings the language panel renders its options inline; on the
-    // homepage the same trigger opens a popover instead. Open the trigger only
-    // when the options are not already on screen, so this does not depend on
-    // which of the two layouts it landed on.
-    await page.goto('/settings');
+    await page.goto('/');
 
-    const spanish = page.getByRole('button', { name: /Español|Spanish/i }).first();
-    if (!(await spanish.isVisible())) {
-      await page.getByRole('button', { name: /change language/i }).first().click();
-    }
+    // The header trigger opens a menu whose options are <button role=
+    // "menuitemradio">. The explicit role replaces the implicit "button" role,
+    // so getByRole('button', ...) matches none of them — that is why this test
+    // reported "element(s) not found" while the options were on the page.
+    const trigger = page.getByRole('button', { name: /change language/i });
+    await expect(trigger).toBeVisible();
+    await trigger.click();
 
-    await expect(spanish).toBeVisible();
-    await expect(page.getByRole('button', { name: /English/i }).first()).toBeVisible();
+    const menu = page.getByRole('menu', { name: /choose your language/i });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitemradio', { name: /English/i }).first()).toBeVisible();
+    await expect(menu.getByRole('menuitemradio', { name: /Español|Spanish/i }).first()).toBeVisible();
   });
 });
 
@@ -207,4 +218,33 @@ test.describe('Responsive layout', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   });
+});
+
+// TEMPORARY DIAGNOSTIC — remove once the overflow source is identified.
+test('DIAG overflow at 375px', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/');
+  await page.waitForTimeout(3000);
+  const info = await page.evaluate(() => {
+    const vw = document.documentElement.clientWidth;
+    const offenders: string[] = [];
+    for (const el of Array.from(document.querySelectorAll('*'))) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.right > vw + 1) {
+        const cls = (typeof el.className === 'string' ? el.className : '').trim().slice(0, 90);
+        offenders.push(
+          `${el.tagName.toLowerCase()} right=${Math.round(r.right)} w=${Math.round(r.width)}` +
+            `${cls ? ` class="${cls}"` : ''}${el.id ? ` id=${el.id}` : ''}`,
+        );
+      }
+    }
+    return {
+      clientWidth: vw,
+      scrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      offenderCount: offenders.length,
+      widest: offenders.slice(0, 30),
+    };
+  });
+  console.log('OVERFLOW-DIAG ' + JSON.stringify(info));
 });
