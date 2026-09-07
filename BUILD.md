@@ -130,6 +130,7 @@ reach users.
 | Symptom | Fix |
 |---------|-----|
 | `Node.js 20.9+ is required` | Install Node 20 or newer from nodejs.org |
+| `Could not run npm.cmd: spawnSync npm.cmd EINVAL` | Fixed in current `scripts/lib/npm-spawn.mjs`: the build runs npm as a Node script (`npm-cli.js`), and if it must use `npm.cmd` it always sets `shell: true`. Pull the latest tree and re-run `npm run build:exe`. Do not stay on Node 18. |
 | Build fails downloading `electron-v…-win32-x64.zip` | GitHub releases are unreachable (corporate proxy, offline). Retry on a normal connection; the download is cached in `node_modules/.cache/electron-builder` after the first success |
 | Windows SmartScreen warns "Unknown publisher" | Expected: the build is unsigned. **More info → Run anyway** |
 | `electron-builder` complains about a signing certificate | Should not happen — the config sets `signAndEditExecutable: false` and the script sets `CSC_IDENTITY_AUTO_DISCOVERY=false` |

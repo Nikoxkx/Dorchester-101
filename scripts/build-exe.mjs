@@ -30,6 +30,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { replaceSymlinksWithCopies, tracedExternals } from './lib/desktop-package.mjs';
+import { npmInvocation, spawnOptionsForCommand } from './lib/npm-spawn.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -140,8 +141,14 @@ function preflight() {
 }
 
 function npmVersion() {
-  const result = spawnSync(npmCommand(), ['--version'], { cwd: root, encoding: 'utf8' });
-  return result.status === 0 ? result.stdout.trim() : 'unknown';
+  const { command, commandArgs, spawnOptions } = npmInvocation(['--version']);
+  const result = spawnSync(command, commandArgs, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+    ...spawnOptions,
+  });
+  return result.status === 0 && result.stdout ? result.stdout.trim() : 'unknown';
 }
 
 /**
@@ -187,7 +194,8 @@ function installDependencies() {
         ? 'package-lock.json changed since the last install — reinstalling'
         : 'node_modules is incomplete — running `npm ci` (this downloads Electron, ~2 minutes)',
   );
-  runOrFail(npmCommand(), ['ci', '--no-audit', '--no-fund'], { cwd: root, env: process.env });
+  const npm = npmInvocation(['ci', '--no-audit', '--no-fund']);
+  runOrFail(npm.command, npm.commandArgs, { cwd: root, env: process.env, ...npm.spawnOptions });
   detail('dependencies installed');
   endStep(started);
   return Promise.resolve();
@@ -491,7 +499,12 @@ function detail(message) {
 }
 
 function runOrFail(command, commandArgs, runOptions = {}) {
-  const result = spawnSync(command, commandArgs, { stdio: 'inherit', shell: false, ...runOptions });
+  const merged = spawnOptionsForCommand(command, { stdio: 'inherit', shell: false, ...runOptions });
+  let result = spawnSync(command, commandArgs, merged);
+  // Last-chance retry: if something still handed us a .cmd without a shell.
+  if (result.error?.code === 'EINVAL' && merged.shell !== true && process.platform === 'win32') {
+    result = spawnSync(command, commandArgs, { ...merged, shell: true, windowsHide: true });
+  }
   if (result.error) {
     throw new Error(`Could not run \`${command}\`: ${result.error.message}`);
   }
@@ -499,10 +512,6 @@ function runOrFail(command, commandArgs, runOptions = {}) {
     const shown = [command, ...commandArgs].map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ');
     throw new Error(`\`${shown}\` exited with code ${result.status}`);
   }
-}
-
-function npmCommand() {
-  return process.platform === 'win32' ? 'npm.cmd' : 'npm';
 }
 
 function git(...gitArgs) {
