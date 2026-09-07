@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
+import { readFileSync } from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+
+/** Read once: the app version shown in the UI and stamped on the .exe. */
+const packageVersion: string = JSON.parse(
+  readFileSync(path.join(root, "package.json"), "utf8"),
+).version as string;
 
 /**
  * Build id.
@@ -81,6 +87,15 @@ const nextConfig: NextConfig = {
   compress: true,
   turbopack: { root },
   generateBuildId: buildId,
+  /**
+   * One source of truth for the version string. The About page, the settings
+   * page, the footer, /api/health and the packaged `DOR101 Setup <version>.exe`
+   * filename all have to agree, and package.json is the only place the desktop
+   * build reads it from anyway.
+   */
+  env: {
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION ?? packageVersion,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 420, 640, 768, 1024, 1280, 1536],

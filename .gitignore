@@ -9,6 +9,8 @@ out/
 build/
 dist/
 dist-electron/
+# Staging directory for `npm run verify:desktop`
+.desktop-package-check/
 release/**
 !release/
 !release/**/
