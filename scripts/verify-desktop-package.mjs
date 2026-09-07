@@ -28,7 +28,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { replaceSymlinksWithCopies, tracedExternals } from './lib/desktop-package.mjs';
+import { removeDirRetrying, replaceSymlinksWithCopies, stopProcess, tracedExternals } from './lib/desktop-package.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -68,12 +68,12 @@ const results = [];
 let server = null;
 
 main()
-  .then((code) => {
-    teardown();
+  .then(async (code) => {
+    await teardown();
     process.exit(code);
   })
-  .catch((error) => {
-    teardown();
+  .catch(async (error) => {
+    await teardown();
     console.error('');
     console.error(`✖ ${error.message}`);
     if (verbose && error.stack) console.error(error.stack);
@@ -93,7 +93,15 @@ async function main() {
   console.log(`staging directory: ${path.relative(root, stagingRoot)}/`);
   console.log('');
 
-  fs.rmSync(stagingRoot, { recursive: true, force: true });
+  // A previous run can leave this behind with a still-locked directory on
+  // Windows; retry rather than failing the whole check over stale output.
+  const stale = removeDirRetrying(stagingRoot);
+  if (stale) {
+    throw new Error(
+      `Cannot clear the staging directory ${path.relative(root, stagingRoot)}/ ` +
+        `(${stale.code ?? stale.message}). Close anything holding it open and run again.`,
+    );
+  }
   fs.mkdirSync(appDir, { recursive: true });
 
   const copied = await copyAppFiles();
@@ -461,10 +469,38 @@ function probe(url, expectedType) {
   });
 }
 
-function teardown() {
-  if (server && server.exitCode === null) server.kill('SIGKILL');
-  if (!keep) fs.rmSync(stagingRoot, { recursive: true, force: true });
-  else console.log(`staging kept at ${stagingRoot}`);
+/**
+ * Stop the server and delete the staging directory.
+ *
+ * This is deliberately defensive, and the defensiveness is load-bearing on
+ * Windows: a `next start` child that has been sent a kill signal has not
+ * released its working directory yet, and `rmdir` on that directory fails with
+ * `EBUSY: resource busy or locked`. That happened in CI — every route probe had
+ * passed and the run still exited 1, so the exe that had just been built was
+ * thrown away at the last step.
+ *
+ * So: wait for the child to actually exit, retry the delete (Node's `maxRetries`
+ * covers exactly the EBUSY/EPERM/ENOTEMPTY set), and treat a leftover directory
+ * as a warning. Cleaning up can never be a reason to fail the build.
+ */
+async function teardown() {
+  // Order matters: the server has to be gone before its working directory can
+  // be deleted, or Windows refuses the rmdir. See stopProcess/removeDirRetrying
+  // in scripts/lib/desktop-package.mjs.
+  await stopProcess(server);
+
+  if (keep) {
+    console.log(`staging kept at ${stagingRoot}`);
+    return;
+  }
+
+  const error = removeDirRetrying(stagingRoot);
+  if (error) {
+    console.log(
+      `  note: could not remove ${path.relative(root, stagingRoot)}/ ` +
+        `(${error.code ?? error.message}) — it is safe to delete it by hand`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

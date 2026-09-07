@@ -17,7 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Node 20 reached end of life in April 2026; Next 16 wants >=20.9.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -40,14 +41,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm run test:run
 
   build:
     name: Build
@@ -60,21 +61,36 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
+      # No artifact is uploaded from here: nothing downstream downloads it (the
+      # e2e and deploy jobs build for themselves), and the old `path: .next/`
+      # upload reported "No files were found" on every run.
       - name: Build application
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: .next/
-          retention-days: 7
+      - name: Confirm the production server starts
+        # A build that compiles but cannot serve is the failure mode that turns
+        # into a blank Electron window, so prove it answers before moving on.
+        run: |
+          npx next start -H 127.0.0.1 -p 3000 &
+          SERVER_PID=$!
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/api/health > /dev/null; then
+              echo "server answered /api/health after ${i}s"
+              curl -fsS http://127.0.0.1:3000/api/health | head -c 300
+              kill "$SERVER_PID"
+              exit 0
+            fi
+            sleep 1
+          done
+          kill "$SERVER_PID"
+          echo "::error::the production server never answered /api/health"
+          exit 1
 
   e2e:
     name: E2E Tests
@@ -87,12 +103,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
+      # chromium only, matching the projects in playwright.config.ts. The config
+      # used to also define firefox and webkit projects, whose binaries were
+      # never installed here.
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
@@ -102,11 +121,23 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
 
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, test, build]
     if: github.ref == 'refs/heads/main'
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,7 +145,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -123,10 +154,29 @@ jobs:
       - name: Build application
         run: npm run build
 
+      # Every run of this job had failed with "Input required and not supplied:
+      # vercel-token" because the secrets were never configured. Skipping when
+      # they are absent keeps CI honest — a deploy that cannot happen should say
+      # so, not paint the whole workflow red.
       - name: Deploy to Vercel
+        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
+
+      - name: Explain why the deploy was skipped
+        if: env.VERCEL_TOKEN == '' || env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == ''
+        run: |
+          {
+            echo '## Deploy skipped'
+            echo ''
+            echo 'The Vercel credentials are not configured for this repository, so nothing was deployed.'
+            echo 'Add these three secrets to enable it:'
+            echo ''
+            echo '- `VERCEL_TOKEN`'
+            echo '- `VERCEL_ORG_ID`'
+            echo '- `VERCEL_PROJECT_ID`'
+          } >> "$GITHUB_STEP_SUMMARY"

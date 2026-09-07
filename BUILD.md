@@ -137,6 +137,7 @@ reach users.
 | The app opens to a blank window | Run `dist-electron/win-unpacked/DOR101.exe` from a terminal to see the server log, then `npm run verify:desktop` to reproduce it outside Electron |
 | The exe shows an old version of the site | The build reused a stale `.next`. Run `npm run build:exe` without `--skip-build`; the script prints the build id it packaged |
 | `Cannot find module` in an API route inside the exe | A dependency is in `devDependencies`. Move it to `dependencies` — only production dependencies are packaged |
+| `verify:desktop` passes every route then dies with `EBUSY: resource busy or locked, rmdir` | Windows-only, and it used to fail the whole run: the staging directory was deleted before the `next start` child had released it. `stopProcess()` in `scripts/lib/desktop-package.mjs` now waits for the exit and `removeDirRetrying()` retries the delete. If a stale `.desktop-package-check/` is left behind, delete it by hand |
 
 ## How the desktop build is put together
 

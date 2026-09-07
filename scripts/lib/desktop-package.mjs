@@ -16,6 +16,68 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
+ * Kill a child process and resolve once it has *actually* exited.
+ *
+ * `child.kill()` only sends the signal. On Windows the process keeps its
+ * working directory locked for a moment afterwards, so anything that deletes
+ * that directory straight away fails with `EBUSY: resource busy or locked`.
+ * That is exactly how the desktop package check used to fail in CI after every
+ * route probe had passed — see scripts/verify-desktop-package.mjs.
+ *
+ * @param {import('node:child_process').ChildProcess} child
+ * @param {number} timeoutMs  give up waiting after this long, so a process that
+ *                            refuses to die cannot hang the whole check
+ * @returns {Promise<void>}
+ */
+export function stopProcess(child, timeoutMs = 15_000) {
+  return new Promise((resolve) => {
+    if (!child || child.exitCode !== null || child.signalCode !== null) {
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      resolve();
+    };
+    const deadline = setTimeout(settle, timeoutMs);
+
+    child.once('exit', settle);
+    child.once('error', settle);
+    try {
+      child.kill('SIGKILL');
+    } catch {
+      settle(); // already gone
+    }
+  });
+}
+
+/**
+ * Delete a directory tree, retrying the errors that mean "try again in a
+ * moment" rather than "this will never work".
+ *
+ * Node's `rmSync` already implements the retry, but only when `maxRetries` is
+ * set, and only for EBUSY/EMFILE/ENFILE/ENOTEMPTY/EPERM — precisely the set a
+ * just-killed process leaves behind on Windows. A directory that still cannot
+ * be removed is not worth failing a build over, so the last error is returned
+ * instead of thrown.
+ *
+ * @param {string} dir
+ * @returns {Error | null}  the error that gave up, or null when it is gone
+ */
+export function removeDirRetrying(dir, { maxRetries = 12, retryDelay = 500 } = {}) {
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries, retryDelay });
+    return null;
+  } catch (error) {
+    return error;
+  }
+}
+
+/**
  * Replace every symlink under `dir` with a real copy of its target.
  *
  * @param {string} dir  directory to walk (the repo's .next, or a staged copy)
