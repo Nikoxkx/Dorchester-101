@@ -1,54 +1,116 @@
 # Image credits
 
-Every photograph the site ships, where it came from, and what the licence allows.
-Kept next to the images because a credit that lives only in a build script gets lost.
+Every photograph the site ships, where it came from, who took it and what the
+licence allows. Kept next to the images because a credit that lives only in a
+build script gets lost.
+
+**A file whose origin cannot be confirmed is not shipped.** Two photographs that
+used to appear on the About page — `img/fields-corner-station.jpg` and a
+top-level `img/codman-square.jpg` — were removed for exactly that reason: no
+EXIF, no upload record, no licence, and therefore no honest way to credit them.
+The Wikimedia Commons photographs below took their place. Author, licence and
+file page for each one were checked against Commons itself, not copied from a
+third party.
+
+None of the images on this site is AI-generated. Every photograph is a credited
+photograph of a real place; the logos, source badges and icons are drawn here.
 
 ## `img/dorchester-bay-sunset.jpg`
 
 - **Subject:** Dorchester Bay and the Neponset mouth at sunset, looking south from the
   Morris Brown Jr. Bridge area.
-- **Source:** Wikimedia Commons, uploaded by user *Sswonk*.
+- **Author:** *Sswonk* (Wikimedia Commons), 4 July 2009.
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Dorchester_Bay_Boston_Harbor_sunset.jpg
 - **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0).
 - **Credit line used in the UI:** “Dorchester Bay at sunset — photo by Sswonk, CC BY-SA 3.0.”
 - **Modifications:** recoloured for contrast, resized to 1600 px on the long edge,
   converted to progressive JPEG with 4:2:0 chroma. Derivative work, so the CC BY-SA
   attribution travels with it.
+- **Also used for:** the app icon, the PWA icon set, the Open Graph card and the README
+  hero — all derivatives of this photograph, so the same credit covers all of them.
 
-## `img/fields-corner-station.jpg`
+## `img/hoods/fields-corner.jpg`
 
-- **Subject:** Fields Corner station plaza, Red Line Ashmont branch.
-- **Status:** provenance and licence **must be confirmed before this file is
-  republished outside this repository.** It is used only as on-site illustration of
-  the Fields Corner section and is not offered for reuse.
+- **Subject:** An inbound Red Line train arriving at Fields Corner station, 25 July 2021.
+- **Author:** *Hutima* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+- **Credit line used in the UI:** “Fields Corner station — photo by Hutima, CC BY-SA 4.0.”
+- **Modifications:** resized to 1200 px on the long edge, progressive JPEG. Derivative work,
+  so the attribution travels with it.
+- **Used in:** the About page, the Fields Corner neighborhood card and the station photo
+  sheet for Fields Corner.
+
+## `img/hoods/codman-square.jpg`
+
+- **Subject:** Edward Everett Square, Dorchester — the Columbia Road end of the
+  Codman Square–Uphams Corner corridor. It stands in for Codman Square because no
+  Commons photograph of Codman Square itself was available at import time; the caption
+  in the UI says so rather than passing the square off as somewhere else.
+- **Author:** *John Phelan* (Wikimedia Commons), 11 March 2012.
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Edward_Everett_Square,_Dorchester_MA.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0).
+- **Credit line used in the UI:** “Edward Everett Square, Dorchester — photo by John Phelan, CC BY-SA 3.0.”
+- **Modifications:** resized, progressive JPEG.
+- **Used in:** the About page and the Codman Square neighborhood card.
+
+## `img/hoods/savin-hill.jpg`
+
+- **Subject:** Dorchester Bay seen from Savin Hill, October 2016.
+- **Author:** *ButteBag* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Dorchester_Bay_from_Savin_Hill.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 - **Modifications:** resized, progressive JPEG.
 
-## `img/codman-square.jpg`
+## `img/hoods/uphams-corner.jpg`
 
-- **Subject:** Codman Square at Washington Street and Centre Street.
-- **Status:** provenance and licence **must be confirmed before republication.** Same
-  handling as above.
+- **Subject:** The S. B. Pierce Building at Uphams Corner, March 2012.
+- **Author:** *John Phelan* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:S_B_Pierce_Building,_Uphams_Corner,_Dorchester_MA.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0).
 - **Modifications:** resized, progressive JPEG.
 
-## `img/hoods/*.jpg` — sub-neighborhood photographs
+## `img/hoods/grove-hall.jpg`
 
-All nine are from Wikimedia Commons and are shown only inside the expanded card for
-that area. Each caption in the UI links to the Commons file page, which carries the
-author and the exact licence (all are CC BY, CC BY-SA or public domain at the time of
-import). Modifications: resized to 1200–1600 px, progressive JPEG.
+- **Subject:** Blue Hill Avenue near American Legion Highway, circa 1960–1968.
+- **Author:** City of Boston Archives (Mayor John F. Collins records, collection #0244.001).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Blue_Hill_Avenue_near_American_Legion_Highway_in_Dorchester_(11071878605).jpg
+- **Licence:** Creative Commons Attribution 2.0 Generic (CC BY 2.0).
+- **Modifications:** resized, progressive JPEG.
 
-- `fields-corner.jpg` — Fields Corner: Inbound Red Line train arriving at Fields Corner station, July 2021. Source: `commons.wikimedia.org/wiki/File:Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg`
-- `savin-hill.jpg` — Savin Hill: Dorchester Bay seen from Savin Hill. Source: `commons.wikimedia.org/wiki/File:Dorchester_Bay_from_Savin_Hill.jpg`
-- `uphams-corner.jpg` — Uphams Corner: The S. B. Pierce Building at Uphams Corner. Source: `commons.wikimedia.org/wiki/File:S_B_Pierce_Building,_Uphams_Corner,_Dorchester_MA.jpg`
-- `codman-square.jpg` — Codman Square: Edward Everett Square, at the Columbia Road end of the Codman Square–Uphams corridor; no Commons photograph of Codman Square itself is available yet. Source: `commons.wikimedia.org/wiki/File:Edward_Everett_Square,_Dorchester_MA.jpg`
-- `grove-hall.jpg` — Grove Hall: Blue Hill Avenue near American Legion Highway. Source: `commons.wikimedia.org/wiki/File:Blue_Hill_Avenue_near_American_Legion_Highway_in_Dorchester_(11071878605).jpg`
-- `four-corners.jpg` — Four Corners: Four Corners/Geneva Avenue station on the Fairmount Line, looking inbound. Source: `commons.wikimedia.org/wiki/File:Four_Corners_Geneva_Ave_station,_looking_inbound,_July_2013.JPG`
-- `lower-mills.jpg` — Lower Mills: Ventura Street playground in the Neponset River Reservation, below Lower Mills. Source: `commons.wikimedia.org/wiki/File:Ventura_Street_Playground_Neponset_River_Reservation_Dorchester_Massachusetts.jpg`
-- `ashmont.jpg` — Ashmont: Ashmont station from Peabody Square. Source: `commons.wikimedia.org/wiki/File:Ashmont_station_from_Peabody_Square.jpg`
-- `neponset.jpg` — Neponset: Neponset River Reservation. Source: `commons.wikimedia.org/wiki/File:Neponset_River_Reservation_1_Dorchester_Massachusetts.jpg`
+## `img/hoods/four-corners.jpg`
 
-Note: no suitable Commons photograph of Codman Square proper existed at import time; the
-Codman Square card uses Edward Everett Square and says so in its caption. Replace when a
-licensed photo is available.
+- **Subject:** Four Corners/Geneva Avenue station on the Fairmount Line, looking inbound,
+  July 2013.
+- **Author:** *Pi.1415926535* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Four_Corners_Geneva_Ave_station,_looking_inbound,_July_2013.JPG
+- **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0).
+- **Modifications:** resized, progressive JPEG.
+
+## `img/hoods/lower-mills.jpg`
+
+- **Subject:** Ventura Street playground in the Neponset River Reservation, below Lower
+  Mills, September 2018.
+- **Author:** *Swampyank* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Ventura_Street_Playground_Neponset_River_Reservation_Dorchester_Massachusetts.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+- **Modifications:** resized, progressive JPEG.
+
+## `img/hoods/ashmont.jpg`
+
+- **Subject:** Ashmont station from Peabody Square, June 2012.
+- **Author:** *Matthew in Boston* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Ashmont_station_from_Peabody_Square.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 2.0 Generic (CC BY-SA 2.0).
+- **Modifications:** resized, progressive JPEG.
+
+## `img/hoods/neponset.jpg`
+
+- **Subject:** Neponset River Reservation, September 2018.
+- **Author:** *Swampyank* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Neponset_River_Reservation_1_Dorchester_Massachusetts.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+- **Modifications:** resized, progressive JPEG.
 
 ## Logos and symbols
 

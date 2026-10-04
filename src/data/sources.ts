@@ -191,7 +191,7 @@ const SOURCE_TABLE = {
     name: 'DOR101 directory',
     short: '101',
     url: '/about',
-    provides: 'Listings verified by volunteers against the organisation named on each entry.',
+    provides: 'Listings checked by the site\'s author against the organisation named on each entry.',
     color: '#14304F',
     cadence: 'Rolling; each listing shows its own check date',
     licence: 'MIT (code) · CC BY 4.0 (listing data)',

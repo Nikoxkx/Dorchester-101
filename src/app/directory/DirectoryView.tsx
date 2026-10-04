@@ -292,7 +292,7 @@ export function DirectoryView() {
           </ul>
         )}
         <ProjectNote sources={['dor101', 'bostongov', 'bha']}>
-          Every listing names the organisation, its phone number and the date a volunteer last confirmed the details with them. A listing older than six months is flagged rather than hidden, so you can still call, but you know to ask.
+          Every listing names the organisation, its phone number and the date the details were last confirmed with them. A listing older than six months is flagged rather than hidden, so you can still call, but you know to ask.
         </ProjectNote>
       </div>
     </MainLayout>

@@ -79,7 +79,7 @@
   },
   "version": "4.0.0",
   "description": "DOR101 — Dorchester 101: Free community resources for Dorchester residents",
-  "author": "DOR101 Community Project",
+  "author": "Yeisbel Pena",
   "license": "MIT",
   "main": "electron/main.js"
 }

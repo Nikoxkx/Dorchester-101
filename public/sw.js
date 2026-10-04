@@ -12,7 +12,9 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-const VERSION = 'v4.1.0';
+/// Bumped for 4.2: the two uncredited About-page photographs were removed and
+/// replaced, so caches holding the old `/img/...` responses have to go with them.
+const VERSION = 'v4.2.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;

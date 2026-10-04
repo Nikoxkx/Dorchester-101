@@ -121,7 +121,7 @@ export default function AffordableHousingPage() {
             {t('housing.description')}
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Each card shows whether the waitlist is <strong>open</strong>, <strong>closed</strong> or run by <strong>lottery</strong>, the income band it serves as a share of area median income (AMI), and the date a volunteer last confirmed it with the housing office. Use the Tools page to find your AMI band first; most Boston listings are for households at or below 80% AMI. Applications are only ever made through the official link on each card.
+            Each card shows whether the waitlist is <strong>open</strong>, <strong>closed</strong> or run by <strong>lottery</strong>, the income band it serves as a share of area median income (AMI), and the date the listing was last confirmed with the housing office. Use the Tools page to find your AMI band first; most Boston listings are for households at or below 80% AMI. Applications are only ever made through the official link on each card.
           </p>
         </header>
 

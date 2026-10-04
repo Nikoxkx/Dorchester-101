@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, CircleAlert, Gauge, Languages, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, Bot, CircleAlert, Gauge, Languages, ShieldCheck } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ReportProblem } from '@/components/a11y/ReportProblem';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
@@ -111,28 +111,30 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <Image
-              src="/img/fields-corner-station.jpg"
-              alt="Fields Corner station plaza on Dorchester Avenue, with the Red Line platform entrance at left"
+              src="/img/hoods/fields-corner.jpg"
+              alt="An inbound Red Line train arriving at Fields Corner station, July 2021"
               width={1200}
               height={800}
               className="h-40 w-full object-cover"
               sizes="(min-width: 640px) 50vw, 100vw"
             />
             <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              {credits.find((credit) => credit.file.includes('fields-corner'))?.note ?? 'Fields Corner'}
+              {credits.find((credit) => credit.file.includes('fields-corner'))?.note ??
+                'Fields Corner station — photo by Hutima, CC BY-SA 4.0.'}
             </figcaption>
           </figure>
           <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <Image
-              src="/img/codman-square.jpg"
-              alt="Codman Square at Washington Street and Centre Street"
-              width={1600}
-              height={1067}
+              src="/img/hoods/codman-square.jpg"
+              alt="Edward Everett Square in Dorchester, at the Columbia Road end of the Codman Square–Uphams Corner corridor"
+              width={500}
+              height={375}
               className="h-40 w-full object-cover"
               sizes="(min-width: 640px) 50vw, 100vw"
             />
             <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              {credits.find((credit) => credit.file.includes('codman-square'))?.note ?? 'Codman Square'}
+              {credits.find((credit) => credit.file.includes('codman-square'))?.note ??
+                'Edward Everett Square, Dorchester — photo by John Phelan, CC BY-SA 3.0.'}
             </figcaption>
           </figure>
         </div>
@@ -158,8 +160,9 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 <Heart className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> Who made it
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Dorchester residents and volunteers, under the name <strong>DOR101 Community Project</strong>. It is not a city service, a non-profit&apos;s product or a startup. The people who
-                verify listings are the people who use them: tenants, parents, case workers, students. Contributors are listed in the repository&apos;s commit history, where credit belongs.
+                One person: <strong>Yeisbel Pena</strong>, who wrote the code, checks every listing against the organisation that publishes it, and runs the site. It is not a city
+                service, a non-profit&apos;s product or a startup, and no organisation stands behind it. There is no team, no board and no outside contributors: the public commit history and
+                the issue tracker are the whole record of the work.
               </p>
             </div>
             <div>
@@ -168,7 +171,8 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 Open source under the MIT licence. The code, the listing data and every correction are public. There is no analytics, no tracking, no third-party script; fonts and icons ship from
-                this server. It also runs as a Windows desktop app for machines with no reliable internet.
+                this server. It also runs as a Windows desktop app for machines with no reliable internet. One person keeps it going, and AI tools helped build it — both are stated plainly
+                below.
               </p>
             </div>
           </div>
@@ -194,6 +198,24 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
 
           {/* The actual .exe files, resolved from the latest GitHub release. */}
           <DownloadAppCard className="mt-4" />
+        </section>
+
+        {/* ── Where AI was used, and where it was not ───────────────── */}
+        <section aria-labelledby="ai-use" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
+          <h2 id="ai-use" className="flex items-center gap-2 font-heading text-base font-bold">
+            <Bot className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+            {t('about.aiUse')}
+          </h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.aiUseBody')}</p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.aiUseRuntime')}</p>
+          <a
+            href={`${REPO_URL}/blob/main/docs/AI-USAGE.md`}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3.5 py-2 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]"
+          >
+            {t('about.aiUseDoc')}
+          </a>
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
@@ -371,6 +393,16 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 <span className="mx-1.5 text-[var(--color-text-muted)]">·</span>
                 {credit.licence ? <span dir="auto">{credit.licence}</span> : <span className="text-[var(--color-accent-amber)]">{credit.note}</span>}
                 {credit.licence && credit.note && <span className="mt-1 block text-[var(--color-text-muted)]" dir="auto">{credit.note}</span>}
+                {credit.commons && (
+                  <a
+                    href={credit.commons}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-0.5 block text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2"
+                  >
+                    Commons file page
+                  </a>
+                )}
               </li>
             ))}
           </ul>

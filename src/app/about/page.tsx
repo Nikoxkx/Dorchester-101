@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { AboutView } from './AboutView';
-import { APP_VERSION, REPO_URL, SITE_FULL_NAME, SITE_NAME, SITE_URL } from '@/lib/site';
+import { APP_VERSION, AUTHOR_NAME, AUTHOR_URL, REPO_URL, SITE_FULL_NAME, SITE_NAME, SITE_URL } from '@/lib/site';
 import { LANGUAGES } from '@/i18n/config';
 
 /**
@@ -29,6 +29,8 @@ export interface PhotoCredit {
   file: string;
   licence: string | null;
   note: string | null;
+  /** The Wikimedia Commons file page, so the credit can be checked by a reader. */
+  commons: string | null;
 }
 
 function readCredits(): PhotoCredit[] {
@@ -45,12 +47,14 @@ function readCredits(): PhotoCredit[] {
     const heading = /^##\s+`?([^`]+)`?/.exec(line);
     if (heading) {
       if (current) credits.push(current);
-      current = { file: heading[1].trim(), licence: null, note: null };
+      current = { file: heading[1].trim(), licence: null, note: null, commons: null };
       continue;
     }
     if (!current) continue;
     const licence = /^-\s*\*\*Licence:\*\*\s*(.+)/.exec(line);
     if (licence) current.licence = licence[1].trim();
+    const commons = /^-\s*\*\*Commons page:\*\*\s*(.+)/.exec(line);
+    if (commons) current.commons = commons[1].trim();
     const status = /^-\s*\*\*Status:\*\*\s*(.+)/.exec(line);
     if (status) current.note = status[1].replace(/\*\*/g, '').trim();
     const credit = /^-\s*\*\*Credit line used in the UI:\*\*\s*(.+)/.exec(line);
@@ -71,6 +75,7 @@ export default function AboutPage() {
     areaServed: { '@type': 'AdministrativeArea', name: 'Dorchester, Boston' },
     sameAs: [REPO_URL],
     codeRepository: REPO_URL,
+    founder: { '@type': 'Person', name: AUTHOR_NAME, url: AUTHOR_URL },
     softwareVersion: APP_VERSION,
     inLanguage: LANGUAGES.map((language) => language.intlLocale),
   };

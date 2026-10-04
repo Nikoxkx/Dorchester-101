@@ -20,7 +20,7 @@ import "@fontsource/noto-sans-arabic/700.css";
 
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import { DorchesterProviders } from "@/components/providers/DorchesterProviders";
-import { SITE_URL } from "@/lib/site";
+import { AUTHOR_NAME, AUTHOR_URL, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "Dorchester", "Boston", "housing", "affordable housing", "food assistance",
     "community resources", "MBTA", "Section 8", "BHA",
   ],
-  authors: [{ name: "DOR101 Community Project" }],
+  authors: [{ name: AUTHOR_NAME, url: AUTHOR_URL }],
   creator: "DOR101",
   publisher: "DOR101",
   applicationName: "DOR101",
@@ -135,13 +135,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 "@context": "https://schema.org",
                 "@type": "Organization",
                 "@id": `${SITE_URL}/#org`,
-                name: "DOR101 Community Project",
+                name: AUTHOR_NAME,
                 url: SITE_URL,
+                founder: { "@type": "Person", name: AUTHOR_NAME, url: AUTHOR_URL },
                 logo: `${SITE_URL}/icons/logo-1024.png`,
                 image: `${SITE_URL}/og.png`,
                 sameAs: ["https://github.com/Nikoxkx/Dorchester-101"],
                 areaServed: { "@type": "Place", name: "Dorchester, Boston, Massachusetts" },
-                nonprofitStatus: "Nonprofit501c3",
               },
             ]),
           }}
