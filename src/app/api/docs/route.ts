@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { AUTHOR_NAME, AUTHOR_URL } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,8 +11,8 @@ const openApiSpec = {
     version: '1.0.0',
     description: 'API for Dorchester 101 - Community Resource Hub for Dorchester residents',
     contact: {
-      name: 'DOR101 Community Project',
-      url: 'https://github.com/Nikoxkx/Dorchester-101',
+      name: AUTHOR_NAME,
+      url: AUTHOR_URL,
     },
   },
   servers: [

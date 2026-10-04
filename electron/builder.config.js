@@ -10,7 +10,7 @@
 module.exports = {
   appId: 'org.dor101.app',
   productName: 'DOR101',
-  copyright: 'Copyright © 2026 DOR101 Community Project',
+  copyright: 'Copyright © 2026 Yeisbel Pena',
 
   /**
    * The app ships as a plain directory, not an asar archive. The desktop shell

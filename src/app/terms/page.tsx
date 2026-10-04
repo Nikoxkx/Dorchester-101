@@ -64,12 +64,12 @@ export default function TermsPage() {
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">7. Intellectual Property</h2>
-              <p>DOR101 is open-source software released under the MIT License. You are free to use, modify, and distribute the software in accordance with the license terms. The DOR101 name and logo are used to identify this specific community project.</p>
+              <p>DOR101 is open-source software released under the MIT License. You are free to use, modify, and distribute the software in accordance with the license terms. The DOR101 name and logo are used to identify this specific project, which is made and run by one person, Yeisbel Pena.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">8. Limitation of Liability</h2>
-              <p>DOR101 is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranties of any kind. To the fullest extent permitted by law, the DOR101 project and its contributors shall not be liable for any damages arising from the use or inability to use the application, including but not limited to reliance on information presented in the application.</p>
+              <p>DOR101 is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranties of any kind. To the fullest extent permitted by law, the author of DOR101 shall not be liable for any damages arising from the use or inability to use the application, including but not limited to reliance on information presented in the application.</p>
             </section>
 
             <section>

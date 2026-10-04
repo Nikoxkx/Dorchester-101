@@ -35,6 +35,8 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 11. [Privacy & security](#privacy--security)
 12. [Contributing](#contributing)
 13. [Image credits & licence](#image-credits--licence)
+14. [Who built this](#who-built-this)
+15. [How AI was used](#how-ai-was-used)
 
 ---
 
@@ -382,14 +384,15 @@ All variables are optional; the site runs with none of them.
 2. **Translate everything.** Use `scripts/i18n-add.py`; the build fails on a missing key.
 3. **Use tokens, not colours.** Components reference `var(--color-…)`; never a hex value. Test your change in Black & white and at least one other palette, light and dark.
 4. **No overlap.** Popups, sheets and toasts must not cover map controls, navigation or each other. Animations respect `prefers-reduced-motion`.
-5. **Photos** come from Wikimedia Commons or an official publisher, with author and licence added to `public/IMAGE-CREDITS.md`. If no photo exists for a place, say so in the UI rather than substituting a look-alike.
-6. Run `npm run typecheck && npm run lint && npm run test && npm run build` before opening a pull request.
+5. **Photos** come from Wikimedia Commons or an official publisher, with author and licence added to `public/IMAGE-CREDITS.md`. If no photo exists for a place, say so in the UI rather than substituting a look-alike. A file whose origin cannot be confirmed is not shipped at all.
+6. **Say when AI helped.** If a change was written or translated with AI assistance, note it in the pull request. If it changes what the site does or claims, update [`docs/AI-USAGE.md`](docs/AI-USAGE.md) in the same pull request.
+7. Run `npm run typecheck && npm run lint && npm run test && npm run build` before opening a pull request.
 
 ---
 
 ## Image credits & licence
 
-Photographs are from Wikimedia Commons and are credited individually — author, licence and source URL — in [`public/IMAGE-CREDITS.md`](public/IMAGE-CREDITS.md). The hero image and logo use *Boston skyline from Dorchester Bay* by Sswonk, CC BY-SA 3.0. Section banners in this README are the same Commons photographs with a caption overlay; the caption text is set smaller and letter-spaced so it never collides with the section label. Technology logos in this README are the trademarks of their respective projects and are used for identification only. Source badges in `public/sources/` are original icons drawn for DOR101 and do not reproduce any agency's trademark.
+Photographs are from Wikimedia Commons and are credited individually — author, licence and source URL — in [`public/IMAGE-CREDITS.md`](public/IMAGE-CREDITS.md). Two photographs that used to appear on the About page were removed because their provenance and licence could not be confirmed; credited Commons photographs (Hutima, CC BY-SA 4.0 and John Phelan, CC BY-SA 3.0) replaced them. **No image on the site is AI-generated** — see [How AI was used](#how-ai-was-used). The hero image and logo use *Boston skyline from Dorchester Bay* by Sswonk, CC BY-SA 3.0. Section banners in this README are the same Commons photographs with a caption overlay; the caption text is set smaller and letter-spaced so it never collides with the section label. Technology logos in this README are the trademarks of their respective projects and are used for identification only. Source badges in `public/sources/` are original icons drawn for DOR101 and do not reproduce any agency's trademark.
 
 Code is released under the **MIT licence** — see [LICENSE](LICENSE). Third-party components keep their own licences:
 
@@ -410,6 +413,28 @@ Code is released under the **MIT licence** — see [LICENSE](LICENSE). Third-par
 | Wikimedia Commons photographs | CC BY-SA 3.0 / CC BY 2.0 as credited in `public/IMAGE-CREDITS.md` |
 
 Map and chart attribution is rendered in-app, not only in this file, so the licences travel with the data.
+
+---
+
+## Who built this
+
+**Yeisbel Pena** — one person, not a team, an agency or a city service. The code, every listing check, the website and the Windows build are that one person's work. There is no board, no staff and no outside contributors; the public commit history and the issue tracker are the whole record of the work.
+
+## How AI was used
+
+AI tools helped build DOR101, and it says so in the app as well as here — the About page carries the same disclosure in all nine languages.
+
+| Where | How | Checked by |
+|-------|-----|------------|
+| Application code, API routes, tests, Electron shell | Written and revised with an AI coding agent (Arena.ai Agent Mode) | `npm run typecheck && npm run lint && npm run test`, plus a manual pass over every screen |
+| English copy — page text, error messages, FAQ answers | Drafted with AI | Every factual claim tied to a named statute, agency page or dataset |
+| Eight non-English locales | Machine-translated first drafts | A parity test fails the build when a key is missing; thin-reference locales (Haitian Creole, Kabuverdianu, Somali) are best efforts, not professional translation |
+| Documentation (this README, `BUILD.md`, `SECURITY.md`) and release notes | Drafted with AI | Commands are run before they are written down |
+| Build and asset scripts (icons, source badges, desktop packager) | Written with AI assistance | Run locally; the desktop package is verified by `npm run verify:desktop` |
+
+**No AI runs in the app.** There is no language model, chat, recommendation engine or automated decision anywhere in the product, and nothing a visitor types is sent to a model or anywhere else. **No image is AI-generated**; every photograph is a credited Commons photograph of a real place, and two photographs of unconfirmed provenance were removed rather than published with a guess for a credit line.
+
+The complete account — including the limits of this disclosure — is in [`docs/AI-USAGE.md`](docs/AI-USAGE.md).
 
 ---
 

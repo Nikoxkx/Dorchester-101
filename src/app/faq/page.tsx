@@ -516,7 +516,7 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
             Find answers to common questions about housing, food assistance, healthcare, and more.
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Answers are written in plain language from the statute or agency rule they describe, and each names the office to call. Search by a word you would actually say — &ldquo;heat&rdquo;, &ldquo;deposit&rdquo;, &ldquo;EBT&rdquo; — and open one question at a time. If an answer looks out of date, the &ldquo;report a problem&rdquo; link at the bottom sends it straight to the volunteers.
+            Answers are written in plain language from the statute or agency rule they describe, and each names the office to call. Search by a word you would actually say — &ldquo;heat&rdquo;, &ldquo;deposit&rdquo;, &ldquo;EBT&rdquo; — and open one question at a time. If an answer looks out of date, the &ldquo;report a problem&rdquo; link at the bottom sends it straight to the person who keeps this list.
           </p>
         </header>
 
