@@ -37,7 +37,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/market-trends': { title: 'Market trends', subtitle: 'Rent and income estimates for Boston' },
   '/neighborhood': { title: 'Neighborhoods', subtitle: 'The twelve areas of Dorchester' },
   '/news': { title: 'News', subtitle: 'Local coverage from each publisher' },
-  '/projects': { title: 'Housing projects', subtitle: 'BPDA dockets in Dorchester' },
+  '/projects': { title: 'Housing projects', subtitle: 'Planning Department dockets in Dorchester' },
   '/resources': { title: 'Directory', subtitle: 'Every organization we list' },
   '/tools': { title: 'Money tools', subtitle: 'AMI calculator, rent burden, deposits' },
   '/settings': { title: 'Settings', subtitle: 'Language, theme, accessibility, feeds' },

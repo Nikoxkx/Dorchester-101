@@ -27,103 +27,106 @@ const pageVariants: Variants = {
   enter: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Sample BPDA project data
+// Planning Department-docketed projects in Dorchester, re-checked against the agency or the
+// developer's own update on 4 October 2026. Unit counts and affordability bands
+// are quoted, not estimated: an earlier version of this page carried invented
+// unit counts and a project that had no docket entry at all.
 const projects = [
   {
     id: 1,
     lat: 42.3126, lng: -71.0561,
-    parcelNote: 'Former Dorchester Ave car dealership lots between Greenmount and Hancock Streets, one block from Savin Hill station.',
-    unitMix: 'Studios to 3-bedrooms; 79 income-restricted units spread across every building and bedroom size.',
-    amenities: ['~35,000 sq ft ground-floor retail', 'Public plaza and mid-block pedestrian way', '0.5 parking spaces per unit', 'Bike room, roof decks'],
-    communityBenefits: 'Developer-funded improvements to Savin Hill station approaches; $1.1M to the Boston Housing Trust; local-hire commitments under the Boston Residents Jobs Policy.',
-    howToApply: 'Income-restricted units are leased by lottery through the Boston Office of Housing (Boston One Stop / MassAccess) roughly 3–6 months before each building opens. Sign up for the lottery alert on Boston One Stop; there is no waiting list before the lottery is announced.',
-    renderings: { available: true, note: 'Architect renderings are in the BPDA project filing (Article 80 Large Project Review).' },
-    articleUrl: 'https://www.dotnews.com/2019/dot-block-plan-gets-bpda-board-approval',
-    lastChecked: '2026-06-28',
+    parcelNote: 'Car-dealership and warehouse lots between Dorchester Avenue, Hancock Street, Pleasant Street and Greenmount Street, one block from Savin Hill station.',
+    unitMix: 'Phase one opened in summer 2023 with 245 apartments, 33 of them income-restricted at 50% and 70% AMI (the developer does not publish that split). Phase two — the Hancock Building, due to start on Hancock Street — is 84 homes, all income-restricted: 17 at 30% AMI, about nine of them reserved for households at risk of homelessness; 17 at 50%; and 50 at 60%. The badges below are the Hancock Building split, the only band-by-band figure the developer publishes.',
+    amenities: ['Ground-floor retail along Dorchester Avenue', 'Six ADA-accessible income-restricted homes in phase one', 'Bike storage and roof decks'],
+    communityBenefits: 'Under the City’s Neighborhood Diversity Preservation Policy pilot, half of the phase-one income-restricted homes are offered first to rent-burdened households already living within three-quarters of a mile. The City awarded $5 million to phase two in January 2025, and the state added tax credits and subsidies in February 2026 to get the Hancock Building started.',
+    howToApply: 'Phase one is leased through Maloney Properties and the Planning Department affordable programme; phase two has not opened applications. Watch Metrolist and the Planning Department docket — there is no waiting list before a lottery is announced.',
+    renderings: { available: true, note: 'Renderings and the approved plans are in the Planning Department project filing.' },
+    articleUrl: 'https://www.dotnews.com/2025/01/23/next-phase-dot-block-gets-5m-boost-city-boston/',
+    lastChecked: '2026-10-04',
     name: 'Dot Block',
     developer: 'Samuels & Associates',
-    address: '1211-1231 Dorchester Ave, Dorchester, MA 02125',
+    address: '1203–1211 Dorchester Avenue, Dorchester, MA 02125',
     neighborhood: 'Savin Hill',
     totalUnits: 488,
-    incomeRestrictedUnits: 79,
-    amiBreakdown: { 30: 20, 50: 30, 60: 29 },
-    status: 'under_construction' as const,
-    approvalDate: '2019-12-12',
-    expectedCompletion: '2025-06-01',
-    description: 'Mixed-use development with residential, retail, and community space adjacent to Savin Hill MBTA station.',
+    incomeRestrictedUnits: 117,
+    amiBreakdown: { 30: 17, 50: 17, 60: 50 } as Record<number, number>,
+    status: 'approved' as const,
+    approvalDate: null,
+    expectedCompletion: null,
+    description: 'Four-acre mixed-use development beside Savin Hill station: 488 homes when complete, with phase one open since 2023 and an all-affordable 84-home Hancock Building moving toward construction.',
     bpdaLink: 'https://www.bostonplans.org/projects/development-projects/dot-block',
   },
   {
     id: 2,
-    lat: 42.3184, lng: -71.0644,
-    parcelNote: 'City-owned lots on Columbia Road beside the Strand Theatre, part of the Uphams Corner Arts & Innovation District plan.',
-    unitMix: 'All 150 units income-restricted; roughly half 2- and 3-bedroom family units.',
-    amenities: ['New branch library on the ground floor', 'Artist live/work units', 'Community room and childcare space'],
-    communityBenefits: 'Public library branch built into the project; ground-floor arts space at below-market rent; 100% of homes deed-restricted for 50+ years.',
-    howToApply: 'Because this is a City-sponsored, all-affordable project, applications open through Boston One Stop and the Boston Housing Authority (for the project-based voucher units) when construction is 6–9 months from completion. Ask Dorchester Bay EDC to be added to their interest list now.',
-    renderings: { available: true, note: 'Concept renderings were shown at the 2023 community meeting and are in the BPDA filing.' },
-    articleUrl: 'https://www.dotnews.com/tags/uphams-corner',
-    lastChecked: '2026-06-28',
-    name: 'Uphams Corner Mixed-Use Development',
-    developer: 'Dorchester Bay EDC',
-    address: '555 Columbia Road, Dorchester, MA 02125',
+    lat: 42.31587, lng: -71.06951,
+    parcelNote: 'The parking lot behind the former Dorchester Savings Bank Hall at 568–574 Columbia Road, in the Uphams Corner arts district.',
+    unitMix: '48 income-restricted apartments, studios to three-bedrooms, for households earning between 30% and 80% of AMI, plus 3,500 sq ft of commercial space.',
+    amenities: ['Adaptive reuse of the 1890s bank hall as an exhibition space', 'Below-market commercial rent for an arts organisation', 'Transit-oriented site on the Fairmount Line'],
+    communityBenefits: 'The bank hall is restored rather than demolished and let affordably to an arts nonprofit; the housing spans deep affordability (30% AMI) through to 80% AMI.',
+    howToApply: 'Ground was broken in June 2026. Applications will open through Metrolist roughly three to six months before completion; there is no waiting list yet.',
+    renderings: { available: true, note: 'Rendering and the community-driven RFP materials were published by POAH and DBEDC.' },
+    articleUrl: 'https://www.poah.org/news/nonprofit-affordable-housing-developers-hold-groundbreaking-48-affordable-apartments-and-arts',
+    lastChecked: '2026-10-04',
+    name: 'Columbia Crossing',
+    developer: 'Preservation of Affordable Housing (POAH) with Dorchester Bay EDC',
+    address: '568–574 Columbia Road, Dorchester, MA 02125',
     neighborhood: 'Uphams Corner',
-    totalUnits: 150,
-    incomeRestrictedUnits: 150,
-    amiBreakdown: { 30: 45, 50: 60, 60: 45 },
-    status: 'approved' as const,
-    approvalDate: '2023-06-15',
-    expectedCompletion: '2026-12-01',
-    description: 'All-affordable housing development with ground-floor retail and community space.',
+    totalUnits: 48,
+    incomeRestrictedUnits: 48,
+    amiBreakdown: {} as Record<number, number>,
+    status: 'under_construction' as const,
+    approvalDate: null,
+    expectedCompletion: null,
+    description: 'All-affordable apartments and arts space on the site of the historic Dorchester Savings Bank Hall.',
     bpdaLink: 'https://www.bostonplans.org/projects/development-projects',
   },
   {
     id: 3,
-    lat: 42.3000, lng: -71.0605,
-    parcelNote: 'Surface parking and one-storey retail on the block south of the Fields Corner station busway.',
-    unitMix: 'Proposed 320 units, 96 income-restricted at 50–80% AMI; final mix subject to Article 80 review.',
-    amenities: ['Affordable ground-floor retail reserved for existing Fields Corner businesses', 'Direct path to the Red Line', 'Bluebikes dock'],
-    communityBenefits: 'Still under negotiation; the Impact Advisory Group has asked for deeper affordability and anti-displacement commitments for current tenants of the site.',
-    howToApply: 'Nothing to apply for yet. The project is in planning; the next public step is the BPDA Impact Advisory Group meeting. Residents can submit comment letters to the BPDA project manager through the docket link.',
-    renderings: { available: false, note: 'No renderings have been filed publicly. The developer has published a massing study only.' },
-    articleUrl: 'https://www.dotnews.com/tags/fields-corner',
-    lastChecked: '2026-06-28',
-    name: 'Fields Corner Transit-Oriented Development',
-    developer: 'Trinity Financial',
-    address: '1400 Dorchester Ave, Dorchester, MA 02122',
-    neighborhood: 'Fields Corner',
-    totalUnits: 320,
-    incomeRestrictedUnits: 96,
-    amiBreakdown: { 50: 32, 60: 32, 80: 32 },
-    status: 'planning' as const,
+    lat: 42.29899, lng: -71.07763,
+    parcelNote: 'Two formerly vacant sites in the Codman Square / Four Corners area: 151 Spencer Street and 25 New England Avenue.',
+    unitMix: '42 income-restricted family apartments across the two buildings — 19 at Spencer Street and 23 at New England Avenue.',
+    amenities: ['Family-sized units', 'Resident services by CSNDC', 'Short walk to Talbot Avenue (Fairmount Line)'],
+    communityBenefits: 'New family housing on vacant lots, with CSNDC keeping on-site resident services for the tenants.',
+    howToApply: 'The lottery ran in February 2026 and is closed. Spencer Street finished in June 2026 and New England Avenue is due in November 2026; after lease-up, vacancies are listed through CSNDC and Metrolist.',
+    renderings: { available: true, note: 'Plans and progress photographs are published in CSNDC’s real-estate updates.' },
+    articleUrl: 'https://www.csndc.com/csndc-real-estate-update-spring-2026/',
+    lastChecked: '2026-10-04',
+    name: 'Talbot Commons II',
+    developer: 'Codman Square Neighborhood Development Corporation (CSNDC)',
+    address: '151 Spencer Street and 25 New England Avenue, Dorchester, MA 02124',
+    neighborhood: 'Codman Square / Four Corners',
+    totalUnits: 42,
+    incomeRestrictedUnits: 42,
+    amiBreakdown: {} as Record<number, number>,
+    status: 'under_construction' as const,
     approvalDate: null,
-    expectedCompletion: '2028-01-01',
-    description: 'Mixed-income housing near Fields Corner MBTA station with affordable retail space.',
+    expectedCompletion: '2026-11-30',
+    description: 'Two small all-affordable buildings completing in 2026, replacing vacant parcels with family apartments.',
     bpdaLink: 'https://www.bostonplans.org/projects/development-projects',
   },
   {
     id: 4,
-    lat: 42.2916, lng: -71.0716,
-    parcelNote: 'Formerly vacant City-owned parcels on Washington Street near Talbot Ave.',
-    unitMix: '75 family units, 1–4 bedrooms, all income-restricted between 30% and 60% AMI.',
-    amenities: ['On-site resident services (CSNDC)', 'Community garden and playground', 'Energy Positive design, solar roof'],
-    communityBenefits: 'Passive-house construction lowering resident utility bills; 15% of units set aside for formerly homeless households with services.',
-    howToApply: 'Initial lottery closed in 2024. The building now keeps a waiting list managed by CSNDC / Maloney Properties; call CSNDC at (617) 825-4224 to be added. Vacancies are rare — expect a multi-year wait.',
-    renderings: { available: true, note: 'Completed building; photographs are on the CSNDC website.' },
-    articleUrl: 'https://www.dotnews.com/tags/codman-square',
-    lastChecked: '2026-06-28',
-    name: 'Codman Square Homes',
-    developer: 'CSNDC',
-    address: '600 Washington Street, Dorchester, MA 02124',
-    neighborhood: 'Codman Square',
-    totalUnits: 75,
-    incomeRestrictedUnits: 75,
-    amiBreakdown: { 30: 25, 50: 25, 60: 25 },
-    status: 'complete' as const,
-    approvalDate: '2020-03-20',
-    expectedCompletion: '2024-08-01',
-    description: 'Fully affordable family housing with on-site services and community garden.',
-    bpdaLink: 'https://www.bostonplans.org/projects/development-projects',
+    lat: 42.29273, lng: -71.06595,
+    parcelNote: 'The Fitzpatrick Bros. auto-body site and the parking lot beside it, immediately next to Shawmut station on the Red Line.',
+    unitMix: '72 income-restricted apartments, studios to three-bedrooms, spread across the 30%, 50%, 60%, 80% and 120% AMI bands.',
+    amenities: ['All-electric building with rooftop solar', 'Passive House design', 'Bluebikes station on site', '25 basement parking spaces'],
+    communityBenefits: 'One hundred per cent income-restricted, including four two- or three-bedroom homes; public-realm and bike improvements at the station.',
+    howToApply: 'Approved in November 2023, when the agency was still the BPDA; construction is projected to start in 2026. Applications will run through Metrolist before completion (projected 2028) — there is nothing to apply for yet.',
+    renderings: { available: true, note: 'Rendering and plans are on the Planning Department project page and Trinity’s project page.' },
+    articleUrl: 'https://www.dotnews.com/2023/trinity-s-project-150-centre-st-wins-bpda-board-support',
+    lastChecked: '2026-10-04',
+    name: '150 Centre Street at Shawmut Station',
+    developer: 'Trinity Financial',
+    address: '150 Centre Street, Dorchester, MA 02124',
+    neighborhood: 'Shawmut / St. Mark’s',
+    totalUnits: 72,
+    incomeRestrictedUnits: 72,
+    amiBreakdown: {} as Record<number, number>,
+    status: 'approved' as const,
+    approvalDate: '2023-11-16',
+    expectedCompletion: '2028-12-31',
+    description: 'Four-storey all-affordable building on the auto-body site next to Shawmut Red Line station.',
+    bpdaLink: 'https://www.bostonplans.org/projects/development-projects/150-centre-street',
   },
 ];
 
@@ -160,7 +163,7 @@ export default function ProjectsPage() {
             {t('projects.description')}
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Every project here is on the Boston Planning &amp; Development Agency docket. The status follows the BPDA&apos;s own stages (proposed, under review, approved, under construction); the unit counts and income-restricted share come from the filed project notification. Public comment periods are the moment a resident&apos;s letter is read into the record, so those dates are highlighted.
+            Every project here has a Boston Planning Department filing (the agency was renamed from the BPDA in 2024) or a published developer update. The status follows the department&apos;s own stages (proposed, under review, approved, under construction); unit counts and affordability bands are quoted from that filing and re-checked by hand — each card prints the date of the last check. Public comment periods are the moment a resident&apos;s letter is read into the record, so those dates are highlighted.
           </p>
         </header>
 
@@ -285,7 +288,7 @@ export default function ProjectsPage() {
                       <p className="mt-0.5 text-[var(--color-text-secondary)]">
                         {project.renderings.note}{' '}
                         {project.renderings.available && (
-                          <a href={project.bpdaLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">View in the BPDA filing</a>
+                          <a href={project.bpdaLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">View in the Planning Department filing</a>
                         )}
                         {' '}Developer artwork is copyrighted, so it is linked rather than copied here.
                       </p>
@@ -305,7 +308,7 @@ export default function ProjectsPage() {
                 </div>
 
                 <SourcePreview
-                  title={`BPDA docket — ${project.name}`}
+                  title={`Planning Department docket — ${project.name}`}
                   url={project.bpdaLink}
                   sourceId="bpda"
                   description="Official project page: filings, meeting notices, comment deadlines, renderings and the approval letter."
@@ -362,7 +365,7 @@ export default function ProjectsPage() {
           </a>
         </p>
         <ProjectNote sources={['bpda', 'bostongov']}>
-          Development projects are read from the BPDA docket: project name, status, unit counts and the number designated income-restricted. Meeting dates are as posted by the agency and can change; the docket link on each project is authoritative.
+          Development projects are read from the Boston Planning Department docket (the former BPDA) or the developer&apos;s own published update: project name, status, unit counts and the bands that are income-restricted. Every card was re-checked on 4 October 2026; meeting dates are as posted by the agency and can change, so the docket link on each project is authoritative. DOR101 prints no rent figures and no unit counts it cannot attribute.
         </ProjectNote>
       </motion.div>
     </MainLayout>

@@ -31,13 +31,13 @@ export default function FAQPage() {
 
 1. **Check your income eligibility** — Use our AMI calculator to see if you qualify. Most affordable units require income at or below 60-80% of Area Median Income (AMI).
 
-2. **Create a MassAccess account** — Visit massaccess.org to create a profile and search for available units.
+2. **Watch the two official listing sites** — Metrolist (boston.gov/metrolist) carries every City of Boston income-restricted lottery and waitlist; Housing Navigator Massachusetts (housingnavigatorma.org) carries income-restricted rentals statewide and has replaced the retired MassAccess registry. Both are free and need no account.
 
-3. **Apply directly to properties** — Many affordable housing developments accept applications through their property management offices.
+3. **Apply through the listing** — Each listing says how to apply. Applications go to the property manager named on it, never to the city or this site.
 
-4. **Boston Housing Authority** — For public housing or Section 8, apply through BHA at bostonhousing.org or call (617) 988-4000.
+4. **Boston Housing Authority** — Public housing and project-based vouchers are open; apply at bostonhousing.org or call (617) 988-4000. The Section 8 Housing Choice Voucher waiting list is closed until further notice.
 
-5. **Attend housing lotteries** — Watch for lottery announcements on the City of Boston housing portal.
+5. **Attend housing lotteries** — All Boston lotteries are advertised on Metrolist about 3–6 months before a building opens.
 
 **Documents you'll need:**
 - Government-issued ID
@@ -46,33 +46,29 @@ export default function FAQPage() {
 - Bank statements
 - Proof of current address`,
         sources: [
-          { name: 'MassAccess Housing', url: 'https://www.massaccess.org' },
+          { name: 'Metrolist (City of Boston)', url: 'https://www.boston.gov/metrolist' },
+          { name: 'Housing Navigator Massachusetts', url: 'https://housingnavigatorma.org' },
           { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org' },
         ],
       },
       {
         q: 'What is the current Section 8 waitlist status in Boston?',
-        a: `As of **June 2026**, the Boston Housing Authority (BHA) Section 8 Housing Choice Voucher waitlist is **OPEN** for the first time since 2020.
+        a: `Checked on **4 October 2026**, against the Boston Housing Authority's own waiting-list pages:
 
-**Key information:**
-- Applications accepted: June 10-30, 2026
-- Apply online: bostonhousing.org
-- Apply by phone: (617) 988-4000
-- Apply in person: 52 Chauncy Street, Boston
+**Section 8 Housing Choice Voucher (tenant-based): CLOSED** until further notice. BHA says it gives at least two weeks' public notice before reopening, and it does not keep a "notify me" list — you have to watch bostonhousing.org.
 
-**Who qualifies:**
-- Income must be at or below 50% of Area Median Income
-- Boston residency not required but given preference
-- No criminal background disqualification for most offenses
+**What is open:**
+- **Public housing** (federal and City-funded developments) — apply at bostonhousing.org or boston.myhousing.com; (617) 988-4000
+- **Project-based vouchers and Mod Rehab** — open for applicants who can document Priority One status
+- **State rental vouchers (MRVP)** — BHA's allocation is closed; the statewide list runs through CHAMP
 
-**Current wait time:** Estimated 2-4 years depending on preference categories.
+**Good to know:**
+- Income limits follow HUD's AMI bands for the Boston metro area
+- Boston residency is not required for public housing, but residency and rent-burden preferences apply to many lotteries
+- A criminal record is not an automatic bar; BHA screens case by case
+- Wait times are long. BHA's own guidance says it can be over ten years from the date of application — apply to neighbouring housing authorities as well
 
-**Preference categories:**
-1. Homeless or at imminent risk of homelessness
-2. Displaced by government action
-3. Victims of domestic violence
-4. Boston residents
-5. Elderly or disabled households`,
+**Preference categories** (which speed a wait up): homelessness or imminent risk of it, displacement by government action, domestic violence, Boston residency, and elderly or disabled households.`,
         sources: [
           { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org' },
         ],
@@ -120,23 +116,21 @@ export default function FAQPage() {
 **Immediate Steps:**
 
 1. **RAFT (Residential Assistance for Families in Transition)**
-   - Up to $10,000 for rent arrears, first/last month, security deposit
-   - Income must be at or below 50% AMI
-   - Apply through local housing agency
-   - Current processing time: 5-7 business days
-   - Contact: (617) 603-1700
+   - Up to **$7,000** per 12-month period for rent arrears, overdue utilities, moving costs or mortgage payments
+   - Income must be at or below 50% AMI; for rent arrears a landlord application is also required
+   - Apply online through the state RAFT portal, by calling **2-1-1**, or through Metro Housing|Boston: **(617) 425-6700**
 
-2. **Emergency Rental Assistance Program (ERAP)**
-   - Federal funding for pandemic-related arrears
-   - Apply at mass.gov/erap
-   
-3. **Greater Boston Legal Services**
+2. **Greater Boston Legal Services**
    - Free eviction defense for low-income residents
-   - Call: (617) 603-1700 (intake 9am-12:30pm)
+   - Intake line: **(617) 371-1234**, Monday-Friday 9:30am-12:30pm
+   - Walk-in clinic at Dorchester Courthouse (410 Washington St), 2nd and 4th Wednesday, 9am-12pm
 
-4. **City Life / Vida Urbana**
-   - Tenant organizing and eviction defense
-   - Call: (617) 524-3541
+3. **City Life / Vida Urbana**
+   - Tenant organizing and free weekly legal clinic
+   - Call: (617) 524-3541; meeting Tuesdays at 6:15pm
+
+4. **Office of Housing Stability (City of Boston)**
+   - Help if you are at immediate risk of losing your home: (617) 635-4200, Monday-Friday 9am-5pm
 
 **If you receive an eviction notice:**
 - You have the right to a court hearing
@@ -145,7 +139,8 @@ export default function FAQPage() {
 - Apply for emergency rental assistance immediately
 - Contact legal aid for free representation`,
         sources: [
-          { name: 'RAFT Program', url: 'https://www.mass.gov/raft' },
+          { name: 'RAFT Program', url: 'https://www.mass.gov/how-to/apply-for-raft-emergency-help-for-housing-costs' },
+          { name: 'Greater Boston Legal Services', url: 'https://www.gbls.org/get-legal-help/service-locations' },
           { name: 'City Life / Vida Urbana', url: 'https://www.clvu.org' },
         ],
       },
@@ -153,14 +148,7 @@ export default function FAQPage() {
         q: 'What is AMI and how is it calculated?',
         a: `**AMI (Area Median Income)** is the middle income for the Boston-Cambridge-Quincy metro area, calculated annually by HUD (U.S. Department of Housing and Urban Development).
 
-**2026 AMI for Boston area:**
-
-| Household Size | 100% AMI | 80% AMI | 60% AMI | 50% AMI | 30% AMI |
-|---------------|----------|---------|---------|---------|---------|
-| 1 person | $96,450 | $77,150 | $57,870 | $48,225 | $28,935 |
-| 2 persons | $110,200 | $88,150 | $66,120 | $55,100 | $33,060 |
-| 3 persons | $123,950 | $99,150 | $74,370 | $61,975 | $37,185 |
-| 4 persons | $137,650 | $110,100 | $82,590 | $68,825 | $41,295 |
+**The current figures** are fetched live from HUD on the Tools page and the housing page — no ladder is copied into this text, because HUD republishes the limits every spring and a table typed here would go stale. For scale, HUD's FY2026 figures for the Boston metro area are: median family income $164,600; the 50% ("very low income") limit $85,700 for a family of four, and the 80% ("low income") limit $137,100 for a family of four. The City of Boston's 2026 schedule sets 100% AMI at $171,400 for a family of four, which is exactly twice HUD's 50% figure — that is the ladder Boston's income-restricted lotteries quote. Check the Tools page's calculator for your own household size and band.
 
 **What counts as income:**
 - Wages, salaries, tips
@@ -192,32 +180,33 @@ export default function FAQPage() {
 
 **Food Pantries (ongoing):**
 
-1. **Codman Square Health Center Food Pantry**
-   - 637 Washington St, Dorchester
-   - Mon, Tue, Thu, Fri: 10am-2pm
-   - Proof of address required
+1. **Codman Square Community Market** (the health centre's pantry)
+   - 450 Washington St, Dorchester — half a mile up Washington Street from the health centre
+   - Tuesday 8am-1pm, Wednesday 2-7pm, Thursday 8am-1pm
+   - Choice-based shopping, once a month per household; no ID required
    - (617) 825-9660
 
 2. **Salvation Army Kroc Center**
    - 650 Dudley St, Dorchester
-   - Mon-Thu: 9am-12pm
-   - No ID required
-   - (617) 318-6900
+   - Emergency pantry: 2nd and 4th Tuesday of the month, 10am-12pm, by appointment only
+   - Call (617) 318-6940 to book; appointments once a month
+   - (617) 318-6900 main line
 
-3. **St. Mark's Church**
-   - 1725 Dorchester Ave
-   - Saturday: 11am-1pm (hot meal)
-   - All welcome, no requirements
+3. **Fair Foods $2 Bag at Lena Park**
+   - 150 American Legion Hwy, Dorchester
+   - Tuesdays from 2pm while the produce lasts; $2 a bag, over 12 lb of fruit and vegetables
+   - No ID, no proof of address, no income test
+   - (617) 533-8133
 
 **Mobile Food Markets:**
-- Greater Boston Food Bank mobile markets rotate through Dorchester weekly
-- Check gbfb.org/need-food for current schedule
+- Greater Boston Food Bank partner pantries and pop-ups rotate through Dorchester
+- Check the food finder at gbfb.org/need-food for the schedule nearest your address
 
 **For immediate help:**
 Call Project Bread FoodSource Hotline: **1-800-645-8333**
 - Free, confidential
-- Available in 180+ languages
-- Monday-Friday 8am-5pm`,
+- Interpreters on the line (180+ languages)
+- Monday-Friday 8am-7pm, Saturday 10am-2pm`,
         sources: [
           { name: 'Greater Boston Food Bank', url: 'https://www.gbfb.org' },
           { name: 'Project Bread', url: 'https://www.projectbread.org' },
@@ -234,9 +223,9 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 3. **In person:** Visit your local DTA office
 
 **Who qualifies:**
-- Income at or below 200% of federal poverty level
-- For a family of 4: gross income under $62,400/year
-- Massachusetts has broad categorical eligibility
+- Income at or below 200% of the federal poverty level — Massachusetts uses the broadest option allowed (broad-based categorical eligibility)
+- For a family of 4: gross income under about $5,500/month (roughly $66,000/year)
+- No asset test for most households
 
 **What you'll need:**
 - ID (license, passport, or other photo ID)
@@ -244,15 +233,17 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 - Proof of address (utility bill, lease)
 - Social Security numbers for household members
 
-**Benefit amounts (2026):**
+**Maximum monthly benefit** (set by USDA for 1 October 2026 – 30 September 2027):
 
 | Household Size | Maximum Monthly Benefit |
 |---------------|------------------------|
-| 1 | $292 |
-| 2 | $536 |
-| 3 | $768 |
-| 4 | $975 |
-| 5 | $1,158 |
+| 1 | $306 |
+| 2 | $562 |
+| 3 | $808 |
+| 4 | $1,023 |
+| 5 | $1,217 |
+
+The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum for your household size minus 30% of your net income after deductions. Most households receive less than the top figure.
 
 **Processing time:** 
 - Standard: 30 days
@@ -276,7 +267,7 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 - Pregnant women
 - Women who recently had a baby (up to 6 months postpartum, or 12 months if breastfeeding)
 - Infants and children under age 5
-- Income at or below 185% of poverty level ($56,398 for family of 4)
+- Income at or below 185% of the poverty level — about $61,000/year for a family of 4 under the guidelines in force since 1 June 2026 (you are automatically income-eligible if you receive SNAP, MassHealth or TAFDC)
 - Must be at "nutritional risk" (determined at appointment)
 
 **What WIC provides:**
@@ -334,10 +325,11 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 
 **Processing time:** Usually 7-10 business days
 
-**Current enrollment assistance in Dorchester:**
-- Codman Square Health Center: (617) 825-9660
+**Enrollment help in Dorchester:**
+- Codman Square Health Center: (617) 825-9660 — walk-in insurance services, non-patients welcome
 - DotHouse Health: (617) 288-3230
-- Enrollment drive through June 15, 2026 with multilingual staff`,
+- Upham's Corner Health Center: (617) 287-8000
+- Statewide multilingual HelpLine from Health Care For All: **1-800-272-4232** — free help with an application or an appeal, no immigration status required`,
         sources: [
           { name: 'MA Health Connector', url: 'https://www.mahealthconnector.org' },
         ],
@@ -369,22 +361,20 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 - Stipend provided
 
 **3. Jewish Vocational Service (JVS)**
-- Phone: (617) 451-8147
-- ESL and job training combined
-- Industry certifications
+- 75 Federal Street, 3rd Floor, Boston
+- Phone: (617) 399-3131
+- ESOL combined with job training and industry certifications
 
-**4. MassHire Career Center (Dorchester)**
-- Address: Multiple locations
-- Free services for all job seekers
-- Job listings, resume help, training referrals
+**4. MassHire career centers**
+- Free services for all job seekers: job listings, resume help, training referrals
+- Find the centre nearest you at mass.gov/masshire-career-centers
 
 **Youth Programs (ages 14-24):**
-- Summer Youth Employment Program (SYEP)
-- YouthBuild Boston
-- Year Up
+- ABCD SummerWorks: paid summer jobs, 14-18 at $15/hour and 19-24 at $20/hour; applications open each 1 March
+- Youth Options Unlimited (YOU) Boston: year-round paid placements, apply through boston.gov
+- Year Up: 6-month training plus a 6-month internship, apply at yearup.org
 
-**Current opportunity (June 2026):**
-Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14-18.`,
+**Timing:** SummerWorks ran 6 July – 28 August 2026; the next application window opens on 1 March 2027.`,
         sources: [
           { name: 'MassHire', url: 'https://www.mass.gov/masshire-career-centers' },
           { name: 'Year Up', url: 'https://www.yearup.org' },
@@ -396,7 +386,7 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
 
 **Who qualifies:**
 - Worked in MA in the past 15 months
-- Earned at least $6,075 in the last year
+- Earned at least $6,300 in the base period, with wages in at least two quarters, and at least 30 times your weekly benefit
 - Lost job through no fault of your own
 - Able and available to work
 - Actively searching for work
@@ -406,9 +396,9 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
 2. **By phone:** (877) 626-6800
 
 **Benefit amount:**
-- Maximum weekly benefit: $1,033 (2026)
-- Calculated as ~50% of average weekly wage
-- Duration: Up to 30 weeks
+- Maximum weekly benefit: $1,105 (in force since 5 October 2025; DUA re-prices the cap every October from state wage data, so check mass.gov for the figure that applies to your claim)
+- Calculated as about half of your average weekly wage, plus up to $25 per dependent child
+- Duration: up to 30 weeks — the longest run in the country
 
 **What you'll need:**
 - Social Security number
@@ -436,12 +426,12 @@ Boston SYEP accepting applications for summer positions. $15.75/hour for ages 14
         q: 'How can I get help paying my utility bills?',
         a: `Several programs help with utility bills in Massachusetts:
 
-**1. LIHEAP (Fuel Assistance)**
-- Helps pay heating bills (oil, gas, electric heat)
-- Income limit: 60% state median income (~$47,000 for family of 4)
-- Maximum benefit: ~$1,600-2,400 depending on income
+**1. LIHEAP / HEAP (fuel assistance)**
+- Helps pay heating bills (oil, gas, electric heat) — renters qualify even when heat is included in the rent
+- Income limit: 60% of state median income, which is far above the SNAP limit and scales with household size — confirm your household's figure with ABCD
+- Maximum benefit in 2025-26: $1,000 for deliverable fuel (oil, propane) and $850 for utility-heated homes
 - Apply through: ABCD (617) 357-6000
-- Season: November - April
+- Season: 1 November - 30 April; applications open each autumn
 
 **2. Good Neighbor Energy Fund**
 - For households just above LIHEAP eligibility

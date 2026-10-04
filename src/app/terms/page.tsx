@@ -43,10 +43,10 @@ export default function TermsPage() {
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">4. Accuracy of Information</h2>
-              <p>We make every effort to ensure that the information presented in DOR101 is accurate and up-to-date. All data is sourced from official government agencies, verified community organizations, and public data sources. However:</p>
+              <p>I make every effort to ensure that the information presented in DOR101 is accurate and up-to-date. All data is sourced from official government agencies, verified community organizations, and public data sources, and every listing prints the date it was last checked by hand. However:</p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Information may change between our verification cycles</li>
-                <li>We are not responsible for errors in source data from third-party organizations</li>
+                <li>Information may change between my verification cycles</li>
+                <li>I am not responsible for errors in source data from third-party organizations</li>
                 <li>Always verify critical information (such as application deadlines, eligibility requirements, and waitlist status) directly with the relevant organization</li>
                 <li>DOR101 is an informational tool, not a substitute for professional legal, financial, or medical advice</li>
               </ul>
@@ -54,32 +54,32 @@ export default function TermsPage() {
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">5. Not Legal or Financial Advice</h2>
-              <p>The information provided by DOR101, including tenant rights information, financial calculators, and eligibility tools, is for general informational purposes only. It does not constitute legal advice, financial advice, or professional guidance. For specific legal questions, contact Greater Boston Legal Services at (617) 603-1700.</p>
+              <p>The information provided by DOR101, including tenant rights information, financial calculators, and eligibility tools, is for general informational purposes only. It does not constitute legal advice, financial advice, or professional guidance. For specific legal questions, contact Greater Boston Legal Services on (617) 371-1234 (intake Monday&ndash;Friday 9:30&nbsp;am&ndash;12:30&nbsp;pm).</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">6. Third-Party Links</h2>
-              <p>DOR101 contains links to external websites and resources operated by third parties (government agencies, community organizations, etc.). We do not control these external sites and are not responsible for their content, accuracy, or privacy practices. Links are provided for convenience and do not imply endorsement.</p>
+              <p>DOR101 contains links to external websites and resources operated by third parties (government agencies, community organizations, etc.). I do not control these external sites and am not responsible for their content, accuracy, or privacy practices. Links are provided for convenience and do not imply endorsement.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">7. Intellectual Property</h2>
-              <p>DOR101 is open-source software released under the MIT License. You are free to use, modify, and distribute the software in accordance with the license terms. The DOR101 name and logo are used to identify this specific project, which is made and run by one person, Yeisbel Pena.</p>
+              <p>DOR101 is open-source software released under the MIT License. You are free to use, modify, and distribute the software in accordance with the license terms. The DOR101 name and logo are used to identify this specific project, which is made and run by me, Yeisbel.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">8. Limitation of Liability</h2>
-              <p>DOR101 is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranties of any kind. To the fullest extent permitted by law, the author of DOR101 shall not be liable for any damages arising from the use or inability to use the application, including but not limited to reliance on information presented in the application.</p>
+              <p>DOR101 is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranties of any kind. To the fullest extent permitted by law, I shall not be liable for any damages arising from the use or inability to use the application, including but not limited to reliance on information presented in the application.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">9. Accessibility</h2>
-              <p>DOR101 is committed to accessibility and strives to meet WCAG 2.1 Level AA standards. The application supports keyboard navigation, screen readers, adjustable font sizes, high contrast modes, and reduced motion preferences. If you encounter accessibility barriers, please report them through our GitHub repository.</p>
+              <p>DOR101 is committed to accessibility and strives to meet WCAG 2.1 Level AA standards. The application supports keyboard navigation, screen readers, adjustable font sizes, high contrast modes, and reduced motion preferences. If you encounter accessibility barriers, please report them through my GitHub repository.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">10. Changes to Terms</h2>
-              <p>We may update these terms from time to time. The &ldquo;Last updated&rdquo; date at the top reflects the most recent revision. Continued use of the application after changes constitutes acceptance of the revised terms.</p>
+              <p>I may update these terms from time to time. The &ldquo;Last updated&rdquo; date at the top reflects the most recent revision. Continued use of the application after changes constitutes acceptance of the revised terms.</p>
             </section>
 
             <section>

@@ -28,21 +28,21 @@ export default function PrivacyPage() {
           <CardContent className="py-6 prose prose-sm max-w-none text-[var(--color-text-secondary)] space-y-6">
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">1. Overview</h2>
-              <p>DOR101 (&ldquo;the Application&rdquo;) is a free community resource tool for Dorchester, Boston residents. This Privacy Policy explains how we handle information when you use our application.</p>
-              <p className="font-semibold text-[var(--color-accent-green)]">The short version: We collect absolutely no personal data. None. Zero.</p>
+              <p>DOR101 (&ldquo;the Application&rdquo;) is a free community resource tool for Dorchester, Boston residents. It is built and run by one person, Yeisbel, and this Privacy Policy explains how I handle information when you use the application.</p>
+              <p className="font-semibold text-[var(--color-accent-green)]">The short version: I collect absolutely no personal data. None. Zero.</p>
             </section>
 
             <section>
-              <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">2. Information We Do NOT Collect</h2>
+              <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">2. Information I Do NOT Collect</h2>
               <ul className="list-disc pl-6 space-y-1">
-                <li>We do NOT collect your name, email, phone number, or any personal identifiers</li>
-                <li>We do NOT require account creation or login</li>
-                <li>We do NOT use cookies for tracking purposes</li>
-                <li>We do NOT use analytics services (no Google Analytics, Mixpanel, Sentry, etc.)</li>
-                <li>We do NOT use advertising networks or ad trackers</li>
-                <li>We do NOT collect location data from your device</li>
-                <li>We do NOT collect usage patterns, click data, or behavioral analytics</li>
-                <li>We do NOT share any data with third parties because we have no data to share</li>
+                <li>I do NOT collect your name, email, phone number, or any personal identifiers</li>
+                <li>I do NOT require account creation or login</li>
+                <li>I do NOT use cookies for tracking purposes</li>
+                <li>I do NOT use analytics services (no Google Analytics, Mixpanel, Sentry, etc.)</li>
+                <li>I do NOT use advertising networks or ad trackers</li>
+                <li>I do NOT collect location data from your device</li>
+                <li>I do NOT collect usage patterns, click data, or behavioral analytics</li>
+                <li>I do NOT share any data with third parties because I have no data to share</li>
               </ul>
             </section>
 
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
                 <li>Map tiles from ESRI and CARTO (satellite imagery and labels)</li>
                 <li>Google Fonts for typography</li>
               </ul>
-              <p>These services have their own privacy policies. We do not control or have access to any data these services may collect about requests made to their servers.</p>
+              <p>These services have their own privacy policies. I do not control and cannot see any data these services may collect about requests made to their servers.</p>
             </section>
 
             <section>
@@ -77,22 +77,22 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">6. Children&apos;s Privacy</h2>
-              <p>DOR101 does not knowingly collect any information from anyone, including children under 13. Since we collect no data, there is no data to protect. The application is safe for use by all ages.</p>
+              <p>DOR101 does not knowingly collect any information from anyone, including children under 13. Since I collect no data, there is no data to protect. The application is safe for use by all ages.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">7. Changes to This Policy</h2>
-              <p>If we ever change this privacy policy, we will update the &ldquo;Last updated&rdquo; date at the top of this page. Any significant changes will be communicated through the application&apos;s notification system.</p>
+              <p>If I ever change this privacy policy, I will update the &ldquo;Last updated&rdquo; date at the top of this page. Any significant changes will be shown in the application.</p>
             </section>
 
             <section>
               <h2 className="font-heading font-semibold text-lg text-[var(--color-text-primary)]">8. Contact</h2>
-              <p>If you have questions about this privacy policy, you can reach us through the project&apos;s GitHub repository or by contacting any of the community organizations listed in our Resource Directory.</p>
+              <p>If you have questions about this privacy policy, you can reach me through the project&apos;s GitHub repository or by contacting any of the community organizations listed in the resource directory.</p>
             </section>
 
             <section className="bg-[var(--color-accent-green)]/10 p-4 rounded-lg">
-              <h3 className="font-heading font-semibold text-[var(--color-accent-green)]">Our Commitment</h3>
-              <p className="text-sm mt-2">DOR101 was built for a community that has historically been subjected to surveillance and exploitation of personal data. We believe privacy is a fundamental right, and we have designed this application to prove that useful community tools can exist without compromising anyone&apos;s privacy.</p>
+              <h3 className="font-heading font-semibold text-[var(--color-accent-green)]">My commitment</h3>
+              <p className="text-sm mt-2">I built DOR101 for a community that has historically been subjected to surveillance and exploitation of personal data. I believe privacy is a fundamental right, and I designed this application to prove that a useful community tool can exist without compromising anyone&apos;s privacy.</p>
             </section>
           </CardContent>
         </Card>

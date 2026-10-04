@@ -148,9 +148,10 @@ describe('/api/market-data', () => {
     expect(Object.keys(body.ami.table)).toHaveLength(8);
     expect(body.ami.snapshot).toBe(true);
     expect(body.listings.officialPortals.map((portal) => portal.label)).toEqual([
-      'Boston One Stop (city-owned affordable units)',
-      'MassAccess (state affordable housing portal)',
-      'Go Housing Link (BPDA income-restricted listings)',
+      'Metrolist (City of Boston income-restricted listings and lotteries)',
+      'Housing Navigator Massachusetts (statewide income-restricted rentals)',
+      'MyMassHome (statewide affordable homeownership listings)',
+      'Boston Housing Authority (public housing applications)',
     ]);
   });
 

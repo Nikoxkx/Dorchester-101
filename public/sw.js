@@ -1,4 +1,5 @@
-/// DOR101 service worker — v1.2.0
+/// DOR101 service worker — the app version lives in package.json; the
+/// cache key below is versioned on its own, as the README explains.
 ///
 /// What this is for: a resident with no signal should still be able to open the
 /// page they saved, read the resource list and see the last arrivals snapshot with
@@ -12,8 +13,9 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-/// Bumped for 4.2: the two uncredited About-page photographs were removed and
-/// replaced, so caches holding the old `/img/...` responses have to go with them.
+/// Bumped when the About-page photographs were replaced, so caches holding the
+/// old `/img/...` responses have to go with them. This is a cache version, not
+/// the app version: the app's own version lives in package.json.
 const VERSION = 'v4.2.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;

@@ -30,13 +30,13 @@ export const hasEmailContact = CONTACT_EMAIL.trim().length > 0;
 export const SITE_FULL_NAME = 'Dorchester 101';
 
 /**
- * Who this site belongs to. One person, named: a resource that tells tenants
- * what their rights are should say who stands behind it, and a collective noun
- * that nobody answers for is worse than no name at all. Read from here so the
- * page metadata, the JSON-LD, the API description and the About page cannot
+ * Who this site belongs to. A resource that tells tenants what their rights
+ * are should say who stands behind it, and a collective noun that nobody
+ * answers for is worse than no name at all. Read from here so the page
+ * metadata, the JSON-LD, the API description and the About page cannot
  * disagree about it.
  */
-export const AUTHOR_NAME = 'Yeisbel Pena';
+export const AUTHOR_NAME = 'Yeisbel';
 export const AUTHOR_URL = 'https://github.com/Nikoxkx';
 
 /** Pages that should exist in the sitemap. `noindex` pages are absent by design. */

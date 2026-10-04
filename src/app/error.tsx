@@ -12,14 +12,14 @@ import { ReportProblem } from '@/components/a11y/ReportProblem';
  * A crash on one page must not blank the site: this keeps the shell, names what
  * happened in the reader's language, offers the two actions that actually help
  * (retry, go home) and lets them tell us. The error message is shown only inside a
- * disclosure, because a stack trace is noise to a resident and signal to a
- * maintainer — both of whom land here.
+ * disclosure, because a stack trace is noise to a resident and signal to me —
+ * and we both land here.
  */
 export default function RouteError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const { t } = useI18n();
 
   useEffect(() => {
-    // The console copy is what a maintainer pastes into an issue; the digest ties
+    // The console copy is what I paste into an issue; the digest ties
     // it to the server log line for the same failure.
     console.error('[DOR101] route error', error);
   }, [error]);

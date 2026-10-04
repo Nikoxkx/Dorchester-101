@@ -78,7 +78,7 @@ export interface HudIncomeLimits {
   limits80: Record<string, number>;
   /** HUD's published "extremely low" (30% / poverty-based) limits, 1–8 person. */
   limits30: Record<string, number>;
-  /** Area median family income from the same workbook, 4-person family. */
+  /** HUD's area median family income for the HMFA, from the same workbook. */
   median: number | null;
   area: string;
   sourceUrl: string;
@@ -90,20 +90,22 @@ export interface HudIncomeLimits {
 /**
  * Verified point-in-time capture of HUD FY2026 Section 8 income limits for the
  * Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area (Suffolk County), effective
- * 2026-05-01. The 50% ("very low income") row and the $171,400 area median are
- * cross-checked against two independent republications of the FY2026 table
- * (MassHousing's HUD-published limits sheet and the BPDA's 2026 AMI schedule,
- * where 100% AMI = $171,400 = 2 × the 4-person 50% limit); the 30% row matches
- * HUD's FY2026 30%-of-median computation for the same area. Used only when the
+ * 2026-05-01. Every row is taken from MassHousing's FY2026 republication of the
+ * HUD-published Boston-Cambridge-Quincy table, which agrees row for row with
+ * the MHP 2026 income-limit sheet: median family income $164,600; 50% and 80%
+ * rows as below. (The City of Boston's own 2026 AMI schedule shows 100% AMI =
+ * $171,400 for a family of four, i.e. 2 × HUD's 50% figure — the number the
+ * city's income-restricted lotteries quote.) The 30% row matches HUD's FY2026
+ * 30%-of-median computation for the same area. Used only when the
  * live workbook is unreachable, and marked `snapshot` so callers can say so.
  */
 export const HUD_IL_SNAPSHOT = {
   fiscalYear: 2026,
   effectiveDate: '2026-05-01',
   limits50: { '1': 60_000, '2': 68_600, '3': 77_150, '4': 85_700, '5': 92_600, '6': 99_450, '7': 106_300, '8': 113_150 },
-  limits80: { '1': 96_000, '2': 109_700, '3': 123_400, '4': 137_100, '5': 148_100, '6': 159_050, '7': 170_100, '8': 181_050 },
+  limits80: { '1': 96_000, '2': 109_700, '3': 123_400, '4': 137_100, '5': 148_100, '6': 159_050, '7': 170_050, '8': 181_000 },
   limits30: { '1': 36_000, '2': 41_150, '3': 46_300, '4': 51_400, '5': 55_550, '6': 59_650, '7': 63_750, '8': 67_850 },
-  median: 171_400,
+  median: 164_600,
   area: 'Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area',
   sourceUrl: 'https://www.huduser.gov/portal/datasets/il/il26/Section8-FY26.xlsx',
   capturedAt: '2026-09-06T22:40:00.000Z',

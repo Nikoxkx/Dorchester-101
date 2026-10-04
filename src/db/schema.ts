@@ -1,6 +1,6 @@
 import { pgTable, serial, varchar, text, integer, boolean, timestamp, decimal, jsonb } from 'drizzle-orm/pg-core';
 
-// Housing Projects - BPDA approved developments
+// Housing Projects - Planning Department approved developments
 export const housingProjects = pgTable('housing_projects', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),

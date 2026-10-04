@@ -349,7 +349,7 @@ export function NewsPageView() {
         {/* About this information — a full-width block BELOW the two-column area.
             It used to sit inside the flex row as a third column, which squeezed it
             beside the filters sidebar and made its inner grid overlap the list. */}
-        <ProjectNote sources={['dotnews', 'bostongov', 'wbur', 'gbh', 'globe', 'mbta']}>
+        <ProjectNote sources={['dotnews', 'bostongov', 'wbur', 'globe', 'mbta']}>
           Headlines are read directly from each publisher&apos;s own feed, no more than once every five minutes while the page is open, and link back to the publisher. Nothing is rewritten, ranked by engagement or paid for. If a feed fails, the page says which one.
         </ProjectNote>
       </div>
