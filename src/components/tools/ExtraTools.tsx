@@ -145,28 +145,39 @@ function Row({ label, value, note }: { label: string; value: number; note?: stri
 /* ───────────────────────────── Benefits screener ─────────────────────── */
 
 /**
- * 2025 thresholds. Each line names its publisher so the number can be checked
- * and updated in one place when the agencies re-issue them.
- *  - Federal poverty guideline, 2025 (HHS): $15,650 for 1, +$5,500 each extra.
+ * 2026 thresholds, checked 4 October 2026. Each line names its publisher so
+ * the number can be checked and updated in one place when the agencies
+ * re-issue them.
+ *  - Federal poverty guideline, 2026 (HHS, effective 13 January 2026):
+ *    $15,960 for 1, +$5,680 each extra person.
  *  - SNAP (MA, BBCE): gross income ≤ 200% FPL.
  *  - MassHealth Standard, adults: ≤ 133% FPL (138% with the 5% disregard).
- *  - LIHEAP / Fuel Assistance (MA DHCD): ≤ 60% state median income; the
- *    published 2024–25 table is approximated by household size below.
+ *  - LIHEAP / Fuel Assistance (MA, program year 2027): ≤ 60% state median
+ *    income, the published table by household size below (the publisher's
+ *    chart runs past size 8; this screener caps household size at 8).
  *  - MBTA Reduced Fare (Income-Eligible): ≤ 200% FPL, ages 18–64.
  *  - Boston Lifeline / ConnectAll and Good Neighbor Energy Fund omitted:
  *    their rules are administered case by case.
  */
-const FPL_2025 = (size: number) => 15650 + 5500 * (Math.max(1, size) - 1);
-const LIHEAP_2025: Record<number, number> = { 1: 49196, 2: 64333, 3: 79469, 4: 94608, 5: 109745, 6: 124882, 7: 127720, 8: 130557 };
+const FPL_2026 = (size: number) => 15960 + 5680 * (Math.max(1, size) - 1);
+const LIHEAP_2027: Record<number, number> = { 1: 53585, 2: 70073, 3: 86561, 4: 103049, 5: 119536, 6: 136024, 7: 139116, 8: 142207 };
+/**
+ * HUD FY2026 low-income (80%) limits for the Boston-Cambridge-Quincy HMFA,
+ * 1–8 persons, as published in the FY2026 Section 8 workbook — 1.6 × the
+ * 50% limits, rounded to $50. (MassHousing's Workforce Housing sheet prints a
+ * slightly higher uncapped 80% series for sizes 7–8; the city's Boston-only
+ * income-restricted lotteries use these HUD figures.)
+ */
+const HUD_BOSTON_80 = [96000, 109700, 123400, 137100, 148100, 159050, 170050, 181000];
 
 export function BenefitsScreener() {
   const [size, setSize] = useState(3);
   const [annual, setAnnual] = useState(42000);
   const [adultsUnder65, setAdultsUnder65] = useState(true);
 
-  const fpl = FPL_2025(size);
+  const fpl = FPL_2026(size);
   const ratio = annual / fpl;
-  const liheapCap = LIHEAP_2025[Math.min(8, Math.max(1, size))];
+  const liheapCap = LIHEAP_2027[Math.min(8, Math.max(1, size))];
 
   const rows = useMemo(
     () => [
@@ -193,7 +204,7 @@ export function BenefitsScreener() {
         ok: annual <= liheapCap,
         rule: 'Income at or below 60% of the state median income; renters with heat included qualify too',
         cap: liheapCap,
-        apply: 'ABCD Boston, (617) 357-6012, from November 1',
+        apply: 'ABCD Boston, (617) 357-6012; applications open 1 October, season runs 1 November – 30 April',
         href: 'https://www.mass.gov/how-to/apply-for-home-heating-assistance',
         source: 'massgov' as const,
       },
@@ -208,11 +219,11 @@ export function BenefitsScreener() {
       },
       {
         name: 'Boston affordable-housing lotteries (80% AMI and below)',
-        ok: annual <= [91900, 105000, 118100, 131150, 141650, 152150, 162650, 173100][Math.min(8, Math.max(1, size)) - 1] * 0.8,
+        ok: annual <= HUD_BOSTON_80[Math.min(8, Math.max(1, size)) - 1],
         rule: 'Most income-restricted units are open to households at or below 80% of area median income',
-        cap: Math.round([91900, 105000, 118100, 131150, 141650, 152150, 162650, 173100][Math.min(8, Math.max(1, size)) - 1] * 0.8),
-        apply: 'Boston One Stop and MassAccess listings',
-        href: 'https://www.boston.gov/departments/housing/boston-one-stop',
+        cap: HUD_BOSTON_80[Math.min(8, Math.max(1, size)) - 1],
+        apply: 'Metrolist, and Housing Navigator Massachusetts statewide',
+        href: 'https://www.boston.gov/metrolist',
         source: 'hud' as const,
       },
     ],
@@ -249,10 +260,10 @@ export function BenefitsScreener() {
           </label>
           <div className="rounded-lg bg-[var(--color-bg-tertiary)] p-3 text-sm">
             <p>
-              Your income is <strong>{Math.round(ratio * 100)}%</strong> of the 2025 federal poverty level for {size} {size === 1 ? 'person' : 'people'} ({formatCurrency(fpl)}).
+              Your income is <strong>{Math.round(ratio * 100)}%</strong> of the 2026 federal poverty level for {size} {size === 1 ? 'person' : 'people'} ({formatCurrency(fpl)}).
             </p>
           </div>
-          <Cite id="massgov" note="HHS 2025 poverty guidelines; program limits as published by each agency" href="https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines" />
+          <Cite id="massgov" note="HHS 2026 poverty guidelines; program limits as published by each agency" href="https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines" />
         </CardContent>
       </Card>
 
@@ -412,7 +423,7 @@ export function EvictionTimeline() {
             <li className="rounded-lg border border-[var(--color-border)] p-3">
               <p className="font-heading font-semibold">City of Boston Office of Housing Stability</p>
               <p className="text-xs text-[var(--color-text-secondary)]">Case managers, emergency funds, relocation help. Speaks your language on request.</p>
-              <a href="tel:+16176356257" className="font-mono text-[var(--color-accent-primary)]">(617) 635-4200</a>
+              <a href="tel:+16176354200" className="font-mono text-[var(--color-accent-primary)]">(617) 635-4200</a>
             </li>
             <li className="rounded-lg border border-[var(--color-border)] p-3">
               <p className="font-heading font-semibold">Right to counsel</p>

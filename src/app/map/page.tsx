@@ -10,7 +10,7 @@ import { SITE_URL } from '@/lib/site';
 export const metadata = {
   title: 'Dorchester map: MBTA lines, arrivals and verified services',
   description:
-    'Interactive map of Dorchester, Boston: Red Line, Mattapan Trolley, Fairmount Line and bus routes with live MBTA arrivals, service alerts and every verified community resource pin.',
+    'Interactive map of Dorchester, Boston: Red Line, Mattapan Line, Fairmount Line and bus routes with live MBTA arrivals, service alerts and every verified community resource pin.',
   alternates: { canonical: '' },
   openGraph: {
     title: 'Dorchester map: MBTA lines, arrivals and verified services',

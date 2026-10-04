@@ -8,6 +8,7 @@ import { categorize, NEWS_FEEDS } from "@/data/feeds";
 import { GET as resourcesGET } from "@/app/api/resources/route";
 import { GET as healthGET } from "@/app/api/health/route";
 import { RESOURCES } from "@/data/resources";
+import { FEED_SOURCE } from "@/data/sources";
 
 const ITEM = {
   title: "Somerset pantry extends hours",
@@ -38,6 +39,13 @@ describe("feed configuration", () => {
 
   it("routes an unknown publisher to the generic category instead of guessing", () => {
     expect(categorize("Some new feed")).toBe("other");
+  });
+
+  it("keeps the badge map in step with the feeds that are actually read", () => {
+    // A feed removed from `feeds.ts` used to leave its badge entry behind, so
+    // the About page kept citing a publisher the site no longer read.
+    const configured = NEWS_FEEDS.map((feed) => feed.id).sort();
+    expect(Object.keys(FEED_SOURCE).sort()).toEqual(configured);
   });
 });
 

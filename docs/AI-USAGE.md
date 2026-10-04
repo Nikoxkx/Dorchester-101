@@ -9,13 +9,13 @@ Last reviewed: 4 October 2026.
 
 ## In one paragraph
 
-One person, **Yeisbel Pena**, designed, built, maintains and runs this site. AI
-tools — an AI coding agent working in this repository (Arena.ai Agent Mode, which
-routes between several models) and machine translation for the eight non-English
-locales — did much of the typing. Yeisbel directed the work, decided what shipped,
-checked every listing against the organisation that publishes it, and is the person
-answerable for what the site says. No AI runs inside the app itself: nothing a
-visitor types is sent to a model, and nothing about a visitor is sent anywhere.
+I'm **Yeisbel**: I designed, built, maintain and run this site. AI tools — an AI
+coding agent working in this repository (Arena.ai Agent Mode, which routes between
+several models) and machine translation for the eight non-English locales — did
+much of the typing. I directed the work, decided what shipped, checked every
+listing against the organisation that publishes it, and I am the person answerable
+for what the site says. No AI runs inside the app itself: nothing a visitor types
+is sent to a model, and nothing about a visitor is sent anywhere.
 
 ## Where AI was used
 
@@ -47,7 +47,7 @@ visitor types is sent to a model, and nothing about a visitor is sent anywhere.
   their place. The rule from here on: a file with no verifiable origin does not ship.
 * **No invented facts.** Nothing on the site comes from a model's memory. Figures
   are read at request time or build time from the publisher (HUD, Census, MBTA,
-  Mass.gov, BHA, BPDA), and when a source is unreachable the UI says "unavailable"
+  Mass.gov, BHA, Boston Planning Department), and when a source is unreachable the UI says "unavailable"
   or "snapshot" instead of filling the gap.
 
 ## Known limits of this disclosure
@@ -57,8 +57,8 @@ visitor types is sent to a model, and nothing about a visitor is sent anywhere.
   per-commit audit trail.
 * Translations are AI-assisted drafts that have not been reviewed by a professional
   translator in every language. Corrections are welcome through the issue tracker.
-* Review was by one person. Errors that a larger team would have caught may remain;
-  that is a reason to report them, not a reason to hide how the site was made.
+* I reviewed everything myself. Errors that a larger team would have caught may
+  remain; that is a reason to report them, not a reason to hide how the site was made.
 
 ## How to check the claims
 

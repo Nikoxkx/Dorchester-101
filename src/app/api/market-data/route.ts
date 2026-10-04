@@ -187,9 +187,10 @@ export async function GET() {
       reason:
         'DOR101 does not aggregate rental listings. Applications run through the city and state portals below, where availability and landlord contact details are authoritative.',
       officialPortals: [
-        { label: 'Boston One Stop (city-owned affordable units)', url: 'https://www.boston.gov/departments/housing/boston-one-stop' },
-        { label: 'MassAccess (state affordable housing portal)', url: 'https://www.massaccess.org' },
-        { label: 'Go Housing Link (BPDA income-restricted listings)', url: 'https://www.gohousinglink.com' },
+        { label: 'Metrolist (City of Boston income-restricted listings and lotteries)', url: 'https://www.boston.gov/metrolist' },
+        { label: 'Housing Navigator Massachusetts (statewide income-restricted rentals)', url: 'https://housingnavigatorma.org' },
+        { label: 'MyMassHome (statewide affordable homeownership listings)', url: 'https://www.mymasshome.org' },
+        { label: 'Boston Housing Authority (public housing applications)', url: 'https://www.bostonhousing.org' },
       ],
     },
   };

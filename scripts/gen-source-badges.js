@@ -23,7 +23,7 @@ const badges = {
   mbta: ['#DA291C', `<circle cx="32" cy="32" r="21" fill="#fff" stroke="none"/><circle cx="32" cy="32" r="17" fill="#DA291C" stroke="none"/>${text('T', 24, 41, 900, "Arial,Helvetica,sans-serif", 'fill="#fff"')}`],
   // BHA: key
   bha: ['#0B4F8A', `<circle cx="22" cy="26" r="9" fill="none" stroke-width="4.5"/><path d="M29 32l18 18M40 43l4-4M46 49l4-4" fill="none" stroke-width="4.5"/>`],
-  // BPDA: skyline
+  // Boston Planning Department: skyline
   bpda: ['#00857C', `<rect x="10" y="30" width="10" height="22" stroke="none"/><rect x="24" y="16" width="12" height="36" stroke="none"/><rect x="40" y="24" width="14" height="28" stroke="none"/><path d="M8 52h48" stroke-width="3"/>`],
   // Boston.gov: B monogram in a shield
   bostongov: ['#091F2F', `<path d="M32 10l17 6v14c0 11-7 19-17 24-10-5-17-13-17-24V16z" fill="#FB4D42" stroke="none"/>${text('B', 26, 41, 900, "Georgia,'Times New Roman',serif", 'fill="#fff"')}`],
@@ -43,8 +43,6 @@ const badges = {
   dotnews: ['#1C3F60', `<path d="M14 16h30v32H14z" fill="none" stroke-width="3.5"/><path d="M44 24h6v20a4 4 0 0 1-8 0V20" fill="none" stroke-width="3.5"/><path d="M20 24h18M20 31h18M20 38h11" stroke-width="3"/>`],
   // WBUR: radio waves
   wbur: ['#C8102E', `<circle cx="32" cy="34" r="4" stroke="none"/><path d="M22 24a14 14 0 0 1 20 0M16 18a22 22 0 0 1 32 0M26 30a8 8 0 0 1 12 0" fill="none" stroke-width="3.5"/><path d="M32 38v12" stroke-width="3.5"/>`],
-  // GBH: broadcast tower
-  gbh: ['#4B2A83', `<path d="M32 20v32M22 52l10-32 10 32M26 40h12" fill="none" stroke-width="3.5"/><path d="M20 20a12 12 0 0 1 24 0M14 16a18 18 0 0 1 36 0" fill="none" stroke-width="3"/>`],
   // Boston Globe: serif G
   globe: ['#000000', text('G', 38, 46, 700, "Georgia,'Times New Roman',serif")],
   // Mass.gov: state shield with star

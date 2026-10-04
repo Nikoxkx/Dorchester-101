@@ -76,7 +76,7 @@ newest release. Installing over an existing installation keeps your preferences.
 | A page shows no live data | Those pages need a connection. The rest of the app works offline |
 | Live transit or news is stale | The local server polls on its own schedule; reopen the page, or check that the MBTA/Census feeds are up |
 
-## For maintainers
+## How I maintain DOR101
 
 | Task | Where |
 |------|-------|

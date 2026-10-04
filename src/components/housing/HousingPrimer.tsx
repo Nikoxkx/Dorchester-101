@@ -57,7 +57,7 @@ const STEPS = [
   {
     icon: Landmark,
     title: 'Pick the right door',
-    body: 'Three systems run in parallel. (1) Boston Housing Authority — public housing and Section 8 vouchers; one application, long waits, priority for homelessness, domestic violence, and displacement. (2) Metrolist / Boston One Stop — the City’s list of income-restricted apartments and lotteries in private buildings. (3) MassAccess / CHAPA — the statewide list, including accessible units.',
+    body: 'Three systems run in parallel. (1) Boston Housing Authority — public housing is open to new applicants while the Section 8 voucher waiting list is closed; one application, long waits, priority for homelessness, domestic violence, and displacement. (2) Metrolist — the City of Boston’s list of income-restricted apartments and lotteries in private buildings. (3) Housing Navigator Massachusetts — the statewide list of income-restricted rentals, including accessible units; it replaced the retired MassAccess registry in 2022.',
     tip: 'Apply to all three. They do not share applications, and being on one list never hurts your place on another.',
   },
   {
@@ -109,17 +109,17 @@ export function HowToApply() {
           ))}
         </ol>
         <div className="mt-4 grid gap-2 text-xs sm:grid-cols-3">
-          <a href="https://www.bostonhousing.org/en/Apply-for-Housing.aspx" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
+          <a href="https://www.bostonhousing.org" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="bha" size="sm" withName asSpan />
-            <p className="mt-1.5 text-[var(--color-text-secondary)]">Public housing &amp; Section 8. One application; (617) 988-4000.</p>
+            <p className="mt-1.5 text-[var(--color-text-secondary)]">Public housing applications are open; the Section 8 waiting list is closed. (617) 988-4000.</p>
           </a>
           <a href="https://www.boston.gov/metrolist" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="bostongov" size="sm" withName asSpan />
             <p className="mt-1.5 text-[var(--color-text-secondary)]">Metrolist: every income-restricted listing and lottery in Boston.</p>
           </a>
-          <a href="https://www.massaccesshousingregistry.org/" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
+          <a href="https://housingnavigatorma.org" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="massgov" size="sm" withName asSpan />
-            <p className="mt-1.5 text-[var(--color-text-secondary)]">MassAccess: statewide registry, including accessible units.</p>
+            <p className="mt-1.5 text-[var(--color-text-secondary)]">Housing Navigator Massachusetts: statewide registry, including accessible units.</p>
           </a>
         </div>
         <Cite id="bostongov" note="Boston Office of Housing — Income-restricted housing guide and lottery preferences" href="https://www.boston.gov/departments/housing/income-restricted-housing" className="mt-3" />

@@ -52,10 +52,10 @@ export function ProjectNote({
         <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-3">
           <h3 className="flex items-center gap-2 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
             <HeartHandshake className="h-3.5 w-3.5" aria-hidden="true" />
-            Open source, kept by one person
+            Open source, kept by me
           </h3>
           <p className="mt-1.5 text-xs">
-            DOR101 is made and run by one person, Yeisbel Pena, with AI tools helping with the code and the copy. The code, the listing data and every correction are public. Nobody pays to be listed and nothing here is sponsored.
+            I&apos;m Yeisbel, and I make and run DOR101, with AI tools helping with the code and the copy. The code, the listing data and every correction are public. Nobody pays to be listed and nothing here is sponsored.
           </p>
           <ul className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
             <li>

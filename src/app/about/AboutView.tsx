@@ -160,9 +160,9 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 <Heart className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> Who made it
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                One person: <strong>Yeisbel Pena</strong>, who wrote the code, checks every listing against the organisation that publishes it, and runs the site. It is not a city
+                I&apos;m <strong>Yeisbel</strong>. I wrote the code, I check every listing against the organisation that publishes it, and I run the site. It is not a city
                 service, a non-profit&apos;s product or a startup, and no organisation stands behind it. There is no team, no board and no outside contributors: the public commit history and
-                the issue tracker are the whole record of the work.
+                the issue tracker are the whole record of my work.
               </p>
             </div>
             <div>
@@ -171,7 +171,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 Open source under the MIT licence. The code, the listing data and every correction are public. There is no analytics, no tracking, no third-party script; fonts and icons ship from
-                this server. It also runs as a Windows desktop app for machines with no reliable internet. One person keeps it going, and AI tools helped build it — both are stated plainly
+                this server. It also runs as a Windows desktop app for machines with no reliable internet. I keep it going, and AI tools helped me build it — both are stated plainly
                 below.
               </p>
             </div>

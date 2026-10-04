@@ -2,23 +2,20 @@
 
 import { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { 
-  Home, 
-  Search, 
-  Filter, 
-  Calculator, 
-  FileText, 
+import {
+  Home,
+  Search,
+  Calculator,
   HelpCircle,
   Phone,
   ExternalLink,
-  ChevronDown,
   Info,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { HousingStartHere, HowToApply } from '@/components/housing/HousingPrimer';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
-import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { AMIBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -30,56 +27,57 @@ const pageVariants: Variants = {
   enter: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Sample listings data - in production this would come from the database
-const sampleListings = [
+/**
+ * Where live listings actually live.
+ *
+ * An earlier version of this page carried three invented "sample" listings,
+ * complete with rents and property-manager phone numbers. That is exactly the
+ * kind of figure this project promises never to print: rents on deed-restricted
+ * units depend on household size and income band, lotteries open and close
+ * weekly, and a copied number is wrong before anyone can act on it. Every card
+ * below is a link to the authority that owns the listing, each of which prints
+ * its own last-updated date.
+ */
+const LIVE_LISTING_SOURCES = [
   {
-    id: 1,
-    propertyName: 'Uphams Corner Residences',
-    address: '555 Columbia Road, Dorchester, MA 02125',
-    neighborhood: 'Uphams Corner',
-    unitTypes: [
-      { type: '1BR', count: 12, rent: 1450 },
-      { type: '2BR', count: 20, rent: 1750 },
-      { type: '3BR', count: 8, rent: 2100 },
-    ],
-    amiRequired: 60,
-    waitlistStatus: 'waitlist_open' as const,
-    applicationDeadline: null,
-    propertyManagerPhone: '(617) 825-4200',
-    amenities: 'Laundry, Parking, Playground, Community Room',
-    transitAccess: '5 min walk to Uphams Corner (Fairmount Line)',
+    id: 'metrolist',
+    name: 'Metrolist',
+    operator: 'City of Boston, Mayor\u2019s Office of Housing',
+    covers: 'Every City of Boston income-restricted lottery and waitlist, with an AMI eligibility estimator and a weekly digest.',
+    url: 'https://www.boston.gov/metrolist',
+    phone: '(617) 635-3880',
   },
   {
-    id: 2,
-    propertyName: 'Fields Corner Family Housing',
-    address: '1400 Dorchester Ave, Dorchester, MA 02122',
-    neighborhood: 'Fields Corner',
-    unitTypes: [
-      { type: '2BR', count: 15, rent: 1600 },
-      { type: '3BR', count: 10, rent: 1950 },
-    ],
-    amiRequired: 50,
-    waitlistStatus: 'available' as const,
-    applicationDeadline: new Date('2025-02-28'),
-    propertyManagerPhone: '(617) 825-9797',
-    amenities: 'On-site Laundry, Storage, Security',
-    transitAccess: '2 min walk to Fields Corner (Red Line)',
+    id: 'housing-navigator',
+    name: 'Housing Navigator Massachusetts',
+    operator: 'Housing Navigator Massachusetts (nonprofit)',
+    covers: 'Statewide income-restricted rentals, filterable by town, household size, rent and accessibility. Replaced the retired MassAccess registry.',
+    url: 'https://housingnavigatorma.org',
+    phone: '2-1-1',
   },
   {
-    id: 3,
-    propertyName: 'Codman Square Commons',
-    address: '600 Washington Street, Dorchester, MA 02124',
-    neighborhood: 'Codman Square',
-    unitTypes: [
-      { type: 'Studio', count: 8, rent: 1100 },
-      { type: '1BR', count: 16, rent: 1350 },
-    ],
-    amiRequired: 30,
-    waitlistStatus: 'waitlist_closed' as const,
-    applicationDeadline: null,
-    propertyManagerPhone: '(617) 825-4200',
-    amenities: 'Elevator, Community Garden, Computer Lab',
-    transitAccess: '10 min walk to Codman Yard (Fairmount Line)',
+    id: 'bha',
+    name: 'Boston Housing Authority',
+    operator: 'City of Boston',
+    covers: 'Public housing applications and project-based vouchers are open. The Section 8 Housing Choice Voucher waiting list is closed until further notice.',
+    url: 'https://www.bostonhousing.org',
+    phone: '(617) 988-4000',
+  },
+  {
+    id: 'metro-housing',
+    name: 'Metro Housing|Boston',
+    operator: 'Regional housing agency',
+    covers: 'RAFT emergency rental assistance, voucher administration and one-to-one housing search help. Start with a phone call.',
+    url: 'https://www.metrohousingboston.org',
+    phone: '(617) 425-6700',
+  },
+  {
+    id: 'mymasshome',
+    name: 'MyMassHome',
+    operator: 'Commonwealth of Massachusetts',
+    covers: 'The homeownership counterpart to Housing Navigator: affordable homes for sale, down-payment help and first-time-buyer courses.',
+    url: 'https://www.mymasshome.org',
+    phone: '2-1-1',
   },
 ];
 
@@ -89,19 +87,11 @@ export default function AffordableHousingPage() {
   const [activeTab, setActiveTab] = useState<'listings' | 'learn' | 'calculator'>('listings');
   const [householdSize, setHouseholdSize] = useState(2);
   const [annualIncome, setAnnualIncome] = useState(50000);
-  const [filterAmi, setFilterAmi] = useState<number | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const { data: incomeLimits, loading: amiLoading, error: amiError } = useIncomeLimits();
 
   const amiTable = incomeLimits?.table ?? {};
   const amiPercentage = calculateAMIPercentage(householdSize, annualIncome, amiTable);
   const amiBand = getAMIBand(amiPercentage);
-
-  const filteredListings = sampleListings.filter(listing => {
-    if (filterAmi && listing.amiRequired > filterAmi) return false;
-    if (filterStatus && listing.waitlistStatus !== filterStatus) return false;
-    return true;
-  });
 
   return (
     <MainLayout>
@@ -172,103 +162,66 @@ export default function AffordableHousingPage() {
           ))}
         </div>
 
-        {/* Listings Tab */}
+        {/* Where live listings are published */}
         {activeTab === 'listings' && (
           <div className="space-y-6">
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={filterAmi || ''}
-                onChange={(e) => setFilterAmi(e.target.value ? Number(e.target.value) : null)}
-                className={cn(
-                  'px-3 py-2 rounded-lg text-sm font-heading',
-                  'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
-                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]'
-                )}
-              >
-                <option value="">All Income Levels</option>
-                <option value="30">30% AMI or below</option>
-                <option value="50">50% AMI or below</option>
-                <option value="60">60% AMI or below</option>
-                <option value="80">80% AMI or below</option>
-              </select>
-              
-              <select
-                value={filterStatus || ''}
-                onChange={(e) => setFilterStatus(e.target.value || null)}
-                className={cn(
-                  'px-3 py-2 rounded-lg text-sm font-heading',
-                  'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
-                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]'
-                )}
-              >
-                <option value="">All Statuses</option>
-                <option value="available">Available Now</option>
-                <option value="waitlist_open">Waitlist Open</option>
-                <option value="waitlist_closed">Waitlist Closed</option>
-              </select>
-            </div>
-
-            {/* Listings Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredListings.map((listing) => (
-                <Card key={listing.id} hoverable>
-                  <CardHeader>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg line-clamp-1">{listing.propertyName}</CardTitle>
-                      <p className="text-sm text-[var(--color-text-muted)] mt-1">{listing.neighborhood}</p>
-                    </div>
-                    <StatusBadge status={listing.waitlistStatus} />
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm">{listing.address}</p>
-                    
-                    <div className="flex items-center gap-2">
-                      <AMIBadge percentage={listing.amiRequired} />
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        For households at or below {listing.amiRequired}% AMI
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-xs font-heading font-medium text-[var(--color-text-muted)]">AVAILABLE UNITS</p>
-                      <div className="flex flex-wrap gap-2">
-                        {listing.unitTypes.map((unit, i) => (
-                          <div key={i} className="bg-[var(--color-bg-tertiary)] px-2 py-1 rounded text-sm">
-                            <span className="font-medium">{unit.type}</span>
-                            <span className="text-[var(--color-text-muted)]"> — {formatCurrency(unit.rent)}/mo</span>
-                          </div>
-                        ))}
+            <Card>
+              <CardHeader>
+                <CardTitle>Where the live listings are</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  DOR101 does not re-publish rents, unit counts or lottery dates. A deed-restricted rent depends on the
+                  household&apos;s size and income band, lotteries open and close within weeks, and a figure copied onto
+                  this page would be wrong before anyone could act on it. The four sites below are the ones that own the
+                  listings, and each prints the date it was last updated. Apply only through the property manager link on
+                  the listing itself — nobody can charge you to apply.
+                </p>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {LIVE_LISTING_SOURCES.map((source) => (
+                    <li key={source.id} className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-3.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-heading text-sm font-bold">{source.name}</p>
+                          <p className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{source.operator}</p>
+                        </div>
+                        <a
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--color-border)] px-2.5 py-1 font-heading text-[11px] font-bold transition-colors hover:border-[var(--color-accent-primary)]"
+                        >
+                          Open
+                          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                        </a>
                       </div>
-                    </div>
-                    
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      <span className="font-medium">Transit:</span> {listing.transitAccess}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex items-center justify-between">
-                    <a 
-                      href={`tel:${listing.propertyManagerPhone.replace(/\D/g, '')}`}
-                      className="text-sm text-[var(--color-accent-primary)] hover:underline flex items-center gap-1"
-                    >
-                      <Phone className="w-4 h-4" />
-                      {listing.propertyManagerPhone}
-                    </a>
-                    <Button variant="secondary" size="sm">
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                      <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">{source.covers}</p>
+                      <a href={`tel:${source.phone.replace(/[^0-9]/g, '')}`} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent-primary)] hover:underline">
+                        <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                        {source.phone}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-            {filteredListings.length === 0 && (
-              <Card className="text-center py-12">
-                <Info className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
-                <p className="font-heading font-medium mb-2">No listings match your filters</p>
-                <p className="text-sm text-[var(--color-text-muted)]">Try adjusting your search criteria</p>
-              </Card>
-            )}
+            <Card className="border-[var(--color-accent-amber)]/40 bg-[var(--color-accent-amber)]/5">
+              <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-3">
+                <Info className="h-5 w-5 shrink-0 text-[var(--color-accent-amber)]" aria-hidden="true" />
+                <div className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                  <p className="font-heading font-bold text-[var(--color-text-primary)]">Waitlist status, checked 4 October 2026</p>
+                  <p className="mt-1">
+                    The BHA Section 8 Housing Choice Voucher waiting list is <strong>closed until further notice</strong>;
+                    BHA has said it will give about two weeks&apos; public notice before reopening. BHA public housing and
+                    project-based vouchers are <strong>open</strong> to new applicants. If you are behind on rent or have a
+                    notice to quit, RAFT can pay up to $7,000 per 12-month period — call 2-1-1 or Metro Housing|Boston at
+                    (617) 425-6700. If you are at immediate risk of losing your home, the City&apos;s Office of Housing
+                    Stability answers at (617) 635-4200, Monday–Friday 9–5.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -354,7 +307,7 @@ export default function AffordableHousingPage() {
                 {[
                   { step: 1, title: 'Check Your Income', desc: 'Use our calculator to see what AMI band you fall into.' },
                   { step: 2, title: 'Gather Documents', desc: 'You\'ll need: ID, proof of income (pay stubs, tax returns), proof of household size.' },
-                  { step: 3, title: 'Find Open Listings', desc: 'Search MassAccess.org or check our listings above.' },
+                  { step: 3, title: 'Find Open Listings', desc: 'Search Metrolist (Boston) or Housing Navigator Massachusetts (statewide) — the open-listings tab above links both.' },
                   { step: 4, title: 'Submit Application', desc: 'Apply online or pick up a paper application at the property office.' },
                   { step: 5, title: 'Wait for Lottery', desc: 'If there are more applicants than units, a lottery selects who moves forward.' },
                   { step: 6, title: 'Interview & Verification', desc: 'If selected, you\'ll verify your income and household.' },
@@ -478,7 +431,7 @@ export default function AffordableHousingPage() {
           </div>
         )}
         <ProjectNote sources={['bha', 'bostongov', 'bpda', 'hud']}>
-          Waitlist status and lottery dates come from the Boston Housing Authority, the Office of Housing and BPDA listings, and are confirmed by hand. Income limits are HUD&apos;s published figures for the Boston metro. Apply only through the official portals linked on each card; DOR101 never takes an application.
+          Waitlist status and lottery dates are read from the Boston Housing Authority, Metrolist and Housing Navigator Massachusetts, and re-checked by hand; the date of the last check is printed on this page. DOR101 publishes no rents and no unit counts of its own — that would be a figure out of date within the week. Income limits are HUD&apos;s published figures for the Boston metro, fetched live. Apply only through the official portals linked here; DOR101 never takes an application.
         </ProjectNote>
       </motion.div>
     </MainLayout>

@@ -23,6 +23,7 @@ import {
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { DORCHESTER_BUS_ROUTES, type BusRouteRef } from '@/data/transit';
 import Image from 'next/image';
 import { SourceMark } from '@/components/sources/SourceMark';
 import { ExpandableSection, ExpandableCard } from '@/components/ui/ExpandableSection';
@@ -42,7 +43,7 @@ const neighborhoods = [
     description: 'Major commercial hub with Red Line access. Strong Vietnamese community.',
     population: '~18,000',
     medianRent: '$2,650/mo',
-    transitAccess: 'Red Line (Fields Corner), Bus 17, 18, 210',
+    transitAccess: 'Red Line (Fields Corner), Bus 15, 17, 18, 19, 201, 202, 210',
     landmarks: ['Fields Corner MBTA', 'Vietnamese restaurants on Dorchester Ave', 'Town Field'],
     demographics: 'Vietnamese (35%), Black (30%), Hispanic (20%), White (10%), Other (5%)',
     schools: ['Mildred Avenue K-8', 'Boston Latin Academy', 'Jeremiah E. Burke High'],
@@ -55,7 +56,7 @@ const neighborhoods = [
     description: 'Residential area near the beach. Close to UMass Boston.',
     population: '~8,500',
     medianRent: '$2,850/mo',
-    transitAccess: 'Red Line (Savin Hill), Bus 17, 18',
+    transitAccess: 'Red Line (Savin Hill), Bus 18',
     landmarks: ['Malibu Beach', 'Savin Hill Park', 'Boston Nature Center'],
     demographics: 'White (45%), Black (25%), Hispanic (15%), Asian (10%), Other (5%)',
     schools: ['Lee Academy Pilot School', 'Boston Collegiate Charter'],
@@ -81,7 +82,7 @@ const neighborhoods = [
     description: 'Community-focused area with health center and local businesses.',
     population: '~15,000',
     medianRent: '$2,400/mo',
-    transitAccess: 'Fairmount Line (Codman Yard - coming), Bus 23, 26, 28',
+    transitAccess: 'Fairmount Line (Codman Yard - coming), Bus 22, 23, 26',
     landmarks: ['Codman Square Health Center', 'Second Church in Dorchester', 'Codman Square Library'],
     demographics: 'Black (55%), Hispanic (25%), Cape Verdean (10%), Haitian (8%), Other (2%)',
     schools: ['Codman Academy', 'Young Achievers Science and Math Pilot'],
@@ -94,7 +95,7 @@ const neighborhoods = [
     description: 'Vibrant neighborhood with Caribbean and African influences.',
     population: '~14,000',
     medianRent: '$2,350/mo',
-    transitAccess: 'Bus 23, 28, 45, 66',
+    transitAccess: 'Bus 14, 19, 23, 28, 45',
     landmarks: ['Grove Hall Library', 'Franklin Park Zoo entrance', 'Lee School'],
     demographics: 'Black (65%), Hispanic (20%), Haitian (10%), Other (5%)',
     schools: ['Frederick Pilot Middle', 'Lee K-8'],
@@ -107,7 +108,7 @@ const neighborhoods = [
     description: 'Intersection of major streets. Mixed residential and commercial.',
     population: '~10,000',
     medianRent: '$2,300/mo',
-    transitAccess: 'Fairmount Line (Four Corners/Geneva), Bus 19, 23, 28',
+    transitAccess: 'Fairmount Line (Four Corners/Geneva), Bus 19, 23',
     landmarks: ['Four Corners Main Streets', 'Geneva Cliffs Urban Wild'],
     demographics: 'Black (55%), Hispanic (30%), Cape Verdean (10%), Other (5%)',
     schools: ['Dever-McCormack K-8', 'Boston Day and Evening Academy'],
@@ -120,7 +121,7 @@ const neighborhoods = [
     description: 'Historic mill area on the Neponset River. Local shops and restaurants.',
     population: '~7,000',
     medianRent: '$2,700/mo',
-    transitAccess: 'Mattapan Trolley (Milton), Bus 27, 240',
+    transitAccess: 'Mattapan Line (Milton), Bus 15, 24, 217, 240',
     landmarks: ['Walter Baker Chocolate Factory', 'Neponset River Trail', 'Lower Mills Library'],
     demographics: 'White (50%), Black (25%), Hispanic (15%), Asian (5%), Other (5%)',
     schools: ['Holmes Elementary', 'Lower Mills Early Education'],
@@ -133,7 +134,7 @@ const neighborhoods = [
     description: 'Red Line terminus. Peabody Square commercial district.',
     population: '~11,000',
     medianRent: '$2,600/mo',
-    transitAccess: 'Red Line & Mattapan Trolley (Ashmont), Bus 22, 23, 26, 27, 215, 217, 240',
+    transitAccess: 'Red Line & Mattapan Line (Ashmont), Bus 15, 18, 21, 22, 23, 24, 26, 215, 217, 240',
     landmarks: ['Ashmont Station', 'Peabody Square', 'All Saints Church', 'Ashmont Hill'],
     demographics: 'Black (40%), White (30%), Hispanic (15%), Haitian (10%), Other (5%)',
     schools: ['Mather Elementary', 'Henderson K-12 Inclusion School'],
@@ -146,7 +147,7 @@ const neighborhoods = [
     description: 'Waterfront area. Parks and marshlands.',
     population: '~5,000',
     medianRent: '$2,800/mo',
-    transitAccess: 'Bus 201, 202 to Ashmont',
+    transitAccess: 'Bus 201, 202 via Neponset Avenue',
     landmarks: ['Neponset River Reservation', 'Pope John Paul II Park', 'Tenean Beach'],
     demographics: 'White (60%), Black (20%), Hispanic (12%), Asian (5%), Other (3%)',
     schools: ['Neighborhood House Charter'],
@@ -158,47 +159,61 @@ const neighborhoods = [
 const transitInfo = {
   redLine: {
     stations: [
-      { name: 'JFK/UMass', transfers: ['Commuter Rail', 'Bus 8, 16'] },
-      { name: 'Savin Hill', transfers: ['Bus 17, 18'] },
-      { name: 'Fields Corner', transfers: ['Bus 17, 18, 210'] },
-      { name: 'Shawmut', transfers: ['Bus 22, 23'] },
-      { name: 'Ashmont', transfers: ['Mattapan Trolley', 'Bus 22, 23, 26, 27, 215, 217, 240'] },
+      { name: 'JFK/UMass', transfers: ['Commuter Rail', 'Bus 8, 16, 41'] },
+      { name: 'Savin Hill', transfers: ['Bus 18 (Dorchester Ave)'] },
+      { name: 'Fields Corner', transfers: ['Bus 15, 17, 18, 19, 201, 202, 210'] },
+      { name: 'Shawmut', transfers: ['Bus 22, 23 (Talbot Avenue)'] },
+      { name: 'Ashmont', transfers: ['Mattapan Line', 'Bus 15, 18, 21, 22, 23, 24, 26, 215, 217, 240'] },
     ],
-    frequency: 'Every 4-6 minutes (rush hour), 8-12 minutes (off-peak)',
-    fare: '$2.40 (CharlieCard) / $2.90 (cash)',
+    frequency: 'Every 4 minutes at rush hour and 9 minutes off-peak on the Ashmont branch',
+    fare: '$2.40 (any payment method), $1.10 reduced fare',
     accessibleStations: 'All stations accessible',
   },
   fairmountLine: {
     stations: [
       { name: 'Uphams Corner', transfers: ['Bus 15, 41'] },
-      { name: 'Four Corners/Geneva', transfers: ['Bus 19, 23, 28'] },
-      { name: 'Talbot Avenue', transfers: ['Bus 23, 26, 28'] },
+      { name: 'Four Corners/Geneva', transfers: ['Bus 19, 23'] },
+      { name: 'Talbot Avenue', transfers: ['Bus 22 (Talbot Avenue)'] },
+      { name: 'Morton Street', transfers: ['Bus 21'] },
+      { name: 'Blue Hill Avenue', transfers: ['Bus 28, 29, 31'] },
     ],
-    frequency: 'Every 20-30 minutes',
-    fare: 'Free Zone 1A ($2.40 w/ CharlieCard from South Station)',
-    note: 'Commuter rail serving Dorchester with subway-like frequency',
+    frequency: 'Every 15 minutes at rush hour, 30 minutes off-peak',
+    fare: '$2.40 one-way (Zone 1A, the same price as the subway)',
+    note: 'Commuter rail serving Dorchester every day, with subway-level fares',
   },
-  mattapanTrolley: {
-    stations: ['Ashmont', 'Cedar Grove', 'Butler', 'Milton', 'Central Avenue', 'Valley Road', 'Capen Street', 'Mattapan'],
-    frequency: 'Every 5-8 minutes',
-    fare: 'Same as subway ($2.40)',
-    note: 'Historic PCC streetcars dating to 1946',
+  mattapanLine: {
+    stations: [
+      { name: 'Ashmont', transfers: ['Red Line'] },
+      { name: 'Cedar Grove', transfers: [] },
+      { name: 'Butler', transfers: [] },
+      { name: 'Milton', transfers: [] },
+      { name: 'Central Avenue', transfers: [] },
+      { name: 'Valley Road', transfers: [] },
+      { name: 'Capen Street', transfers: [] },
+      { name: 'Mattapan', transfers: ['Bus 15, 24, 28, 29, 30, 31, 33, 245, 716'] },
+    ],
+    frequency: 'Every 7 minutes at rush hour and 11 minutes off-peak',
+    fare: '$2.40, the same as the subway, with a free transfer to the Red Line at Ashmont',
+    note: 'Historic PCC streetcars, built in 1946, run this line. An accessible ramp was dedicated at Milton in October 2026 as part of a line-wide upgrade that also brings lighting, cameras, handrails and seating; Valley Road is the one stop still without an accessible platform.',
   },
-  busRoutes: [
-    { route: '16', destination: 'Andrew via Columbia Rd', frequency: '10-15 min' },
-    { route: '17', destination: 'Andrew via Fields Corner', frequency: '15-20 min' },
-    { route: '18', destination: 'Andrew via Savin Hill', frequency: '15-20 min' },
-    { route: '23', destination: 'Ruggles via Blue Hill Ave', frequency: '6-10 min' },
-    { route: '26', destination: 'Ashmont via Talbot Ave', frequency: '15-20 min' },
-    { route: '28', destination: 'Ruggles via Blue Hill Ave', frequency: '6-10 min' },
-  ],
   farePrograms: [
     { name: 'CharlieCard', description: 'Reloadable fare card with discounted fares' },
-    { name: 'Youth Pass', description: 'Free for BPS students grades 7-12' },
-    { name: 'Reduced Fare', description: '50% off for seniors 65+, people with disabilities' },
-    { name: 'Low-Income Fare', description: '$10/month unlimited for income-eligible residents' },
+    { name: 'M7 Pass', description: 'Free for BPS students grades 7-12; bus, subway and Commuter Rail Zones 1A-2' },
+    { name: 'Reduced Fare', description: '50% off for seniors 65+, riders with disabilities and students' },
+    { name: 'Low-Income Fare', description: '$10 7-day or $30 monthly LinkPass, ages 18-64 on state assistance' },
+    { name: 'Car-Free Seniors', description: 'Free rides for Massachusetts residents 75+ who do not drive, from 13 October 2026' },
   ],
 };
+
+/**
+ * The bus routes this guide highlights, read from the same verified reference
+ * the map draws from, so a card here cannot promise a terminus or a headway
+ * that the map's own data contradicts.
+ */
+const HIGHLIGHTED_BUS_ROUTE_IDS = ['16', '17', '18', '23', '26', '28'];
+const highlightedBusRoutes = HIGHLIGHTED_BUS_ROUTE_IDS
+  .map((id) => DORCHESTER_BUS_ROUTES.find((route) => route.id === id))
+  .filter((route): route is BusRouteRef => Boolean(route));
 
 export default function NeighborhoodPage() {
   const { language } = useAppStore();
@@ -355,7 +370,7 @@ export default function NeighborhoodPage() {
             <ExpandableSection
               title="MBTA Red Line"
               icon={<Train className="w-5 h-5" />}
-              preview="5 stations in Dorchester • Every 4-6 min rush hour"
+              preview="5 stations in Dorchester • Every 4-9 minutes"
               badge="Primary"
               sourceUrl="https://www.mbta.com"
               sourceName="MBTA"
@@ -368,9 +383,11 @@ export default function NeighborhoodPage() {
                         <div className="w-3 h-3 rounded-full bg-red-600" />
                         <span className="font-heading font-semibold">{station.name}</span>
                       </div>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        Transfers: {station.transfers.join(', ')}
-                      </p>
+                      {station.transfers.length > 0 && (
+                        <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                          Transfers: {station.transfers.join(', ')}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -392,9 +409,51 @@ export default function NeighborhoodPage() {
             </ExpandableSection>
 
             <ExpandableSection
+              title="Mattapan Line (Trolley)"
+              icon={<Train className="w-5 h-5" />}
+              preview="8 stops • Ashmont to Mattapan • Subway fare"
+              badge="Trolley"
+              sourceUrl="https://www.mbta.com/stops/place-asmnl"
+              sourceName="MBTA"
+            >
+              <div className="space-y-4">
+                <div className="p-3 bg-[var(--color-accent-primary)]/10 rounded-lg">
+                  <p className="text-sm font-medium text-[var(--color-accent-primary)]">
+                    {transitInfo.mattapanLine.note}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {transitInfo.mattapanLine.stations.map((station) => (
+                    <div key={station.name} className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-600" />
+                        <span className="font-heading font-semibold">{station.name}</span>
+                      </div>
+                      {station.transfers.length > 0 && (
+                        <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                          Transfers: {station.transfers.join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-[var(--color-text-muted)]">Frequency</p>
+                    <p className="font-medium">{transitInfo.mattapanLine.frequency}</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--color-text-muted)]">Fare</p>
+                    <p className="font-medium">{transitInfo.mattapanLine.fare}</p>
+                  </div>
+                </div>
+              </div>
+            </ExpandableSection>
+
+            <ExpandableSection
               title="Fairmount Line (Commuter Rail)"
               icon={<Train className="w-5 h-5" />}
-              preview="3 stations in Dorchester • Free Zone 1A fare"
+              preview="5 stations in Dorchester • Zone 1A fare, same as the subway"
               badge="Growing"
               sourceUrl="https://www.mbta.com/schedules/CR-Fairmount"
               sourceName="MBTA"
@@ -418,26 +477,38 @@ export default function NeighborhoodPage() {
                     </div>
                   ))}
                 </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-[var(--color-text-muted)]">Frequency</p>
+                    <p className="font-medium">{transitInfo.fairmountLine.frequency}</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--color-text-muted)]">Fare</p>
+                    <p className="font-medium">{transitInfo.fairmountLine.fare}</p>
+                  </div>
+                </div>
               </div>
             </ExpandableSection>
 
             <ExpandableSection
               title="Bus Routes"
               icon={<Bus className="w-5 h-5" />}
-              preview="12+ bus routes serving Dorchester"
+              preview={`${DORCHESTER_BUS_ROUTES.length} bus routes serving Dorchester`}
               sourceUrl="https://www.mbta.com/schedules/bus"
               sourceName="MBTA"
             >
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {transitInfo.busRoutes.map((bus) => (
-                  <div key={bus.route} className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                {highlightedBusRoutes.map((bus) => (
+                  <div key={bus.id} className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded">
-                        {bus.route}
+                        {bus.name}
                       </span>
-                      <span className="text-xs text-[var(--color-text-muted)]">{bus.frequency}</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        About every {bus.headwayMinutes} min{bus.frequent ? ' · Frequent bus' : ''}
+                      </span>
                     </div>
-                    <p className="text-xs mt-1">{bus.destination}</p>
+                    <p className="text-xs mt-1">{bus.longName}</p>
                   </div>
                 ))}
               </div>
