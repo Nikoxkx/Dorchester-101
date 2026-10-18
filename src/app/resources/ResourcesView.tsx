@@ -18,8 +18,13 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from "@/components/ui/Badge";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
+import { ListenButton } from "@/components/a11y/ListenButton";
+import { QRPoster } from "@/components/resources/QRPoster";
+import { VerifyButton } from "@/components/resources/VerifyButton";
+import { FieldNotes } from "@/components/pwa/FieldNotes";
 import { useI18n } from "@/i18n/hook";
 import { useAppStore } from "@/stores/appStore";
+import { useBadgeStore } from "@/stores/badgeStore";
 import {
   RESOURCES,
   VERIFICATION_STALE_DAYS,
@@ -63,6 +68,7 @@ export function ResourcesView() {
   const searchParams = useSearchParams();
   const favorites = useAppStore((s) => s.favorites);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const earnBadge = useBadgeStore((s) => s.earn);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ResourceCategory | "all">("all");
   const [stepFreeOnly, setStepFreeOnly] = useState(false);
@@ -218,7 +224,10 @@ export function ResourcesView() {
               <Chip
                 key={key}
                 active={category === key}
-                onClick={() => setCategory(key)}
+                onClick={() => {
+                  setCategory(key);
+                  if (key === "food") earnBadge("food-finder");
+                }}
                 label={t(CATEGORY_KEYS[key])}
                 count={
                   RESOURCES.filter((resource) => resource.category === key)
@@ -435,6 +444,19 @@ export function ResourcesView() {
                         {resource.eligibility}
                       </p>
                     )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <ListenButton text={`${resource.name}. ${summary.value}. ${resource.address}.`} />
+                      <QRPoster
+                        id={id}
+                        name={resource.name}
+                        address={resource.address}
+                        phone={resource.phone}
+                        summary={summary.value}
+                      />
+                      <VerifyButton resourceId={id} />
+                      <FieldNotes scope={`resource-${id}`} compact />
+                    </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-[var(--color-border)] pt-2.5 text-[11px]">
                       <span className="text-[var(--color-text-muted)]">

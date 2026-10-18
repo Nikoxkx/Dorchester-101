@@ -14,6 +14,7 @@ import {
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { HousingStartHere, HowToApply } from '@/components/housing/HousingPrimer';
+import { AddToCalendar } from '@/components/housing/AddToCalendar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { AMIBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -196,10 +197,21 @@ export default function AffordableHousingPage() {
                         </a>
                       </div>
                       <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">{source.covers}</p>
-                      <a href={`tel:${source.phone.replace(/[^0-9]/g, '')}`} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent-primary)] hover:underline">
-                        <Phone className="h-3.5 w-3.5" aria-hidden="true" />
-                        {source.phone}
-                      </a>
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                        <a href={`tel:${source.phone.replace(/[^0-9]/g, '')}`} className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent-primary)] hover:underline">
+                          <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                          {source.phone}
+                        </a>
+                        <AddToCalendar
+                          label="Check-in reminder (.ics)"
+                          event={{
+                            title: `Check ${source.name} for new Boston housing listings`,
+                            description: `${source.covers} Phone: ${source.phone}`,
+                            location: 'Dorchester, Boston, MA',
+                            url: source.url,
+                          }}
+                        />
+                      </div>
                     </li>
                   ))}
                 </ul>
