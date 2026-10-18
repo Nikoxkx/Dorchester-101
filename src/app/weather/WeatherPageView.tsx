@@ -319,7 +319,7 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
     <section className={card} aria-labelledby="wx-hourly">
       <h2 id="wx-hourly" className="font-heading text-base font-bold">{t('weather.hourly')}</h2>
       <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
-      <TempCurve hours={rows.slice(0, 24)} labelFor={(f) => tempText(f, unit, format.number)} />
+      <TempCurve hours={rows.slice(0, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
       <h3 className="mt-2 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
       <div className="mt-1"><PrecipBars hours={rows.slice(0, 24)} timeFor={(iso) => format.time(iso)} /></div>
       <ul className="mt-3 flex flex-col divide-y divide-[var(--color-border)]">
@@ -333,7 +333,7 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
                 <span className="block text-[10px] font-medium text-[var(--color-text-muted)]">{t('weather.feelsLike', { temp: tempText(h.feelsLikeF, unit, format.number) })}</span>
               )}
             </span>
-            <span className="min-w-0 truncate text-xs text-[var(--color-text-secondary)]" dir="auto">
+            <span className="min-w-0 text-xs leading-snug text-[var(--color-text-secondary)]" dir="auto">
               {h.shortForecast}{h.windText ? ` · ${h.windText}${h.windDir ? ` ${h.windDir}` : ''}` : ''}
             </span>
             <span className="hidden items-center gap-1.5 sm:flex" aria-label={`${t('weather.precipChance')}: ${h.precipChance != null ? format.percent(h.precipChance / 100, 0) : '—'}`}>

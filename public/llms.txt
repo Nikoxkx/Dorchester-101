@@ -13,6 +13,7 @@ Licence: MIT (code) — see /LICENSE ; photographs credited individually in /pub
 ## Allow / Disallow (polite crawl budget)
 Allow: /
 Allow: /about
+Allow: /faq
 Allow: /affordable-housing
 Allow: /food
 Allow: /map
@@ -26,6 +27,7 @@ Allow: /directory
 Allow: /weather
 Allow: /winter-clothing
 Allow: /sitemap.xml
+Allow: /opensearch.xml
 Allow: /robots.txt
 Disallow: /api/
 Disallow: /settings

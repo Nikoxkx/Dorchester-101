@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ConditionKind, HourlyPeriod } from '@/lib/weather';
 
 /**
@@ -70,21 +70,55 @@ export function TempRangeBar({
   );
 }
 
-/** Smooth 24-hour temperature curve (Catmull-Rom → bezier) with min/max dots. */
-const CURVE_W = 720;
-const CURVE_H = 132;
-const CURVE_PAD = { top: 22, bottom: 18, left: 10, right: 10 } as const;
+/**
+ * The width the chart is actually painted at, in CSS pixels. The first
+ * version stretched a 720-wide viewBox into whatever box it landed in
+ * (`preserveAspectRatio="none"`), which squished the curve AND the text
+ * on phones. Now the SVG is drawn 1:1 at the measured container width —
+ * and never narrower than 540px, scrolling sideways instead of
+ * compressing, the way the Apple hourly graph behaves.
+ */
+const CURVE_H = 168;
+const CURVE_PAD = { top: 26, bottom: 34, left: 14, right: 14 } as const;
 
-export function TempCurve({ hours, labelFor }: { hours: HourlyPeriod[]; labelFor: (tempF: number) => string }) {
+function useElementWidth(min = 540): [React.RefObject<HTMLDivElement | null>, number] {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(min);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      if (w > 0) setWidth(Math.max(min, Math.floor(w)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [min]);
+  return [ref, width];
+}
+
+/** Smooth 24-hour temperature curve (Catmull-Rom → bezier), true-scale. */
+export function TempCurve({
+  hours,
+  labelFor,
+  timeFor,
+}: {
+  hours: HourlyPeriod[];
+  labelFor: (tempF: number) => string;
+  timeFor?: (iso: string) => string;
+}) {
   const gid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const pts = useMemo(() => {
+  const [boxRef, width] = useElementWidth(540);
+
+  const drawn = useMemo(() => {
     if (hours.length < 2) return null;
     const temps = hours.map((h) => h.tempF);
     const min = Math.min(...temps);
     const max = Math.max(...temps);
     const span = Math.max(1, max - min);
-    const x = (i: number) => CURVE_PAD.left + (i / (hours.length - 1)) * (CURVE_W - CURVE_PAD.left - CURVE_PAD.right);
-    const y = (temp: number) => CURVE_PAD.top + (1 - (temp - min + span * 0.12) / (span * 1.24)) * (CURVE_H - CURVE_PAD.top - CURVE_PAD.bottom);
+    const x = (i: number) => CURVE_PAD.left + (i / (hours.length - 1)) * (width - CURVE_PAD.left - CURVE_PAD.right);
+    const y = (temp: number) =>
+      CURVE_PAD.top + (1 - (temp - min + span * 0.15) / (span * 1.3)) * (CURVE_H - CURVE_PAD.top - CURVE_PAD.bottom);
     const coords = temps.map((temp, i) => ({ x: x(i), y: y(temp), temp }));
     let d = `M ${coords[0].x} ${coords[0].y}`;
     for (let i = 0; i < coords.length - 1; i++) {
@@ -92,38 +126,53 @@ export function TempCurve({ hours, labelFor }: { hours: HourlyPeriod[]; labelFor
       const p1 = coords[i];
       const p2 = coords[i + 1];
       const p3 = coords[Math.min(coords.length - 1, i + 2)];
-      const c1x = p1.x + (p2.x - p0.x) / 6;
-      const c1y = p1.y + (p2.y - p0.y) / 6;
-      const c2x = p2.x - (p3.x - p1.x) / 6;
-      const c2y = p2.y - (p3.y - p1.y) / 6;
-      d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+      d += ` C ${p1.x + (p2.x - p0.x) / 6} ${p1.y + (p2.y - p0.y) / 6}, ${p2.x - (p3.x - p1.x) / 6} ${p2.y - (p3.y - p1.y) / 6}, ${p2.x} ${p2.y}`;
     }
-    const minIdx = temps.indexOf(min);
-    const maxIdx = temps.indexOf(max);
-    return { d, coords, min, max, minIdx, maxIdx };
-  }, [hours]);
+    return { d, coords, min, max, minIdx: temps.indexOf(min), maxIdx: temps.indexOf(max) };
+  }, [hours, width]);
 
-  if (!pts) return null;
-  const { d, coords, minIdx, maxIdx, min, max } = pts;
+  if (!drawn) return null;
+  const { d, coords, min, max, minIdx, maxIdx } = drawn;
   return (
-    <svg viewBox={`0 0 ${CURVE_W} ${CURVE_H}`} className="w-full" role="img" aria-label={`${labelFor(min)} – ${labelFor(max)}`} preserveAspectRatio="none" style={{ height: 110 }}>
-      <defs>
-        <linearGradient id={`tc-${gid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-      <path d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-${gid})`} />
-      <path d={d} fill="none" stroke="var(--color-accent-primary)" strokeWidth="2.5" strokeLinecap="round" />
-      {[{ i: maxIdx, temp: max }, { i: minIdx, temp: min }].map(({ i, temp }, k) => (
-        <g key={k}>
-          <circle cx={coords[i].x} cy={coords[i].y} r="4" fill="var(--color-accent-primary)" stroke="#fff" strokeWidth="1.6" />
-          <text x={coords[i].x} y={coords[i].y - 9} textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--color-text-primary)">
-            {labelFor(temp)}
-          </text>
-        </g>
-      ))}
-    </svg>
+    <div ref={boxRef} className="overflow-x-auto pb-1 [scrollbar-width:thin]">
+      <svg
+        width={width}
+        height={CURVE_H}
+        viewBox={`0 0 ${width} ${CURVE_H}`}
+        className="block"
+        role="img"
+        aria-label={`${labelFor(min)} – ${labelFor(max)}`}
+      >
+        <defs>
+          <linearGradient id={`tc-fill-${gid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.26" />
+            <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0.02" />
+          </linearGradient>
+          <linearGradient id={`tc-line-${gid}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#3E8BDC" />
+            <stop offset="45%" stopColor="var(--color-accent-primary)" />
+            <stop offset="100%" stopColor="#F59A3C" />
+          </linearGradient>
+        </defs>
+        <path d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-fill-${gid})`} />
+        <path d={d} fill="none" stroke={`url(#tc-line-${gid})`} strokeWidth="3" strokeLinecap="round" />
+        {coords.map((c, i) =>
+          i % 3 === 0 || i === minIdx || i === maxIdx ? (
+            <g key={i}>
+              <circle cx={c.x} cy={c.y} r={i === minIdx || i === maxIdx ? 4.5 : 3} fill="var(--color-bg-card)" stroke="var(--color-accent-primary)" strokeWidth="2" />
+              <text x={c.x} y={c.y - 10} textAnchor="middle" fontSize="12.5" fontWeight={i === minIdx || i === maxIdx ? 800 : 650} fill="var(--color-text-primary)">
+                {labelFor(c.temp)}
+              </text>
+              {timeFor && (
+                <text x={c.x} y={CURVE_H - 12} textAnchor="middle" fontSize="11" fill="var(--color-text-muted)">
+                  {timeFor(hours[i].start)}
+                </text>
+              )}
+            </g>
+          ) : null
+        )}
+      </svg>
+    </div>
   );
 }
 
@@ -131,25 +180,27 @@ export function TempCurve({ hours, labelFor }: { hours: HourlyPeriod[]; labelFor
 export function PrecipBars({ hours, timeFor }: { hours: HourlyPeriod[]; timeFor: (iso: string) => string }) {
   if (!hours.length) return null;
   return (
-    <div>
-      <div className="flex h-20 items-end gap-[3px]" aria-hidden="true">
+    <div className="overflow-x-auto pb-1 [scrollbar-width:thin]">
+     <div className="min-w-[540px]">
+      <div className="flex h-24 items-end gap-[3px]" aria-hidden="true">
         {hours.map((h) => {
           const pct = Math.max(0, Math.min(100, h.precipChance ?? 0));
           return (
             <div key={h.start} className="flex flex-1 flex-col items-center gap-1">
               <span className="text-[9px] font-semibold leading-none text-[var(--color-accent-primary)]">{pct >= 20 ? `${pct}%` : ''}</span>
-              <span className="w-full rounded-t bg-[var(--color-accent-primary)]/80" style={{ height: `${Math.max(2, (pct / 100) * 52)}px`, opacity: 0.35 + pct / 154 }} />
+              <span className="w-full rounded-t bg-[var(--color-accent-primary)]/80" style={{ height: `${Math.max(3, (pct / 100) * 64)}px`, opacity: 0.35 + pct / 154 }} />
             </div>
           );
         })}
       </div>
       <div className="mt-1 flex gap-[3px]" aria-hidden="true">
         {hours.map((h, i) => (
-          <span key={h.start} className="flex-1 text-center text-[9px] leading-none text-[var(--color-text-muted)]">
+          <span key={h.start} className="flex-1 whitespace-nowrap text-center text-[10px] leading-none text-[var(--color-text-muted)]">
             {i % 3 === 0 ? timeFor(h.start) : ''}
           </span>
         ))}
       </div>
+     </div>
     </div>
   );
 }

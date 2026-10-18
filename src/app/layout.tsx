@@ -120,6 +120,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="DOR101" />
         {/* Only same-origin data endpoints are prefetched; no third party is contacted. */}
+        {/* Address-bar search: browsers register Dorchester 101 as a search engine. */}
+        <link rel="search" type="application/opensearchdescription+xml" title="Dorchester 101" href="/opensearch.xml" />
         <link rel="prefetch" href="/api/news" />
         <link rel="prefetch" href="/api/notifications" />
         {/* The storm-warning banner renders on every page; warming its feed
@@ -182,6 +184,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   "Free winter coats and clothing directory",
                 ].join("; "),
                 publisher: { "@id": `${SITE_URL}/#org` },
+              },
+              {
+                // The sections a search result should offer as sitelinks.
+                // Names carry the phrases residents actually type.
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                name: "Dorchester 101 — main sections",
+                itemListElement: [
+                  { "@type": "SiteNavigationElement", position: 1, name: "Affordable housing in Dorchester", url: `${SITE_URL}/affordable-housing` },
+                  { "@type": "SiteNavigationElement", position: 2, name: "Food pantries open now", url: `${SITE_URL}/food` },
+                  { "@type": "SiteNavigationElement", position: 3, name: "Live MBTA map — buses & trains", url: `${SITE_URL}/map` },
+                  { "@type": "SiteNavigationElement", position: 4, name: "Boston weather & what to wear", url: `${SITE_URL}/weather` },
+                  { "@type": "SiteNavigationElement", position: 5, name: "Free winter coats & clothing", url: `${SITE_URL}/winter-clothing` },
+                  { "@type": "SiteNavigationElement", position: 6, name: "Directory of local help", url: `${SITE_URL}/directory` },
+                  { "@type": "SiteNavigationElement", position: 7, name: "Dorchester news", url: `${SITE_URL}/news` },
+                  { "@type": "SiteNavigationElement", position: 8, name: "Common questions (FAQ)", url: `${SITE_URL}/faq` },
+                ],
               },
             ]),
           }}

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+import { faqJsonLd } from "@/lib/jsonLd";
+import { FAQ_JSONLD } from "./faqData";
 
 export const metadata: Metadata = {
   title: "FAQ: housing, food help, tenant rights & transit in Dorchester",
@@ -12,5 +14,14 @@ export const metadata: Metadata = {
   },
 };
 export default function FaqLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      {/* FAQ rich-result data: the same answers the page itself shows. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd([...FAQ_JSONLD])) }}
+      />
+      {children}
+    </>
+  );
 }

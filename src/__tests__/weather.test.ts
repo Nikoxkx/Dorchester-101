@@ -10,6 +10,8 @@ import {
   buildDaySummaries,
   buildStyleTips,
   coldSignal,
+  dayPhase,
+  pickSpotlightTip,
   conditionFromText,
   degreesToCompass,
   feelsLikeF,
@@ -309,5 +311,71 @@ describe('style tips', () => {
     const order = { now: 0, today: 1, tonight: 2, week: 3 };
     const scopes = tips.map((tp) => order[tp.scope]);
     expect(scopes).toEqual([...scopes].sort((a, b) => a - b));
+  });
+});
+
+describe('day phase (which single tip the spotlight leads with)', () => {
+  const at = (iso: string) => new Date(iso);
+
+  it('uses the Boston clock when astronomy is missing', () => {
+    const payload = makePayload({});
+    expect(payload.astronomy).toBeNull();
+    expect(dayPhase(payload, at('2026-10-18T07:30:00-04:00'))).toBe('morning');
+    expect(dayPhase(payload, at('2026-10-18T13:00:00-04:00'))).toBe('midday');
+    expect(dayPhase(payload, at('2026-10-18T19:00:00-04:00'))).toBe('evening');
+    expect(dayPhase(payload, at('2026-10-18T23:30:00-04:00'))).toBe('night');
+    expect(dayPhase(payload, at('2026-10-18T02:00:00-04:00'))).toBe('night');
+  });
+
+  it('prefers real sunrise/sunset when the payload carries them', () => {
+    const payload = makePayload({
+      astronomy: { sunrise: '2026-10-18T07:05:00-04:00', sunset: '2026-10-18T18:08:00-04:00' },
+    });
+    expect(dayPhase(payload, at('2026-10-18T05:00:00-04:00'))).toBe('night');
+    expect(dayPhase(payload, at('2026-10-18T08:00:00-04:00'))).toBe('morning');
+    expect(dayPhase(payload, at('2026-10-18T13:00:00-04:00'))).toBe('midday');
+    expect(dayPhase(payload, at('2026-10-18T16:30:00-04:00'))).toBe('evening');
+    expect(dayPhase(payload, at('2026-10-18T20:00:00-04:00'))).toBe('night');
+  });
+
+  it('spotlight leads with the moment: morning cold in the morning, not the stacked list order', () => {
+    const payload = makePayload({ daysSpec: [[40, 26]] });
+    payload.current = { ...payload.current!, tempF: 30, feelsLikeF: 24 };
+    payload.hourly = payload.hourly.map((h) => ({ ...h, tempF: 30, feelsLikeF: 24 }));
+    const morning = pickSpotlightTip(payload, at('2026-10-18T07:30:00-04:00'));
+    expect(morning).not.toBeNull();
+    expect(['morningChill', 'heavyCoat', 'coat']).toContain(morning!.kind);
+  });
+
+  it('an evening read prefers tonight-scoped advice over the daytime lead', () => {
+    // Mild afternoon that turns cold at night: buildStyleTips orders
+    // now -> today -> tonight, but at 7 PM the spotlight must lead with
+    // tonight, because that is when the reader will be out in it.
+    const payload = makePayload({ daysSpec: [[62, 30]] });
+    payload.current = { ...payload.current!, tempF: 58, feelsLikeF: 58 };
+    payload.hourly = payload.hourly.map((h, i) => ({ ...h, tempF: i < 5 ? 58 : 33, feelsLikeF: i < 5 ? 58 : 33 }));
+    const evening = pickSpotlightTip(payload, at('2026-10-18T19:00:00-04:00'));
+    expect(evening).not.toBeNull();
+    expect(evening!.scope === 'tonight' || evening!.kind === 'eveningLayer' || evening!.kind === 'darkReflective').toBe(true);
+  });
+
+  it('safety always overrides the phase (storm tip wins at any hour)', () => {
+    const payload = makePayload({ daysSpec: [[55, 45]] });
+    payload.current = { ...payload.current!, tempF: 52, feelsLikeF: 52 };
+    payload.hourly = payload.hourly.map((h) => ({ ...h, tempF: 52, feelsLikeF: 52, kind: 'storm', precipChance: 90 }));
+    payload.alerts = [{
+      id: 'test-alert', event: 'Severe Thunderstorm Warning', severity: 'Severe', certainty: 'Observed',
+      urgency: 'Immediate', headline: null, description: '', instruction: null, senderName: 'NWS Boston',
+      onset: null, ends: null, expires: null, areas: 'Suffolk County', url: 'https://www.weather.gov',
+    }];
+    const spot = pickSpotlightTip(payload, at('2026-10-18T13:00:00-04:00'));
+    expect(spot?.kind).toBe('storm');
+  });
+
+  it('returns exactly one tip, and null only when there is nothing to say', () => {
+    const payload = makePayload({ daysSpec: [[70, 58]] });
+    const spot = pickSpotlightTip(payload, at('2026-10-18T12:00:00-04:00'));
+    expect(spot).not.toBeNull();
+    expect(buildStyleTips(payload, at('2026-10-18T12:00:00-04:00')).length).toBeGreaterThanOrEqual(1);
   });
 });

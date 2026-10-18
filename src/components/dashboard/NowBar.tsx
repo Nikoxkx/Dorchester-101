@@ -10,6 +10,7 @@ import { useNow } from '@/hooks/useNow';
 import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
+import { skyGradient } from '@/components/weather/WeatherVisuals';
 
 /**
  * The "right now" strip. The weather chip reads the shared NWS payload
@@ -67,72 +68,101 @@ export function NowBar() {
   const chipKind = current?.kind ?? hour0?.kind;
   const alertCount = weatherData?.alerts.length ?? 0;
 
+  const bostonClock = new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: BOSTON_TZ,
+  }).format(now);
+
+  const statLink =
+    'group flex min-w-0 items-center gap-2.5 rounded-2xl px-2.5 py-1.5 transition-colors hover:bg-white/40 dark:hover:bg-white/10';
+
   return (
     <div
       role="region"
-      aria-label="Dorchester live status bar"
-      className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 px-3.5 py-2 text-xs"
+      aria-label={t('dashboard.nowTitle')}
+      className="relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)]/85 px-3 py-2.5 shadow-[var(--shadow)] backdrop-blur-xl sm:px-4 drop-shadow-sm"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="inline-flex items-center gap-1.5 font-heading font-bold text-[var(--color-text-primary)]">
-          <span className="h-2 w-2 rounded-full bg-[var(--color-accent-green)]" aria-hidden="true" />
-          Dorchester now
+      {/* Ambient glow: the live sky, blurred, so the strip always matches the weather below it. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.16]"
+        style={{ background: chipKind ? skyGradient(chipKind, current?.isDay ?? hour0?.isDay ?? true) : undefined }}
+      />
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+        <span className="flex items-center gap-2.5 pe-1">
+          <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-accent-green)] opacity-60" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--color-accent-green)]" />
+          </span>
+          <span className="leading-tight">
+            <span className="block font-heading text-[13px] font-extrabold tracking-tight text-[var(--color-text-primary)]">{t('dashboard.nowTitle')}</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{bostonClock} · Boston</span>
+          </span>
         </span>
+
+        <span className="mx-1 hidden h-8 w-px bg-[var(--color-border-strong)]/60 sm:block" aria-hidden="true" />
 
         {chipTemp !== undefined && chipKind && (
           <Link
             href="/weather"
-            className="inline-flex items-center gap-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline"
+            className={statLink}
             aria-label={`${t('weather.homeTitle')}: ${tempText(chipTemp, unit, format.number)}, ${t(`weather.cond.${chipKind}` as never)}${alertCount > 0 ? ` · ${t('weather.alertsTitle')} (${format.number(alertCount)})` : ''}`}
           >
-            <ConditionIcon kind={chipKind} isDay={current?.isDay ?? hour0?.isDay ?? true} className="h-3.5 w-3.5 text-[var(--color-accent-primary)]" />
-            <strong className="font-mono">{tempText(chipTemp, unit, format.number)}</strong> {t(`weather.cond.${chipKind}` as never)}
-            {alertCount > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-secondary)] px-1.5 py-0.5 font-heading text-[10px] font-bold text-white">
-                <TriangleAlert className="h-3 w-3" aria-hidden="true" /> {format.number(alertCount)}
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white shadow-sm" style={{ background: skyGradient(chipKind, current?.isDay ?? hour0?.isDay ?? true) }} aria-hidden="true">
+              <ConditionIcon kind={chipKind} isDay={current?.isDay ?? hour0?.isDay ?? true} className="h-5 w-5" />
+            </span>
+            <span className="leading-tight">
+              <span className="block whitespace-nowrap font-heading text-[15px] font-extrabold text-[var(--color-text-primary)]">
+                {tempText(chipTemp, unit, format.number)}
+                {alertCount > 0 && (
+                  <span className="ms-1.5 inline-flex translate-y-[-1px] items-center gap-0.5 rounded-full bg-[var(--color-accent-secondary)] px-1.5 py-0.5 align-middle font-heading text-[10px] font-bold text-white">
+                    <TriangleAlert className="h-3 w-3" aria-hidden="true" /> {format.number(alertCount)}
+                  </span>
+                )}
               </span>
-            )}
+              <span className="block whitespace-nowrap text-[11px] font-medium text-[var(--color-text-secondary)]">{t(`weather.cond.${chipKind}` as never)}</span>
+            </span>
           </Link>
         )}
 
-        <Link
-          href="/food"
-          className="inline-flex items-center gap-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline"
-        >
-          <Utensils className="h-3.5 w-3.5 text-[var(--color-accent-green)]" aria-hidden="true" />
-          <strong>{openPantries}</strong> of {pantries.length} pantries open
+        <Link href="/food" className={statLink}>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-accent-green)]/15 text-[var(--color-accent-green)]" aria-hidden="true">
+            <Utensils className="h-4.5 w-4.5" />
+          </span>
+          <span className="leading-tight">
+            <span className="block whitespace-nowrap font-heading text-[15px] font-extrabold text-[var(--color-text-primary)]">
+              {format.number(openPantries)}<span className="text-[var(--color-text-muted)]"> / {format.number(pantries.length)}</span>
+            </span>
+            <span className="block whitespace-nowrap text-[11px] font-medium text-[var(--color-text-secondary)]">{t('dashboard.pantriesLabel')}</span>
+          </span>
         </Link>
 
-        <Link
-          href="/map"
-          className="inline-flex items-center gap-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline"
-        >
-          <AlertTriangle
-            className={
-              mbtaAlerts > 0
-                ? 'h-3.5 w-3.5 text-[var(--color-accent-amber)]'
-                : 'h-3.5 w-3.5 text-[var(--color-text-muted)]'
-            }
-            aria-hidden="true"
-          />
-          <strong>{mbtaAlerts}</strong> T {mbtaAlerts === 1 ? 'alert' : 'alerts'}
+        <Link href="/map" className={statLink}>
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${mbtaAlerts > 0 ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)]' : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'}`} aria-hidden="true">
+            <AlertTriangle className="h-4.5 w-4.5" />
+          </span>
+          <span className="leading-tight">
+            <span className="block whitespace-nowrap font-heading text-[15px] font-extrabold text-[var(--color-text-primary)]">{format.number(mbtaAlerts)}</span>
+            <span className="block whitespace-nowrap text-[11px] font-medium text-[var(--color-text-secondary)]">{t('dashboard.tAlerts')}</span>
+          </span>
         </Link>
 
         {offline && (
-          <span className="inline-flex items-center gap-1 font-semibold text-[var(--color-accent-amber)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-amber)]/15 px-2.5 py-1.5 text-xs font-bold text-[var(--color-accent-amber)]">
             <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
-            Offline mode
+            {t('offline.title')}
           </span>
         )}
-      </div>
 
-      <Link
-        href="/map"
-        className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-primary)]/12 px-2.5 py-1 font-heading text-[11px] font-bold text-[var(--color-accent-primary)] transition-colors hover:bg-[var(--color-accent-primary)]/20"
-      >
-        <MapPin className="h-3 w-3" aria-hidden="true" />
-        Live Map
-      </Link>
+        <Link
+          href="/map"
+          className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--color-accent-primary),var(--color-accent-secondary))] px-4 py-2.5 font-heading text-[13px] font-extrabold text-white shadow-[var(--shadow)] transition-transform hover:scale-[1.03] active:scale-95"
+        >
+          <MapPin className="h-4 w-4" aria-hidden="true" />
+          {t('dashboard.liveNowMap')}
+        </Link>
+      </div>
     </div>
   );
 }

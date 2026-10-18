@@ -748,6 +748,60 @@ export function buildStyleTips(payload: WeatherPayload, now = new Date()): Style
 }
 
 /** True when the live weather says a warm coat is urgent — drives CTAs. */
+export type DayPhase = 'morning' | 'midday' | 'evening' | 'night';
+
+/**
+ * Which part of the day the reader is standing in, Boston time. Real
+ * sunrise/sunset win when the payload carries them; otherwise the Boston
+ * wall clock decides. This is what lets one advice surface show the
+ * morning's tip in the morning and tonight's after dark.
+ */
+export function dayPhase(payload: WeatherPayload, now = new Date()): DayPhase {
+  const hour = hourInBoston(now);
+  const sunrise = payload.astronomy?.sunrise ? new Date(payload.astronomy.sunrise).getTime() : null;
+  const sunset = payload.astronomy?.sunset ? new Date(payload.astronomy.sunset).getTime() : null;
+  const t = now.getTime();
+  if (sunrise && sunset && !Number.isNaN(sunrise) && !Number.isNaN(sunset)) {
+    if (t < sunrise - 30 * 60_000 || t > sunset + 45 * 60_000) return 'night';
+    if (t < sunrise + 4.5 * 3600_000) return 'morning';
+    if (t > sunset - 3.5 * 3600_000) return 'evening';
+    return 'midday';
+  }
+  if (hour >= 5 && hour < 11) return 'morning';
+  if (hour >= 11 && hour < 15) return 'midday';
+  if (hour >= 15 && hour < 21) return 'evening';
+  return 'night';
+}
+
+/**
+ * The single most useful tip *for this moment*: safety alerts first, then
+ * the tip written for the reader's part of the day, at the temperature it
+ * actually is right now (the underlying tips already run on feels-like).
+ * One tip, shown one at a time — the full set stays one tap away on
+ * /weather.
+ */
+export function pickSpotlightTip(payload: WeatherPayload, now = new Date()): StyleTip | null {
+  const tips = buildStyleTips(payload, now);
+  if (!tips.length) return null;
+  const safety = tips.find((tip) => tip.kind === 'storm' || tip.kind === 'freezingRain');
+  if (safety) return safety;
+
+  const phase = dayPhase(payload, now);
+  const byKind = (kinds: TipKind[]) => tips.find((tip) => kinds.includes(tip.kind));
+  const byScope = (scopes: StyleTip['scope'][]) => tips.find((tip) => scopes.includes(tip.scope));
+
+  switch (phase) {
+    case 'morning':
+      return byKind(['morningChill', 'heavyCoat', 'coat']) ?? byScope(['now', 'today']) ?? tips[0];
+    case 'midday':
+      return byScope(['now']) ?? byKind(['layers', 'rainShell', 'umbrella']) ?? byScope(['today']) ?? tips[0];
+    case 'evening':
+      return byKind(['eveningLayer', 'darkReflective']) ?? byScope(['tonight', 'now']) ?? tips[0];
+    case 'night':
+      return byScope(['tonight']) ?? byKind(['heavyCoat', 'coat', 'coldWeek']) ?? byScope(['now']) ?? tips[0];
+  }
+}
+
 export function coldSignal(payload: WeatherPayload, now = new Date()): boolean {
   const feels = payload.current?.feelsLikeF ?? payload.hourly.find((h) => new Date(h.end).getTime() > now.getTime())?.feelsLikeF;
   if (feels !== undefined && feels <= 38) return true;

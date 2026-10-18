@@ -20,6 +20,7 @@ import { MapCanvas, type MapPin, type MapStyle, type MapStop, type MapVehicle, t
 import { Shield } from './Shield';
 import { CategoryPin } from './CategoryPin';
 import { PlaceSheet } from './PlaceSheet';
+import { VehicleSheet } from './VehicleSheet';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore, useReduceMotion } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
@@ -323,6 +324,28 @@ export function DorchesterMap() {
     [vehicles, selectedVehicleId]
   );
 
+
+  const fittedVehicleRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedVehicle) {
+      fittedVehicleRef.current = null;
+      return;
+    }
+    const key = `${selectedVehicle.id}:${selectedVehicle.routeId}`;
+    if (fittedVehicleRef.current === key) return;
+    const shape = shapes.find((sh) => sh.routeId === selectedVehicle.routeId);
+    const points = shape?.paths.flat() ?? [];
+    const map = mapRef.current;
+    if (!map || points.length < 2) return;
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const [lat, lng] of [...points, [selectedVehicle.lat, selectedVehicle.lng] as [number, number]]) {
+      minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+      minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
+    }
+    fittedVehicleRef.current = key;
+    map.flyToBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [52, 52], maxZoom: 15, duration: 0.7 });
+  }, [selectedVehicle, shapes]);
+
   const selectVehicle = useCallback((id: string) => {
     setSelectedVehicleId(id);
     setSelectedPinId(null);
@@ -333,7 +356,10 @@ export function DorchesterMap() {
         const bus = DORCHESTER_BUS_ROUTES.find((b) => b.id === found.routeId);
         if (bus) setFocus({ kind: 'bus', routeId: found.routeId });
         else if (RAIL_ROUTE_IDS.includes(found.routeId)) setFocus({ kind: 'rail', routeId: found.routeId });
-        if (found.stopId) setSelectedStopId(found.stopId);
+        // The full route takes over the map (emphasis + fit below) and the
+        // VehicleSheet opens; the stop sheet stays out of the way until the
+        // rider taps a stop in the sheet's "more options" list.
+        setSelectedStopId(null);
       }
       return current;
     });
@@ -351,6 +377,7 @@ export function DorchesterMap() {
       }
       setSelectedStopId(id);
       setSelectedPinId(null);
+      setSelectedVehicleId(null);
       const stop = stops.find((s) => s.id === id);
       if (stop) setCamera({ lat: stop.lat, lng: stop.lng, token: Date.now() });
       const params = new URLSearchParams(searchParams.toString());
@@ -620,7 +647,7 @@ export function DorchesterMap() {
       {/* ── map + details ───────────────────────────────────────── */}
       <div className="grid items-stretch gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="dor101-map-canvas-box relative min-h-[20rem] overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
-          <div className={cn('relative w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')} data-sheet-open={selectedPinId || selectedStopId ? 'true' : undefined}>
+          <div className={cn('relative w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')} data-sheet-open={selectedPinId || selectedStopId || selectedVehicleId ? 'true' : undefined}>
             {!mounted ? (
               <div className="flex h-full items-end bg-[var(--color-bg-tertiary)] p-4">
                 <div className="skeleton h-full w-full rounded-xl opacity-70" />
@@ -633,6 +660,7 @@ export function DorchesterMap() {
                 pins={pins}
                 vehicles={mapVehicles}
                 selectedVehicleId={selectedVehicleId}
+                emphasisRouteId={selectedVehicle?.routeId ?? null}
                 onSelectVehicle={selectVehicle}
                 selectedStopId={selectedStopId}
                 selectedPinId={selectedPinId}
@@ -648,13 +676,20 @@ export function DorchesterMap() {
               />
             )}
             <PlaceSheet
-              target={selectedPinId ? { kind: 'place', id: selectedPinId } : selectedStopId ? { kind: 'stop', id: selectedStopId } : null}
+              target={selectedVehicleId ? null : selectedPinId ? { kind: 'place', id: selectedPinId } : selectedStopId ? { kind: 'stop', id: selectedStopId } : null}
               arrivals={liveArrivals}
               arrivalsLive={transitSource === 'mbta-live'}
               userPosition={userPosition}
               onClose={clearSelection}
               onSelectStop={selectStop}
               onLocate={locate}
+            />
+            <VehicleSheet
+              vehicle={selectedVehicle}
+              stops={stops}
+              now={now}
+              onClose={() => setSelectedVehicleId(null)}
+              onSelectStop={selectStop}
             />
           </div>
 
@@ -828,58 +863,6 @@ export function DorchesterMap() {
               <p className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-muted)]">{t('map.busFeedNote')}</p>
             )}
           </section>
-
-          {selectedVehicle && (
-            <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 p-3" aria-live="polite" aria-label={t('map.liveVehicles')}>
-              <header className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Shield label={selectedVehicle.routeLabel} mode={SHIELD_MODE[selectedVehicle.mode]} color={selectedVehicle.routeColor} />
-                  <div>
-                    <h2 className="font-heading text-sm font-bold leading-tight">
-                      {t('map.vehicle', { id: selectedVehicle.label || selectedVehicle.id })}
-                    </h2>
-                    <p className="text-[11px] leading-snug text-[var(--color-text-muted)]">
-                      {t('map.updatedAgo', { seconds: String(Math.max(0, Math.round((now - new Date(selectedVehicle.updatedAt).getTime()) / 1000))) })}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedVehicleId(null)}
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]"
-                  aria-label={t('common.close')}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </header>
-              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                {selectedVehicle.stopName && (
-                  <div className="col-span-2">
-                    <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.nextStop')}</dt>
-                    <dd className="font-heading font-bold">
-                      {selectedVehicle.stopStatus === 'at-stop' ? t('map.statusAtStop') : t('map.statusInTransit')}{' '}
-                      <span dir="auto">{selectedVehicle.stopName}</span>
-                    </dd>
-                  </div>
-                )}
-                {selectedVehicle.speedMph != null && (
-                  <div>
-                    <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.speed')}</dt>
-                    <dd className="font-heading font-bold tabular-nums">{selectedVehicle.speedMph} mph</dd>
-                  </div>
-                )}
-                {selectedVehicle.occupancy && (
-                  <div>
-                    <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.occupancy')}</dt>
-                    <dd className="font-heading font-bold">
-                      {t(selectedVehicle.occupancy === 'many-seats' ? 'map.occupancy.manySeats' : selectedVehicle.occupancy === 'few-seats' ? 'map.occupancy.fewSeats' : 'map.occupancy.full')}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-              {!selectedVehicle.stopName && <p className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-muted)]">{t('map.tapVehicle')}</p>}
-            </section>
-          )}
 
           {stops.length > 0 && (
             <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 p-3" aria-label={t('map.routeStops')}>

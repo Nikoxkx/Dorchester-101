@@ -1,14 +1,16 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, RefreshCw, TriangleAlert } from 'lucide-react';
+import { useReduceMotion } from '@/stores/appStore';
 import { useWeather } from '@/hooks/useWeather';
 import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
-import { buildStyleTips, type WeatherPayload } from '@/lib/weather';
+import { pickSpotlightTip, type HourlyPeriod, type WeatherPayload } from '@/lib/weather';
 import { ConditionIcon, TempUnitToggle, tempText, tipText, useTempUnit, type TempUnit } from './shared';
 import { PrecipBars, TempCurve, TempRangeBar, skyGradient } from './WeatherVisuals';
-import { StyleTips } from './StyleTips';
+import { WearSpotlight } from './WearSpotlight';
 
 /**
  * The homepage weather section, Apple-Weather-shaped: a sky hero whose
@@ -91,7 +93,7 @@ export function WeatherPanel() {
           <div className="grid gap-6 px-5 py-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
             <div className="min-w-0">
               <h3 className="font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
-              <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} />
+              <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
               {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
                 <>
                   <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
@@ -102,11 +104,85 @@ export function WeatherPanel() {
               )}
               <WeekList payload={data} unit={unit} />
             </div>
-            <StyleTips payload={data} unit={unit} limit={4} />
+            <WearSpotlight payload={data} unit={unit} />
           </div>
         </>
       )}
     </section>
+  );
+}
+
+
+/**
+ * The hour-by-hour ribbon: 24 hours side-scrolling on glass chips with
+ * snap, edge fades, mouse drag, arrow paging on larger screens, and a
+ * "back to now" pill once you have scrolled away from the present —
+ * compact, but nothing is ever compressed to fit; it scrolls instead.
+ */
+function HourlyStrip({ hours, unit }: { hours: HourlyPeriod[]; unit: TempUnit }) {
+  const { t, format } = useI18n();
+  const reduceMotion = useReduceMotion();
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const [away, setAway] = useState(false);
+  const drag = useRef({ down: false, startX: 0, startLeft: 0 });
+
+  const page = (dir: 1 | -1) => {
+    const el = scroller.current;
+    if (el) el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.8), behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  return (
+    <div className="relative mt-4">
+      <div
+        ref={scroller}
+        onScroll={() => setAway((scroller.current?.scrollLeft ?? 0) > 90)}
+        onPointerDown={(e) => {
+          if (e.pointerType !== 'mouse') return;
+          drag.current = { down: true, startX: e.clientX, startLeft: scroller.current?.scrollLeft ?? 0 };
+        }}
+        onPointerMove={(e) => {
+          if (drag.current.down && scroller.current) scroller.current.scrollLeft = drag.current.startLeft - (e.clientX - drag.current.startX);
+        }}
+        onPointerUp={() => (drag.current.down = false)}
+        onPointerCancel={() => (drag.current.down = false)}
+        onPointerLeave={() => (drag.current.down = false)}
+        className="flex cursor-grab snap-x gap-2 overflow-x-auto px-0.5 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          maskImage: 'linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 40px), transparent)',
+          WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 40px), transparent)',
+        }}
+        aria-label={t('weather.hourly')}
+      >
+        {hours.map((h, i) => (
+          <div
+            key={h.start}
+            className={`flex w-[4.3rem] shrink-0 select-none snap-start flex-col items-center gap-1 rounded-2xl px-2 py-2.5 text-center shadow-sm backdrop-blur-md ring-1 ${i === 0 ? 'bg-white/25 ring-white/40' : 'bg-white/15 ring-white/20'}`}
+          >
+            <span className="whitespace-nowrap text-[11px] font-semibold text-white/90">{i === 0 ? t('weather.now') : format.time(h.start)}</span>
+            <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5" />
+            <span className="font-heading text-sm font-bold">{tempText(h.tempF, unit, format.number)}</span>
+            <span className={`text-[10px] font-semibold ${(h.precipChance ?? 0) >= 10 ? 'text-sky-100' : 'text-transparent'}`}>
+              {(h.precipChance ?? 0) >= 10 ? format.percent((h.precipChance ?? 0) / 100, 0) : '0%'}
+            </span>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => page(-1)} aria-label="Earlier hours" className="absolute inset-y-0 start-0 my-auto hidden h-8 w-8 place-items-center rounded-full bg-white/20 ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/35 sm:grid">
+        <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+      </button>
+      <button type="button" onClick={() => page(1)} aria-label="Later hours" className="absolute inset-y-0 end-0 my-auto hidden h-8 w-8 place-items-center rounded-full bg-white/20 ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white/35 sm:grid">
+        <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+      </button>
+      {away && (
+        <button
+          type="button"
+          onClick={() => scroller.current?.scrollTo({ left: 0, behavior: reduceMotion ? 'auto' : 'smooth' })}
+          className="absolute -top-2.5 end-2 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-heading text-[11px] font-extrabold text-[var(--color-accent-primary)] shadow-lg transition-transform active:scale-95"
+        >
+          <LocateFixed className="h-3 w-3" aria-hidden="true" /> {t('weather.now')}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -124,8 +200,8 @@ function SkyHero({ payload, unit, now, updatedLine }: { payload: WeatherPayload;
   const kind = cur?.kind ?? hour0?.kind ?? 'unknown';
   const isDay = cur?.isDay ?? hour0?.isDay ?? true;
   const today = payload.days[0];
-  const hours12 = nextHours(payload, now, 12);
-  const topTip = buildStyleTips(payload, new Date(now))[0];
+  const hours24 = nextHours(payload, now, 24);
+  const topTip = pickSpotlightTip(payload, new Date(now));
 
   return (
     <div className="relative px-5 pb-5 pt-6 text-white md:px-6" style={{ background: skyGradient(kind, isDay) }}>
@@ -165,16 +241,7 @@ function SkyHero({ payload, unit, now, updatedLine }: { payload: WeatherPayload;
         )}
         {updatedLine && <p className="mt-1 text-[11px] text-white/75">{updatedLine}</p>}
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label={t('weather.hourly')}>
-          {hours12.map((h, i) => (
-            <div key={h.start} className="flex w-[4.1rem] shrink-0 flex-col items-center gap-1 rounded-2xl bg-white/15 px-2 py-2 text-center shadow-sm backdrop-blur-md ring-1 ring-white/20">
-              <span className="whitespace-nowrap text-[11px] font-semibold text-white/90">{i === 0 ? t('weather.now') : format.time(h.start)}</span>
-              <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5" />
-              <span className="font-heading text-sm font-bold">{tempText(h.tempF, unit, format.number)}</span>
-              {(h.precipChance ?? 0) >= 10 && <span className="text-[10px] font-semibold text-sky-100">{format.percent((h.precipChance ?? 0) / 100, 0)}</span>}
-            </div>
-          ))}
-        </div>
+        <HourlyStrip hours={hours24} unit={unit} />
       </div>
     </div>
   );

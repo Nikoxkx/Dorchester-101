@@ -8,7 +8,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore, useReduceMotion } from '@/stores/appStore';
-import { buildStyleTips, localDateKey } from '@/lib/weather';
+import { buildStyleTips, localDateKey, pickSpotlightTip } from '@/lib/weather';
 import { TIP_ICON, tipText, tipsNeedCoat, useTempUnit } from './shared';
 
 /**
@@ -63,7 +63,7 @@ export function WearTodayToast() {
     if (!data) return null;
     const at = new Date(now);
     const tips = buildStyleTips(data, at);
-    const top = tips[0];
+    const top = pickSpotlightTip(data, at);
     if (!top) return null;
     const band = Math.round(feelsNow / 5);
     const sig = `${localDateKey(at.toISOString())}|${top.kind}|${band}`;

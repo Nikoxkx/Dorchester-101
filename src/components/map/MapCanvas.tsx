@@ -125,6 +125,7 @@ export function MapCanvas({
   pins,
   vehicles,
   selectedVehicleId,
+  emphasisRouteId,
   selectedStopId,
   selectedPinId,
   userPosition,
@@ -141,6 +142,8 @@ export function MapCanvas({
   pins: MapPin[];
   vehicles: MapVehicle[];
   selectedVehicleId: string | null;
+  /** When set (a vehicle is tapped), this route glows at full strength and every other route dims, so the full route reads at a glance. */
+  emphasisRouteId?: string | null;
   selectedStopId: string | null;
   selectedPinId: string | null;
   userPosition: [number, number] | null;
@@ -181,17 +184,22 @@ export function MapCanvas({
 
       {shapes.flatMap((shape) => {
         const color = ROUTE_HEX[shape.routeId] ?? '#7A6B5D';
+        const emphasized = emphasisRouteId != null && shape.routeId === emphasisRouteId;
+        const dimmed = emphasisRouteId != null && !emphasized;
         return shape.paths.map((path, index) => (
           <Fragment key={`${shape.routeId}-${index}`}>
-            <Polyline positions={path} pathOptions={{ color: '#1B2430', opacity: 0.55, weight: 11, lineCap: 'round', className: 'route-casing' }} interactive={false} />
-            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.95, weight: 8.5, lineCap: 'round', className: 'route-casing' }} interactive={false} />
+            {emphasized && (
+              <Polyline positions={path} pathOptions={{ color, opacity: 0.22, weight: 16, lineCap: 'round', className: 'route-glow' }} interactive={false} />
+            )}
+            <Polyline positions={path} pathOptions={{ color: '#1B2430', opacity: dimmed ? 0.18 : 0.55, weight: emphasized ? 12.5 : 11, lineCap: 'round', className: 'route-casing' }} interactive={false} />
+            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: dimmed ? 0.4 : 0.95, weight: emphasized ? 10 : 8.5, lineCap: 'round', className: 'route-casing' }} interactive={false} />
             <Polyline
               positions={path}
-              pathOptions={{ color, opacity: 1, weight: 5.5, lineCap: 'round', className: cn('route-core', shape.source !== 'mbta-live' && 'route-timetable') }}
+              pathOptions={{ color, opacity: dimmed ? 0.3 : 1, weight: emphasized ? 7 : 5.5, lineCap: 'round', className: cn('route-core', shape.source !== 'mbta-live' && 'route-timetable') }}
               eventHandlers={{ click: () => onSelectStop(`route:${shape.routeId}`) }}
             />
-            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.35, weight: 1.5, lineCap: 'round', className: 'route-highlight' }} interactive={false} />
-            {shape.source === 'mbta-live' && (
+            {!dimmed && <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.35, weight: 1.5, lineCap: 'round', className: 'route-highlight' }} interactive={false} />}
+            {(shape.source === 'mbta-live' || emphasized) && !dimmed && (
               <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.85, weight: 3, className: 'route-flow' }} interactive={false} />
             )}
           </Fragment>
