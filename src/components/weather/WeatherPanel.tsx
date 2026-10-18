@@ -1,26 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CloudSun, Droplets, RefreshCw, TriangleAlert, Wind } from 'lucide-react';
+import { ArrowRight, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useWeather } from '@/hooks/useWeather';
+import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
-import { ConditionIcon, TempUnitToggle, tempText, useTempUnit, type TempUnit } from './shared';
+import { buildStyleTips, type WeatherPayload } from '@/lib/weather';
+import { ConditionIcon, TempUnitToggle, tempText, tipText, useTempUnit, type TempUnit } from './shared';
+import { PrecipBars, TempCurve, TempRangeBar, skyGradient } from './WeatherVisuals';
 import { StyleTips } from './StyleTips';
-import type { WeatherPayload } from '@/lib/weather';
 
 /**
- * The homepage weather section: current conditions, the next 12 hours, the
- * week at a glance, and what to wear — all from the one shared payload that
- * also drives the warning banner, so nothing on the page disagrees.
+ * The homepage weather section, Apple-Weather-shaped: a sky hero whose
+ * gradient is chosen by the live condition, a glass hour-by-hour strip, a
+ * 24-hour temperature curve, precipitation bars, and the 7-day list with
+ * temperature-range bars — above the what-to-wear advice. Every number is
+ * the shared NWS payload (`useWeather`), the same one driving the storm
+ * banner and the NowBar chip, so the site can never show two weathers.
  *
- * Honesty rules carried over from the feed: a cached payload is labelled with
- * its age, the publisher is always named, and total failure shows an honest
- * "unavailable" box with a retry button rather than stale numbers.
+ * Honesty rules unchanged: cached readings are labelled with their age,
+ * the publisher is named, and total failure shows a retry box, not numbers.
  */
 export function WeatherPanel() {
   const { t, format } = useI18n();
   const { data, loading, unavailable, fromCacheAt, refresh } = useWeather();
   const [unit, setUnit] = useTempUnit();
+  const now = useNow(60_000);
 
   const updatedLine = data
     ? fromCacheAt
@@ -29,159 +34,177 @@ export function WeatherPanel() {
     : null;
 
   return (
-    <section aria-labelledby="home-weather-title" className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 shadow-[var(--shadow)] md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="home-weather-title" className="flex items-center gap-2 font-heading text-xl font-extrabold tracking-tight">
-          <CloudSun className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" />
-          {t('weather.homeTitle')}
-        </h2>
-        <div className="flex items-center gap-2">
-          <TempUnitToggle unit={unit} onChange={setUnit} />
-          <button
-            type="button"
-            onClick={refresh}
-            className="rounded-full border border-[var(--color-border)] p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
-            aria-label={t('weather.retry')}
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-          </button>
-          <Link href="/weather" className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[var(--color-accent-primary)] hover:underline">
-            {t('weather.viewFull')} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-          </Link>
-        </div>
-      </div>
-
+    <section aria-labelledby="home-weather-title" className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow)]">
       {loading && !data && (
-        <div className="mt-4 space-y-3" aria-busy="true" aria-label={t('weather.loading')}>
-          <div className="h-16 w-48 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-bg-tertiary)]" />
+        <div className="space-y-3 p-6" aria-busy="true" aria-label={t('weather.loading')}>
+          <div className="h-40 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-bg-tertiary)]" />
           <div className="h-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-bg-tertiary)]" />
         </div>
       )}
 
       {unavailable && (
-        <div className="mt-4 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] p-4">
-          <p className="text-sm text-[var(--color-text-secondary)]">{t('weather.unavailable')}</p>
-          <button type="button" onClick={refresh} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3.5 py-1.5 font-heading text-sm font-bold text-white">
-            <RefreshCw className="h-4 w-4" aria-hidden="true" /> {t('weather.retry')}
-          </button>
+        <div className="p-6">
+          <h2 id="home-weather-title" className="font-heading text-xl font-extrabold tracking-tight">{t('weather.homeTitle')}</h2>
+          <div className="mt-3 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] p-4">
+            <p className="text-sm text-[var(--color-text-secondary)]">{t('weather.unavailable')}</p>
+            <button type="button" onClick={refresh} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3.5 py-1.5 font-heading text-sm font-bold text-white">
+              <RefreshCw className="h-4 w-4" aria-hidden="true" /> {t('weather.retry')}
+            </button>
+          </div>
         </div>
       )}
 
       {data && (
         <>
-          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{updatedLine}</p>
+          <SkyHero payload={data} unit={unit} now={now} updatedLine={updatedLine} />
+          <div className="flex items-center justify-between gap-2 px-5 pt-4 md:px-6">
+            <p className="text-xs text-[var(--color-text-muted)]">{updatedLine}</p>
+            <div className="flex items-center gap-2">
+              <TempUnitToggle unit={unit} onChange={setUnit} />
+              <button
+                type="button"
+                onClick={refresh}
+                className="rounded-full border border-[var(--color-border)] p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
+                aria-label={t('weather.retry')}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              </button>
+              <Link href="/weather" className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[var(--color-accent-primary)] hover:underline">
+                {t('weather.viewFull')} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+
           {data.alerts.length > 0 ? (
-            <Link
-              href="/weather#alerts"
-              className="mt-3 flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-accent-secondary)]/40 bg-[var(--color-accent-secondary)]/10 px-3 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-accent-secondary)]/15"
-            >
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent-secondary)]" aria-hidden="true" />
-              <span>
-                {t('weather.alertsTitle')}: {data.alerts.map((a) => a.event).join(' · ')}
-              </span>
-            </Link>
+            <div className="px-5 pt-3 md:px-6">
+              <Link href="/weather#alerts" className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-accent-secondary)]/40 bg-[var(--color-accent-secondary)]/10 px-3 py-2.5 text-sm font-semibold hover:bg-[var(--color-accent-secondary)]/15">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent-secondary)]" aria-hidden="true" />
+                <span>{t('weather.alertsTitle')}: {data.alerts.map((a) => a.event).join(' · ')}</span>
+              </Link>
+            </div>
           ) : data.alertsStatus === 'unavailable' ? (
-            <p className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-xs text-[var(--color-text-secondary)]">
+            <p className="mx-5 mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-xs text-[var(--color-text-secondary)] md:mx-6">
               {t('weather.alertsUnavailable')}
             </p>
           ) : null}
 
-          <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-            <CurrentAndHours payload={data} unit={unit} />
+          <div className="grid gap-6 px-5 py-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+            <div className="min-w-0">
+              <h3 className="font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
+              <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} />
+              {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
+                <>
+                  <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
+                  <div className="mt-1">
+                    <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} />
+                  </div>
+                </>
+              )}
+              <WeekList payload={data} unit={unit} />
+            </div>
             <StyleTips payload={data} unit={unit} limit={4} />
           </div>
-
-          <WeekStrip payload={data} unit={unit} />
         </>
       )}
     </section>
   );
 }
 
-function CurrentAndHours({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }) {
+function nextHours(payload: WeatherPayload, now: number, count: number) {
+  const readAt = Math.max(now, 0);
+  return payload.hourly.filter((h) => new Date(h.end).getTime() > readAt - 1).slice(0, count);
+}
+
+function SkyHero({ payload, unit, now, updatedLine }: { payload: WeatherPayload; unit: TempUnit; now: number; updatedLine: string | null }) {
   const { t, format } = useI18n();
-  // Filter against the payload's own assembly time: pure, and correct —
-  // "the next 12 hours" means from when this forecast was read.
-  const now = new Date(payload.fetchedAt).getTime();
-  const today = payload.days[0];
-  const next12 = payload.hourly.filter((h) => new Date(h.end).getTime() > now).slice(0, 12);
   const cur = payload.current;
-  const hour0 = next12[0];
-  const displayTemp = cur?.tempF ?? hour0?.tempF;
-  const displayFeels = cur?.feelsLikeF ?? hour0?.feelsLikeF;
-  const displayKind = cur?.kind ?? hour0?.kind ?? 'unknown';
-  const displayDay = cur?.isDay ?? hour0?.isDay ?? true;
+  const hour0 = nextHours(payload, now, 1)[0];
+  const temp = cur?.tempF ?? hour0?.tempF;
+  const feels = cur?.feelsLikeF ?? hour0?.feelsLikeF;
+  const kind = cur?.kind ?? hour0?.kind ?? 'unknown';
+  const isDay = cur?.isDay ?? hour0?.isDay ?? true;
+  const today = payload.days[0];
+  const hours12 = nextHours(payload, now, 12);
+  const topTip = buildStyleTips(payload, new Date(now))[0];
 
   return (
-    <div>
-      <div className="flex items-center gap-4">
-        <ConditionIcon kind={displayKind} isDay={displayDay} className="h-14 w-14 shrink-0 text-[var(--color-accent-primary)]" />
-        <div>
-          {displayTemp !== undefined && (
-            <p className="font-heading text-5xl font-extrabold leading-none tracking-tight">{tempText(displayTemp, unit, format.number)}</p>
-          )}
-          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-            {displayFeels !== undefined && `${t('weather.feelsLike', { temp: tempText(displayFeels, unit, format.number) })} · `}
-            {t(`weather.cond.${displayKind}` as never)}
-          </p>
-          {today && today.highF != null && today.lowF != null && (
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {t('weather.highLow', { high: tempText(today.highF, unit, format.number), low: tempText(today.lowF, unit, format.number) })}
+    <div className="relative px-5 pb-5 pt-6 text-white md:px-6" style={{ background: skyGradient(kind, isDay) }}>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(255,255,255,0.28),transparent_55%)]" aria-hidden="true" />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 id="home-weather-title" className="font-heading text-lg font-bold leading-tight drop-shadow-sm">
+              {t('weather.homeTitle')}
+            </h2>
+            <p className="text-xs font-medium text-white/85">{format.date(new Date(now), 'long')}</p>
+          </div>
+          <ConditionIcon kind={kind} isDay={isDay} className="h-11 w-11 drop-shadow" />
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-end gap-x-5 gap-y-1">
+          {temp !== undefined && (
+            <p className="font-heading text-[5.25rem] font-extralight leading-[0.95] tracking-tighter drop-shadow-md" aria-label={tempText(temp, unit, format.number)}>
+              {format.number(Math.round(unit === 'F' ? temp : ((temp - 32) * 5) / 9))}°
             </p>
           )}
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
-            {cur?.windMph != null && (
-              <span className="inline-flex items-center gap-1">
-                <Wind className="h-3.5 w-3.5" aria-hidden="true" />
-                {t('weather.wind')} {format.number(Math.round(cur.windMph))} mph{cur.windDir ? ` ${cur.windDir}` : ''}
-                {cur.windGustMph ? ` · ${t('weather.gusts', { speed: `${format.number(Math.round(cur.windGustMph))} mph` })}` : ''}
-              </span>
+          <div className="pb-3">
+            <p className="font-heading text-base font-bold drop-shadow-sm">{t(`weather.cond.${kind}` as never)}</p>
+            {feels !== undefined && <p className="text-sm text-white/90">{t('weather.feelsLike', { temp: tempText(feels, unit, format.number) })}</p>}
+            {today && today.highF != null && today.lowF != null && (
+              <p className="text-sm font-semibold text-white/95">
+                H: {tempText(today.highF, unit, format.number)}&nbsp;&nbsp;L: {tempText(today.lowF, unit, format.number)}
+              </p>
             )}
-            {cur?.humidity != null && (
-              <span className="inline-flex items-center gap-1">
-                <Droplets className="h-3.5 w-3.5" aria-hidden="true" /> {format.percent(cur.humidity / 100, 0)}
-              </span>
-            )}
-            {cur?.observedAt && <span>{t('weather.observedAt', { station: cur.stationName, time: format.time(cur.observedAt) })}</span>}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label={t('weather.hourly')}>
-        {next12.map((h) => (
-          <div key={h.start} className="flex w-[4.25rem] shrink-0 flex-col items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-2 text-center">
-            <span className="whitespace-nowrap text-[11px] font-semibold text-[var(--color-text-secondary)]">{format.time(h.start)}</span>
-            <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5 text-[var(--color-accent-primary)]" />
-            <span className="font-heading text-sm font-bold">{tempText(h.tempF, unit, format.number)}</span>
-            {(h.precipChance ?? 0) >= 10 && <span className="text-[10px] font-semibold text-[var(--color-accent-primary)]">{format.percent((h.precipChance ?? 0) / 100, 0)}</span>}
           </div>
-        ))}
+        </div>
+
+        {topTip && (
+          <p className="mt-1 max-w-xl text-sm font-medium leading-snug text-white/95 drop-shadow-sm">
+            {tipText(t, topTip, unit, format)}
+          </p>
+        )}
+        {updatedLine && <p className="mt-1 text-[11px] text-white/75">{updatedLine}</p>}
+
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label={t('weather.hourly')}>
+          {hours12.map((h, i) => (
+            <div key={h.start} className="flex w-[4.1rem] shrink-0 flex-col items-center gap-1 rounded-2xl bg-white/15 px-2 py-2 text-center shadow-sm backdrop-blur-md ring-1 ring-white/20">
+              <span className="whitespace-nowrap text-[11px] font-semibold text-white/90">{i === 0 ? t('weather.now') : format.time(h.start)}</span>
+              <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5" />
+              <span className="font-heading text-sm font-bold">{tempText(h.tempF, unit, format.number)}</span>
+              {(h.precipChance ?? 0) >= 10 && <span className="text-[10px] font-semibold text-sky-100">{format.percent((h.precipChance ?? 0) / 100, 0)}</span>}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function WeekStrip({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }) {
+function WeekList({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }) {
   const { t, format } = useI18n();
   const days = payload.days.slice(0, 7);
   if (!days.length) return null;
+  const highs = days.map((d) => d.highF).filter((v): v is number => v != null);
+  const lows = days.map((d) => d.lowF).filter((v): v is number => v != null);
+  const weekHigh = highs.length ? Math.max(...highs) : 100;
+  const weekLow = lows.length ? Math.min(...lows) : 0;
+  const currentTemp = payload.current?.tempF;
   return (
-    <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-      <h3 className="sr-only">{t('weather.daily')}</h3>
-      <ul className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+    <div className="mt-4">
+      <h3 className="font-heading text-sm font-bold">{t('weather.daily')}</h3>
+      <ul className="mt-1 divide-y divide-[var(--color-border)]">
         {days.map((d, i) => (
-          <li key={d.date} className="flex flex-col items-center gap-1 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] px-1 py-2.5 text-center">
-            <span className="text-[11px] font-heading font-bold uppercase text-[var(--color-text-secondary)]">
-              {i === 0 ? t('weather.today') : format.weekday(new Date(`${d.date}T12:00:00`))}
-            </span>
+          <li key={d.date} className="grid grid-cols-[4.6rem_1.6rem_3rem_minmax(0,1fr)] items-center gap-2 py-1.5 sm:grid-cols-[5.5rem_1.75rem_3.2rem_2.8rem_minmax(0,1fr)_2.8rem]">
+            <span className="font-heading text-sm font-semibold">{i === 0 ? t('weather.today') : format.weekday(new Date(`${d.date}T12:00:00`))}</span>
             <ConditionIcon kind={d.kind} isDay className="h-5 w-5 text-[var(--color-accent-primary)]" />
-            <span className="text-sm">
-              <strong className="font-heading font-bold">{d.highF != null ? tempText(d.highF, unit, format.number) : '—'}</strong>{' '}
-              <span className="text-[var(--color-text-muted)]">{d.lowF != null ? tempText(d.lowF, unit, format.number) : '—'}</span>
+            <span className="text-[11px] font-semibold text-[var(--color-accent-primary)]">
+              {(d.precipChanceMax ?? 0) >= 10 ? format.percent((d.precipChanceMax ?? 0) / 100, 0) : ''}
             </span>
-            {(d.precipChanceMax ?? 0) >= 10 && (
-              <span className="text-[10px] font-semibold text-[var(--color-accent-primary)]">{format.percent((d.precipChanceMax ?? 0) / 100, 0)}</span>
-            )}
+            <span className="text-right font-heading text-sm text-[var(--color-text-muted)]">{d.lowF != null ? tempText(d.lowF, unit, format.number) : '—'}</span>
+            <span className="hidden sm:block">
+              {d.lowF != null && d.highF != null && <TempRangeBar low={d.lowF} high={d.highF} weekLow={weekLow} weekHigh={weekHigh} current={i === 0 ? currentTemp : undefined} />}
+            </span>
+            <span className="text-right font-heading text-sm font-bold">{d.highF != null ? tempText(d.highF, unit, format.number) : '—'}</span>
           </li>
         ))}
       </ul>

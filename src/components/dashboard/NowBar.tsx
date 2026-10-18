@@ -6,6 +6,7 @@ import { AlertTriangle, MapPin, TriangleAlert, Utensils, WifiOff } from 'lucide-
 import { RESOURCES } from '@/data/resources';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
 import { useLivePolling } from '@/hooks/useLivePolling';
+import { useNow } from '@/hooks/useNow';
 import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
@@ -56,7 +57,7 @@ export function NowBar() {
     };
   }, []);
 
-  const now = new Date();
+  const now = new Date(useNow(60_000));
   const pantries = RESOURCES.filter((r) => r.category === 'food');
   const openPantries = pantries.filter((r) => r.hours && isOpenNow(r.hours, now, BOSTON_TZ)).length;
 

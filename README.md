@@ -46,6 +46,12 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 
 | Area | Change |
 |------|--------|
+| **Apple-style weather + what-to-wear pop-up** | The weather surfaces were redrawn the way a phone weather app draws them, entirely from the live NWS payload (`src/components/weather/WeatherVisuals.tsx`): a sky-gradient hero chosen by the live condition, glass hour cards, a smooth 24-hour temperature curve, precipitation bars, 7-day temperature-range bars with a "you are here" dot, a sun-path arc and a wind compass. A small **What to wear today** card now lives in the corner of every page (`WearTodayToast`): it re-derives its tip from the live forecast every minute, dismissing it remembers *that advice* (Boston date + tip + 5 °F band) so tomorrow's weather — or a real temperature swing — brings it back, and whenever the tip implies warm gear it links straight to the free-coats list. |
+| **One flush link preview everywhere** | Sharing used to race three different preview images (a ~1 MB photo vs. two differently drawn cards). There is now exactly one generated 1200×630 card (`src/lib/ogCard.tsx`) behind `opengraph-image`, `twitter-image` and `/api/og?title=…`, with per-section cards for Weather, Free winter clothing, Map and Food. The layout no longer declares competing `images`, titles lead with **Dorchester 101**, and the JSON-LD names the phrase people actually search (`alternateName`, plus a `WebApplication` node). A pasted link now previews identically in Messages, Instagram, WhatsApp and X. |
+| **Map: menu overlap + vanishing satellite fixed** | Leaflet's panes carry z-indexes up to ~1000 and, without a stacking context of their own, painted over the fixed sidebar — opening the menu on the map page put the map *over* the site. The map container is now `isolation: isolate` (rail 1200 / scrim 1150), so every Leaflet layer stays inside the map box. The satellite basemap could also disappear permanently: the resilient tile layer remembered falling back to a later provider across style switches. It is keyed by style now, so Satellite always starts again from real Esri imagery. |
+| **Live buses & trains on the map** | The map now draws the actual vehicles from the MBTA's public `VehiclePositions.pb` feed (`/api/mbta?type=vehicles`, 15 s heartbeat, stale GPS reports dropped): route-coloured pills with direction-of-travel arrows, for buses and trains alike. Tapping one opens its panel — fleet number, next stop and whether it is stopped there, speed, on-board crowding when reported, and the report's age — beside a clickable stops list for the focused route with the vehicle's next stop lit. |
+| **The clock is real everywhere** | "Open now" surfaces read a shared ticking clock (`useNow`) instead of a render-time timestamp: a place that closes at 8 PM flips to Closed at 8 PM while you look at it — NowBar pantry counts, map pins, clothing-card hours ("today" is the place's Boston today, not the visitor's timezone). |
+
 | **Live data fills itself in** | Granting a permission, restoring a dropped connection (the `online` event) or Settings → "Refresh now" all bump the same global data epoch, and every live panel refetches immediately — news, Census charts, AMI ladder, MBTA arrivals, notifications, the About page's source statuses and the release download. A field that said "unavailable" on a dead network turns into real live data with no page reload; one-shot hooks are epoch-aware too, so nothing stays stuck on a first failure (pinned by a unit test). |
 | **Faster return to live sources** | Snapshot/failure answers are held only briefly (news 60 s, HUD 2 min) instead of five minutes, so when a publisher answers again the live feed retakes the page at the next poll. Census failures were never cached at all — recovery is immediate. |
 | **Current Census year** | The ACS reader now requests the newest published 5-year release (2020–2024, published December 2025) before falling back a year, and the trend chart and citation follow, so a deployed site reports the current vintage instead of one that is a year stale. |
@@ -360,10 +366,22 @@ All variables are optional; the site runs with none of them.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Canonical origin for `metadataBase`, sitemap, robots, JSON-LD and the OG image URL. **Set this in production** or social previews will point at localhost. |
+| `NEXT_PUBLIC_SITE_URL` | `https://dorchester-101.vercel.app` | Canonical origin for `metadataBase`, sitemap, robots, JSON-LD and the OG image URL. **Set this to your custom domain** or social previews will print the vercel.app address. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | — | Google Search Console verification token (renders only when set). |
+| `NEXT_PUBLIC_BING_SITE_VERIFICATION` | — | Bing Webmaster Tools verification token (renders only when set). |
 | `NEXT_PUBLIC_APP_VERSION` | `4.0.0` | Shown in About and the footer. |
 | `MBTA_API_KEY` | — | Raises the MBTA rate limit from 20 to 1000 req/min. Server-side only. |
 | `DATABASE_URL` | — | Enables the Drizzle/PostgreSQL admin path. |
+
+### Being found: your own domain, search, and sharing
+
+The site is findable today at `dorchester-101.vercel.app`. To make it *yours* — and to rank for "dorchester 101" — the remaining steps are account-side, not code:
+
+1. **Buy the domain** (for example `dorchester101.org` or `dorchester101.com`) at any registrar, or directly in Vercel → Domains.
+2. **Attach it in Vercel**: Project → Settings → Domains → add the domain and follow the DNS records Vercel shows. HTTPS is issued automatically.
+3. **Point the site at itself**: set `NEXT_PUBLIC_SITE_URL=https://<your-domain>` in Vercel → Settings → Environment Variables and redeploy. Every canonical URL, the sitemap, `robots.txt`, JSON-LD and the domain printed on the share card follow automatically — they all read `src/lib/site.ts`.
+4. **Tell the search engines**: add the domain in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters), verify with the tokens above, and submit `/sitemap.xml`. Search results lead with "Dorchester 101 (DOR101)" and the structured data names every spelling people type.
+5. **Free Vercel tools already wired in**: Web Analytics and Speed Insights render on every page (enable them once in the Vercel dashboard — Analytics → Enable, Speed Insights → Enable; both have free tiers), daily Cron Jobs keep the live caches warm (`vercel.json`), and edge caching headers are set per route. The installable PWA + offline shell ship from `public/manifest.json` + `public/sw.js`.
 
 ---
 

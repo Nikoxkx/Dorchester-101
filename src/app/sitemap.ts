@@ -16,12 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   return PUBLIC_ROUTES.map((route) => {
-    const isDirectory = route === '/' || route === '/resources' || route === '/directory' || route === '/map';
+    const isDirectory = route === '/' || route === '/resources' || route === '/directory' || route === '/map' || route === '/weather' || route === '/winter-clothing' || route === '/food';
     const isAboutFaq = route === '/about' || route === '/faq' || route === '/resources' || route === '/directory';
     return {
       url: `${origin}${route}`,
       // OG image for homepage so crawlers associate it
-      ...(route === '/' ? { images: [`${origin}/og.png`] } : {}),
+      ...(route === '/' ? { images: [`${origin}/opengraph-image`] } : {}),
       lastModified: isAboutFaq ? reviewedOn : now,
       changeFrequency:
         route === '/news' || route === '/map' || route === '/weather'

@@ -6,6 +6,7 @@ import { Header } from './Header';
 import { SiteFooter } from './SiteFooter';
 import { OfflineBanner } from './OfflineBanner';
 import { WeatherAlertBanner } from '@/components/weather/WeatherAlertBanner';
+import { WearTodayToast } from '@/components/weather/WearTodayToast';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
 import { useAppStore } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
@@ -47,6 +48,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <SiteFooter />
       </div>
 
+      <WearTodayToast />
       <PWAInstaller />
     </div>
   );

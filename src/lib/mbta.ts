@@ -48,6 +48,30 @@ export interface Arrival {
   delayMinutes: number;
 }
 
+/** One vehicle, where the GTFS-RT VehiclePositions feed last saw it. */
+export interface LiveVehicle {
+  id: string;
+  /** The fleet number printed on the vehicle, when the feed reports it. */
+  label: string;
+  routeId: string;
+  routeLabel: string;
+  routeColor: string;
+  mode: Arrival['mode'];
+  directionId: number;
+  lat: number;
+  lng: number;
+  /** Degrees clockwise from north, direction of travel; null if unreported. */
+  bearing: number | null;
+  speedMph: number | null;
+  /** The stop the vehicle is at, or is travelling toward. */
+  stopId: string | null;
+  stopName: string | null;
+  stopStatus: 'at-stop' | 'in-transit' | 'incoming' | null;
+  occupancy: 'many-seats' | 'few-seats' | 'full' | null;
+  /** When the vehicle itself reported this position (feed timestamp). */
+  updatedAt: string;
+}
+
 export interface ServiceAlert {
   id: string;
   header: string;
@@ -547,6 +571,75 @@ function stopIndex(line: TransitLine, stopId: string): number {
 const ROUTE_IDS_FOR_ALERTS = ['Red', 'Mattapan', 'CR-Fairmount', ...DORCHESTER_BUS_ROUTES.map((b) => b.id)];
 /** GTFS stop ids for lines DOR101 tracks, used to keep alerts about a station. */
 const DORCHESTER_STOP_IDS_RT = new Set(TRANSIT_LINES.flatMap((line) => line.dorchesterStops.map((stop) => stop.id)));
+
+/**
+ * Live vehicle positions from `VehiclePositions.pb` — the same public feed
+ * the arrivals come from, so the map can show actual buses and trains
+ * moving, not timetable guesses. Positions are the vehicles' own GPS
+ * reports with their own timestamps; the map shows the report age and
+ * drops anything the feed has not refreshed in five minutes, because a
+ * stale dot is worse than no dot.
+ *
+ * Scope: the routes this site serves, inside a box around Dorchester wide
+ * enough to see a vehicle approaching the neighbourhood.
+ */
+const VEHICLE_BBOX = { minLat: 42.23, maxLat: 42.39, minLng: -71.16, maxLng: -70.98 };
+
+export async function fetchVehicles(
+  routeIds: string[]
+): Promise<{ vehicles: LiveVehicle[]; source: DataSource; fetchedAt: string }> {
+  const fetchedAt = new Date().toISOString();
+  try {
+    const feed = await fetchRtFeed('VehiclePositions');
+    const wanted = new Set(routeIds);
+    const now = Date.now();
+    const vehicles: LiveVehicle[] = [];
+
+    for (const entity of feed.entity ?? []) {
+      const v = entity.vehicle;
+      const pos = v?.position;
+      const routeId = v?.trip?.routeId ?? undefined;
+      if (!v || !pos || !routeId || !wanted.has(routeId)) continue;
+      const lat = pos.latitude ?? null;
+      const lng = pos.longitude ?? null;
+      if (lat == null || lng == null) continue;
+      if (lat < VEHICLE_BBOX.minLat || lat > VEHICLE_BBOX.maxLat || lng < VEHICLE_BBOX.minLng || lng > VEHICLE_BBOX.maxLng) continue;
+      const ts = epochSeconds(v.timestamp);
+      if (ts == null || now - ts * 1000 > 5 * 60_000) continue;
+
+      const line = TRANSIT_LINES.find((l) => l.routeId === routeId);
+      const bus = DORCHESTER_BUS_ROUTES.find((b) => b.id === routeId);
+      const stopId = typeof v.stopId === 'string' && v.stopId ? v.stopId : null;
+      const occ = v.occupancyStatus;
+      vehicles.push({
+        id: String(v.vehicle?.id ?? entity.id ?? `${routeId}-${lat}-${lng}`),
+        label: String(v.vehicle?.label ?? v.vehicle?.id ?? ''),
+        routeId,
+        routeLabel: line?.label ?? bus?.name ?? routeId,
+        routeColor: `#${(line?.color ?? bus?.color ?? '14304F').replace('#', '')}`,
+        mode: modeForRoute(routeId, undefined),
+        directionId: v.trip?.directionId ?? 0,
+        lat,
+        lng,
+        bearing: typeof pos.bearing === 'number' ? pos.bearing : null,
+        speedMph: typeof pos.speed === 'number' ? Math.round(pos.speed * 2.23694) : null,
+        stopId,
+        stopName: stopId ? (STOP_NAME_BY_ID.get(stopId) ?? null) : null,
+        stopStatus: v.currentStatus === 1 ? 'at-stop' : v.currentStatus === 2 ? 'in-transit' : v.currentStatus === 0 ? 'incoming' : null,
+        occupancy:
+          occ === 1 || occ === 2 ? 'many-seats' : occ === 3 || occ === 4 || occ === 5 ? 'few-seats' : occ === 6 || occ === 7 || occ === 8 ? 'full' : null,
+        updatedAt: new Date(ts * 1000).toISOString(),
+      });
+    }
+
+    vehicles.sort((a, b) => a.routeId.localeCompare(b.routeId) || a.id.localeCompare(b.id));
+    return { vehicles: vehicles.slice(0, 300), source: 'mbta-live', fetchedAt };
+  } catch {
+    // No feed, no vehicles — the map says timetable and draws no dots
+    // rather than animating invented ones along the line.
+    return { vehicles: [], source: 'timetable', fetchedAt };
+  }
+}
 
 export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }> {
   const cacheKey = 'mbta:alerts:dorchester';

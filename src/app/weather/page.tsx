@@ -13,6 +13,7 @@ export const metadata = {
     'Live National Weather Service forecast for Dorchester, Boston: current conditions, hour-by-hour and 7-day forecast, active storm warnings, and clothing tips that follow the weather. Updated automatically, never typed in by hand.',
   alternates: { canonical: '/weather' },
   openGraph: {
+    images: [{ url: "/api/og?title=Boston+weather&desc=Live+Dorchester+forecast%2C+storm+warnings%2C+and+what+to+wear+%E2%80%94+from+the+National+Weather+Service.&kicker=DOR101+%C2%B7+LIVE+WEATHER", width: 1200, height: 630, type: "image/png", alt: "Dorchester 101" }],
     title: 'Boston weather for Dorchester',
     description: 'Live forecast, storm warnings and what-to-wear tips from the National Weather Service.',
     url: `${SITE_URL}/weather`,

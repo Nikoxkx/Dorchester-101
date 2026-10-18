@@ -13,7 +13,7 @@ import {
 } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon } from './icons';
+import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon, vehicleIcon } from './icons';
 import { cn } from '@/lib/utils';
 import type { ResourceCategory } from '@/data/resources';
 import type { ShieldMode } from './icons';
@@ -50,6 +50,17 @@ export interface MapStop {
   label: string;
   interchange?: boolean;
   accessible?: boolean;
+}
+
+export interface MapVehicle {
+  id: string;
+  label: string;
+  routeId: string;
+  routeLabel: string;
+  lat: number;
+  lng: number;
+  color: string;
+  bearing: number | null;
 }
 
 export interface MapPin {
@@ -112,12 +123,15 @@ export function MapCanvas({
   shapes,
   stops,
   pins,
+  vehicles,
+  selectedVehicleId,
   selectedStopId,
   selectedPinId,
   userPosition,
   focusRequest,
   onSelectStop,
   onSelectPin,
+  onSelectVehicle,
   onMapReady,
   onBlankClick,
 }: {
@@ -125,12 +139,15 @@ export function MapCanvas({
   shapes: ShapeData[];
   stops: MapStop[];
   pins: MapPin[];
+  vehicles: MapVehicle[];
+  selectedVehicleId: string | null;
   selectedStopId: string | null;
   selectedPinId: string | null;
   userPosition: [number, number] | null;
   focusRequest: { lat: number; lng: number; zoom?: number; token: number } | null;
   onSelectStop: (id: string) => void;
   onSelectPin: (id: string) => void;
+  onSelectVehicle: (id: string) => void;
   onMapReady: (map: LeafletMap) => void;
   onBlankClick: () => void;
 }) {
@@ -155,9 +172,10 @@ export function MapCanvas({
         focusRequest={focusRequest}
         onBlankClick={onBlankClick}
       />
-      <ResilientTileLayer providers={layers} maxZoom={19} updateWhenIdle={style === 'satellite'} />
+      {/* Keyed by style: switching back to satellite must restart the provider walk at the first imagery endpoint. Before, a layer that had degraded to a fallback once stayed there forever, so 'satellite' quietly vanished. */}
+      <ResilientTileLayer key={`base-${style}`} providers={layers} maxZoom={19} updateWhenIdle={false} />
       {style === 'hybrid' && (
-        <ResilientTileLayer key="hybrid-labels" providers={[OSM_STREET]} maxZoom={19} opacity={0.6} />
+        <ResilientTileLayer key="hybrid-labels" providers={[OSM_STREET]} maxZoom={19} opacity={0.55} />
       )}
       <AttributionControl position="bottomleft" prefix={false} />
 
@@ -221,6 +239,24 @@ export function MapCanvas({
         );
       })}
 
+      {vehicles.map((vehicle) => {
+        const selected = vehicle.id === selectedVehicleId;
+        return (
+          <Marker
+            key={`veh-${vehicle.id}`}
+            position={[vehicle.lat, vehicle.lng]}
+            icon={vehicleIcon(vehicle.routeLabel, vehicle.color, { selected, bearing: vehicle.bearing })}
+            alt={`${vehicle.routeLabel} ${vehicle.label}`.trim()}
+            zIndexOffset={selected ? 900 : 300}
+            eventHandlers={{ click: () => onSelectVehicle(vehicle.id) }}
+          >
+            <Tooltip direction="top" offset={[0, -12]} opacity={1} className="map-tooltip">
+              <span className="font-heading text-xs font-semibold">{vehicle.routeLabel}{vehicle.label ? ` · ${vehicle.label}` : ''}</span>
+            </Tooltip>
+          </Marker>
+        );
+      })}
+
       {userPosition && (
         <Marker position={userPosition} icon={userLocationIcon()} alt="Your location" interactive={false} />
       )}
@@ -250,8 +286,7 @@ function ResilientTileLayer({
   const errors = useRef(0);
   const advanced = useRef(false);
 
-  if (index >= providers.length) return null;
-  const provider = providers[index];
+  const provider = providers[Math.min(index, providers.length - 1)];
 
   return (
     <TileLayer

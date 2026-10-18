@@ -557,7 +557,16 @@ html:is([data-surface="glass"], [data-surface="frost"], [data-surface="tinted"],
 .leaflet-container {
   font-family: var(--font-heading);
   background: var(--color-bg-tertiary);
+  /* Leaflet's panes and popups carry z-indexes up to ~1000. Without its own
+     stacking context they escape into the page's and paint over the fixed
+     sidebar (z 40) and header — the "map overlaps the menu" bug. Isolating
+     the container (and its frame) keeps every Leaflet layer inside the map
+     box, where it belongs. */
+  isolation: isolate;
+  z-index: 0;
 }
+
+.dor101-map-canvas-box { isolation: isolate; z-index: 0; }
 
 .leaflet-control-container .leaflet-top,
 .leaflet-control-container .leaflet-bottom { z-index: 500; }
@@ -706,6 +715,38 @@ html[data-reduce-motion="true"] .pin__live { animation: none; }
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-accent-primary), 0 3px 8px rgba(0, 0, 0, 0.4);
   filter: none;
 }
+
+/* Live vehicles: a route-coloured pill with the direction of travel, the
+   way riders already read them in transit apps. The arrow rotates with the
+   GPS bearing reported by the vehicle itself. */
+.veh {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 7px 0 4px;
+  border-radius: 999px;
+  background: var(--veh);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 0 0 2px #fff, 0 2px 7px rgba(0, 0, 0, 0.45);
+  transition: transform 200ms var(--ease-out);
+}
+.veh__arrow {
+  display: block;
+  width: 0; height: 0;
+  border-left: 4.5px solid transparent;
+  border-right: 4.5px solid transparent;
+  border-bottom: 8px solid #fff;
+  transform: rotate(var(--veh-rot, 0deg));
+}
+.dor101-icon:hover .veh { transform: scale(1.14); }
+.veh.is-selected { transform: scale(1.22); box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px var(--color-accent-primary), 0 3px 10px rgba(0,0,0,0.5); }
 
 /* Route lines: dark casing + colour + a light centre gives the cartographic
    "tube" look and keeps the colour legible over both grey streets and imagery. */
@@ -876,7 +917,7 @@ html[data-text-spacing="true"] p, html[data-text-spacing="true"] li { margin-blo
   inset-block: 0;
   inset-inline-start: 0;
   width: var(--rail);
-  z-index: 40;
+  z-index: 1200;
   display: flex;
   flex-direction: column;
   background: color-mix(in oklab, var(--color-bg-secondary) 92%, transparent);
@@ -909,7 +950,7 @@ html[data-text-spacing="true"] p, html[data-text-spacing="true"] li { margin-blo
   .dor101-scrim {
     position: fixed;
     inset: 0;
-    z-index: 39;
+    z-index: 1150;
     background: var(--color-scrim);
   }
 }

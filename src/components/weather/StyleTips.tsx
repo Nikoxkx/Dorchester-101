@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Shirt } from 'lucide-react';
 import { buildStyleTips, type WeatherPayload } from '@/lib/weather';
+import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
 import { SCOPE_KEY, TIP_ICON, tipText, tipsNeedCoat, type TempUnit } from './shared';
 
@@ -28,7 +29,12 @@ export function StyleTips({
   headingLevel?: 2 | 3;
 }) {
   const { t, format } = useI18n();
-  const tips = useMemo(() => buildStyleTips(payload), [payload]);
+  // Re-derived on the minute tick as well as on every new payload, so the
+  // advice follows the day: a tip that was right at 7 AM ("cold start") is
+  // replaced by tonight's layer warning without a reload, and a fresh
+  // forecast with a different temperature re-runs the coat ladder at once.
+  const now = useNow(60_000);
+  const tips = useMemo(() => buildStyleTips(payload, new Date(now)), [payload, now]);
   const shown = limit ? tips.slice(0, limit) : tips;
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
 

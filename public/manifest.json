@@ -1,7 +1,7 @@
 {
-  "name": "DOR101 — Dorchester 101",
+  "name": "Dorchester 101 (DOR101)",
   "short_name": "DOR101",
-  "description": "Free housing, food, health and transit information for Dorchester residents, in nine languages, with each listing's own verification date.",
+  "description": "Dorchester 101 \u2014 free housing, food open now, live MBTA buses and trains, Boston weather with what to wear, and free winter clothing for Dorchester, Boston. Nine languages, no account, no ads.",
   "start_url": "/",
   "display": "standalone",
   "display_override": [
@@ -125,7 +125,7 @@
       "sizes": "1920x1080",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "DOR101 — Dorchester Bay at sunset"
+      "label": "DOR101 \u2014 Dorchester Bay at sunset"
     },
     {
       "src": "/og.png",
@@ -139,7 +139,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "DOR101 — app icon 512"
+      "label": "DOR101 \u2014 app icon 512"
     }
   ],
   "related_applications": [],

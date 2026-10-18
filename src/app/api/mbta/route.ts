@@ -6,6 +6,7 @@ import {
   fetchRouteMeta,
   fetchShapes,
   fetchStopsForRoute,
+  fetchVehicles,
   mbtaKeyStatus,
   transitReferenceMeta,
   dorchesterStopIds,
@@ -23,7 +24,7 @@ export const dynamic = 'force-dynamic';
  * an optional API key, and no CORS or key-leak questions.
  */
 
-const typeSchema = z.enum(['arrivals', 'predictions', 'alerts', 'shapes', 'stops', 'routes', 'meta']);
+const typeSchema = z.enum(['arrivals', 'predictions', 'alerts', 'shapes', 'stops', 'routes', 'meta', 'vehicles']);
 const querySchema = z.object({
   type: typeSchema.default('arrivals'),
   /** comma separated stop ids; defaults to every Dorchester station we track */
@@ -129,6 +130,18 @@ export async function GET(request: Request) {
             fetchedAt: new Date().toISOString(),
           },
           { headers: { 'cache-control': 'public, s-maxage=86400, stale-while-revalidate=604800' } }
+        );
+      }
+
+      case 'vehicles': {
+        const routeIds = parseIds(parsed.data.route, [
+          ...TRANSIT_LINES.map((l) => l.routeId),
+          ...DORCHESTER_BUS_ROUTES.map((b) => b.id),
+        ]);
+        const { vehicles, source, fetchedAt } = await fetchVehicles(routeIds);
+        return NextResponse.json(
+          { vehicles, source, fetchedAt, refreshSeconds: 15 },
+          { headers: { 'cache-control': 'public, s-maxage=15, stale-while-revalidate=60' } }
         );
       }
 

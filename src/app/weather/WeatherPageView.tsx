@@ -23,6 +23,8 @@ import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, TempUnitToggle, tempText, useTempUnit, type TempUnit } from '@/components/weather/shared';
 import { StyleTips } from '@/components/weather/StyleTips';
+import { PrecipBars, SunArc, TempCurve, TempRangeBar, WindCompass, skyGradient } from '@/components/weather/WeatherVisuals';
+import { useNow } from '@/hooks/useNow';
 import { coldSignal, type WeatherAlert, type WeatherPayload } from '@/lib/weather';
 
 /**
@@ -177,51 +179,115 @@ function AlertCard({ alert, dayTime }: { alert: WeatherAlert; dayTime: (iso: str
 
 function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }) {
   const { t, format } = useI18n();
+  const now = useNow(60_000);
   const cur = payload.current;
   const today = payload.days[0];
   if (!cur) return null;
 
-  const stats: Array<{ icon: typeof Wind; label: string; value: string }> = [];
-  if (cur.windMph != null) stats.push({ icon: Wind, label: t('weather.wind'), value: `${format.number(Math.round(cur.windMph))} mph${cur.windDir ? ` ${cur.windDir}` : ''}${cur.windGustMph ? ` · ${t('weather.gusts', { speed: `${format.number(Math.round(cur.windGustMph))} mph` })}` : ''}` });
-  if (cur.humidity != null) stats.push({ icon: Droplets, label: t('weather.humidity'), value: format.percent(cur.humidity / 100, 0) });
-  if (cur.dewpointF != null) stats.push({ icon: Thermometer, label: t('weather.dewpoint'), value: tempText(cur.dewpointF, unit, format.number) });
-  if (cur.windChillF != null) stats.push({ icon: ThermometerSnowflake, label: t('weather.windChill'), value: tempText(cur.windChillF, unit, format.number) });
-  if (cur.heatIndexF != null) stats.push({ icon: ThermometerSun, label: t('weather.heatIndex'), value: tempText(cur.heatIndexF, unit, format.number) });
-  if (cur.pressureInHg != null) stats.push({ icon: Gauge, label: t('weather.pressure'), value: `${format.number(cur.pressureInHg)} inHg` });
-  if (cur.visibilityMi != null) stats.push({ icon: Eye, label: t('weather.visibility'), value: `${format.number(cur.visibilityMi)} mi` });
-  if (payload.astronomy) {
-    stats.push({ icon: Sunrise, label: t('weather.sunrise'), value: format.time(payload.astronomy.sunrise) });
-    stats.push({ icon: Sunset, label: t('weather.sunset'), value: format.time(payload.astronomy.sunset) });
-  }
+  const tile = "rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/70 p-4";
+  const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-[var(--color-text-muted)]";
+
+  const daylight = payload.astronomy
+    ? Math.round((new Date(payload.astronomy.sunset).getTime() - new Date(payload.astronomy.sunrise).getTime()) / 60_000)
+    : null;
 
   return (
-    <section className={card} aria-labelledby="wx-current">
-      <h2 id="wx-current" className="font-heading text-base font-bold">{t('weather.conditions')}</h2>
-      <div className="mt-3 flex flex-wrap items-center gap-5">
-        <ConditionIcon kind={cur.kind} isDay={cur.isDay} className="h-16 w-16 text-[var(--color-accent-primary)]" />
-        <div>
-          <p className="font-heading text-6xl font-extrabold leading-none tracking-tight">{tempText(cur.tempF, unit, format.number)}</p>
-          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-            {t('weather.feelsLike', { temp: tempText(cur.feelsLikeF, unit, format.number) })} · <span dir="auto">{cur.text}</span>
+    <section aria-labelledby="wx-current" className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow)]">
+      {/* Sky hero: the gradient follows the live condition, Apple-style. */}
+      <div className="relative px-5 pb-6 pt-8 text-center text-white md:px-6" style={{ background: skyGradient(cur.kind, cur.isDay) }}>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(255,255,255,0.28),transparent_55%)]" aria-hidden="true" />
+        <div className="relative">
+          <h2 id="wx-current" className="font-heading text-xl font-bold drop-shadow-sm">Dorchester, Boston</h2>
+          <p className="font-heading text-[6rem] font-extralight leading-none tracking-tighter drop-shadow-md">
+            {format.number(Math.round(unit === 'F' ? cur.tempF : ((cur.tempF - 32) * 5) / 9))}°
           </p>
+          <p className="font-heading text-base font-bold drop-shadow-sm" dir="auto">{cur.text || t(`weather.cond.${cur.kind}` as never)}</p>
           {today && today.highF != null && today.lowF != null && (
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {t('weather.highLow', { high: tempText(today.highF, unit, format.number), low: tempText(today.lowF, unit, format.number) })}
+            <p className="text-sm font-semibold text-white/95">
+              H: {tempText(today.highF, unit, format.number)}&nbsp;&nbsp;L: {tempText(today.lowF, unit, format.number)}
             </p>
           )}
-          <p className="text-xs text-[var(--color-text-muted)]">{t('weather.observedAt', { station: cur.stationName, time: format.time(cur.observedAt) })}</p>
+          <p className="mt-1 text-xs text-white/85">
+            {t('weather.feelsLike', { temp: tempText(cur.feelsLikeF, unit, format.number) })} · {t('weather.observedAt', { station: cur.stationName, time: format.time(cur.observedAt) })}
+          </p>
         </div>
       </div>
-      <dl className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] px-3 py-2.5">
-            <dt className="flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-              <s.icon className="h-3.5 w-3.5" aria-hidden="true" /> {s.label}
-            </dt>
-            <dd className="mt-0.5 font-heading text-sm font-bold">{s.value}</dd>
+
+      {/* Detail tiles, one reading per tile like a phone weather app. */}
+      <div className="grid grid-cols-2 gap-2.5 p-4 md:p-5 lg:grid-cols-4">
+        <div className={tile}>
+          <p className={tileTitle}><Thermometer className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.feelsLike', { temp: '' }).trim() || t('weather.conditions')}</p>
+          <p className="mt-1 font-heading text-3xl font-extrabold">{tempText(cur.feelsLikeF, unit, format.number)}</p>
+          <p className="mt-1 text-xs leading-snug text-[var(--color-text-secondary)]">
+            {cur.windChillF != null
+              ? `${t('weather.windChill')}: ${tempText(cur.windChillF, unit, format.number)}`
+              : cur.heatIndexF != null
+                ? `${t('weather.heatIndex')}: ${tempText(cur.heatIndexF, unit, format.number)}`
+                : `${t('weather.now')}: ${tempText(cur.tempF, unit, format.number)}`}
+          </p>
+        </div>
+
+        <div className={tile}>
+          <p className={tileTitle}><Wind className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.wind')}</p>
+          <div className="mt-1 flex items-center gap-3">
+            <WindCompass dir={cur.windDir} speedText={cur.windMph != null ? `${Math.round(cur.windMph)} mph ${cur.windDir ?? ''}` : ''} />
+            <div>
+              <p className="font-heading text-2xl font-extrabold">{cur.windMph != null ? `${format.number(Math.round(cur.windMph))} mph` : '—'}</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                {cur.windDir ?? ''}
+                {cur.windGustMph ? ` · ${t('weather.gusts', { speed: `${format.number(Math.round(cur.windGustMph))} mph` })}` : ''}
+              </p>
+            </div>
           </div>
-        ))}
-      </dl>
+        </div>
+
+        <div className={tile}>
+          <p className={tileTitle}><Droplets className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.humidity')}</p>
+          <p className="mt-1 font-heading text-3xl font-extrabold">{cur.humidity != null ? format.percent(cur.humidity / 100, 0) : '—'}</p>
+          {cur.humidity != null && (
+            <span className="mt-2 block h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-bg-tertiary)]" aria-hidden="true">
+              <span className="block h-full rounded-full bg-[var(--color-accent-primary)]" style={{ width: `${cur.humidity}%` }} />
+            </span>
+          )}
+          {cur.dewpointF != null && (
+            <p className="mt-1.5 text-xs text-[var(--color-text-secondary)]">{t('weather.dewpoint')}: {tempText(cur.dewpointF, unit, format.number)}</p>
+          )}
+        </div>
+
+        <div className={tile}>
+          <p className={tileTitle}><Umbrella className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.precipChance')}</p>
+          <p className="mt-1 font-heading text-3xl font-extrabold">
+            {today?.precipChanceMax != null ? format.percent(today.precipChanceMax / 100, 0) : '—'}
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{t('weather.today')}</p>
+        </div>
+
+        {payload.astronomy && (
+          <div className={`${tile} col-span-2`}>
+            <p className={tileTitle}><Sunrise className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.daylight')}</p>
+            <SunArc sunrise={payload.astronomy.sunrise} sunset={payload.astronomy.sunset} nowMs={now} />
+            <div className="mt-1 flex items-center justify-between text-xs font-semibold">
+              <span>{t('weather.sunrise')} {format.time(payload.astronomy.sunrise)}</span>
+              {daylight != null && <span className="text-[var(--color-text-muted)]">{Math.floor(daylight / 60)}h {daylight % 60}m</span>}
+              <span>{t('weather.sunset')} {format.time(payload.astronomy.sunset)}</span>
+            </div>
+          </div>
+        )}
+
+        {cur.visibilityMi != null && (
+          <div className={tile}>
+            <p className={tileTitle}><Eye className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.visibility')}</p>
+            <p className="mt-1 font-heading text-3xl font-extrabold">{format.number(cur.visibilityMi)} <span className="text-base">mi</span></p>
+          </div>
+        )}
+
+        {cur.pressureInHg != null && (
+          <div className={tile}>
+            <p className={tileTitle}><Gauge className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.pressure')}</p>
+            <p className="mt-1 font-heading text-3xl font-extrabold">{format.number(cur.pressureInHg)} <span className="text-base">inHg</span></p>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -252,6 +318,10 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
   return (
     <section className={card} aria-labelledby="wx-hourly">
       <h2 id="wx-hourly" className="font-heading text-base font-bold">{t('weather.hourly')}</h2>
+      <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
+      <TempCurve hours={rows.slice(0, 24)} labelFor={(f) => tempText(f, unit, format.number)} />
+      <h3 className="mt-2 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
+      <div className="mt-1"><PrecipBars hours={rows.slice(0, 24)} timeFor={(iso) => format.time(iso)} /></div>
       <ul className="mt-3 flex flex-col divide-y divide-[var(--color-border)]">
         {rows.map((h) => (
           <li key={h.start} className="grid grid-cols-[4.5rem_1.75rem_4.5rem_1fr] items-center gap-2 py-2 sm:grid-cols-[5rem_2rem_5rem_1fr_7rem]">
@@ -286,6 +356,32 @@ function DailySection({ payload, unit }: { payload: WeatherPayload; unit: TempUn
   return (
     <section className={card} aria-labelledby="wx-daily">
       <h2 id="wx-daily" className="font-heading text-base font-bold">{t('weather.daily')}</h2>
+      {(() => {
+        const days = payload.days.slice(0, 7);
+        const highs = days.map((d) => d.highF).filter((v): v is number => v != null);
+        const lows = days.map((d) => d.lowF).filter((v): v is number => v != null);
+        if (!days.length || !highs.length || !lows.length) return null;
+        const weekHigh = Math.max(...highs);
+        const weekLow = Math.min(...lows);
+        return (
+          <ul className="mt-2 divide-y divide-[var(--color-border)]">
+            {days.map((d, i) => (
+              <li key={d.date} className="grid grid-cols-[5rem_1.75rem_3.2rem_2.9rem_minmax(0,1fr)_2.9rem] items-center gap-2 py-1.5">
+                <span className="font-heading text-sm font-semibold">{i === 0 ? t('weather.today') : format.weekday(new Date(`${d.date}T12:00:00`))}</span>
+                <ConditionIcon kind={d.kind} isDay className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                <span className="text-[11px] font-semibold text-[var(--color-accent-primary)]">
+                  {(d.precipChanceMax ?? 0) >= 10 ? format.percent((d.precipChanceMax ?? 0) / 100, 0) : ''}
+                </span>
+                <span className="text-right font-heading text-sm text-[var(--color-text-muted)]">{d.lowF != null ? tempText(d.lowF, unit, format.number) : '—'}</span>
+                {d.lowF != null && d.highF != null ? (
+                  <TempRangeBar low={d.lowF} high={d.highF} weekLow={weekLow} weekHigh={weekHigh} current={i === 0 ? payload.current?.tempF : undefined} />
+                ) : <span />}
+                <span className="text-right font-heading text-sm font-bold">{d.highF != null ? tempText(d.highF, unit, format.number) : '—'}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      })()}
       <ul className="mt-3 flex flex-col gap-2">
         {payload.daily.map((d) => (
           <li key={`${d.name}-${d.start}`} className="rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3.5">

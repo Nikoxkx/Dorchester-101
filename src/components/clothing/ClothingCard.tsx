@@ -3,8 +3,8 @@
 import { BadgeCheck, Clock, ExternalLink, MapPin, Phone, TriangleAlert, Users } from 'lucide-react';
 import { useI18n } from '@/i18n/hook';
 import { Badge } from '@/components/ui/Badge';
-import { formatWindow, windowsForDay } from '@/lib/hours';
-import { weekdayIndex } from '@/i18n/formatters';
+import { BOSTON_TZ, formatWindow, windowsForDay, zonedParts } from '@/lib/hours';
+import { useNow } from '@/hooks/useNow';
 import type { WinterClothingPlace } from '@/data/winterClothing';
 import type { TranslationKey } from '@/i18n/en';
 
@@ -27,7 +27,11 @@ export function ClothingCard({ place }: { place: ClothingPlaceView }) {
   const { t, format, pickContent } = useI18n();
   const summary = pickContent(place.summary);
   const c = place.computed;
-  const todayWindows = place.hours ? windowsForDay(place.hours, weekdayIndex(new Date())) : [];
+  // "Today" is the place's today: a coat closet on Columbia Road opens on
+  // Boston's calendar, not the visitor's device timezone — and the reading
+  // re-decides every minute on the real clock, so an 8 PM closing flips at 8.
+  const now = useNow(60_000);
+  const todayWindows = place.hours ? windowsForDay(place.hours, zonedParts(new Date(now), BOSTON_TZ).weekday) : [];
   const mapsUrl = place.address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}`
     : null;
