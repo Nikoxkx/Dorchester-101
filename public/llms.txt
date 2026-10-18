@@ -1,0 +1,44 @@
+# DOR101 — llms.txt
+# Guidance for AI crawlers, per https://llmstxt.org/
+# This file tells automated agents what DOR101 is and where its data lives.
+# It does NOT grant rights to republish restricted content — all pages carry
+# standard copyright + MIT code licence; photographs are under their own CC licences.
+
+Name: DOR101 — Dorchester 101
+URL: https://dorchester-101.vercel.app
+Description: Free housing, food, transit and community resources for Dorchester, Boston — in nine languages, with each listing's verification date.
+Author: Yeisbel (https://github.com/Nikoxkx)
+Licence: MIT (code) — see /LICENSE ; photographs credited individually in /public/IMAGE-CREDITS.md
+
+## Allow / Disallow (polite crawl budget)
+Allow: /
+Allow: /about
+Allow: /affordable-housing
+Allow: /food
+Allow: /map
+Allow: /market-trends
+Allow: /neighborhood
+Allow: /news
+Allow: /projects
+Allow: /resources
+Allow: /tools
+Allow: /directory
+Allow: /sitemap.xml
+Allow: /robots.txt
+Disallow: /api/
+Disallow: /settings
+
+## Data sources (official, not scraped)
+- City of Boston open data: data.boston.gov
+- U.S. Census Bureau ACS 5-year (2020–2024): data.census.gov + api.census.gov
+- HUD FY2026 income limits + Fair Market Rents: huduser.gov
+- MBTA real-time GTFS-realtime CDN + v3 API: cdn.mbta.com / api-v3.mbta.com
+- News RSS: Dorchester Reporter (/feed/), City of Boston news (/rss/news), WBUR (rss.wbur.org), Boston Globe ARC feed
+- Map tiles: Esri World Imagery (services.arcgisonline.com), OpenStreetMap
+
+## API (public, rate-limited)
+Docs: https://dorchester-101.vercel.app/api/docs
+All endpoints are public JSON; no auth. Rate-limit and cache headers are set per route.
+Do not abuse the MBTA or Census endpoints — use the cached /api/* instead.
+
+Sitemap: https://dorchester-101.vercel.app/sitemap.xml

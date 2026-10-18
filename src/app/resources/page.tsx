@@ -12,7 +12,7 @@ export const metadata = {
   title: 'Resource directory: Dorchester organizations and services',
   description:
     'Housing, food, health, legal and community services in Dorchester, Boston, each with hours, phone, languages, accessibility and the date it was last checked against its source.',
-  alternates: { canonical: '' },
+  alternates: { canonical: '/resources' },
   openGraph: {
     title: 'Dorchester resource directory',
     description: 'Every listing carries its own verification date. Nothing is presented as checked when it is not.',

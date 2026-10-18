@@ -11,7 +11,7 @@ export const metadata = {
   title: 'Food help in Dorchester: pantries, meals and benefits',
   description:
     'Food pantries, hot meals, senior and kids programs and help applying for SNAP or WIC in Dorchester, Boston, with hours checked against each site and an open-now reading in your local time.',
-  alternates: { canonical: '' },
+  alternates: { canonical: '/food' },
   openGraph: {
     title: 'Food help in Dorchester',
     description: 'Every site comes from the same checked dataset the map and directory use.',

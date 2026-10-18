@@ -4,7 +4,9 @@
  */
 
 /** Canonical origin. Set NEXT_PUBLIC_SITE_URL in deployment; localhost in dev. */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `https://dorchester-101.vercel.app`);
 
 export const SITE_NAME = 'DOR101';
 /**

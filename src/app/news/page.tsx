@@ -11,7 +11,7 @@ export const metadata = {
   title: 'Dorchester local news: Boston headlines with dates and sources',
   description:
     'Housing, transit, food and community coverage for Dorchester, pulled from each publisher’s own RSS feed with publication time and source named. No rewriting, no invented stories.',
-  alternates: { canonical: '' },
+  alternates: { canonical: '/news' },
   openGraph: {
     title: 'Dorchester local news',
     description: 'Publisher headlines with age and source attached, refreshed while the page is open.',

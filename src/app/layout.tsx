@@ -21,6 +21,8 @@ import "@fontsource/noto-sans-arabic/700.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import { DorchesterProviders } from "@/components/providers/DorchesterProviders";
 import { AUTHOR_NAME, AUTHOR_URL, SITE_URL } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -71,6 +73,14 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     other: [{ url: "/icons/maskable-512.png", rel: "maskable-icon", sizes: "512x512", type: "image/png" }],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: {
+      ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+        : {}),
+    },
   },
   other: {
     "msapplication-TileColor": "#14304F",
@@ -155,6 +165,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="dor101-backdrop" aria-hidden="true" />
         <DorchesterProviders>{children}</DorchesterProviders>
         <ServiceWorkerRegistration />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

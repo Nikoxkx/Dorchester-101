@@ -53,6 +53,8 @@ const allowedDevOrigins = isDev
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(self), browsing-history=(), interest-cohort=()",
@@ -60,6 +62,8 @@ const securityHeaders = [
   // Only when the app is really deployed: a preview iframe is a legitimate
   // parent, and sending SAMEORIGIN from a dev server just shows a blank frame.
   ...(isDev ? [] : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
+  // HSTS — 2-year preload, only over HTTPS (Vercel terminates TLS; local dev is http so skip)
+  ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Content-Security-Policy",
@@ -67,11 +71,13 @@ const securityHeaders = [
       "default-src 'self'",
       // Leaflet and the map need inline styles for transforms and sizes; the
       // tile layer is the only cross-origin image source allowed.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // In production we drop 'unsafe-eval' — it's needed only for Next dev HMR.
+      isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org",
+      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
       "font-src 'self'",
-      "connect-src 'self'",
+      // Allow same-origin API fetches + Vercel vitals beacon
+      "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com",
       ...(isDev ? [] : [`frame-ancestors 'self'`]),
       "base-uri 'self'",
       "form-action 'self'",
@@ -103,6 +109,8 @@ const nextConfig: NextConfig = {
     // No remote hosts: every image is either bundled in /public or drawn by the
     // OG route. `domains: ['example.com']` sat here for a reason nobody had.
     localPatterns: [{ pathname: "/**", search: "" }],
+    minimumCacheTTL: 86400,
+    dangerouslyAllowSVG: false,
   },
   // Tree-shake the three libraries that would otherwise ship whole icon and
   // chart families to a phone in Dorchester on a prepaid data plan.
@@ -121,7 +129,15 @@ const nextConfig: NextConfig = {
       // hand, so they can be held a long time.
       {
         source: "/img/(.*)",
-        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }],
+      },
+      {
+        source: "/icons/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }],
+      },
+      {
+        source: "/_next/static/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
       {
         source: "/sw.js",
@@ -130,6 +146,30 @@ const nextConfig: NextConfig = {
           { key: "Service-Worker-Allowed", value: "/" },
         ],
       },
+      {
+        source: "/manifest.json",
+        headers: [{ key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" }],
+      },
+      {
+        source: "/api/health",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
+      {
+        source: "/.well-known/security.txt",
+        headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: "/home", destination: "/", permanent: true },
+      { source: "/index.html", destination: "/", permanent: true },
+      // Normalize trailing slash to avoid duplicate indexing (Google sees /food and /food/ as distinct)
+      { source: "/resources/", destination: "/resources", permanent: true },
+      { source: "/food/", destination: "/food", permanent: true },
+      { source: "/map/", destination: "/map", permanent: true },
+      { source: "/news/", destination: "/news", permanent: true },
+      { source: "/about/", destination: "/about", permanent: true },
     ];
   },
 };

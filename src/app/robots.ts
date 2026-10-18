@@ -16,6 +16,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
+        // Disallow API and personal preference pages; allow everything else.
+        // Preview deployments get an automatic X-Robots-Tag: noindex from Vercel,
+        // so we never need a manual noindex here that would block prod after a bad redeploy.
         allow: '/',
         disallow: ['/api/', '/settings', '/print'],
       },
