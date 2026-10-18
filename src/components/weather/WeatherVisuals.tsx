@@ -109,6 +109,12 @@ export function TempCurve({
 }) {
   const gid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [boxRef, width] = useElementWidth(540);
+  // Apple-Weather scrubbing: hover/pen glides a crosshair along the curve,
+  // a tap or click pins the readout, arrow keys walk it hour by hour.
+  const [active, setActive] = useState<number | null>(null);
+  const [pinned, setPinned] = useState(false);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [viewWidth, setViewWidth] = useState(0);
 
   const drawn = useMemo(() => {
     if (hours.length < 2) return null;
@@ -133,74 +139,172 @@ export function TempCurve({
 
   if (!drawn) return null;
   const { d, coords, min, max, minIdx, maxIdx } = drawn;
+  const n = hours.length;
+
+  const indexFromPointer = (e: React.PointerEvent<HTMLDivElement>): number => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const px = e.clientX - rect.left + el.scrollLeft;
+    const ratio = (px - CURVE_PAD.left) / Math.max(1, width - CURVE_PAD.left - CURVE_PAD.right);
+    return Math.round(Math.min(1, Math.max(0, ratio)) * (n - 1));
+  };
+
+  const activeHour = active != null ? hours[active] : null;
+  const activeCoord = active != null ? coords[active] : null;
+  const readout = activeHour && timeFor
+    ? `${timeFor(activeHour.start)} · ${labelFor(activeHour.tempF)}${activeHour.precipChance != null ? ` · ${activeHour.precipChance}%` : ''} · ${activeHour.shortForecast}`
+    : activeHour
+      ? `${labelFor(activeHour.tempF)} · ${activeHour.shortForecast}`
+      : '';
+
   return (
-    <div ref={boxRef} className="overflow-x-auto pb-1 [scrollbar-width:thin]">
-      <svg
-        width={width}
-        height={CURVE_H}
-        viewBox={`0 0 ${width} ${CURVE_H}`}
-        className="block"
-        role="img"
+    <div className="relative">
+      <div
+        ref={boxRef}
+        role="slider"
+        tabIndex={0}
         aria-label={`${labelFor(min)} – ${labelFor(max)}`}
+        aria-valuemin={0}
+        aria-valuemax={n - 1}
+        aria-valuenow={active ?? 0}
+        aria-valuetext={readout}
+        className="cursor-crosshair overflow-x-auto pb-1 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] rounded-lg"
+        onScroll={(e) => { setScrollLeft(e.currentTarget.scrollLeft); setViewWidth(e.currentTarget.clientWidth); }}
+        onPointerMove={(e) => {
+          if (e.pointerType === 'touch' || pinned) return;
+          setViewWidth(e.currentTarget.clientWidth);
+          setActive(indexFromPointer(e));
+        }}
+        onPointerDown={(e) => {
+          setViewWidth(e.currentTarget.clientWidth);
+          const idx = indexFromPointer(e);
+          if (pinned && idx === active) {
+            setPinned(false);
+            setActive(null);
+          } else {
+            setActive(idx);
+            setPinned(true);
+          }
+        }}
+        onPointerLeave={() => {
+          if (!pinned) setActive(null);
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+          e.preventDefault();
+          const dir = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : -1;
+          setPinned(true);
+          setActive((cur) => Math.min(n - 1, Math.max(0, (cur ?? 0) + dir)));
+        }}
       >
-        <defs>
-          <linearGradient id={`tc-fill-${gid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.26" />
-            <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0.02" />
-          </linearGradient>
-          <linearGradient id={`tc-line-${gid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#3E8BDC" />
-            <stop offset="45%" stopColor="var(--color-accent-primary)" />
-            <stop offset="100%" stopColor="#F59A3C" />
-          </linearGradient>
-        </defs>
-        <path d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-fill-${gid})`} />
-        <path d={d} fill="none" stroke={`url(#tc-line-${gid})`} strokeWidth="3" strokeLinecap="round" />
-        {coords.map((c, i) =>
-          i % 3 === 0 || i === minIdx || i === maxIdx ? (
-            <g key={i}>
-              <circle cx={c.x} cy={c.y} r={i === minIdx || i === maxIdx ? 4.5 : 3} fill="var(--color-bg-card)" stroke="var(--color-accent-primary)" strokeWidth="2" />
-              <text x={c.x} y={c.y - 10} textAnchor="middle" fontSize="12.5" fontWeight={i === minIdx || i === maxIdx ? 800 : 650} fill="var(--color-text-primary)">
-                {labelFor(c.temp)}
-              </text>
-              {timeFor && (
-                <text x={c.x} y={CURVE_H - 12} textAnchor="middle" fontSize="11" fill="var(--color-text-muted)">
-                  {timeFor(hours[i].start)}
+        <svg width={width} height={CURVE_H} viewBox={`0 0 ${width} ${CURVE_H}`} className="block" aria-hidden="true">
+          <defs>
+            <linearGradient id={`tc-fill-${gid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.26" />
+              <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0.02" />
+            </linearGradient>
+            <linearGradient id={`tc-line-${gid}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#3E8BDC" />
+              <stop offset="45%" stopColor="var(--color-accent-primary)" />
+              <stop offset="100%" stopColor="#F59A3C" />
+            </linearGradient>
+          </defs>
+          <path d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-fill-${gid})`} />
+          <path d={d} fill="none" stroke={`url(#tc-line-${gid})`} strokeWidth="3" strokeLinecap="round" />
+          {coords.map((c, i) =>
+            i % 3 === 0 || i === minIdx || i === maxIdx ? (
+              <g key={i}>
+                <circle cx={c.x} cy={c.y} r={i === minIdx || i === maxIdx ? 4.5 : 3} fill="var(--color-bg-card)" stroke="var(--color-accent-primary)" strokeWidth="2" />
+                <text x={c.x} y={c.y - 10} textAnchor="middle" fontSize="12.5" fontWeight={i === minIdx || i === maxIdx ? 800 : 650} fill="var(--color-text-primary)">
+                  {labelFor(c.temp)}
                 </text>
-              )}
+                {timeFor && (
+                  <text x={c.x} y={CURVE_H - 12} textAnchor="middle" fontSize="11" fill="var(--color-text-muted)">
+                    {timeFor(hours[i].start)}
+                  </text>
+                )}
+              </g>
+            ) : null
+          )}
+          {activeCoord && (
+            <g className="transition-all duration-100">
+              <line x1={activeCoord.x} x2={activeCoord.x} y1={CURVE_PAD.top - 14} y2={CURVE_H - CURVE_PAD.bottom} stroke="var(--color-accent-primary)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.75" />
+              <circle cx={activeCoord.x} cy={activeCoord.y} r="9" fill="var(--color-accent-primary)" opacity="0.18" />
+              <circle cx={activeCoord.x} cy={activeCoord.y} r="5" fill="var(--color-accent-primary)" stroke="#FFFFFF" strokeWidth="2" />
             </g>
-          ) : null
-        )}
-      </svg>
+          )}
+        </svg>
+      </div>
+
+      {activeHour && activeCoord && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-xl bg-[var(--color-text-primary)] px-2.5 py-1.5 text-center text-[var(--color-bg-primary)] shadow-[var(--shadow-lg)]"
+          style={{ left: Math.min(Math.max(activeCoord.x - scrollLeft, 64), Math.max(64, (viewWidth || width) - 64)) }}
+        >
+          <span className="block whitespace-nowrap font-heading text-[13px] font-extrabold leading-tight">
+            {timeFor ? timeFor(activeHour.start) : ''} · {labelFor(activeHour.tempF)}
+          </span>
+          <span className="block max-w-[11rem] truncate text-[10px] font-medium opacity-85">
+            {activeHour.shortForecast}
+            {activeHour.precipChance != null && activeHour.precipChance > 0 ? ` · ${activeHour.precipChance}%` : ''}
+          </span>
+        </div>
+      )}
+      <span className="sr-only" role="status">{readout}</span>
     </div>
   );
 }
 
 /** Precipitation probability, hour by hour, as Apple-style bars. */
-export function PrecipBars({ hours, timeFor }: { hours: HourlyPeriod[]; timeFor: (iso: string) => string }) {
+export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]; timeFor: (iso: string) => string; labelFor?: (tempF: number) => string }) {
+  const [active, setActive] = useState<number | null>(null);
   if (!hours.length) return null;
+  const activeHour = active != null ? hours[active] : null;
   return (
-    <div className="overflow-x-auto pb-1 [scrollbar-width:thin]">
-     <div className="min-w-[540px]">
-      <div className="flex h-24 items-end gap-[3px]" aria-hidden="true">
-        {hours.map((h) => {
-          const pct = Math.max(0, Math.min(100, h.precipChance ?? 0));
-          return (
-            <div key={h.start} className="flex flex-1 flex-col items-center gap-1">
-              <span className="text-[9px] font-semibold leading-none text-[var(--color-accent-primary)]">{pct >= 20 ? `${pct}%` : ''}</span>
-              <span className="w-full rounded-t bg-[var(--color-accent-primary)]/80" style={{ height: `${Math.max(3, (pct / 100) * 64)}px`, opacity: 0.35 + pct / 154 }} />
-            </div>
-          );
-        })}
+    <div>
+      <p role="status" className="mb-1 h-5 font-heading text-xs font-bold text-[var(--color-accent-primary)]">
+        {activeHour
+          ? `${timeFor(activeHour.start)} · ${activeHour.precipChance ?? 0}%${labelFor ? ` · ${labelFor(activeHour.tempF)}` : ''} · ${activeHour.shortForecast}`
+          : ''}
+      </p>
+      <div className="overflow-x-auto pb-1 [scrollbar-width:thin]" onPointerLeave={() => setActive(null)}>
+        <div className="min-w-[540px]">
+          <div className="flex h-24 items-end gap-[3px]">
+            {hours.map((h, i) => {
+              const pct = Math.max(0, Math.min(100, h.precipChance ?? 0));
+              const isActive = i === active;
+              return (
+                <button
+                  key={h.start}
+                  type="button"
+                  aria-label={`${timeFor(h.start)}: ${pct}%`}
+                  aria-pressed={isActive}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType !== 'touch') setActive(i);
+                  }}
+                  onClick={() => setActive(isActive ? null : i)}
+                  onFocus={() => setActive(i)}
+                  className={`flex h-full flex-1 flex-col items-center justify-end gap-1 rounded-t-md px-px transition-colors ${isActive ? 'bg-[var(--color-accent-primary)]/12' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
+                >
+                  <span className={`text-[9px] font-semibold leading-none ${isActive ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-accent-primary)]'}`}>{pct >= 20 || isActive ? `${pct}%` : ''}</span>
+                  <span
+                    className="w-full rounded-t bg-[var(--color-accent-primary)] transition-all duration-150"
+                    style={{ height: `${Math.max(3, (pct / 100) * 64) + (isActive ? 4 : 0)}px`, opacity: isActive ? 1 : 0.35 + pct / 154 }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-1 flex gap-[3px]" aria-hidden="true">
+            {hours.map((h, i) => (
+              <span key={h.start} className={`flex-1 whitespace-nowrap text-center text-[10px] leading-none ${i === active ? 'font-bold text-[var(--color-accent-primary)]' : 'text-[var(--color-text-muted)]'}`}>
+                {i % 3 === 0 || i === active ? timeFor(h.start) : ''}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="mt-1 flex gap-[3px]" aria-hidden="true">
-        {hours.map((h, i) => (
-          <span key={h.start} className="flex-1 whitespace-nowrap text-center text-[10px] leading-none text-[var(--color-text-muted)]">
-            {i % 3 === 0 ? timeFor(h.start) : ''}
-          </span>
-        ))}
-      </div>
-     </div>
     </div>
   );
 }

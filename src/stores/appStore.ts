@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { LanguageCode } from '@/i18n/config';
+import type { SceneSetting } from '@/lib/scenes';
 
 export type Theme = 'light' | 'dark' | 'system';
 export type Language = LanguageCode;
@@ -107,6 +108,39 @@ export interface CustomFeed {
   label: string;
 }
 
+/**
+ * Homepage customization (Settings → Homepage). The sections a resident
+ * can hide or rearrange; the storm/emergency banner is deliberately not
+ * in this list — it is a safety surface, not furniture.
+ */
+export type HomeSectionId =
+  | 'nowbar'
+  | 'hero'
+  | 'greeting'
+  | 'weather'
+  | 'permissions'
+  | 'glance'
+  | 'quick'
+  | 'clothing'
+  | 'news'
+  | 'map'
+  | 'extras';
+export const HOME_SECTION_ORDER: HomeSectionId[] = [
+  'nowbar', 'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
+];
+export type HomeCardStyle = 'match' | 'solid' | 'glass' | 'tinted' | 'aurora';
+export const HOME_CARD_STYLES: HomeCardStyle[] = ['match', 'solid', 'glass', 'tinted', 'aurora'];
+export interface HomeLayout {
+  order: HomeSectionId[];
+  hidden: HomeSectionId[];
+  cardStyle: HomeCardStyle;
+}
+export const DEFAULT_HOME_LAYOUT: HomeLayout = {
+  order: HOME_SECTION_ORDER,
+  hidden: [],
+  cardStyle: 'match',
+};
+
 interface AppState {
   theme: Theme;
   language: Language;
@@ -122,6 +156,11 @@ interface AppState {
   mapStyle: MapStyle;
   surface: Surface;
   palette: Palette;
+  /** Whole-site theme scene; 'classic' leaves palette/surface in charge. */
+  scene: SceneSetting;
+  homeLayout: HomeLayout;
+  /** The plain-language privacy notice has been shown and acknowledged. */
+  consentSeen: boolean;
   accessibility: AccessibilityPrefs;
   speechRate: number;
   /**
@@ -159,6 +198,10 @@ interface AppState {
   setMapStyle: (style: MapStyle) => void;
   setSurface: (surface: Surface) => void;
   setPalette: (palette: Palette) => void;
+  setScene: (scene: SceneSetting) => void;
+  setHomeLayout: (layout: HomeLayout) => void;
+  resetHomeLayout: () => void;
+  setConsentSeen: (seen: boolean) => void;
   setAccessibility: <K extends keyof AccessibilityPrefs>(key: K, value: AccessibilityPrefs[K]) => void;
   toggleAccessibility: (key: keyof Pick<AccessibilityPrefs, 'underlineLinks' | 'largeFocus' | 'legibleFont' | 'textSpacing' | 'announceUpdates'>) => void;
   setAccessibilityAuto: (key: 'reduceMotion' | 'highContrast') => void;
@@ -218,6 +261,9 @@ export const useAppStore = create<AppState>()(
       mapStyle: 'satellite',
       surface: 'solid',
       palette: 'harbor',
+      scene: 'classic',
+      homeLayout: DEFAULT_HOME_LAYOUT,
+      consentSeen: false,
       accessibility: DEFAULT_ACCESSIBILITY,
       speechRate: 1,
       speechVoiceURI: null,
@@ -247,6 +293,10 @@ export const useAppStore = create<AppState>()(
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setSurface: (surface) => set({ surface }),
       setPalette: (palette) => set({ palette }),
+      setScene: (scene) => set({ scene }),
+      setHomeLayout: (homeLayout) => set({ homeLayout }),
+      resetHomeLayout: () => set({ homeLayout: DEFAULT_HOME_LAYOUT }),
+      setConsentSeen: (consentSeen) => set({ consentSeen }),
 
       setAccessibility: (key, value) =>
         set((s) => ({ accessibility: { ...s.accessibility, [key]: value } })),
@@ -297,6 +347,9 @@ export const useAppStore = create<AppState>()(
           mapStyle: 'satellite',
           surface: 'solid',
           palette: 'harbor',
+          scene: 'classic',
+          homeLayout: DEFAULT_HOME_LAYOUT,
+          consentSeen: false,
           accessibility: DEFAULT_ACCESSIBILITY,
           speechRate: 1,
           speechVoiceURI: null,
@@ -322,6 +375,9 @@ export const useAppStore = create<AppState>()(
         mapStyle: s.mapStyle,
         surface: s.surface,
         palette: s.palette,
+        scene: s.scene,
+        homeLayout: s.homeLayout,
+        consentSeen: s.consentSeen,
         accessibility: s.accessibility,
         speechRate: s.speechRate,
         speechVoiceURI: s.speechVoiceURI,

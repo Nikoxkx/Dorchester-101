@@ -77,7 +77,7 @@ describe('PWAInstaller banner', () => {
       window.dispatchEvent(new Event('beforeinstallprompt'));
     });
 
-    expect(screen.getByText('Install DOR101 on your computer')).toBeTruthy();
+    expect(screen.getByText('Install DOR101 on this device')).toBeTruthy();
     const exeLink = screen.getByText('Windows app (.exe)').closest('a');
     expect(exeLink?.getAttribute('href')).toBe('/api/download?get=installer');
   });
@@ -91,7 +91,7 @@ describe('PWAInstaller banner', () => {
     });
 
     expect(container.textContent).not.toContain('Windows app (.exe)');
-    expect(container.textContent).not.toContain('Install DOR101 on your computer');
+    expect(container.textContent).not.toContain('Install DOR101 on this device');
   });
 });
 

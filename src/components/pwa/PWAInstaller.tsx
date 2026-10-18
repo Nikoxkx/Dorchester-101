@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Monitor, CheckCircle } from 'lucide-react';
+import { Download, X, Monitor, CheckCircle, Share } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isDesktopApp } from '@/lib/desktop';
 import { useAppStore } from '@/stores/appStore';
@@ -23,6 +23,16 @@ export function PWAInstaller() {
   // inside the desktop app itself. The service worker registration above still
   // runs; only the banner is suppressed.
   const [inDesktop] = useState(isDesktopApp);
+  // iPhone/iPad Safari has no beforeinstallprompt: installing is a manual
+  // Share-sheet step, so the banner teaches it instead of offering a
+  // button that can never appear there.
+  const [isIOS] = useState(
+    () =>
+      typeof navigator !== 'undefined' &&
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
+      !('standalone' in navigator && (navigator as { standalone?: boolean }).standalone)
+  );
 
   useEffect(() => {
     // Register service worker
@@ -49,6 +59,11 @@ export function PWAInstaller() {
     };
 
     window.addEventListener('beforeinstallprompt', handler);
+    // Deferred a tick: keep synchronous state writes out of the effect body.
+    const iosTimer =
+      isIOS && !localStorage.getItem('dor101-install-dismissed')
+        ? window.setTimeout(() => setShowBanner(true), 0)
+        : undefined;
 
     window.addEventListener('appinstalled', () => {
       setInstalled(true);
@@ -58,8 +73,9 @@ export function PWAInstaller() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      if (iosTimer !== undefined) window.clearTimeout(iosTimer);
     };
-  }, []);
+  }, [isIOS]);
 
   const handleInstall = async () => {
     if (!installPrompt) return;
@@ -104,35 +120,44 @@ export function PWAInstaller() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-heading font-semibold text-sm mb-1">
-              Install DOR101 on your computer
+              {t('pwa.installTitle')}
             </h3>
             <p className="text-xs text-[var(--color-text-muted)] mb-3 leading-relaxed">
-              Get one-click access from your desktop or Start menu. Works offline. No app store needed.
+              {isIOS && !installPrompt ? t('pwa.iosSteps') : t('pwa.installHint')}
             </p>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleInstall}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-heading font-medium',
-                  'bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-primary)]/90 transition-colors'
-                )}
-              >
-                <Download className="w-4 h-4" />
-                Install App
-              </button>
+              {installPrompt ? (
+                <button
+                  onClick={handleInstall}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-heading font-medium',
+                    'bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-primary)]/90 transition-colors'
+                  )}
+                >
+                  <Download className="w-4 h-4" />
+                  {t('pwa.install')}
+                </button>
+              ) : isIOS ? (
+                <span className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-heading font-medium border border-[var(--color-border)]">
+                  <Share className="w-4 h-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+                  {t('pwa.install')}
+                </span>
+              ) : null}
               {/* The real .exe, straight from the latest release. */}
-              <a
-                href="/api/download?get=installer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-heading font-medium border border-[var(--color-border)] hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] transition-colors"
-              >
-                <Monitor className="w-4 h-4" />
-                Windows app (.exe)
-              </a>
+              {!isIOS && (
+                <a
+                  href="/api/download?get=installer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-heading font-medium border border-[var(--color-border)] hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] transition-colors"
+                >
+                  <Monitor className="w-4 h-4" />
+                  {t('pwa.windowsExe')}
+                </a>
+              )}
               <button
                 onClick={handleDismiss}
                 className="px-4 py-2 rounded-lg text-sm font-heading text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
               >
-                Not now
+                {t('pwa.notNow')}
               </button>
             </div>
           </div>

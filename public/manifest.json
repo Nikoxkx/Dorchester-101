@@ -1,7 +1,7 @@
 {
   "name": "Dorchester 101 (DOR101)",
   "short_name": "DOR101",
-  "description": "Dorchester 101 \u2014 free housing, food open now, live MBTA buses and trains, Boston weather with what to wear, and free winter clothing for Dorchester, Boston. Nine languages, no account, no ads.",
+  "description": "Dorchester 101 — free housing, food open now, live MBTA buses and trains, Boston weather with what to wear, and free winter clothing for Dorchester, Boston. Nine languages, no account, no ads.",
   "start_url": "/",
   "display": "standalone",
   "display_override": [
@@ -60,10 +60,49 @@
   ],
   "shortcuts": [
     {
+      "name": "Live MBTA Map",
+      "short_name": "Map",
+      "url": "/map",
+      "description": "Real-time buses, trains and every Dorchester resource",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Boston Weather & What to Wear",
+      "short_name": "Weather",
+      "url": "/weather",
+      "description": "Live forecast, storm warnings and what to wear today",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Food Open Now",
+      "short_name": "Food",
+      "url": "/food",
+      "description": "Food pantries and meal programs open right now",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
       "name": "Affordable Housing",
       "short_name": "Housing",
       "url": "/affordable-housing",
-      "description": "Find income-restricted housing in Dorchester",
+      "description": "Income-restricted housing and tenant rights in Dorchester",
       "icons": [
         {
           "src": "/icons/icon-192.png",
@@ -73,36 +112,10 @@
       ]
     },
     {
-      "name": "Food Resources",
-      "short_name": "Food",
-      "url": "/food",
-      "description": "Find food pantries and meal programs",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Map",
-      "short_name": "Map",
-      "url": "/map",
-      "description": "View Dorchester resources map",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "News",
-      "short_name": "News",
-      "url": "/news",
-      "description": "Latest community news",
+      "name": "Free Winter Clothing",
+      "short_name": "Coats",
+      "url": "/winter-clothing",
+      "description": "Verified free coats and warm clothing near Dorchester",
       "icons": [
         {
           "src": "/icons/icon-192.png",
@@ -125,7 +138,7 @@
       "sizes": "1920x1080",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "DOR101 \u2014 Dorchester Bay at sunset"
+      "label": "DOR101 — Dorchester Bay at sunset"
     },
     {
       "src": "/og.png",
@@ -139,9 +152,10 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "DOR101 \u2014 app icon 512"
+      "label": "DOR101 — app icon 512"
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "id": "/"
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, ChevronRight, Moon, Shirt, Sun, Sunrise, Sunset } from 'lucide-react';
-import { buildStyleTips, dayPhase, pickSpotlightTip, type WeatherPayload } from '@/lib/weather';
+import { ArrowRight, ChevronLeft, ChevronRight, Lightbulb, Moon, Shirt, Sun, Sunrise, Sunset } from 'lucide-react';
+import { buildStyleTips, dayPhase, pickSpotlightTip, type DaySummary, type HourlyPeriod, type WeatherPayload } from '@/lib/weather';
 import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
 import { useReduceMotion } from '@/stores/appStore';
@@ -51,6 +51,65 @@ export function WearSpotlight({ payload, unit }: { payload: WeatherPayload; unit
   const spotlightIndex = Math.max(0, tips.findIndex((tip) => tip.kind === spotlight?.kind));
   const chosenIndex = tips.findIndex((tip) => tip.kind === chosenKind);
   const index = chosenIndex >= 0 ? chosenIndex : spotlightIndex;
+
+
+  // "Did you know?" — small rotating facts for the space under the tip.
+  // Most are computed from the same live payload (tonight's sunset, the
+  // week's warmest afternoon, the wettest hour), so they are never stale;
+  // two are evergreen Dorchester history. They crossfade every few
+  // seconds, pausing while the tab is hidden.
+  // Hoisted out of the memo: the compiler treats deep reads of `payload`
+  // inside a memo like ref access, so the slices are named first.
+  const astro = payload.astronomy;
+  const factDays = payload.days;
+  const factHours = payload.hourly;
+  const windMphNow = payload.current?.windMph;
+  const windDirNow = payload.current?.windDir;
+  const facts = useMemo<string[]>(() => {
+    const out: string[] = [];
+    const today = factDays[0];
+    if (astro?.sunset) out.push(t('weather.fact.sunset', { time: format.time(astro.sunset) }));
+    if (today && today.highF != null && today.lowF != null && today.highF - today.lowF >= 12) {
+      out.push(t('weather.fact.swing', { low: tempText(today.lowF, unit, format.number), high: tempText(today.highF, unit, format.number) }));
+    }
+    const warmest = factDays.reduce<DaySummary | null>(
+      (best, d) => (d.highF != null && (best?.highF == null || d.highF > best.highF) ? d : best),
+      null
+    );
+    if (warmest?.highF != null) {
+      out.push(t('weather.fact.warmest', { day: format.weekday(new Date(`${warmest.date}T12:00:00`)), temp: tempText(warmest.highF, unit, format.number) }));
+    }
+    const coldest = factDays.reduce<DaySummary | null>(
+      (best, d) => (d.lowF != null && (best?.lowF == null || d.lowF < best.lowF) ? d : best),
+      null
+    );
+    if (coldest?.lowF != null) {
+      out.push(t('weather.fact.coldest', { day: format.weekday(new Date(`${coldest.date}T12:00:00`)), temp: tempText(coldest.lowF, unit, format.number) }));
+    }
+    const wetHour = factHours.slice(0, 24).reduce<HourlyPeriod | null>(
+      (best, h) => ((h.precipChance ?? 0) > (best?.precipChance ?? 0) ? h : best),
+      null
+    );
+    if (wetHour && (wetHour.precipChance ?? 0) >= 30) {
+      out.push(t('weather.fact.rainPeak', { time: format.time(wetHour.start), chance: format.percent((wetHour.precipChance ?? 0) / 100, 0) }));
+    }
+    if (windMphNow != null && windMphNow >= 8) {
+      out.push(t('weather.fact.windNow', { wind: `${windDirNow ?? ''} ${format.number(Math.round(windMphNow))} mph`.trim() }));
+    }
+    if (astro?.sunrise) out.push(t('weather.fact.sunrise', { time: format.time(astro.sunrise) }));
+    out.push(t('weather.fact.history'), t('weather.fact.redline'));
+    return out;
+  }, [astro, factDays, factHours, windMphNow, windDirNow, t, format, unit]);
+
+  const [factIndex, setFactIndex] = useState(0);
+  useEffect(() => {
+    if (facts.length < 2) return;
+    const id = window.setInterval(() => {
+      if (!document.hidden) setFactIndex((i) => (i + 1) % facts.length);
+    }, 7000);
+    return () => window.clearInterval(id);
+  }, [facts.length]);
+  const fact = facts[Math.min(factIndex, Math.max(0, facts.length - 1))];
 
   if (!tips.length || !spotlight) return null;
   const tip = tips[Math.min(index, tips.length - 1)] ?? spotlight;
@@ -118,6 +177,31 @@ export function WearSpotlight({ payload, unit }: { payload: WeatherPayload; unit
             </span>
           ))}
         </div>
+
+        {fact && (
+          <div className="relative mt-3 min-h-[2.6rem] overflow-hidden rounded-2xl bg-white/12 px-3 py-2 ring-1 ring-white/20 backdrop-blur-sm" aria-live="off">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={fact}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : -8 }}
+                transition={{ duration: reduceMotion ? 0.1 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className="flex items-start gap-2 text-[13px] font-medium leading-snug text-white/95"
+              >
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-white/90" aria-hidden="true" />
+                <span><strong className="font-heading">{t('weather.fact.title')}</strong> {fact}</span>
+              </motion.p>
+            </AnimatePresence>
+            {facts.length > 1 && (
+              <span className="absolute bottom-1 end-2 flex gap-1" aria-hidden="true">
+                {facts.map((f, i) => (
+                  <span key={f.slice(0, 24) + i} className={`h-1 rounded-full transition-all ${i === Math.min(factIndex, facts.length - 1) ? 'w-3 bg-white' : 'w-1 bg-white/40'}`} />
+                ))}
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {tipsNeedCoat(tips) && (

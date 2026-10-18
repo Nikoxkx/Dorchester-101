@@ -10,7 +10,6 @@ import { useNow } from '@/hooks/useNow';
 import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
-import { skyGradient } from '@/components/weather/WeatherVisuals';
 
 /**
  * The "right now" strip. The weather chip reads the shared NWS payload
@@ -83,11 +82,17 @@ export function NowBar() {
       aria-label={t('dashboard.nowTitle')}
       className="relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)]/85 px-3 py-2.5 shadow-[var(--shadow)] backdrop-blur-xl sm:px-4 drop-shadow-sm"
     >
-      {/* Ambient glow: the live sky, blurred, so the strip always matches the weather below it. */}
+      {/* Ambient glow in the resident's own UI colors: the strip takes the
+          active palette/scene accents, so recoloring the site recolors this
+          bar in the same instant — it must never wear the weather's sky
+          while the rest of the page wears forest green. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.16]"
-        style={{ background: chipKind ? skyGradient(chipKind, current?.isDay ?? hour0?.isDay ?? true) : undefined }}
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.14]"
+        style={{
+          background:
+            'linear-gradient(115deg, color-mix(in srgb, var(--color-accent-primary) 60%, transparent), color-mix(in srgb, var(--color-accent-secondary) 45%, transparent))',
+        }}
       />
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
         <span className="flex items-center gap-2.5 pe-1">
@@ -109,7 +114,7 @@ export function NowBar() {
             className={statLink}
             aria-label={`${t('weather.homeTitle')}: ${tempText(chipTemp, unit, format.number)}, ${t(`weather.cond.${chipKind}` as never)}${alertCount > 0 ? ` · ${t('weather.alertsTitle')} (${format.number(alertCount)})` : ''}`}
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white shadow-sm" style={{ background: skyGradient(chipKind, current?.isDay ?? hour0?.isDay ?? true) }} aria-hidden="true">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white shadow-sm" style={{ background: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))' }} aria-hidden="true">
               <ConditionIcon kind={chipKind} isDay={current?.isDay ?? hour0?.isDay ?? true} className="h-5 w-5" />
             </span>
             <span className="leading-tight">

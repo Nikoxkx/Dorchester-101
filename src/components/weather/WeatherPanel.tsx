@@ -98,7 +98,7 @@ export function WeatherPanel() {
                 <>
                   <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
                   <div className="mt-1">
-                    <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} />
+                    <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
                   </div>
                 </>
               )}

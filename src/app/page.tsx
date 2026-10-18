@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BadgeCheck, BookOpen, Calendar, Clock, DollarSign, MapPin, Shield } from 'lucide-react';
 import { MapPreview } from '@/components/map/DorchesterMapLoader';
 import { useI18n } from '@/i18n/hook';
-import { useAppStore } from '@/stores/appStore';
+import { useAppStore, type HomeSectionId } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
@@ -78,6 +78,16 @@ export default function DashboardPage() {
   const setLastUpdated = useAppStore((s) => s.setLastUpdated);
   const dataEpoch = useAppStore((s) => s.dataEpoch);
   const earnBadge = useBadgeStore((s) => s.earn);
+
+  // Resident-arranged homepage (Settings → Homepage): every block below is
+  // wrapped in a slot whose flex `order` and visibility come from the
+  // stored layout, so sections can be rearranged or removed entirely
+  // without touching this file's data wiring. The emergency banner is not
+  // a slot: it always rides just ahead of the weather, hidden or not.
+  const homeLayout = useAppStore((s) => s.homeLayout);
+  const show = (id: HomeSectionId) => !homeLayout.hidden.includes(id);
+  const slot = (id: HomeSectionId): CSSProperties => ({ order: Math.max(0, homeLayout.order.indexOf(id)) * 10 });
+  const emergencySlot: CSSProperties = { order: Math.max(0, homeLayout.order.indexOf('weather')) * 10 - 1 };
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsSnapshot, setNewsSnapshot] = useState<{ asOf: string; note: string } | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
@@ -186,9 +196,15 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <motion.div variants={pv} initial="initial" animate="enter" className="flex flex-col gap-7 pb-10">
+      <motion.div variants={pv} initial="initial" animate="enter" className="dor101-home flex flex-col gap-7 pb-10" data-cards={homeLayout.cardStyle === 'match' ? undefined : homeLayout.cardStyle}>
+{show('nowbar') && (
+          <div style={slot('nowbar')}>
         <NowBar />
 
+          </div>
+        )}
+{show('hero') && (
+          <div style={slot('hero')}>
         {/* ── Photo hero: Dorchester Bay at sunset, not a gradient ── */}
         <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
           <Image
@@ -229,6 +245,10 @@ export default function DashboardPage() {
           </div>
         </section>
 
+          </div>
+        )}
+{show('greeting') && (
+          <div style={slot('greeting')}>
         {/* ── Greeting ─────────────────────────────────────── */}
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -242,16 +262,30 @@ export default function DashboardPage() {
           <DataRefreshIndicator lastUpdated={lastRefresh} isRefreshing={loading} />
         </header>
 
+          </div>
+        )}
+        <div style={emergencySlot}>
         <EmergencyBanner />
 
+        </div>
+{show('weather') && (
+          <div style={slot('weather')}>
         {/* Live weather with what-to-wear advice, from the same NWS payload
             that drives the storm banner above every page. */}
         <WeatherPanel />
 
+          </div>
+        )}
+{show('permissions') && (
+          <div style={slot('permissions')}>
         {/* The optional asks: alerts, location, offline storage — one explicit
             card instead of surprise browser prompts. Dismissible. */}
         <PermissionSetup variant="banner" />
 
+          </div>
+        )}
+{show('glance') && (
+          <div style={slot('glance')}>
         {/* ── Stats, every one computed ───────────────────── */}
         <section aria-labelledby="glance">
           <h2 id="glance" className="mb-3 font-heading text-lg font-bold sm:text-xl">
@@ -305,6 +339,10 @@ export default function DashboardPage() {
           </motion.div>
         </section>
 
+          </div>
+        )}
+{show('quick') && (
+          <div style={slot('quick')}>
         {/* ── Quick links ─────────────────────────────────── */}
         <section aria-labelledby="quick">
           <h2 id="quick" className="mb-3 font-heading text-lg font-bold sm:text-xl">
@@ -313,10 +351,18 @@ export default function DashboardPage() {
           <QuickLinks />
         </section>
 
+          </div>
+        )}
+{show('clothing') && (
+          <div style={slot('clothing')}>
         {/* Free winter clothing; the heading turns urgent when the live
             weather says a warm coat matters today. */}
         <ClothingPreview />
 
+          </div>
+        )}
+{show('news') && (
+          <div style={slot('news')}>
         {/* ── News + verification log ─────────────────────── */}
         <div className="grid gap-4 lg:grid-cols-3">
           <section className="lg:col-span-2" aria-label={t('dashboard.latestNews')}>
@@ -413,6 +459,10 @@ export default function DashboardPage() {
           </section>
         </div>
 
+          </div>
+        )}
+{show('map') && (
+          <div style={slot('map')}>
         {/* ── Map preview ─────────────────────────────────── */}
         <section aria-label={t('dashboard.mapTitle')}>
           <Card className="overflow-hidden">
@@ -441,6 +491,10 @@ export default function DashboardPage() {
           </Card>
         </section>
 
+          </div>
+        )}
+{show('extras') && (
+          <div style={slot('extras')}>
         {/* ── Explorer Badges + Offline Field Notes ───────── */}
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
@@ -451,7 +505,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <footer className="border-t border-[var(--color-border)] pt-5 text-center">
+          </div>
+        )}
+        <footer style={{ order: 900 }} className="border-t border-[var(--color-border)] pt-5 text-center">
           <p className="text-sm text-[var(--color-text-secondary)]">{t('dashboard.footer.line1')}</p>
           <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">{t('dashboard.footer.line2')}</p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
@@ -459,9 +515,11 @@ export default function DashboardPage() {
           </p>
         </footer>
 
+        <div style={{ order: 901 }}>
         <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']} className="mt-10">
           Every number on this page is computed from a dataset the site ships or from an API that names its own source and date. The directory counts are live from the listing data; the rent figure is the Census Bureau&apos;s; the headlines come from the publishers.
         </ProjectNote>
+        </div>
       </motion.div>
     </MainLayout>
   );

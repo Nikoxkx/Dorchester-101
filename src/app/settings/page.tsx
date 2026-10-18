@@ -4,7 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  Ghost,
+  Leaf,
+  LayoutGrid,
+  Palette as PaletteIcon,
+  RefreshCw,
+  RotateCcw,
+  Snowflake,
+  Sunset,
+  Wand2,
   BellRing,
   Check,
   Database,
@@ -25,7 +38,8 @@ import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
-import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface } from '@/stores/appStore';
+import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId } from '@/stores/appStore';
+import { SCENE_SETTINGS, isInSeason, resolveScene, type SceneSetting } from '@/lib/scenes';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
@@ -49,10 +63,43 @@ import type { TranslationKey } from '@/i18n/en';
  * guessing.
  */
 
-const SECTION_IDS = ['language', 'appearance', 'accessibility', 'data', 'permissions', 'feeds', 'saved', 'privacy'] as const;
+const SECTION_IDS = ['language', 'appearance', 'homepage', 'accessibility', 'data', 'permissions', 'feeds', 'saved', 'privacy'] as const;
 type SectionId = (typeof SECTION_IDS)[number];
 
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
+
+/** Mini preview skies for the scene cards: the actual backdrop mood in one gradient. */
+const SCENE_PREVIEW: Record<SceneSetting, { bg: string; fg: string }> = {
+  classic: { bg: 'linear-gradient(135deg,#14304F,#2C5A86 60%,#A6362A)', fg: '#FFFFFF' },
+  auto: { bg: 'linear-gradient(135deg,#7FB4E8,#F0A35E 55%,#9BE15D)', fg: '#FFFFFF' },
+  halloween: { bg: 'radial-gradient(60% 60% at 82% 18%,#F5E8BE 0 12%,transparent 40%),linear-gradient(160deg,#0D0518,#2A1845)', fg: '#FF8A3C' },
+  'first-snow': { bg: 'linear-gradient(160deg,#D8E6F2,#8FC7F2 65%,#1F6FB4)', fg: '#FFFFFF' },
+  autumn: { bg: 'linear-gradient(150deg,#F0A35E,#B3531F 60%,#71852B)', fg: '#FFF3E0' },
+  'harbor-sunset': { bg: 'linear-gradient(150deg,#FFB08A,#C2432B 55%,#7A3A8C)', fg: '#FFEDE8' },
+};
+const SCENE_ICON: Record<SceneSetting, typeof Ghost> = {
+  classic: PaletteIcon,
+  auto: Wand2,
+  halloween: Ghost,
+  'first-snow': Snowflake,
+  autumn: Leaf,
+  'harbor-sunset': Sunset,
+};
+
+/** Labels for the homepage section list, reusing existing keys where they exist. */
+const HOME_SECTION_LABEL: Record<HomeSectionId, TranslationKey> = {
+  nowbar: 'settings.home.section.nowbar',
+  hero: 'settings.home.section.hero',
+  greeting: 'settings.home.section.greeting',
+  weather: 'settings.home.section.weather',
+  permissions: 'settings.section.permissions',
+  glance: 'dashboard.glance',
+  quick: 'dashboard.quickAccess',
+  clothing: 'nav.clothing',
+  news: 'settings.home.section.news',
+  map: 'dashboard.mapTitle',
+  extras: 'settings.home.section.extras',
+};
 
 /** Preview swatches — the same hexes as the palette blocks in globals.css. */
 const PALETTE_SWATCH: Record<Palette, { light: { bg: string; card: string; accent: string; accent2: string }; dark: { bg: string; card: string; accent: string; accent2: string } }> = {
@@ -105,6 +152,59 @@ const SIZE_KEY: Record<FontSize, TranslationKey> = {
 };
 const MAP_STYLES: MapStyle[] = ['satellite', 'street', 'hybrid'];
 const REFRESH_CHOICES = [1, 2, 5, 10, 15, 30, 60];
+
+
+/**
+ * "Check for updates" — asks the service worker to look for a newer build
+ * right now instead of waiting for the hourly background check. If a
+ * worker is already waiting, the existing polite reload banner (in
+ * ServiceWorkerRegistration) is what applies it; this control just
+ * reports the verdict honestly, including when there is no worker
+ * (desktop shell, private mode) and so nothing to check against.
+ */
+function UpdateChecker() {
+  const { t } = useI18n();
+  const [state, setState] = useState<'idle' | 'checking' | 'current' | 'found' | 'unavailable'>('idle');
+
+  const check = async () => {
+    if (!('serviceWorker' in navigator)) {
+      setState('unavailable');
+      return;
+    }
+    setState('checking');
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        setState('unavailable');
+        return;
+      }
+      await reg.update();
+      // A freshly found worker takes a beat to reach `waiting`.
+      window.setTimeout(() => setState(reg.waiting ? 'found' : 'current'), 900);
+    } catch {
+      setState('unavailable');
+    }
+  };
+
+  return (
+    <div className="mt-2.5 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        onClick={() => void check()}
+        disabled={state === 'checking'}
+        className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3.5 py-1.5 font-heading text-xs font-bold text-white transition-transform active:scale-[0.97] disabled:opacity-60"
+      >
+        <RefreshCw className={cn('h-3.5 w-3.5', state === 'checking' && 'animate-spin')} aria-hidden="true" />
+        {state === 'checking' ? t('settings.updates.checking') : t('settings.updates.check')}
+      </button>
+      <span role="status" className="text-xs text-[var(--color-text-secondary)]">
+        {state === 'current' && t('settings.updates.current', { version: APP_VERSION })}
+        {state === 'found' && t('settings.updates.found')}
+        {state === 'unavailable' && t('settings.updates.current', { version: APP_VERSION })}
+      </span>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { t, lang, format } = useI18n();
@@ -160,6 +260,7 @@ export default function SettingsPage() {
   const sectionTitle: Record<SectionId, TranslationKey> = {
     language: 'settings.section.locale',
     appearance: 'settings.section.appearance',
+    homepage: 'settings.section.homepage',
     accessibility: 'settings.section.accessibility',
     data: 'settings.section.data',
     permissions: 'settings.section.permissions',
@@ -280,6 +381,40 @@ export default function SettingsPage() {
         {/* ── Appearance ───────────────────────────────────────────── */}
         <Section id="appearance" title={t('settings.section.appearance')} icon={<Sparkles className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.appearance = node; }}>
           <div className="grid gap-4 lg:grid-cols-2">
+            <fieldset className="lg:col-span-2">
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.scene')}
+              </legend>
+              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-6">
+                {SCENE_SETTINGS.map((value) => {
+                  const active = store.scene === value;
+                  const Icon = SCENE_ICON[value];
+                  const preview = SCENE_PREVIEW[value];
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer overflow-hidden rounded-[var(--radius-md)] border text-center text-xs font-heading transition-all',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] ring-1 ring-[var(--color-accent-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
+                      )}
+                    >
+                      <input type="radio" name="scene" className="sr-only" checked={active} onChange={() => store.setScene(value)} />
+                      <span aria-hidden="true" className="flex h-14 items-end justify-end p-1.5" style={{ background: preview.bg, color: preview.fg }}>
+                        <Icon className="h-5 w-5 drop-shadow" />
+                      </span>
+                      <span className="block px-1.5 py-1.5 leading-tight">
+                        {t(`settings.scene.${value}` as TranslationKey)}
+                        {isInSeason(value) && <span className="mt-0.5 block text-[10px] font-bold text-[var(--color-accent-green)]">{t('settings.scene.inSeason')}</span>}
+                        {value === 'auto' && <span className="mt-0.5 block text-[10px] text-[var(--color-text-muted)]">{t(`settings.scene.${resolveScene('auto')}` as TranslationKey)}</span>}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.sceneNote')}</p>
+            </fieldset>
+
             <fieldset>
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('settings.theme')}
@@ -420,6 +555,91 @@ export default function SettingsPage() {
                 {t('settings.mapSatelliteNote')}
               </p>
             </fieldset>
+          </div>
+        </Section>
+
+        {/* ── Homepage layout ─────────────────────────────────────── */}
+        <Section id="homepage" title={t('settings.section.homepage')} icon={<LayoutGrid className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.homepage = node; }}>
+          <p className="mb-3 max-w-prose text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.home.intro')}</p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <fieldset>
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.home.cardStyle')}
+              </legend>
+              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {HOME_CARD_STYLES.map((value) => {
+                  const active = store.homeLayout.cardStyle === value;
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer rounded-[var(--radius-md)] border px-2 py-2 text-center text-xs font-heading transition-colors',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="home-card-style"
+                        className="sr-only"
+                        checked={active}
+                        onChange={() => store.setHomeLayout({ ...store.homeLayout, cardStyle: value })}
+                      />
+                      {value === 'match' ? t('settings.home.cardStyle.match') : t(`settings.surface.${value}` as TranslationKey)}
+                    </label>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => store.resetHomeLayout()}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 font-heading text-xs font-bold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]"
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> {t('settings.home.reset')}
+              </button>
+            </fieldset>
+
+            <div>
+              <p className="mb-2 text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{t('settings.section.homepage')}</p>
+              <ol className="space-y-1">
+                {store.homeLayout.order.map((id, index) => {
+                  const hidden = store.homeLayout.hidden.includes(id);
+                  const move = (dir: -1 | 1) => {
+                    const order = [...store.homeLayout.order];
+                    const j = index + dir;
+                    if (j < 0 || j >= order.length) return;
+                    [order[index], order[j]] = [order[j], order[index]];
+                    store.setHomeLayout({ ...store.homeLayout, order });
+                  };
+                  return (
+                    <li key={id} className={cn('flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2 py-1.5', hidden && 'opacity-55')}>
+                      <span className="min-w-0 flex-1 truncate text-xs font-medium">{t(HOME_SECTION_LABEL[id])}</span>
+                      <button type="button" onClick={() => move(-1)} disabled={index === 0} aria-label={`${t('settings.home.moveUp')}: ${t(HOME_SECTION_LABEL[id])}`} className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-30">
+                        <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <button type="button" onClick={() => move(1)} disabled={index === store.homeLayout.order.length - 1} aria-label={`${t('settings.home.moveDown')}: ${t(HOME_SECTION_LABEL[id])}`} className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-30">
+                        <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!hidden}
+                        aria-label={`${hidden ? t('settings.home.show') : t('settings.home.hide')}: ${t(HOME_SECTION_LABEL[id])}`}
+                        onClick={() =>
+                          store.setHomeLayout({
+                            ...store.homeLayout,
+                            hidden: hidden ? store.homeLayout.hidden.filter((h) => h !== id) : [...store.homeLayout.hidden, id],
+                          })
+                        }
+                        className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)]"
+                      >
+                        {hidden ? <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> : <Eye className="h-3.5 w-3.5" aria-hidden="true" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
           </div>
         </Section>
 
@@ -634,6 +854,15 @@ export default function SettingsPage() {
               })}
             </div>
           </fieldset>
+
+          <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+            <h3 className="flex items-center gap-2 font-heading text-sm font-semibold">
+              <RefreshCw className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+              {t('settings.updates.title')} · <span className="font-mono text-xs">{t('settings.version', { version: APP_VERSION })}</span>
+            </h3>
+            <p className="mt-1 max-w-prose text-xs leading-relaxed text-[var(--color-text-secondary)]">{t('settings.updates.body')}</p>
+            <UpdateChecker />
+          </div>
         </Section>
 
         {/* ── Permissions & alerts ──────────────────────────────────── */}

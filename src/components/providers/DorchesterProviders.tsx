@@ -8,6 +8,7 @@ import { languageMeta } from '@/i18n/config';
 import { useI18n } from '@/i18n/hook';
 import { LiveRegionProvider } from './LiveRegion';
 import { SkipLink, ShortcutHelp } from '@/components/a11y';
+import { SceneDecor } from '@/components/theme/SceneDecor';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 /**
@@ -36,6 +37,7 @@ function DocumentSettings() {
     root.dataset.textSpacing = String(prefs.textSpacing);
     root.dataset.surface = prefs.surface;
     root.dataset.palette = prefs.palette;
+    root.dataset.scene = prefs.scene;
     root.style.fontSize = prefs.fontSizePx;
   }, [
     prefs.dir,
@@ -49,6 +51,7 @@ function DocumentSettings() {
     prefs.textSpacing,
     prefs.surface,
     prefs.palette,
+    prefs.scene,
     prefs.fontSizePx,
     meta.intlLocale,
   ]);
@@ -57,9 +60,10 @@ function DocumentSettings() {
   // the theme is 'system' and the OS switches at sunset.
   useEffect(() => {
     const existing = document.querySelector('meta[name="theme-color"]');
-    const color = prefs.dark ? '#0F1720' : '#14304F';
+    const color =
+      prefs.scene === 'halloween' ? '#160B24' : prefs.scene === 'first-snow' ? '#24425F' : prefs.scene === 'autumn' ? '#5A2E18' : prefs.scene === 'harbor-sunset' ? '#7A2E3A' : prefs.dark ? '#0F1720' : '#14304F';
     if (existing) existing.setAttribute('content', color);
-  }, [prefs.dark]);
+  }, [prefs.dark, prefs.scene]);
 
   return null;
 }
@@ -129,6 +133,7 @@ export function DorchesterProviders({ children }: { children: ReactNode }) {
         <HydrationBridge />
         <DataRecovery />
         <SkipLink />
+        <SceneDecor />
         {children}
         <ShortcutHelp />
       </LiveRegionProvider>

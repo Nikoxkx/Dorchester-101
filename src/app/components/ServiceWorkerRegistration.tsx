@@ -24,6 +24,7 @@ export default function ServiceWorkerRegistration() {
     if (!('serviceWorker' in navigator)) return;
     let registration: ServiceWorkerRegistration | null = null;
     let cancelled = false;
+    const cleanups: Array<() => void> = [];
 
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === 'DOR101_CLAIMED') setUpdateReady(false);
@@ -42,6 +43,25 @@ export default function ServiceWorkerRegistration() {
           }
         };
         markReady();
+        // Self-updating means asking, not waiting to be told: long-lived
+        // tabs and installed PWAs re-check for a newer build every hour,
+        // and again whenever the app comes back to the foreground or the
+        // connection returns. The polite part is unchanged — a found
+        // update still waits for the visitor's tap before reloading.
+        const checkForUpdate = () => {
+          if (navigator.onLine !== false) void result.update().catch(() => {});
+        };
+        const hourly = window.setInterval(checkForUpdate, 60 * 60_000);
+        const onVisible = () => {
+          if (!document.hidden) checkForUpdate();
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        window.addEventListener('online', checkForUpdate);
+        cleanups.push(() => {
+          window.clearInterval(hourly);
+          document.removeEventListener('visibilitychange', onVisible);
+          window.removeEventListener('online', checkForUpdate);
+        });
         result.addEventListener('updatefound', () => {
           const worker = result.installing;
           if (!worker) return;
@@ -59,6 +79,7 @@ export default function ServiceWorkerRegistration() {
 
     return () => {
       cancelled = true;
+      cleanups.forEach((fn) => fn());
       navigator.serviceWorker.removeEventListener('message', onMessage);
       void registration;
     };

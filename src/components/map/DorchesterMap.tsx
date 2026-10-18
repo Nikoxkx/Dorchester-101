@@ -325,6 +325,25 @@ export function DorchesterMap() {
   );
 
 
+  // Guarantee the "click a bus, see its whole route" promise even when
+  // the shapes feed has nothing for that route (bus geometry is the feed
+  // most likely to be missing): thread a line through the route's own
+  // stops, in order. It is labelled timetable geometry, never passed off
+  // as the surveyed path. Rail lines already have drawn fallbacks.
+  const displayShapes = useMemo<ShapeData[]>(() => {
+    if (!selectedVehicle) return shapes;
+    if (shapes.some((sh) => sh.routeId === selectedVehicle.routeId && sh.paths.length > 0)) return shapes;
+    if (focus.routeId !== selectedVehicle.routeId || stops.length < 2) return shapes;
+    return [
+      ...shapes,
+      {
+        routeId: selectedVehicle.routeId,
+        paths: [stops.map((stop) => [stop.lat, stop.lng] as [number, number])],
+        source: 'timetable' as DataSource,
+      },
+    ];
+  }, [shapes, selectedVehicle, focus.routeId, stops]);
+
   const fittedVehicleRef = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedVehicle) {
@@ -333,7 +352,7 @@ export function DorchesterMap() {
     }
     const key = `${selectedVehicle.id}:${selectedVehicle.routeId}`;
     if (fittedVehicleRef.current === key) return;
-    const shape = shapes.find((sh) => sh.routeId === selectedVehicle.routeId);
+    const shape = displayShapes.find((sh) => sh.routeId === selectedVehicle.routeId);
     const points = shape?.paths.flat() ?? [];
     const map = mapRef.current;
     if (!map || points.length < 2) return;
@@ -344,7 +363,7 @@ export function DorchesterMap() {
     }
     fittedVehicleRef.current = key;
     map.flyToBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [52, 52], maxZoom: 15, duration: 0.7 });
-  }, [selectedVehicle, shapes]);
+  }, [selectedVehicle, displayShapes]);
 
   const selectVehicle = useCallback((id: string) => {
     setSelectedVehicleId(id);
@@ -655,7 +674,7 @@ export function DorchesterMap() {
             ) : (
               <MapCanvas
                 style={mapStyle}
-                shapes={shapes}
+                shapes={displayShapes}
                 stops={stops}
                 pins={pins}
                 vehicles={mapVehicles}

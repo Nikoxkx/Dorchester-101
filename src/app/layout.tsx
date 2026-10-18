@@ -14,6 +14,11 @@ import "@fontsource/public-sans/700.css";
 import "@fontsource/atkinson-hyperlegible/400.css";
 import "@fontsource/atkinson-hyperlegible/700.css";
 import "@fontsource/ibm-plex-mono/400.css";
+// Scene display faces (Settings → Theme scenes). The woff2 files are only
+// fetched when a scene actually names the family, so Classic pays nothing.
+import "@fontsource/creepster/400.css";
+import "@fontsource/mountains-of-christmas/400.css";
+import "@fontsource/mountains-of-christmas/700.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/noto-sans-arabic/400.css";
 import "@fontsource/noto-sans-arabic/700.css";
@@ -103,6 +108,7 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#0F1720" },
   ],
   width: "device-width",
+  viewportFit: "cover",
   initialScale: 1,
   // Pinch zoom is never disabled: maximumScale=5 keeps it generous while
   // blocking the accidental double-tap zoom that breaks map interactions.

@@ -321,7 +321,7 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
       <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
       <TempCurve hours={rows.slice(0, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
       <h3 className="mt-2 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
-      <div className="mt-1"><PrecipBars hours={rows.slice(0, 24)} timeFor={(iso) => format.time(iso)} /></div>
+      <div className="mt-1"><PrecipBars hours={rows.slice(0, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} /></div>
       <ul className="mt-3 flex flex-col divide-y divide-[var(--color-border)]">
         {rows.map((h) => (
           <li key={h.start} className="grid grid-cols-[4.5rem_1.75rem_4.5rem_1fr] items-center gap-2 py-2 sm:grid-cols-[5rem_2rem_5rem_1fr_7rem]">

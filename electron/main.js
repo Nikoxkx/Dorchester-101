@@ -256,6 +256,51 @@ function createTray() {
   });
 }
 
+
+/**
+ * Self-updating (installed NSIS builds): check GitHub releases shortly
+ * after launch and every six hours, download in the background, and only
+ * restart when the resident says yes — the same polite contract as the
+ * web app's service-worker prompt. Everything is best-effort: portable
+ * builds, dev runs, a missing electron-updater, or being offline must
+ * never stop the app from opening, so the whole thing is wrapped and
+ * silent on failure. Code-signing verification stays off to match the
+ * unsigned builds (`verifyUpdateCodeSignature: false` in the builder
+ * config); the feed itself is served over HTTPS by GitHub.
+ */
+function initAutoUpdates() {
+  if (!app.isPackaged || isDev) return;
+  if (process.env.DOR101_NO_UPDATE) return;
+  let autoUpdater;
+  try {
+    ({ autoUpdater } = require('electron-updater'));
+  } catch {
+    return;
+  }
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('update-downloaded', async (info) => {
+    const choice = await dialog.showMessageBox(mainWindow ?? undefined, {
+      type: 'info',
+      title: 'Dorchester 101 update ready',
+      message: `Version ${info.version} has been downloaded.`,
+      detail: 'Restart Dorchester 101 now to finish updating? Your settings and saved places are kept. If you choose Later, the update applies the next time the app closes.',
+      buttons: ['Restart now', 'Later'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (choice.response === 0) autoUpdater.quitAndInstall(false, true);
+  });
+  autoUpdater.on('error', () => {
+    /* offline or feed unreachable: try again next interval */
+  });
+  const check = () => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  };
+  setTimeout(check, 20_000);
+  setInterval(check, 6 * 60 * 60_000);
+}
+
 // App lifecycle
 app.whenReady().then(async () => {
   const ready = await startServer();
@@ -265,6 +310,7 @@ app.whenReady().then(async () => {
   }
   createWindow();
   createTray();
+  initAutoUpdates();
 });
 
 app.on('window-all-closed', () => {

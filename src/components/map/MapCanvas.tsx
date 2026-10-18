@@ -218,7 +218,7 @@ export function MapCanvas({
                 : stationDotIcon(stop.color, { selected, accessible: stop.accessible })
             }
             alt={`Station ${stop.name}`}
-            zIndexOffset={selected ? 500 : 0}
+            zIndexOffset={selected ? 500 : emphasisRouteId ? 300 : 0}
             eventHandlers={{ click: () => onSelectStop(stop.id) }}
           >
             <Tooltip direction="top" offset={[0, -10]} opacity={1} className="map-tooltip">
