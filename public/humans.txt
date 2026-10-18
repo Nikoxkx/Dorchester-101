@@ -1,0 +1,26 @@
+/* DOR101 — humans.txt */
+# TEAM
+Developer: Yeisbel (@Nikoxkx) — https://github.com/Nikoxkx
+Site: https://dorchester-101.vercel.app
+Repo: https://github.com/Nikoxkx/Dorchester-101
+Location: Dorchester, Boston, Massachusetts
+
+# THANKS
+- Dorchester Reporter, City of Boston, WBUR, Boston Globe — news feeds
+- MBTA — GTFS-realtime CDN + v3 API
+- U.S. Census Bureau — ACS 2020–2024
+- HUD — FY2026 Section 8 income limits & Fair Market Rents
+- Wikimedia Commons photographers credited in public/IMAGE-CREDITS.md
+
+# COLOPHON
+Built with Next.js 16, React 19, Leaflet, Tailwind, Framer Motion, Recharts
+TypeScript strict, Vitest + Playwright, hosted on Vercel (Hobby, free tier)
+Fonts: Fraunces, Public Sans, Atkinson Hyperlegible, IBM Plex Mono (self-hosted via Fontsource)
+
+# CONTACT
+Report a problem: https://github.com/Nikoxkx/Dorchester-101/issues/new
+Email (if set): see env NEXT_PUBLIC_CONTACT_EMAIL
+
+# LICENCE
+Code: MIT — see /LICENSE
+Content: listings are factual (no copyright) + summaries are original, photos under CC as credited.

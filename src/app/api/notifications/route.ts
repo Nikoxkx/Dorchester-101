@@ -152,7 +152,16 @@ export async function GET(request: Request) {
       timezone: BOSTON_TZ,
       localTime: now.toLocaleString('en-US', { timeZone: BOSTON_TZ }),
     },
-    { headers: { 'cache-control': 'no-store' } }
+    {
+      headers: {
+        // Cache 60s on the edge (query-string aware) — reduces origin hits for
+        // many residents watching the same transit lines. Not private: the URL
+        // itself carries the filter (lines=, categories=) so each variant is its own cache entry.
+        'cache-control': 'public, s-maxage=30, stale-while-revalidate=120',
+        'Vary': 'Accept-Language',
+        'x-robots-tag': 'noindex',
+      },
+    }
   );
 }
 

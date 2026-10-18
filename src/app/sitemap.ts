@@ -17,9 +17,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return PUBLIC_ROUTES.map((route) => {
     const isDirectory = route === '/' || route === '/resources' || route === '/directory' || route === '/map';
+    const isAboutFaq = route === '/about' || route === '/faq' || route === '/resources' || route === '/directory';
     return {
       url: `${origin}${route}`,
-      lastModified: route === '/about' || route === '/faq' ? reviewedOn : now,
+      // OG image for homepage so crawlers associate it
+      ...(route === '/' ? { images: [`${origin}/og.png`] } : {}),
+      lastModified: isAboutFaq ? reviewedOn : now,
       changeFrequency: route === '/news' || route === '/map' ? 'hourly' : isDirectory ? 'weekly' : 'monthly',
       priority: route === '/' ? 1 : isDirectory ? 0.9 : 0.7,
     } satisfies MetadataRoute.Sitemap[number];

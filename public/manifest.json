@@ -119,6 +119,29 @@
   "edge_side_panel": {
     "preferred_width": 400
   },
+  "screenshots": [
+    {
+      "src": "/img/dorchester-bay-sunset.jpg",
+      "sizes": "1920x1080",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "DOR101 — Dorchester Bay at sunset"
+    },
+    {
+      "src": "/og.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "DOR101 share preview"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "DOR101 — app icon 512"
+    }
+  ],
   "related_applications": [],
   "prefer_related_applications": false
 }

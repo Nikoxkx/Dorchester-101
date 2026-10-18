@@ -17,7 +17,7 @@ export const metadata = {
   title: 'About DOR101: how this list is kept correct',
   description:
     'Who maintains the Dorchester 101 directory, how every listing is checked against its source, which feeds the site reads and how often, and the licence for each photograph.',
-  alternates: { canonical: '' },
+  alternates: { canonical: '/about' },
   openGraph: {
     title: `About ${SITE_FULL_NAME}`,
     description: 'Method, data sources, refresh cadence and photo credits.',
