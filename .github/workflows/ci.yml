@@ -23,6 +23,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       - name: Run ESLint
         run: npm run lint
@@ -46,6 +48,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       - name: Run tests
         run: npm run test:run
@@ -66,6 +70,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       # No artifact is uploaded from here: nothing downstream downloads it (the
       # e2e and deploy jobs build for themselves), and the old `path: .next/`
@@ -108,6 +114,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       # chromium only, matching the projects in playwright.config.ts. The config
       # used to also define firefox and webkit projects, whose binaries were
@@ -150,6 +158,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       - name: Build application
         run: npm run build
