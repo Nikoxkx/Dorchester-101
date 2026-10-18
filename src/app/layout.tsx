@@ -21,6 +21,7 @@ import "@fontsource/noto-sans-arabic/700.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import { DorchesterProviders } from "@/components/providers/DorchesterProviders";
 import { AUTHOR_NAME, AUTHOR_URL, SITE_URL } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -155,6 +156,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="dor101-backdrop" aria-hidden="true" />
         <DorchesterProviders>{children}</DorchesterProviders>
         <ServiceWorkerRegistration />
+        <Analytics />
       </body>
     </html>
   );
