@@ -23,7 +23,8 @@ import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, TempUnitToggle, tempText, useTempUnit, type TempUnit } from '@/components/weather/shared';
 import { StyleTips } from '@/components/weather/StyleTips';
-import { PrecipBars, SunArc, TempCurve, TempRangeBar, WindCompass, skyGradient } from '@/components/weather/WeatherVisuals';
+import { PrecipBars, SkyBackdrop, SunArc, TempCurve, TempRangeBar, WindCompass } from '@/components/weather/WeatherVisuals';
+import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useNow } from '@/hooks/useNow';
 import { coldSignal, type WeatherAlert, type WeatherPayload } from '@/lib/weather';
 
@@ -182,24 +183,25 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
   const now = useNow(60_000);
   const cur = payload.current;
   const today = payload.days[0];
+  const animatedTemp = useAnimatedNumber(cur?.tempF ?? 0);
   if (!cur) return null;
 
-  const tile = "rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/70 p-4";
-  const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-[var(--color-text-muted)]";
+  const tile = "wx-module p-4";
+  const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-white/75";
 
   const daylight = payload.astronomy
     ? Math.round((new Date(payload.astronomy.sunset).getTime() - new Date(payload.astronomy.sunrise).getTime()) / 60_000)
     : null;
 
   return (
-    <section aria-labelledby="wx-current" className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow)]">
-      {/* Sky hero: the gradient follows the live condition, Apple-style. */}
-      <div className="relative px-5 pb-6 pt-8 text-center text-white md:px-6" style={{ background: skyGradient(cur.kind, cur.isDay) }}>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(255,255,255,0.28),transparent_55%)]" aria-hidden="true" />
+    <section aria-labelledby="wx-current" className="wx-glass-scope relative overflow-hidden rounded-[2rem] text-white shadow-[var(--shadow-lg)] ring-1 ring-black/10">
+      <SkyBackdrop kind={cur.kind} isDay={cur.isDay} />
+      {/* Sky hero: the animated backdrop follows the live condition, Apple-style. */}
+      <div className="relative px-5 pb-2 pt-8 text-center text-white md:px-6">
         <div className="relative">
           <h2 id="wx-current" className="font-heading text-xl font-bold drop-shadow-sm">Dorchester, Boston</h2>
-          <p className="font-heading text-[6rem] font-extralight leading-none tracking-tighter drop-shadow-md">
-            {format.number(Math.round(unit === 'F' ? cur.tempF : ((cur.tempF - 32) * 5) / 9))}°
+          <p className="font-heading text-[6rem] font-extralight leading-none tracking-tighter drop-shadow-md" aria-label={tempText(cur.tempF, unit, format.number)}>
+            {format.number(Math.round(unit === 'F' ? animatedTemp : ((animatedTemp - 32) * 5) / 9))}°
           </p>
           <p className="font-heading text-base font-bold drop-shadow-sm" dir="auto">{cur.text || t(`weather.cond.${cur.kind}` as never)}</p>
           {today && today.highF != null && today.lowF != null && (
@@ -214,7 +216,7 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
       </div>
 
       {/* Detail tiles, one reading per tile like a phone weather app. */}
-      <div className="grid grid-cols-2 gap-2.5 p-4 md:p-5 lg:grid-cols-4">
+      <div className="relative grid grid-cols-2 gap-2.5 p-4 pb-5 pt-3 md:p-5 md:pb-6 lg:grid-cols-4">
         <div className={tile}>
           <p className={tileTitle}><Thermometer className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.feelsLike', { temp: '' }).trim() || t('weather.conditions')}</p>
           <p className="mt-1 font-heading text-3xl font-extrabold">{tempText(cur.feelsLikeF, unit, format.number)}</p>

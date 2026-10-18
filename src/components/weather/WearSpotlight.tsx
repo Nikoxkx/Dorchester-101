@@ -32,7 +32,7 @@ const PHASES = [
 
 const PHASE_KEY = { morning: 'weather.today', midday: 'weather.today', evening: 'weather.tonight', night: 'weather.tonight' } as const;
 
-export function WearSpotlight({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }) {
+export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: WeatherPayload; unit: TempUnit; variant?: 'sky' | 'glass' }) {
   const { t, format } = useI18n();
   const reduceMotion = useReduceMotion();
   const now = useNow(60_000);
@@ -126,7 +126,11 @@ export function WearSpotlight({ payload, unit }: { payload: WeatherPayload; unit
   };
 
   return (
-    <section aria-label={t('weather.wearToday')} className="relative overflow-hidden rounded-[1.4rem] text-white shadow-[var(--shadow)]" style={{ background: skyGradient(kind, isDay) }}>
+    <section
+      aria-label={t('weather.wearToday')}
+      className={variant === 'glass' ? 'wx-module relative overflow-hidden text-white' : 'relative overflow-hidden rounded-[1.4rem] text-white shadow-[var(--shadow)]'}
+      style={variant === 'glass' ? undefined : { background: skyGradient(kind, isDay) }}
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_90%_-20%,rgba(255,255,255,0.3),transparent_55%)]" aria-hidden="true" />
       <div className="relative flex h-full flex-col p-5">
         <div className="flex items-center justify-between gap-2">

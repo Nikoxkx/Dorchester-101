@@ -120,9 +120,15 @@ const COND_ICON_DAY: Record<ConditionKind, LucideIcon> = {
   unknown: Cloud,
 };
 
-export function ConditionIcon({ kind, isDay, className }: { kind: ConditionKind; isDay: boolean; className?: string }) {
+export function ConditionIcon({ kind, isDay, className, animated = false }: { kind: ConditionKind; isDay: boolean; className?: string; animated?: boolean }) {
   const Icon = !isDay && kind === 'clear' ? Moon : !isDay && kind === 'partly' ? CloudMoon : COND_ICON_DAY[kind];
-  return <Icon className={className ?? 'h-5 w-5'} aria-hidden="true" />;
+  const icon = <Icon className={className ?? 'h-5 w-5'} aria-hidden="true" />;
+  if (!animated) return icon;
+  return (
+    <span className={`wx-cond wx-cond-animated wx-cond-${kind}`} aria-hidden="true">
+      {icon}
+    </span>
+  );
 }
 
 export const TIP_ICON: Record<TipKind, LucideIcon> = {

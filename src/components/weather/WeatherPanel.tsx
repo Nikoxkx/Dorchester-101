@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useReduceMotion } from '@/stores/appStore';
 import { useWeather } from '@/hooks/useWeather';
@@ -9,14 +10,17 @@ import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
 import { pickSpotlightTip, type HourlyPeriod, type WeatherPayload } from '@/lib/weather';
 import { ConditionIcon, TempUnitToggle, tempText, tipText, useTempUnit, type TempUnit } from './shared';
-import { PrecipBars, TempCurve, TempRangeBar, skyGradient } from './WeatherVisuals';
+import { PrecipBars, SkyBackdrop, TempCurve, TempRangeBar } from './WeatherVisuals';
+import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { WearSpotlight } from './WearSpotlight';
 
 /**
- * The homepage weather section, Apple-Weather-shaped: a sky hero whose
- * gradient is chosen by the live condition, a glass hour-by-hour strip, a
- * 24-hour temperature curve, precipitation bars, and the 7-day list with
- * temperature-range bars — above the what-to-wear advice. Every number is
+ * The homepage weather section, Apple-Weather-shaped in the literal sense:
+ * the whole panel is one living sky (SkyBackdrop — sun/moon, twinkling
+ * stars, drifting clouds, falling rain or snow for the live condition) and
+ * every module floats on it in frosted glass (.wx-module + .wx-glass-scope).
+ * The hero temperature counts up to its value; the curve draws itself in;
+ * modules rise in a short stagger as they scroll into view. Every number is
  * the shared NWS payload (`useWeather`), the same one driving the storm
  * banner and the NowBar chip, so the site can never show two weathers.
  *
@@ -35,8 +39,17 @@ export function WeatherPanel() {
       : `${t('weather.updated', { time: format.time(data.fetchedAt) })} · ${data.status === 'fallback' ? t('weather.sourceFallback') : t('weather.sourceNws')}`
     : null;
 
+  const backdropHour = data ? nextHours(data, now, 1)[0] : undefined;
+  const skyKind = data?.current?.kind ?? backdropHour?.kind ?? 'unknown';
+  const skyIsDay = data?.current?.isDay ?? backdropHour?.isDay ?? true;
+
   return (
-    <section aria-labelledby="home-weather-title" className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow)]">
+    <section
+      aria-labelledby="home-weather-title"
+      className={`relative overflow-hidden rounded-[2rem] shadow-[var(--shadow-lg)] ring-1 ring-black/10 ${data ? 'text-white' : 'bg-[var(--color-bg-card)] ring-[var(--color-border)]'}`}
+    >
+      {data && <SkyBackdrop kind={skyKind} isDay={skyIsDay} />}
+      <div className={data ? 'wx-glass-scope relative' : 'relative'}>
       {loading && !data && (
         <div className="space-y-3 p-6" aria-busy="true" aria-label={t('weather.loading')}>
           <div className="h-40 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-bg-tertiary)]" />
@@ -60,18 +73,18 @@ export function WeatherPanel() {
         <>
           <SkyHero payload={data} unit={unit} now={now} updatedLine={updatedLine} />
           <div className="flex items-center justify-between gap-2 px-5 pt-4 md:px-6">
-            <p className="text-xs text-[var(--color-text-muted)]">{updatedLine}</p>
+            <p className="text-xs text-white/75">{updatedLine}</p>
             <div className="flex items-center gap-2">
               <TempUnitToggle unit={unit} onChange={setUnit} />
               <button
                 type="button"
                 onClick={refresh}
-                className="rounded-full border border-[var(--color-border)] p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
+                className="rounded-full border border-white/30 bg-white/10 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                 aria-label={t('weather.retry')}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
               </button>
-              <Link href="/weather" className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[var(--color-accent-primary)] hover:underline">
+              <Link href="/weather" className="inline-flex items-center gap-1 font-heading text-sm font-bold text-white hover:underline">
                 {t('weather.viewFull')} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
             </div>
@@ -79,35 +92,65 @@ export function WeatherPanel() {
 
           {data.alerts.length > 0 ? (
             <div className="px-5 pt-3 md:px-6">
-              <Link href="/weather#alerts" className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-accent-secondary)]/40 bg-[var(--color-accent-secondary)]/10 px-3 py-2.5 text-sm font-semibold hover:bg-[var(--color-accent-secondary)]/15">
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent-secondary)]" aria-hidden="true" />
+              <Link href="/weather#alerts" className="flex items-start gap-2 rounded-2xl bg-red-500/30 px-3 py-2.5 text-sm font-semibold text-white ring-1 ring-white/35 backdrop-blur-md transition-colors hover:bg-red-500/40">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden="true" />
                 <span>{t('weather.alertsTitle')}: {data.alerts.map((a) => a.event).join(' · ')}</span>
               </Link>
             </div>
           ) : data.alertsStatus === 'unavailable' ? (
-            <p className="mx-5 mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-xs text-[var(--color-text-secondary)] md:mx-6">
+            <p className="mx-5 mt-3 rounded-2xl bg-white/12 px-3 py-2 text-xs text-white/85 ring-1 ring-white/25 backdrop-blur-md md:mx-6">
               {t('weather.alertsUnavailable')}
             </p>
           ) : null}
 
-          <div className="grid gap-6 px-5 py-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-            <div className="min-w-0">
-              <h3 className="font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
-              <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
+          <div className="grid gap-3 px-4 pb-5 pt-4 sm:gap-4 sm:px-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+            <div className="min-w-0 space-y-3 sm:space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="wx-module p-4"
+              >
+                <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-white/75">{t('weather.tempNext24')}</h3>
+                <div className="mt-1.5">
+                  <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
+                </div>
+              </motion.div>
               {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
-                <>
-                  <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.precipNext24')}</h3>
-                  <div className="mt-1">
-                    <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
-                  </div>
-                </>
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.55, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+                  className="wx-module p-4"
+                >
+                  <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-white/75">{t('weather.precipNext24')}</h3>
+                  <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
+                </motion.div>
               )}
-              <WeekList payload={data} unit={unit} />
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className="wx-module p-4"
+              >
+                <WeekList payload={data} unit={unit} />
+              </motion.div>
             </div>
-            <WearSpotlight payload={data} unit={unit} />
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.55, delay: 0.09, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <WearSpotlight payload={data} unit={unit} variant="glass" />
+            </motion.div>
           </div>
         </>
       )}
+      </div>
     </section>
   );
 }
@@ -202,10 +245,10 @@ function SkyHero({ payload, unit, now, updatedLine }: { payload: WeatherPayload;
   const today = payload.days[0];
   const hours24 = nextHours(payload, now, 24);
   const topTip = pickSpotlightTip(payload, new Date(now));
+  const animatedTemp = useAnimatedNumber(temp ?? 0);
 
   return (
-    <div className="relative px-5 pb-5 pt-6 text-white md:px-6" style={{ background: skyGradient(kind, isDay) }}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(255,255,255,0.28),transparent_55%)]" aria-hidden="true" />
+    <div className="relative px-5 pb-2 pt-6 text-white md:px-6">
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -214,13 +257,13 @@ function SkyHero({ payload, unit, now, updatedLine }: { payload: WeatherPayload;
             </h2>
             <p className="text-xs font-medium text-white/85">{format.date(new Date(now), 'long')}</p>
           </div>
-          <ConditionIcon kind={kind} isDay={isDay} className="h-11 w-11 drop-shadow" />
+          <ConditionIcon kind={kind} isDay={isDay} animated className="h-11 w-11 drop-shadow" />
         </div>
 
         <div className="mt-2 flex flex-wrap items-end gap-x-5 gap-y-1">
           {temp !== undefined && (
             <p className="font-heading text-[5.25rem] font-extralight leading-[0.95] tracking-tighter drop-shadow-md" aria-label={tempText(temp, unit, format.number)}>
-              {format.number(Math.round(unit === 'F' ? temp : ((temp - 32) * 5) / 9))}°
+              {format.number(Math.round(unit === 'F' ? animatedTemp : ((animatedTemp - 32) * 5) / 9))}°
             </p>
           )}
           <div className="pb-3">
@@ -257,8 +300,8 @@ function WeekList({ payload, unit }: { payload: WeatherPayload; unit: TempUnit }
   const weekLow = lows.length ? Math.min(...lows) : 0;
   const currentTemp = payload.current?.tempF;
   return (
-    <div className="mt-4">
-      <h3 className="font-heading text-sm font-bold">{t('weather.daily')}</h3>
+    <div>
+      <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-white/75">{t('weather.daily')}</h3>
       <ul className="mt-1 divide-y divide-[var(--color-border)]">
         {days.map((d, i) => (
           <li key={d.date} className="grid grid-cols-[4.6rem_1.6rem_3rem_minmax(0,1fr)] items-center gap-2 py-1.5 sm:grid-cols-[5.5rem_1.75rem_3.2rem_2.8rem_minmax(0,1fr)_2.8rem]">

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useReduceMotion } from '@/stores/appStore';
 import type { ConditionKind, HourlyPeriod } from '@/lib/weather';
 
 /**
@@ -37,6 +38,131 @@ export function skyGradient(kind: ConditionKind, isDay: boolean): string {
   const pair = SKY[kind] ?? SKY.unknown;
   return isDay ? pair.day : pair.night;
 }
+
+/**
+ * Which animated layers a condition gets. Pure so the mapping is testable:
+ * a clear night must never rain, and a storm must always be allowed to
+ * flicker. Densities are layer counts, tuned to stay decoration-quiet.
+ */
+export interface SkyLayers {
+  sun: boolean;
+  moon: boolean;
+  stars: number;
+  clouds: number;
+  darkClouds: boolean;
+  rain: number;
+  snow: number;
+  fog: number;
+  flash: boolean;
+}
+
+export function skyLayers(kind: ConditionKind, isDay: boolean): SkyLayers {
+  const base: SkyLayers = { sun: false, moon: false, stars: 0, clouds: 0, darkClouds: false, rain: 0, snow: 0, fog: 0, flash: false };
+  switch (kind) {
+    case 'clear':
+      return isDay ? { ...base, sun: true, clouds: 1 } : { ...base, moon: true, stars: 42, clouds: 1 };
+    case 'partly':
+      return isDay ? { ...base, sun: true, clouds: 3 } : { ...base, moon: true, stars: 22, clouds: 3 };
+    case 'cloudy':
+      return { ...base, clouds: 5 };
+    case 'fog':
+      return { ...base, clouds: 2, fog: 4 };
+    case 'drizzle':
+      return { ...base, clouds: 4, rain: 14 };
+    case 'rain':
+      return { ...base, clouds: 4, darkClouds: true, rain: 34 };
+    case 'storm':
+      return { ...base, clouds: 5, darkClouds: true, rain: 30, flash: true };
+    case 'snow':
+      return { ...base, clouds: 3, snow: 30 };
+    case 'sleet':
+      return { ...base, clouds: 3, snow: 16, rain: 10 };
+    case 'ice':
+      return { ...base, clouds: 3, rain: 12 };
+    case 'wind':
+      return isDay ? { ...base, sun: true, clouds: 4 } : { ...base, moon: true, stars: 16, clouds: 4 };
+    default:
+      return isDay ? { ...base, sun: true, clouds: 2 } : { ...base, moon: true, stars: 18, clouds: 2 };
+  }
+}
+
+const subscribeNoop = () => () => {};
+
+/** Deterministic spread (same sky on every client, no hydration flicker). */
+function seededSky(count: number, salt: number) {
+  return Array.from({ length: count }, (_, i) => {
+    const a = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+    const b = Math.sin(i * 269.5 + salt * 183.3) * 28001.8384;
+    const c = Math.sin(i * 113.5 + salt * 271.9) * 12543.1234;
+    const frac = (v: number) => v - Math.floor(v);
+    return { x: frac(a) * 100, y: frac(b) * 62, d: -frac(c) * 26, dur: 2.6 + frac(a * 3) * 5, s: 0.6 + frac(b * 7) * 0.9 };
+  });
+}
+
+/**
+ * The living sky behind the weather modules: condition gradient + sun or
+ * moon, twinkling stars, drifting clouds, falling rain/snow, fog bands and
+ * a rare distant lightning flicker — the animated backdrop a phone
+ * weather app is recognized by. Absolutely positioned; the parent owns
+ * the clipping (`relative overflow-hidden`). Reduced motion gets the
+ * still sky: gradient, sun/moon and clouds, nothing moving, no rain.
+ */
+export function SkyBackdrop({ kind, isDay }: { kind: ConditionKind; isDay: boolean }) {
+  const reduceMotion = useReduceMotion();
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const layers = skyLayers(kind, isDay);
+  const stars = useMemo(() => seededSky(layers.stars, 1), [layers.stars]);
+  const drops = useMemo(() => seededSky(layers.rain, 2), [layers.rain]);
+  const flakes = useMemo(() => seededSky(layers.snow, 3), [layers.snow]);
+  const clouds = useMemo(() => seededSky(layers.clouds, 4), [layers.clouds]);
+
+  return (
+    <div className="wx-sky" style={{ background: skyGradient(kind, isDay) }} aria-hidden="true">
+      <div className="absolute inset-0 bg-[radial-gradient(130%_100%_at_85%_-15%,rgba(255,255,255,0.30),transparent_55%)]" />
+      {layers.sun && <div className="wx-sky-sun" />}
+      {layers.moon && <div className="wx-sky-moon" />}
+      {mounted && stars.map((st, i) => (
+        <span
+          key={`star-${i}`}
+          className="wx-sky-star"
+          style={{ left: `${st.x}%`, top: `${st.y}%`, width: st.s * 2.4, height: st.s * 2.4, animationDelay: `${st.d}s`, animationDuration: `${st.dur}s` }}
+        />
+      ))}
+      {clouds.map((c, i) => (
+        <span
+          key={`cloud-${i}`}
+          className={`wx-sky-cloud${layers.darkClouds ? ' dark-cloud' : ''}`}
+          style={{
+            left: `${(c.x * 0.82).toFixed(1)}%`,
+            top: `${(c.y * 0.5).toFixed(1)}%`,
+            width: `${9 + c.s * 9}rem`,
+            height: `${2.6 + c.s * 2.2}rem`,
+            opacity: 0.5 + c.s * 0.3,
+            animationDelay: `${c.d}s`,
+            animationDuration: `${46 + c.dur * 9}s`,
+            animationDirection: i % 2 ? 'alternate-reverse' : 'alternate',
+          }}
+        />
+      ))}
+      {mounted && !reduceMotion && drops.map((d, i) => (
+        <span key={`rain-${i}`} className="wx-sky-rain" style={{ left: `${d.x}%`, animationDelay: `${d.d}s`, animationDuration: `${0.85 + d.s * 0.5}s` }} />
+      ))}
+      {mounted && !reduceMotion && flakes.map((f, i) => (
+        <span
+          key={`snow-${i}`}
+          className="wx-sky-snowflake"
+          style={{ left: `${f.x}%`, animationDelay: `${f.d}s`, animationDuration: `${5.5 + f.s * 4.5}s`, ['--wx-flake' as string]: `${0.3 + f.s * 0.3}rem` } as React.CSSProperties}
+        />
+      ))}
+      {Array.from({ length: layers.fog }, (_, i) => (
+        <span key={`fog-${i}`} className="wx-sky-fogband" style={{ top: `${34 + i * 15}%`, animationDelay: `${-i * 3.7}s`, animationDuration: `${11 + i * 3}s` }} />
+      ))}
+      {layers.flash && !reduceMotion && <div className="wx-sky-flash" />}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/14 to-transparent" />
+    </div>
+  );
+}
+
 
 /** Blue→green→yellow→orange→red, the scale every weather app reader knows. */
 const TEMP_GRADIENT = 'linear-gradient(90deg,#3E8BDC 0%,#4FBE8C 35%,#F6D34A 62%,#F59A3C 82%,#E4572E 100%)';
@@ -115,6 +241,13 @@ export function TempCurve({
   const [pinned, setPinned] = useState(false);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [viewWidth, setViewWidth] = useState(0);
+  const reduceMotion = useReduceMotion();
+  const [drawnIn, setDrawnIn] = useState(false);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const id = requestAnimationFrame(() => setDrawnIn(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduceMotion]);
 
   const drawn = useMemo(() => {
     if (hours.length < 2) return null;
@@ -209,8 +342,8 @@ export function TempCurve({
               <stop offset="100%" stopColor="#F59A3C" />
             </linearGradient>
           </defs>
-          <path d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-fill-${gid})`} />
-          <path d={d} fill="none" stroke={`url(#tc-line-${gid})`} strokeWidth="3" strokeLinecap="round" />
+          <path className={`wx-curve-fill${drawnIn || reduceMotion ? ' is-on' : ''}`} d={`${d} L ${coords[coords.length - 1].x} ${CURVE_H - CURVE_PAD.bottom} L ${coords[0].x} ${CURVE_H - CURVE_PAD.bottom} Z`} fill={`url(#tc-fill-${gid})`} />
+          <path className={`wx-curve-line${drawnIn || reduceMotion ? ' is-on' : ''}`} pathLength={1} d={d} fill="none" stroke={`url(#tc-line-${gid})`} strokeWidth="3" strokeLinecap="round" />
           {coords.map((c, i) =>
             i % 3 === 0 || i === minIdx || i === maxIdx ? (
               <g key={i}>
@@ -259,6 +392,13 @@ export function TempCurve({
 /** Precipitation probability, hour by hour, as Apple-style bars. */
 export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]; timeFor: (iso: string) => string; labelFor?: (tempF: number) => string }) {
   const [active, setActive] = useState<number | null>(null);
+  const reduceMotion = useReduceMotion();
+  const [grown, setGrown] = useState(false);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const id = requestAnimationFrame(() => setGrown(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduceMotion]);
   if (!hours.length) return null;
   const activeHour = active != null ? hours[active] : null;
   return (
@@ -289,8 +429,12 @@ export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]
                 >
                   <span className={`text-[9px] font-semibold leading-none ${isActive ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-accent-primary)]'}`}>{pct >= 20 || isActive ? `${pct}%` : ''}</span>
                   <span
-                    className="w-full rounded-t bg-[var(--color-accent-primary)] transition-all duration-150"
-                    style={{ height: `${Math.max(3, (pct / 100) * 64) + (isActive ? 4 : 0)}px`, opacity: isActive ? 1 : 0.35 + pct / 154 }}
+                    className="w-full rounded-t bg-[var(--color-accent-primary)] transition-[height,opacity] duration-500 ease-out"
+                    style={{
+                      height: `${grown || reduceMotion ? Math.max(3, (pct / 100) * 64) + (isActive ? 4 : 0) : 2}px`,
+                      opacity: isActive ? 1 : 0.35 + pct / 154,
+                      transitionDelay: `${Math.min(i * 18, 420)}ms`,
+                    }}
                   />
                 </button>
               );
@@ -331,7 +475,7 @@ export function SunArc({ sunrise, sunset, nowMs }: { sunrise: string; sunset: st
         <line x1="6" y1={cy} x2={W - 6} y2={cy} stroke="var(--color-border)" strokeWidth="1.5" />
         {frac >= 0 && frac <= 1 && (
           <>
-            <circle cx={sunX} cy={sunY} r="11" fill="#F6B93B" opacity="0.3" />
+            <circle className="wx-sun-pulse" cx={sunX} cy={sunY} r="11" fill="#F6B93B" opacity="0.3" />
             <circle cx={sunX} cy={sunY} r="6" fill="#F6B93B" stroke="#D9930D" strokeWidth="1.4" />
           </>
         )}

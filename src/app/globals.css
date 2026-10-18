@@ -1203,6 +1203,122 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
   background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), color-mix(in srgb, var(--color-accent-secondary) 8%, transparent));
 }
 
+/* ------------------------------------------------- Apple-weather sky --- */
+/*
+ * The weather surfaces render their modules *on* a living sky, the way a
+ * phone weather app does: SkyBackdrop paints the condition gradient plus
+ * animated layers (sun, moon, twinkling stars, drifting clouds, rain,
+ * snow, fog, a distant lightning flicker), and the content sits in
+ * frosted-glass modules. `.wx-glass-scope` re-points the ink tokens at
+ * white-based values inside those modules so every existing visual
+ * (curves, bars, range bars, lists) reads correctly on glass without a
+ * single prop being threaded through. Sky colors stay literal — a sky is
+ * not a theme token.
+ */
+.wx-glass-scope {
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.88);
+  --color-text-muted: rgba(255, 255, 255, 0.72);
+  --color-border: rgba(255, 255, 255, 0.22);
+  --color-border-strong: rgba(255, 255, 255, 0.42);
+  --color-bg-card: rgba(255, 255, 255, 0.16);
+  --color-bg-tertiary: rgba(255, 255, 255, 0.22);
+  --color-bg-secondary: rgba(255, 255, 255, 0.12);
+  --color-accent-primary: #A9DCFF;
+  color: #FFFFFF;
+}
+.wx-module {
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px -18px rgba(5, 20, 40, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+  outline: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* Sky layers (SkyBackdrop). Pure decoration: aria-hidden, pointer-none. */
+.wx-sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.wx-sky-sun {
+  position: absolute; top: -4.5rem; right: -2.5rem; width: 13rem; height: 13rem; border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 244, 195, 0.95) 0%, rgba(255, 214, 110, 0.55) 32%, rgba(255, 190, 80, 0.18) 58%, transparent 72%);
+  animation: wx-sun-pulse 7s ease-in-out infinite alternate;
+}
+.wx-sky-moon {
+  position: absolute; top: 1.6rem; right: 2.2rem; width: 3.4rem; height: 3.4rem; border-radius: 999px;
+  background: radial-gradient(circle at 38% 34%, #FFFFFF 0%, #E8EEF7 55%, #C6D2E4 100%);
+  box-shadow: 0 0 42px 10px rgba(220, 232, 255, 0.35);
+}
+.wx-sky-star { position: absolute; border-radius: 999px; background: #FFFFFF; animation: wx-twinkle 3.4s ease-in-out infinite alternate; }
+.wx-sky-cloud {
+  position: absolute; border-radius: 999px; filter: blur(14px);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 60%, transparent 75%);
+  animation-name: wx-drift; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+.wx-sky-cloud.dark-cloud { background: radial-gradient(ellipse at center, rgba(38, 54, 84, 0.55) 0%, rgba(38, 54, 84, 0.2) 60%, transparent 75%); }
+/* Drops/flakes are full-height columns with the streak painted at the
+   top (background-size), so translateY % travels the whole panel. */
+.wx-sky-rain {
+  position: absolute; top: 0; width: 1.5px; height: 100%;
+  background-image: linear-gradient(180deg, transparent, rgba(190, 225, 255, 0.8));
+  background-size: 100% 4.4rem; background-repeat: no-repeat; background-position: top center;
+  animation-name: wx-rain-fall; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+.wx-sky-snowflake {
+  position: absolute; top: 0; width: 0.55rem; height: 100%; opacity: 0.92;
+  background-image: radial-gradient(circle, #FFFFFF 0 42%, rgba(255, 255, 255, 0.25) 68%, transparent 75%);
+  background-size: var(--wx-flake, 0.45rem) var(--wx-flake, 0.45rem); background-repeat: no-repeat; background-position: top center;
+  animation-name: wx-snow-fall; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+.wx-sky-fogband {
+  position: absolute; left: -15%; width: 130%; height: 2.6rem; border-radius: 999px; filter: blur(10px);
+  background: linear-gradient(90deg, transparent, rgba(240, 246, 252, 0.4), transparent);
+  animation-name: wx-fog-drift; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate;
+}
+.wx-sky-flash { position: absolute; inset: 0; background: rgba(215, 228, 255, 0.85); opacity: 0; animation: wx-lightning 9s linear infinite; }
+
+@keyframes wx-sun-pulse { from { transform: scale(1); opacity: 0.85; } to { transform: scale(1.09); opacity: 1; } }
+@keyframes wx-twinkle { from { opacity: 0.25; transform: scale(0.8); } to { opacity: 1; transform: scale(1.25); } }
+@keyframes wx-drift { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+@keyframes wx-rain-fall { from { transform: translate3d(0, -12%, 0) rotate(11deg); } to { transform: translate3d(-2.6rem, 104%, 0) rotate(11deg); } }
+@keyframes wx-snow-fall {
+  0% { transform: translate3d(0, -6%, 0); }
+  50% { transform: translate3d(1.1rem, 48%, 0); }
+  100% { transform: translate3d(-0.7rem, 102%, 0); }
+}
+@keyframes wx-fog-drift { from { transform: translateX(-2.5%); } to { transform: translateX(2.5%); } }
+@keyframes wx-lightning {
+  0%, 86%, 89.5%, 93%, 100% { opacity: 0; }
+  87%, 90.5% { opacity: 0.32; }
+  88.2% { opacity: 0.08; }
+}
+
+/* Temperature curve draw-in + sun pulse + condition icon micro-motion. */
+.wx-curve-line { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.wx-curve-line.is-on { stroke-dashoffset: 0; transition: stroke-dashoffset 1150ms cubic-bezier(0.22, 1, 0.36, 1); }
+.wx-curve-fill { opacity: 0; }
+.wx-curve-fill.is-on { opacity: 1; transition: opacity 700ms ease 320ms; }
+.wx-sun-pulse { animation: wx-sun-r 2.6s ease-in-out infinite alternate; }
+@keyframes wx-sun-r { from { opacity: 0.18; } to { opacity: 0.42; } }
+
+.wx-cond { display: inline-flex; }
+.wx-cond-animated.wx-cond-clear svg { animation: wx-icon-spin 26s linear infinite; }
+.wx-cond-animated.wx-cond-partly svg { animation: wx-icon-drift 5.5s ease-in-out infinite alternate; }
+.wx-cond-animated:is(.wx-cond-rain, .wx-cond-drizzle, .wx-cond-storm) svg { animation: wx-icon-bob 2.2s ease-in-out infinite; }
+.wx-cond-animated:is(.wx-cond-snow, .wx-cond-sleet, .wx-cond-ice) svg { animation: wx-icon-sway 3.6s ease-in-out infinite alternate; }
+.wx-cond-animated.wx-cond-cloudy svg, .wx-cond-animated.wx-cond-fog svg { animation: wx-icon-drift 6.5s ease-in-out infinite alternate; }
+@keyframes wx-icon-spin { to { transform: rotate(360deg); } }
+@keyframes wx-icon-drift { from { transform: translateX(-1.5px); } to { transform: translateX(1.5px); } }
+@keyframes wx-icon-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.6px); } }
+@keyframes wx-icon-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wx-sky-sun, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash,
+  .wx-sun-pulse, .wx-cond svg { animation: none !important; }
+  .wx-sky-rain, .wx-sky-snowflake, .wx-sky-flash { display: none; }
+  .wx-curve-line { stroke-dashoffset: 0; }
+  .wx-curve-fill { opacity: 1; }
+}
+
 /* Safe-area comfort for notched phones/tablets in standalone mode. */
 .dor101-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .dor101-safe-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
