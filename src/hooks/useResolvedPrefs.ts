@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppStore, FONT_SIZE_VALUES, type Surface, type Palette } from '@/stores/appStore';
+import { useAppStore, FONT_SIZE_VALUES, PALETTES, SURFACES, type Surface, type Palette } from '@/stores/appStore';
 import { languageMeta, isRtl, type LanguageCode } from '@/i18n/config';
 import {
   usePrefersDark,

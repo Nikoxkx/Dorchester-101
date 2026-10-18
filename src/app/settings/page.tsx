@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
-import { useAppStore, type FontSize, type MapStyle, PALETTES, type Palette } from '@/stores/appStore';
+import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
@@ -55,15 +55,48 @@ type SectionId = (typeof SECTION_IDS)[number];
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
 
 /** Preview swatches — the same hexes as the palette blocks in globals.css. */
-const PALETTE_SWATCH: Record<Palette, { light: { bg: string; card: string; accent: string }; dark: { bg: string; card: string; accent: string } }> = {
-  harbor: { light: { bg: '#FAF7F1', card: '#F2EDE4', accent: '#14304F' }, dark: { bg: '#0F1720', card: '#16202C', accent: '#7FB4E8' } },
-  midnight: { light: { bg: '#FFFFFF', card: '#F4F4F5', accent: '#111111' }, dark: { bg: '#000000', card: '#0B0B0D', accent: '#E8E8ED' } },
-  forest: { light: { bg: '#F7F8F3', card: '#ECEFE4', accent: '#1F5A3A' }, dark: { bg: '#0C1511', card: '#121E18', accent: '#7FD3A3' } },
-  brick: { light: { bg: '#FBF6F2', card: '#F3EAE3', accent: '#8E2E22' }, dark: { bg: '#170F0D', card: '#201513', accent: '#F09A8C' } },
-  slate: { light: { bg: '#F5F7F9', card: '#ECEFF3', accent: '#2F4A66' }, dark: { bg: '#0E1216', card: '#151A20', accent: '#9CC0E4' } },
-  sand: { light: { bg: '#FBF5E9', card: '#F3EAD6', accent: '#7A4E0F' }, dark: { bg: '#17130C', card: '#201A11', accent: '#E9BE6A' } },
-  violet: { light: { bg: '#F8F6FC', card: '#EFEBF7', accent: '#4A2E8A' }, dark: { bg: '#100C1A', card: '#171226', accent: '#B9A3F2' } },
+const PALETTE_SWATCH: Record<Palette, { light: { bg: string; card: string; accent: string; accent2: string }; dark: { bg: string; card: string; accent: string; accent2: string } }> = {
+  harbor: { light: { bg: '#FAF7F1', card: '#F2EDE4', accent: '#14304F', accent2: '#A6362A' }, dark: { bg: '#0F1720', card: '#16202C', accent: '#7FB4E8', accent2: '#E8746A' } },
+  midnight: { light: { bg: '#FFFFFF', card: '#F4F4F5', accent: '#111111', accent2: '#C0392B' }, dark: { bg: '#000000', card: '#0B0B0D', accent: '#E8E8ED', accent2: '#FF7A6B' } },
+  forest: { light: { bg: '#F7F8F3', card: '#ECEFE4', accent: '#1F5A3A', accent2: '#A85A22' }, dark: { bg: '#0C1511', card: '#121E18', accent: '#7FD3A3', accent2: '#F0A070' } },
+  brick: { light: { bg: '#FBF6F2', card: '#F3EAE3', accent: '#8E2E22', accent2: '#14304F' }, dark: { bg: '#170F0D', card: '#201513', accent: '#F09A8C', accent2: '#8DBCEA' } },
+  slate: { light: { bg: '#F5F7F9', card: '#ECEFF3', accent: '#2F4A66', accent2: '#B5432F' }, dark: { bg: '#0E1216', card: '#151A20', accent: '#9CC0E4', accent2: '#F08A78' } },
+  sand: { light: { bg: '#FBF5E9', card: '#F3EAD6', accent: '#7A4E0F', accent2: '#1F4E6B' }, dark: { bg: '#17130C', card: '#201A11', accent: '#E9BE6A', accent2: '#8BC4E6' } },
+  violet: { light: { bg: '#F8F6FC', card: '#EFEBF7', accent: '#4A2E8A', accent2: '#B0402F' }, dark: { bg: '#100C1A', card: '#171226', accent: '#B9A3F2', accent2: '#F3907F' } },
+  lagoon: { light: { bg: '#F4FAF8', card: '#E4F1ED', accent: '#0F6B5C', accent2: '#B3541E' }, dark: { bg: '#081713', card: '#0E211C', accent: '#6EDDBE', accent2: '#F2A679' } },
+  rose: { light: { bg: '#FBF4F5', card: '#F5E6E9', accent: '#9E2B4F', accent2: '#1F4E6B' }, dark: { bg: '#180B10', card: '#211117', accent: '#F29FBC', accent2: '#8BC4E6' } },
+  sunset: { light: { bg: '#FBF5EE', card: '#F6E7D8', accent: '#A64A12', accent2: '#146B66' }, dark: { bg: '#1A110A', card: '#231610', accent: '#F7B267', accent2: '#7FD1C8' } },
+  cobalt: { light: { bg: '#F4F7FD', card: '#E5ECFA', accent: '#1D4FB8', accent2: '#B03060' }, dark: { bg: '#081226', card: '#0E1A36', accent: '#8FB4FF', accent2: '#F29FBC' } },
+  orchid: { light: { bg: '#FAF4FB', card: '#F2E4F4', accent: '#8A2B8F', accent2: '#0F6B5C' }, dark: { bg: '#160A1C', card: '#1F1029', accent: '#E2A3F5', accent2: '#6EDDBE' } },
 };
+
+/**
+ * Miniature of each surface style, painted with the *currently selected*
+ * palette over the same Dorchester Bay photo the real backdrop uses, so what
+ * the tile shows is what the whole site will do: same transparency shares and
+ * the same hue mixing as the `data-surface` rules in globals.css.
+ */
+function surfacePreview(surface: Surface, sw: { bg: string; card: string; accent: string; accent2: string }): React.CSSProperties {
+  switch (surface) {
+    case 'solid':
+      return { background: sw.card };
+    case 'glass':
+      return { background: `color-mix(in srgb, ${sw.card} 62%, transparent)`, backdropFilter: 'blur(3px)' };
+    case 'frost':
+      return {
+        background: `linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 55%), color-mix(in srgb, ${sw.card} 48%, transparent)`,
+        backdropFilter: 'blur(6px)',
+      };
+    case 'tinted':
+      return { background: `color-mix(in srgb, color-mix(in oklab, ${sw.card} 82%, ${sw.accent} 18%) 92%, transparent)`, backdropFilter: 'blur(2px)' };
+    case 'aurora':
+      return {
+        background: `linear-gradient(135deg, color-mix(in srgb, ${sw.accent} 38%, transparent), transparent 52%, color-mix(in srgb, ${sw.accent2} 38%, transparent)), color-mix(in srgb, ${sw.card} 72%, transparent)`,
+        backdropFilter: 'blur(4px)',
+      };
+  }
+}
+
 const SIZE_KEY: Record<FontSize, TranslationKey> = {
   small: 'size.small',
   medium: 'size.medium',
@@ -286,10 +319,11 @@ export default function SettingsPage() {
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('settings.palette')}
               </legend>
-              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-7">
+              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                 {PALETTES.map((value) => {
                   const active = store.palette === value;
-                  const sw = PALETTE_SWATCH[value][prefs.dark ? 'dark' : 'light'];
+                  const swLight = PALETTE_SWATCH[value].light;
+                  const swDark = PALETTE_SWATCH[value].dark;
                   return (
                     <label
                       key={value}
@@ -300,9 +334,16 @@ export default function SettingsPage() {
                       )}
                     >
                       <input type="radio" name="palette" className="sr-only" checked={active} onChange={() => store.setPalette(value)} />
-                      <span aria-hidden="true" className="mx-auto mb-1.5 flex h-8 w-full overflow-hidden rounded-md border border-black/10" style={{ background: sw.bg }}>
-                        <span className="m-1 flex-1 rounded-sm" style={{ background: sw.card }} />
-                        <span className="my-1 me-1 w-3 rounded-sm" style={{ background: sw.accent }} />
+                      {/* Both halves at once: light left, dark right, accent pair as a gradient bar. */}
+                      <span aria-hidden="true" className="mx-auto mb-1.5 flex h-9 w-full overflow-hidden rounded-md border border-black/10">
+                        <span className="flex flex-1" style={{ background: swLight.bg }}>
+                          <span className="m-1 flex-1 rounded-sm" style={{ background: swLight.card }} />
+                          <span className="my-1 me-1 w-2.5 rounded-sm" style={{ background: `linear-gradient(180deg, ${swLight.accent}, ${swLight.accent2})` }} />
+                        </span>
+                        <span className="flex flex-1" style={{ background: swDark.bg }}>
+                          <span className="m-1 flex-1 rounded-sm" style={{ background: swDark.card }} />
+                          <span className="my-1 me-1 w-2.5 rounded-sm" style={{ background: `linear-gradient(180deg, ${swDark.accent}, ${swDark.accent2})` }} />
+                        </span>
                       </span>
                       <span className="block truncate">{t(`settings.palette.${value}` as TranslationKey)}</span>
                     </label>
@@ -312,39 +353,42 @@ export default function SettingsPage() {
               <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.paletteNote')}</p>
             </fieldset>
 
-            <fieldset>
+            <fieldset className="lg:col-span-2">
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('settings.surface')}
               </legend>
-              <div className="grid grid-cols-2 gap-1.5">
-                {(['solid', 'glass'] as const).map((value) => {
+              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-5">
+                {SURFACES.map((value) => {
                   const active = store.surface === value;
+                  const sw = PALETTE_SWATCH[store.palette][prefs.dark ? 'dark' : 'light'];
                   return (
                     <label
                       key={value}
                       className={cn(
-                        'relative cursor-pointer rounded-[var(--radius-md)] border px-2 py-2 text-center text-xs font-heading transition-colors',
+                        'relative cursor-pointer rounded-[var(--radius-md)] border p-2 text-start text-xs font-heading transition-colors',
                         'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
                         active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
                       )}
                     >
                       <input type="radio" name="surface" className="sr-only" checked={active} onChange={() => store.setSurface(value)} />
-                      <span className="flex items-center justify-center gap-1.5">
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'inline-block h-3.5 w-3.5 rounded-[3px] border border-[var(--color-border-strong)]',
-                            value === 'glass' ? 'bg-[linear-gradient(135deg,rgba(20,48,79,0.55),rgba(166,54,42,0.35))] opacity-70' : 'bg-[var(--color-accent-primary)]'
-                          )}
-                        />
-                        {t(`settings.surface.${value}` as TranslationKey)}
+                      {/* The preview is the real backdrop photo with a panel
+                          painted the way globals.css paints this style, in
+                          the palette selected above. */}
+                      <span
+                        aria-hidden="true"
+                        className="mb-1.5 block h-10 w-full overflow-hidden rounded-md border border-black/10 bg-cover bg-center"
+                        style={{ backgroundImage: 'url(/img/dorchester-bay-sunset.jpg)' }}
+                      >
+                        <span className="m-1.5 block h-7 rounded-[5px] border border-white/30" style={surfacePreview(value, sw)} />
                       </span>
+                      <span className="block font-semibold">{t(`settings.surface.${value}` as TranslationKey)}</span>
+                      <span className="mt-0.5 block text-[10px] leading-snug text-[var(--color-text-muted)]">{t(`settings.surfaceDesc.${value}` as TranslationKey)}</span>
                     </label>
                   );
                 })}
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                {t('settings.surfaceNote')} {t('settings.surfaceHint')}
+                {t('settings.surfaceStylesNote')}
                 {prefs.highContrast && <> {t('settings.surfaceContrastNote')}</>}
               </p>
             </fieldset>

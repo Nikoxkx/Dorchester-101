@@ -25,6 +25,8 @@ const PAGES: Array<{ path: string; heading: RegExp }> = [
   // /food and /market-trends render their h1 in a client island, so these two
   // wait for hydration rather than reading server-rendered HTML.
   { path: '/food', heading: /^Food$|Alimentos|Manje/i },
+  { path: '/weather', heading: /Boston weather|clima/i },
+  { path: '/winter-clothing', heading: /Free coats|winter clothing/i },
   { path: '/faq', heading: /questions|preguntas/i },
   { path: '/about', heading: /About|Acerca/i },
   { path: '/affordable-housing', heading: /housing|vivienda/i },
@@ -84,6 +86,8 @@ test.describe('Navigation', () => {
       ['Directory', '/resources'],
       ['News', '/news'],
       ['Food', '/food'],
+      ['Weather', '/weather'],
+      ['Free winter clothing', '/winter-clothing'],
     ] as const) {
       const link = nav.locator(`a[href="${href}"]`).first();
       await expect(link, `nav should link to ${href}`).toHaveCount(1);

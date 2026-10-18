@@ -24,9 +24,11 @@ import {
   BookOpen,
   TrendingUp,
   MonitorSmartphone,
+  CloudSun,
+  Shirt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAppStore } from '@/stores/appStore';
+import { SURFACES, useAppStore } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { Logo } from '@/components/ui/Logo';
@@ -62,6 +64,8 @@ const SECTIONS: Array<{ labelKey: TranslationKey; items: NavItem[] }> = [
     labelKey: 'nav.section.services',
     items: [
       { href: '/food', icon: Apple, labelKey: 'nav.food' },
+      { href: '/weather', icon: CloudSun, labelKey: 'nav.weather' },
+      { href: '/winter-clothing', icon: Shirt, labelKey: 'nav.clothing' },
       { href: '/map', icon: MapIcon, labelKey: 'nav.map' },
       { href: '/resources', icon: BookOpen, labelKey: 'nav.resources' },
       { href: '/directory', icon: ListChecks, labelKey: 'nav.directory' },
@@ -180,10 +184,9 @@ export function Sidebar() {
 
         <button
           type="button"
-          role="switch"
-          aria-checked={surface === 'glass'}
-          onClick={() => setSurface(surface === 'glass' ? 'solid' : 'glass')}
-          title={isCompact ? t('settings.surface.glass') : undefined}
+          onClick={() => setSurface(SURFACES[(SURFACES.indexOf(surface) + 1) % SURFACES.length])}
+          aria-label={`${t('settings.surface')}: ${t(`settings.surface.${surface}` as TranslationKey)}`}
+          title={`${t('settings.surface')}: ${t(`settings.surface.${surface}` as TranslationKey)}`}
           className={cn(
             'flex items-center gap-3 w-full px-3 py-2.5 rounded-[var(--radius-md)]',
             'text-sm font-heading font-medium transition-colors hover:bg-[var(--color-bg-tertiary)]',
@@ -194,15 +197,9 @@ export function Sidebar() {
           <Layers className="w-5 h-5 shrink-0" aria-hidden="true" />
           {!isCompact && (
             <span className="flex flex-1 items-center justify-between gap-2">
-              {t('settings.surface.glass')}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'relative inline-block h-4 w-7 rounded-full border transition-colors',
-                  surface === 'glass' ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]' : 'border-[var(--color-border-strong)] bg-[var(--color-bg-tertiary)]'
-                )}
-              >
-                <span className={cn('absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow transition-all', surface === 'glass' ? 'start-3.5' : 'start-0.5')} />
+              {t('settings.surface')}
+              <span className="rounded-full bg-[var(--color-accent-primary)]/12 px-2 py-0.5 text-[11px] font-bold text-[var(--color-accent-primary)]">
+                {t(`settings.surface.${surface}` as TranslationKey)}
               </span>
             </span>
           )}

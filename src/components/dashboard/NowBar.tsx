@@ -2,28 +2,26 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CloudSun, MapPin, Utensils, WifiOff } from 'lucide-react';
+import { AlertTriangle, MapPin, TriangleAlert, Utensils, WifiOff } from 'lucide-react';
 import { RESOURCES } from '@/data/resources';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
 import { useLivePolling } from '@/hooks/useLivePolling';
+import { useWeather } from '@/hooks/useWeather';
+import { useI18n } from '@/i18n/hook';
+import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
 
-interface WeatherState {
-  tempF: number;
-  label: string;
-}
-
-function weatherCodeLabel(code: number): string {
-  if (code === 0) return 'Clear';
-  if (code <= 3) return 'Partly cloudy';
-  if (code <= 48) return 'Foggy';
-  if (code <= 67) return 'Rain';
-  if (code <= 77) return 'Snow';
-  if (code <= 82) return 'Showers';
-  return 'Stormy';
-}
-
+/**
+ * The "right now" strip. The weather chip reads the shared NWS payload
+ * (`useWeather`) — the same source as the homepage panel, the storm banner
+ * and the weather page — so the strip can never show a different number
+ * than the rest of the page. (It used to call Open-Meteo on its own with
+ * hardcoded English labels.) When the NWS has an active warning for
+ * Dorchester the chip gains a warning badge linking to it.
+ */
 export function NowBar() {
-  const [weather, setWeather] = useState<WeatherState | null>(null);
+  const { t, format } = useI18n();
+  const { data: weatherData } = useWeather();
+  const [unit] = useTempUnit();
   const [mbtaAlerts, setMbtaAlerts] = useState<number>(0);
   const [offline, setOffline] = useState<boolean>(false);
 
@@ -33,25 +31,14 @@ export function NowBar() {
       return;
     }
     setOffline(false);
-
-    const [weatherRes, mbtaRes] = await Promise.allSettled([
-      fetch(
-        'https://api.open-meteo.com/v1/forecast?latitude=42.3105&longitude=-71.063&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FNew_York',
-      ).then((r) => (r.ok ? r.json() : null)),
-      fetch('/api/mbta').then((r) => (r.ok ? r.json() : null)),
-    ]);
-
-    if (weatherRes.status === 'fulfilled' && weatherRes.value?.current) {
-      const temp = Math.round(Number(weatherRes.value.current.temperature_2m));
-      const code = Number(weatherRes.value.current.weather_code ?? 0);
-      if (!Number.isNaN(temp)) {
-        setWeather({ tempF: temp, label: weatherCodeLabel(code) });
+    try {
+      const res = await fetch('/api/mbta');
+      if (res.ok) {
+        const json = (await res.json()) as { alerts?: unknown[] };
+        setMbtaAlerts(Array.isArray(json.alerts) ? json.alerts.length : 0);
       }
-    }
-
-    if (mbtaRes.status === 'fulfilled' && mbtaRes.value) {
-      const alerts = Array.isArray(mbtaRes.value.alerts) ? mbtaRes.value.alerts.length : 0;
-      setMbtaAlerts(alerts);
+    } catch {
+      /* the strip keeps its last count; weather polling is unaffected */
     }
   }, []);
 
@@ -73,6 +60,12 @@ export function NowBar() {
   const pantries = RESOURCES.filter((r) => r.category === 'food');
   const openPantries = pantries.filter((r) => r.hours && isOpenNow(r.hours, now, BOSTON_TZ)).length;
 
+  const current = weatherData?.current;
+  const hour0 = weatherData?.hourly.find((h) => new Date(h.end).getTime() > now.getTime());
+  const chipTemp = current?.tempF ?? hour0?.tempF;
+  const chipKind = current?.kind ?? hour0?.kind;
+  const alertCount = weatherData?.alerts.length ?? 0;
+
   return (
     <div
       role="region"
@@ -85,11 +78,20 @@ export function NowBar() {
           Dorchester now
         </span>
 
-        {weather && (
-          <span className="inline-flex items-center gap-1 text-[var(--color-text-secondary)]">
-            <CloudSun className="h-3.5 w-3.5 text-[var(--color-accent-primary)]" aria-hidden="true" />
-            <strong className="font-mono">{weather.tempF}°F</strong> {weather.label}
-          </span>
+        {chipTemp !== undefined && chipKind && (
+          <Link
+            href="/weather"
+            className="inline-flex items-center gap-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline"
+            aria-label={`${t('weather.homeTitle')}: ${tempText(chipTemp, unit, format.number)}, ${t(`weather.cond.${chipKind}` as never)}${alertCount > 0 ? ` · ${t('weather.alertsTitle')} (${format.number(alertCount)})` : ''}`}
+          >
+            <ConditionIcon kind={chipKind} isDay={current?.isDay ?? hour0?.isDay ?? true} className="h-3.5 w-3.5 text-[var(--color-accent-primary)]" />
+            <strong className="font-mono">{tempText(chipTemp, unit, format.number)}</strong> {t(`weather.cond.${chipKind}` as never)}
+            {alertCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-secondary)] px-1.5 py-0.5 font-heading text-[10px] font-bold text-white">
+                <TriangleAlert className="h-3 w-3" aria-hidden="true" /> {format.number(alertCount)}
+              </span>
+            )}
+          </Link>
         )}
 
         <Link

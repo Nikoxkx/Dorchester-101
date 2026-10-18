@@ -73,17 +73,21 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 | **Map preview never collapses** | The dashboard's `ssr:false` map loader now owns its height, so the pre-hydration skeleton can no longer render a zero-height blank box. |
 | **Every listing re-checked (4 Oct 2026)** | Every listing, fare, income limit and project record was re-verified against the publishing agency in one pass: MBTA routes, stops and street-stop memberships from the v3 API; subway and Commuter Rail fares from mbta.com; the M7 and income-eligible reduced-fare descriptions (the $10 pass is a 7-day LinkPass; monthly is $30); HUD's FY2026 income limits and $164,600 median family income; the LIHEAP PY2027 60%-SMI ladder; and Dot Block's 488 homes with 117 income-restricted. The offline news snapshot was refreshed to the same date, because the old capture had aged past the fourteen-day window the API asks for, and the retired GBH feed was removed from the About page's source list so it no longer claims a publisher the site does not read. |
 
+| **Live Boston weather, warnings and what to wear** | A `/weather` section and a homepage weather panel read the **National Weather Service** (Dorchester grid point) at every load: current conditions from the nearest station, the next 48 hours hour by hour, the 7-day day/night forecast, and feels-like computed with the NWS wind-chill and heat-index formulas. Active storm watches, warnings and advisories appear in a banner on **every** page, with the NWS's own instructions verbatim. If the NWS cannot be reached, Open-Meteo is shown *labelled as a backup* and the alert area says warnings could not be checked — it never claims there are none. What-to-wear tips are computed from the live hourly forecast at read time (coat ladder on feels-like, rain/wind/footwear, cold-snap and heat-wave *week* patterns across all seven days, morning-chill and after-dark rules), not written once in the summer. |
+| **Free coats and winter clothing** | A `/winter-clothing` section lists verified places in Dorchester and Boston where winter coats and warm clothing are free — ABCD Dorchester NSC, Cradles to Crayons (through its named Dorchester partners), St. Francis House Fresh Threads, women's programs, Coats4Vets, the seasonal Coats for Kids & Families drive — plus Mass 2-1-1 and other finders that maintain their own listings daily. Every record carries who it is for, what is given away, the exact next step, honest hours (structured where the organisation publishes them, "call first" where it does not) and its check date; `/api/winter-clothing` re-computes open-now and in-season in Boston time and live-tests each official page on every load, reporting a dead link as "could not be checked" rather than hiding it. When the live forecast says a warm coat matters today, the weather tips and the homepage link straight here. |
+| **Five more palettes, five surfaces** | Palettes grew from seven to twelve (Lagoon, Rose, Sunset, Cobalt, Orchid), each WCAG-contrast-checked in light and dark. The old glass on/off switch became five **surface styles** — Solid, Transparent, Frosted, Tinted, Aurora — that change how the *same* palette reflects on the page: translucency over the bay photograph, frost blur and sheen, accent-tinted panels, or an accent-glow aurora. Surfaces derive from the active palette's own colours with `color-mix` (never a second hard-coded scheme), high contrast and reduced-transparency systems always get Solid, and Settings previews each style over the real backdrop photo before you pick. |
+
 ### 4.0 launch
 
 | Area | Change |
 |------|--------|
-| **Seven colour palettes** | Harbor (default), **Black & white**, Forest, Brick, Slate, Sand and Violet. Each has a light and a dark version, keeps the same contrast ratios, and is applied to the whole site — cards, buttons, charts, map controls — not just the header. Settings → Appearance. |
+| **Twelve colour palettes** | Harbor (default), **Black & white**, Forest, Brick, Slate, Sand, Violet, Lagoon, Rose, Sunset, Cobalt and Orchid. Each has a light and a dark version, keeps the same contrast ratios (WCAG-checked in `palettes.test.ts`), and is applied to the whole site — cards, buttons, charts, map controls — not just the header. Settings → Appearance. |
 | **Door-to-door transit directions** | Every place on the map has a **Bus / train route** button. It asks the browser for your location once and opens Google Maps with the full route from where you stand, using live MBTA times. Apple Maps and walking routes are one tap away. |
 | **Photographic brand** | The logo, favicon, PWA icons and the link-preview card are built from a real photograph of the Boston skyline seen across Dorchester Bay (Wikimedia Commons, CC BY-SA 3.0), not a generated illustration. |
 | **Shareable & indexable** | A 1200×630 Open Graph / Twitter card (`/og.png`), `robots.txt`, `sitemap.xml`, canonical URLs and schema.org `WebSite` + `Organization` JSON-LD on every page. Pasting a link into iMessage, WhatsApp, Slack or X shows the logo, description and a preview. |
 | **Clean dashboard map** | The dashboard map preview is now imagery only. Symbols and route lines belong to the full map page, where they are drawn correctly and cannot overflow neighbouring content. |
 | **Zero-warning codebase** | Every `react-hooks/set-state-in-effect` and `exhaustive-deps` warning was fixed properly (lazy initialisers, `useSyncExternalStore`, render-time comparisons) rather than suppressed. `npm run lint` reports 0 errors, 0 warnings. |
-| Also | Glass/transparent surface toggle, per-project site imagery with "no render published" fallbacks, neighbourhood photographs, housing primer, source badges with hover previews, PlaceSheet redesign, stronger settings contrast, console-error clean-up. |
+| Also | **Five surface styles** — Solid, Transparent, Frosted, Tinted and Aurora: the palette's own colours re-derived with different translucency, blur and tint over the Dorchester Bay photograph (high contrast and `prefers-reduced-transparency` always force Solid) — plus per-project site imagery with "no render published" fallbacks, neighbourhood photographs, housing primer, source badges with hover previews, PlaceSheet redesign, stronger settings contrast, console-error clean-up. |
 
 ---
 
@@ -140,6 +144,8 @@ installing, running and troubleshooting the desktop app are in
 * **Resource directory** — organisations by category, each with a *last verified* date, a source badge and a "report a problem" button that pre-fills a GitHub issue.
 * **Emergency hotlines** pinned to the dashboard: 911, 311, 211, the BHA emergency line, Mass 2-1-1 shelter, Safelink and the 988 crisis line.
 * **News** — live feed from the Dorchester Reporter, City of Boston news, WBUR and the Globe's Dorchester coverage, filterable by topic.
+* **Weather** — live National Weather Service forecast for Dorchester with storm warnings site-wide and what-to-wear tips computed from the forecast at read time.
+* **Free winter clothing** — checked list of free coat and warm-clothing programs in Dorchester and Boston, with open-now/in-season computed live and each official page re-tested on load.
 * **FAQ** — questions residents actually asked, answered with citations.
 
 <p align="center"><img src="docs/media/banner-uphams-corner.jpg" width="100%" alt="S. B. Pierce Building at Uphams Corner" /></p>
@@ -150,8 +156,8 @@ Profiles of Fields Corner, Savin Hill, Uphams Corner, Ashmont, Codman Square, Gr
 
 ### Personalisation & settings
 
-* Seven colour palettes × light / dark / system.
-* Solid or glass (translucent) surfaces.
+* Twelve colour palettes × light / dark / system.
+* Five surface styles — Solid, Transparent, Frosted, Tinted and Aurora — that change the panels' translucency, blur and tint over the Dorchester Bay photograph.
 * Four text sizes, dyslexia-friendly font, reduced motion, high contrast.
 * Read-aloud for any page using the browser's speech engine, in the language you selected.
 * Language, palette and every other preference is stored on the device only.
@@ -195,6 +201,9 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
 | **Boston.gov / Mayor's Office of Housing** | Metrolist, AMI table, Office of Housing Stability programs |
 | **Mass.gov / DHCD / DTA** | RAFT, HomeBASE, SNAP, WIC, HIP |
 | **Greater Boston Food Bank** | Pantry network and hours |
+| **National Weather Service (api.weather.gov)** | Forecast, hour-by-hour conditions, station observations and active storm watches/warnings/advisories for the Dorchester grid point — no API key; read at every load, cached five minutes server-side |
+| **Open-Meteo** | Labelled backup forecast, only when the NWS cannot be reached; never a source for warnings |
+| **The clothing programs themselves** | Free coat/clothing records checked against each organisation's own page, with the page live-re-tested on every `/winter-clothing` load |
 | **MassLegalHelp / Greater Boston Legal Services** | Tenant rights, eviction process, right-to-counsel |
 | **OpenStreetMap contributors** | Street tiles and geocoding |
 | **Esri World Imagery** | Satellite tiles |

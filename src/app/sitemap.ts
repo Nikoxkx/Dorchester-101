@@ -23,7 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       // OG image for homepage so crawlers associate it
       ...(route === '/' ? { images: [`${origin}/og.png`] } : {}),
       lastModified: isAboutFaq ? reviewedOn : now,
-      changeFrequency: route === '/news' || route === '/map' ? 'hourly' : isDirectory ? 'weekly' : 'monthly',
+      changeFrequency:
+        route === '/news' || route === '/map' || route === '/weather'
+          ? 'hourly'
+          : route === '/winter-clothing' || isDirectory
+            ? 'weekly'
+            : 'monthly',
       priority: route === '/' ? 1 : isDirectory ? 0.9 : 0.7,
     } satisfies MetadataRoute.Sitemap[number];
   });

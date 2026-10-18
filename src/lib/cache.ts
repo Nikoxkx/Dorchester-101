@@ -17,6 +17,8 @@ export const CACHE_TTL = {
   MBTA: 30 * 1000,                // 30 seconds
   MARKET_DATA: 2 * 60 * 60 * 1000, // 2 hours
   NOTIFICATIONS: 5 * 60 * 1000,   // 5 minutes
+  WEATHER: 5 * 60 * 1000,         // 5 minutes (forecast + active NWS alerts)
+  SOURCE_CHECKS: 6 * 60 * 60 * 1000, // 6 hours (winter-clothing page liveness)
   RESOURCES: 60 * 60 * 1000,      // 1 hour
   DEFAULT: 5 * 60 * 1000,         // 5 minutes
 } as const;
@@ -121,6 +123,12 @@ export const cacheHelpers = {
   },
   getNotifications: () => globalCache.get<unknown[]>('notifications:list'),
   
+  // Weather cache
+  setWeather: (data: unknown) => {
+    globalCache.set('weather:boston', data, CACHE_TTL.WEATHER);
+  },
+  getWeather: () => globalCache.get<unknown>('weather:boston'),
+
   // Clear all caches
   clearAll: () => globalCache.clear(),
   

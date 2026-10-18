@@ -9,6 +9,7 @@
  */
 
 import { RESOURCES, type ResourceRecord } from '@/data/resources';
+import { WINTER_CLOTHING, type WinterClothingPlace } from '@/data/winterClothing';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES } from '@/data/transit';
 import { PUBLIC_ROUTES } from './site';
 
@@ -33,6 +34,8 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/affordable-housing': { title: 'Affordable housing', subtitle: 'Lotteries, waitlists, RAFT, subsidies' },
   '/faq': { title: 'Common questions', subtitle: 'Rights, evictions, applications' },
   '/food': { title: 'Food', subtitle: 'Pantry hours, hot meals, SNAP help' },
+  '/weather': { title: 'Boston weather', subtitle: 'Live forecast, storm warnings, what to wear' },
+  '/winter-clothing': { title: 'Free coats and winter clothing', subtitle: 'Free coat programs, kids coats, warming help' },
   '/map': { title: 'Map and transit', subtitle: 'Pins, MBTA arrivals, alerts' },
   '/market-trends': { title: 'Market trends', subtitle: 'Rent and income estimates for Boston' },
   '/neighborhood': { title: 'Neighborhoods', subtitle: 'The twelve areas of Dorchester' },
@@ -63,6 +66,8 @@ export const NAV_LABEL_KEY: Record<string, string> = {
   '/market-trends': 'nav.market',
   '/map': 'nav.map',
   '/food': 'nav.food',
+  '/weather': 'nav.weather',
+  '/winter-clothing': 'nav.clothing',
   '/neighborhood': 'nav.neighborhood',
   '/tools': 'nav.tools',
   '/news': 'nav.news',
@@ -106,6 +111,35 @@ function fromResource(record: ResourceRecord): SearchEntry {
   };
 }
 
+/** Free-coat programs search like directory orgs: by name, phone and need. */
+function fromClothing(place: WinterClothingPlace): SearchEntry {
+  const haystack = normalize(
+    [
+      place.name,
+      place.neighborhood,
+      place.address ?? '',
+      'coat coats winter clothing free',
+      place.offers.join(' '),
+      place.audiences.join(' '),
+      place.operator ?? '',
+      place.phone ?? '',
+      phoneDigits(place.phone ?? ''),
+    ].join(' ')
+  );
+  return {
+    id: `clothing-${place.id}`,
+    kind: 'organization',
+    title: place.name,
+    subtitle: `${place.neighborhood} · ${place.address?.split(',')[0] ?? 'Free winter clothing'}`,
+    href: '/winter-clothing',
+    haystack,
+    category: 'community',
+    lat: place.lat,
+    lng: place.lng,
+    phone: place.phone,
+  };
+}
+
 function build(): SearchEntry[] {
   const entries: SearchEntry[] = [];
 
@@ -121,6 +155,7 @@ function build(): SearchEntry[] {
   }
 
   entries.push(...RESOURCES.map(fromResource));
+  entries.push(...WINTER_CLOTHING.map(fromClothing));
 
   for (const line of TRANSIT_LINES) {
     for (const stop of line.dorchesterStops) {

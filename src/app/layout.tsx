@@ -114,6 +114,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Only same-origin data endpoints are prefetched; no third party is contacted. */}
         <link rel="prefetch" href="/api/news" />
         <link rel="prefetch" href="/api/notifications" />
+        {/* The storm-warning banner renders on every page; warming its feed
+            means a live warning is already on screen when the page settles. */}
+        <link rel="prefetch" href="/api/weather" />
         <link rel="preload" href="/img/dorchester-bay-sunset.jpg" as="image" />
         <noscript>
           <style>{`.dor101-js-only { display: none !important; } .dor101-nojs { display: block !important; }`}</style>

@@ -9,15 +9,47 @@ export type Language = LanguageCode;
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 export type MapStyle = 'satellite' | 'street' | 'hybrid';
 /**
- * Surface treatment. `solid` is the default opaque UI; `glass` lets the
- * Dorchester photograph show through every panel and the menu rail with a blur
- * behind the text. Contrast is protected in CSS: text colours never change and
- * every glass surface keeps at least ~70% of its base colour.
+ * Surface treatment — how panels sit over the Dorchester photograph.
+ * `solid` is the default opaque UI. The translucent styles differ in both
+ * transparency and hue, and all of them derive from the active palette in CSS
+ * (`color-mix` over the `--bg-*-solid` tokens), so a style never washes the
+ * chosen colours back to harbor: `glass` is the classic soft blur, `frost` is
+ * more see-through with a heavy frost blur and a bright sheen, `tinted`
+ * washes every panel in the palette's own accent hue, and `aurora` lays a
+ * slow two-colour glow (accent + secondary) over glass. Contrast is protected
+ * in CSS: text colours never change, high-contrast mode and
+ * `prefers-reduced-transparency` both win back the solid palette.
  */
-export type Surface = 'solid' | 'glass';
+export type Surface = 'solid' | 'glass' | 'frost' | 'tinted' | 'aurora';
+export const SURFACES: Surface[] = ['solid', 'glass', 'frost', 'tinted', 'aurora'];
 /** Colour palette for the whole interface. Each has a light and a dark variant. */
-export type Palette = 'harbor' | 'midnight' | 'forest' | 'brick' | 'slate' | 'sand' | 'violet';
-export const PALETTES: Palette[] = ['harbor', 'midnight', 'forest', 'brick', 'slate', 'sand', 'violet'];
+export type Palette =
+  | 'harbor'
+  | 'midnight'
+  | 'forest'
+  | 'brick'
+  | 'slate'
+  | 'sand'
+  | 'violet'
+  | 'lagoon'
+  | 'rose'
+  | 'sunset'
+  | 'cobalt'
+  | 'orchid';
+export const PALETTES: Palette[] = [
+  'harbor',
+  'midnight',
+  'forest',
+  'brick',
+  'slate',
+  'sand',
+  'violet',
+  'lagoon',
+  'rose',
+  'sunset',
+  'cobalt',
+  'orchid',
+];
 
 export const FONT_SIZE_VALUES: Record<FontSize, string> = {
   small: '15px',

@@ -36,6 +36,8 @@ export async function GET(req: Request) {
     "/api/market-data",
     "/api/resources?limit=5",
     "/api/notifications",
+    "/api/weather",
+    "/api/winter-clothing",
   ];
 
   const results: Array<{ path: string; status: number | string }> = [];

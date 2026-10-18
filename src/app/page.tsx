@@ -15,6 +15,8 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
 import { NowBar } from '@/components/dashboard/NowBar';
+import { WeatherPanel } from '@/components/weather/WeatherPanel';
+import { ClothingPreview } from '@/components/clothing/ClothingPreview';
 import { BadgeWall } from '@/components/gamification/BadgeWall';
 import { FieldNotes } from '@/components/pwa/FieldNotes';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
@@ -242,6 +244,10 @@ export default function DashboardPage() {
 
         <EmergencyBanner />
 
+        {/* Live weather with what-to-wear advice, from the same NWS payload
+            that drives the storm banner above every page. */}
+        <WeatherPanel />
+
         {/* The optional asks: alerts, location, offline storage — one explicit
             card instead of surprise browser prompts. Dismissible. */}
         <PermissionSetup variant="banner" />
@@ -306,6 +312,10 @@ export default function DashboardPage() {
           </h2>
           <QuickLinks />
         </section>
+
+        {/* Free winter clothing; the heading turns urgent when the live
+            weather says a warm coat matters today. */}
+        <ClothingPreview />
 
         {/* ── News + verification log ─────────────────────── */}
         <div className="grid gap-4 lg:grid-cols-3">
