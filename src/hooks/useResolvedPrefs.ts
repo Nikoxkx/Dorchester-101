@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { useAppStore, FONT_SIZE_VALUES, PALETTES, SURFACES, type Surface, type Palette } from '@/stores/appStore';
 import { languageMeta, isRtl, type LanguageCode } from '@/i18n/config';
-import { resolveScene, SCENES, type ResolvedScene } from '@/lib/scenes';
 import {
   usePrefersDark,
   usePrefersHighContrast,
@@ -19,8 +18,6 @@ export interface ResolvedPreferences {
   dark: boolean;
   surface: Surface;
   palette: Palette;
-  /** Resolved theme scene ('classic' = palette/surface run the show). */
-  scene: ResolvedScene;
   underlineLinks: boolean;
   largeFocus: boolean;
   legibleFont: boolean;
@@ -47,7 +44,6 @@ export function useResolvedPrefs(): ResolvedPreferences {
   const accessibility = useAppStore((s) => s.accessibility);
   const surface = useAppStore((s) => s.surface);
   const palette = useAppStore((s) => s.palette);
-  const sceneSetting = useAppStore((s) => s.scene);
   const hydrated = useAppStore((s) => s.hydrated);
 
   const deviceReduceMotion = usePrefersReducedMotion();
@@ -59,12 +55,7 @@ export function useResolvedPrefs(): ResolvedPreferences {
       accessibility.reduceMotion === 'auto' ? deviceReduceMotion : accessibility.reduceMotion === 'on';
     const highContrast =
       accessibility.highContrast === 'auto' ? deviceContrast : accessibility.highContrast === 'on';
-    const scene = resolveScene(sceneSetting);
-    const sceneMeta = SCENES[scene];
-    // A scene is designed as a whole: Halloween is a night scene whatever
-    // the light/dark toggle says, and each scene sits on its own surface.
-    const dark = sceneMeta.forcedDark ? true : theme === 'system' ? deviceDark : theme === 'dark';
-    const effectiveSurface = scene === 'classic' ? surface : (sceneMeta.surface ?? surface);
+    const dark = theme === 'system' ? deviceDark : theme === 'dark';
 
     return {
       language,
@@ -73,8 +64,7 @@ export function useResolvedPrefs(): ResolvedPreferences {
       reduceMotion,
       highContrast,
       dark,
-      surface: effectiveSurface,
-      scene,
+      surface,
       palette,
       underlineLinks: accessibility.underlineLinks,
       largeFocus: accessibility.largeFocus,
@@ -99,7 +89,6 @@ export function useResolvedPrefs(): ResolvedPreferences {
     deviceReduceMotion,
     deviceContrast,
     deviceDark,
-    sceneSetting,
   ]);
 }
 

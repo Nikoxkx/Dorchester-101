@@ -9,15 +9,10 @@ import {
   ArrowUp,
   Eye,
   EyeOff,
-  Ghost,
-  Leaf,
   LayoutGrid,
   Palette as PaletteIcon,
   RefreshCw,
   RotateCcw,
-  Snowflake,
-  Sunset,
-  Wand2,
   BellRing,
   Check,
   Database,
@@ -39,7 +34,6 @@ import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId } from '@/stores/appStore';
-import { SCENE_SETTINGS, isInSeason, resolveScene, type SceneSetting } from '@/lib/scenes';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
@@ -67,24 +61,6 @@ const SECTION_IDS = ['language', 'appearance', 'homepage', 'accessibility', 'dat
 type SectionId = (typeof SECTION_IDS)[number];
 
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
-
-/** Mini preview skies for the scene cards: the actual backdrop mood in one gradient. */
-const SCENE_PREVIEW: Record<SceneSetting, { bg: string; fg: string }> = {
-  classic: { bg: 'linear-gradient(135deg,#14304F,#2C5A86 60%,#A6362A)', fg: '#FFFFFF' },
-  auto: { bg: 'linear-gradient(135deg,#7FB4E8,#F0A35E 55%,#9BE15D)', fg: '#FFFFFF' },
-  halloween: { bg: 'radial-gradient(60% 60% at 82% 18%,#F5E8BE 0 12%,transparent 40%),linear-gradient(160deg,#0D0518,#2A1845)', fg: '#FF8A3C' },
-  'first-snow': { bg: 'linear-gradient(160deg,#D8E6F2,#8FC7F2 65%,#1F6FB4)', fg: '#FFFFFF' },
-  autumn: { bg: 'linear-gradient(150deg,#F0A35E,#B3531F 60%,#71852B)', fg: '#FFF3E0' },
-  'harbor-sunset': { bg: 'linear-gradient(150deg,#FFB08A,#C2432B 55%,#7A3A8C)', fg: '#FFEDE8' },
-};
-const SCENE_ICON: Record<SceneSetting, typeof Ghost> = {
-  classic: PaletteIcon,
-  auto: Wand2,
-  halloween: Ghost,
-  'first-snow': Snowflake,
-  autumn: Leaf,
-  'harbor-sunset': Sunset,
-};
 
 /** Labels for the homepage section list, reusing existing keys where they exist. */
 const HOME_SECTION_LABEL: Record<HomeSectionId, TranslationKey> = {
@@ -381,40 +357,6 @@ export default function SettingsPage() {
         {/* ── Appearance ───────────────────────────────────────────── */}
         <Section id="appearance" title={t('settings.section.appearance')} icon={<Sparkles className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.appearance = node; }}>
           <div className="grid gap-4 lg:grid-cols-2">
-            <fieldset className="lg:col-span-2">
-              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                {t('settings.scene')}
-              </legend>
-              <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 xl:grid-cols-6">
-                {SCENE_SETTINGS.map((value) => {
-                  const active = store.scene === value;
-                  const Icon = SCENE_ICON[value];
-                  const preview = SCENE_PREVIEW[value];
-                  return (
-                    <label
-                      key={value}
-                      className={cn(
-                        'relative cursor-pointer overflow-hidden rounded-[var(--radius-md)] border text-center text-xs font-heading transition-all',
-                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
-                        active ? 'border-[var(--color-accent-primary)] ring-1 ring-[var(--color-accent-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
-                      )}
-                    >
-                      <input type="radio" name="scene" className="sr-only" checked={active} onChange={() => store.setScene(value)} />
-                      <span aria-hidden="true" className="flex h-14 items-end justify-end p-1.5" style={{ background: preview.bg, color: preview.fg }}>
-                        <Icon className="h-5 w-5 drop-shadow" />
-                      </span>
-                      <span className="block px-1.5 py-1.5 leading-tight">
-                        {t(`settings.scene.${value}` as TranslationKey)}
-                        {isInSeason(value) && <span className="mt-0.5 block text-[10px] font-bold text-[var(--color-accent-green)]">{t('settings.scene.inSeason')}</span>}
-                        {value === 'auto' && <span className="mt-0.5 block text-[10px] text-[var(--color-text-muted)]">{t(`settings.scene.${resolveScene('auto')}` as TranslationKey)}</span>}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.sceneNote')}</p>
-            </fieldset>
-
             <fieldset>
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('settings.theme')}

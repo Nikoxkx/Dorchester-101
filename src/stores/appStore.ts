@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { LanguageCode } from '@/i18n/config';
-import type { SceneSetting } from '@/lib/scenes';
 
 export type Theme = 'light' | 'dark' | 'system';
 export type Language = LanguageCode;
@@ -156,8 +155,6 @@ interface AppState {
   mapStyle: MapStyle;
   surface: Surface;
   palette: Palette;
-  /** Whole-site theme scene; 'classic' leaves palette/surface in charge. */
-  scene: SceneSetting;
   homeLayout: HomeLayout;
   /** The plain-language privacy notice has been shown and acknowledged. */
   consentSeen: boolean;
@@ -198,7 +195,6 @@ interface AppState {
   setMapStyle: (style: MapStyle) => void;
   setSurface: (surface: Surface) => void;
   setPalette: (palette: Palette) => void;
-  setScene: (scene: SceneSetting) => void;
   setHomeLayout: (layout: HomeLayout) => void;
   resetHomeLayout: () => void;
   setConsentSeen: (seen: boolean) => void;
@@ -261,7 +257,6 @@ export const useAppStore = create<AppState>()(
       mapStyle: 'satellite',
       surface: 'solid',
       palette: 'harbor',
-      scene: 'classic',
       homeLayout: DEFAULT_HOME_LAYOUT,
       consentSeen: false,
       accessibility: DEFAULT_ACCESSIBILITY,
@@ -293,7 +288,6 @@ export const useAppStore = create<AppState>()(
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setSurface: (surface) => set({ surface }),
       setPalette: (palette) => set({ palette }),
-      setScene: (scene) => set({ scene }),
       setHomeLayout: (homeLayout) => set({ homeLayout }),
       resetHomeLayout: () => set({ homeLayout: DEFAULT_HOME_LAYOUT }),
       setConsentSeen: (consentSeen) => set({ consentSeen }),
@@ -347,7 +341,6 @@ export const useAppStore = create<AppState>()(
           mapStyle: 'satellite',
           surface: 'solid',
           palette: 'harbor',
-          scene: 'classic',
           homeLayout: DEFAULT_HOME_LAYOUT,
           consentSeen: false,
           accessibility: DEFAULT_ACCESSIBILITY,
@@ -375,7 +368,6 @@ export const useAppStore = create<AppState>()(
         mapStyle: s.mapStyle,
         surface: s.surface,
         palette: s.palette,
-        scene: s.scene,
         homeLayout: s.homeLayout,
         consentSeen: s.consentSeen,
         accessibility: s.accessibility,

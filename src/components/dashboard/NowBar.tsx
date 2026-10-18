@@ -83,7 +83,7 @@ export function NowBar() {
       className="relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)]/85 px-3 py-2.5 shadow-[var(--shadow)] backdrop-blur-xl sm:px-4 drop-shadow-sm"
     >
       {/* Ambient glow in the resident's own UI colors: the strip takes the
-          active palette/scene accents, so recoloring the site recolors this
+          active palette accents, so recoloring the site recolors this
           bar in the same instant — it must never wear the weather's sky
           while the rest of the page wears forest green. */}
       <div
