@@ -15,6 +15,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { SiteImagery } from '@/components/projects/SiteImagery';
 import { SourcePreview } from '@/components/sources/SourcePreview';
+import { AddToCalendar } from '@/components/housing/AddToCalendar';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge, AMIBadge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -329,21 +330,32 @@ export default function ProjectsPage() {
                 </div>
               </CardContent>
               
-              <CardFooter className="flex items-center justify-between">
+              <CardFooter className="flex flex-wrap items-center justify-between gap-2">
                 {project.approvalDate && (
                   <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
                     <Calendar className="w-4 h-4" />
                     {t('projects.approved')} {new Date(project.approvalDate).toLocaleDateString(language === 'en' ? 'en-US' : language)}
                   </div>
                 )}
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => window.open(project.bpdaLink, '_blank')}
-                  rightIcon={<ExternalLink className="w-3 h-3" />}
-                >
-                  {t('projects.bpdaDetails')}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <AddToCalendar
+                    label="Follow lottery (.ics)"
+                    event={{
+                      title: `Check Metrolist & BPDA docket: ${project.name}`,
+                      description: `${project.howToApply}\n\nAddress: ${project.address}`,
+                      location: project.address,
+                      url: project.bpdaLink,
+                    }}
+                  />
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => window.open(project.bpdaLink, '_blank')}
+                    rightIcon={<ExternalLink className="w-3 h-3" />}
+                  >
+                    {t('projects.bpdaDetails')}
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}

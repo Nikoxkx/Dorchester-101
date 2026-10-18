@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { ReportProblem } from "@/components/a11y/ReportProblem";
 import { useI18n } from "@/i18n/hook";
 import { useAppStore } from "@/stores/appStore";
+import { useBadgeStore } from "@/stores/badgeStore";
 import {
   RESOURCES,
   verificationAge,
@@ -84,6 +85,10 @@ export default function FoodPageView() {
   const searchParams = useSearchParams();
   const favorites = useAppStore((s) => s.favorites);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const earnBadge = useBadgeStore((s) => s.earn);
+  useEffect(() => {
+    earnBadge("food-finder");
+  }, [earnBadge]);
   // Deep links (?q=, ?place=) seed the search box; later URL changes are applied
   // during render by comparing against the last seen params, no effect needed.
   const seedFromParams = (params: URLSearchParams) => {

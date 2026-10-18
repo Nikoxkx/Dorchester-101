@@ -74,11 +74,10 @@ const securityHeaders = [
       // In production we drop 'unsafe-eval' — it's needed only for Next dev HMR.
       isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
+      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://api.qrserver.com",
       "font-src 'self'",
-      // Allow same-origin API fetches + Vercel vitals beacon
-      "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com",
-      ...(isDev ? [] : [`frame-ancestors 'self'`]),
+      // Allow same-origin API fetches + Vercel vitals beacon + Open-Meteo for NowBar
+      "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com https://api.open-meteo.com https://air-quality-api.open-meteo.com",
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
@@ -124,7 +123,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["read-excel-file"],
   async headers() {
     return [
-      { source: "/(.*)", headers: securityHeaders },
+      { source: "/((?!embed).*)", headers: securityHeaders },
+      {
+        source: "/embed",
+        headers: securityHeaders.filter((h) => h.key !== "X-Frame-Options"),
+      },
       // Static tiles and photos are content-hashed by the build or versioned by
       // hand, so they can be held a long time.
       {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Bus, ExternalLink, Map as MapIcon, MapPin, TrainFront } from 'lucide-react';
@@ -8,11 +8,16 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { DorchesterMapLoader } from '@/components/map/DorchesterMapLoader';
 import { useI18n } from '@/i18n/hook';
+import { useBadgeStore } from '@/stores/badgeStore';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, TRANSIT_DATA_AS_OF } from '@/data/transit';
 import { RESOURCES } from '@/data/resources';
 
 export function MapPageView() {
   const { t, format } = useI18n();
+  const earnBadge = useBadgeStore((s) => s.earn);
+  useEffect(() => {
+    earnBadge('map-explorer');
+  }, [earnBadge]);
   const stations = useMemo(() => {
     const seen = new Set<string>();
     return TRANSIT_LINES.flatMap((line) => line.dorchesterStops).filter((stop) => {

@@ -14,6 +14,9 @@ import { ProjectNote } from '@/components/layout/ProjectNote';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
+import { NowBar } from '@/components/dashboard/NowBar';
+import { BadgeWall } from '@/components/gamification/BadgeWall';
+import { FieldNotes } from '@/components/pwa/FieldNotes';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -22,6 +25,7 @@ import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
 import { RESOURCES, lastReviewedOn, reviewBacklog, verificationAge } from '@/data/resources';
 import { TRANSIT_LINES } from '@/data/transit';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
+import { useBadgeStore } from '@/stores/badgeStore';
 import type { TranslationKey } from '@/i18n/en';
 
 /**
@@ -71,6 +75,7 @@ export default function DashboardPage() {
   const { t, format, meta } = useI18n();
   const setLastUpdated = useAppStore((s) => s.setLastUpdated);
   const dataEpoch = useAppStore((s) => s.dataEpoch);
+  const earnBadge = useBadgeStore((s) => s.earn);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsSnapshot, setNewsSnapshot] = useState<{ asOf: string; note: string } | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
@@ -100,6 +105,15 @@ export default function DashboardPage() {
   // Mount, auto-refresh and Settings' "refresh now" all run through one rule, so
   // the dashboard cannot hammer the feeds while it sits in a background tab.
   useLivePolling(load, { minMs: 5 * 60_000 });
+
+  useEffect(() => {
+    earnBadge('first-visit');
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      void navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) earnBadge('offline-ready');
+      });
+    }
+  }, [earnBadge]);
 
   useEffect(() => {
     const handler = () => void load();
@@ -171,6 +185,8 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <motion.div variants={pv} initial="initial" animate="enter" className="flex flex-col gap-7 pb-10">
+        <NowBar />
+
         {/* ── Photo hero: Dorchester Bay at sunset, not a gradient ── */}
         <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
           <Image
@@ -414,6 +430,16 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </section>
+
+        {/* ── Explorer Badges + Offline Field Notes ───────── */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <BadgeWall />
+          </div>
+          <div>
+            <FieldNotes scope="dashboard" title="Offline Field Notes" />
+          </div>
+        </div>
 
         <footer className="border-t border-[var(--color-border)] pt-5 text-center">
           <p className="text-sm text-[var(--color-text-secondary)]">{t('dashboard.footer.line1')}</p>

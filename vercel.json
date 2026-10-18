@@ -63,7 +63,7 @@
   "rewrites": [{ "source": "/.well-known/security.txt", "destination": "/security.txt" }],
   "crons": [
     { "path": "/api/cron/refresh", "schedule": "0 9 * * *" },
-    { "path": "/api/health", "schedule": "0 * * * *" }
+    { "path": "/api/health", "schedule": "0 12 * * *" }
   ],
   "github": { "silent": true }
 }

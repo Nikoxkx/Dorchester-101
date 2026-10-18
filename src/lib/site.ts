@@ -3,10 +3,9 @@
  * the robots file and the service worker. One place, no drift.
  */
 
-/** Canonical origin. Set NEXT_PUBLIC_SITE_URL in deployment; localhost in dev. */
+/** Canonical origin. Set NEXT_PUBLIC_SITE_URL in deployment; defaults to production domain. */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `https://dorchester-101.vercel.app`);
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dorchester-101.vercel.app';
 
 export const SITE_NAME = 'DOR101';
 /**
