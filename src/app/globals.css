@@ -1237,18 +1237,6 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
     radial-gradient(56% 42% at 88% 94%, color-mix(in srgb, var(--wx-accent-2, #E4572E) 34%, transparent), transparent 70%);
   mix-blend-mode: soft-light;
 }
-/* The same aurora wash at card strength for site-chrome surfaces (the
-   help-today band), including the 135° sheen the homepage aurora cards
-   use. It drifts only while the aurora surface is active, like the
-   backdrop. */
-.dor101-aurora-wash {
-  background:
-    radial-gradient(62% 46% at 16% 6%, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), transparent 70%),
-    radial-gradient(56% 42% at 88% 94%, color-mix(in srgb, var(--color-accent-secondary) 16%, transparent), transparent 70%),
-    linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), color-mix(in srgb, var(--color-accent-secondary) 8%, transparent));
-}
-html[data-surface="aurora"] .dor101-aurora-wash { animation: dor101-aurora 26s var(--ease-in-out, ease-in-out) infinite alternate; }
-
 .wx-glass-scope {
   --color-text-primary: #FFFFFF;
   --color-text-secondary: rgba(255, 255, 255, 0.88);
@@ -1388,7 +1376,7 @@ html[data-surface="aurora"] .dor101-aurora-wash { animation: dor101-aurora 26s v
 @keyframes wx-icon-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .wx-sky, .wx-sky-aurora, .dor101-aurora-wash, .wx-sky-sun, .wx-sky-sun-rays, .wx-sky-moon, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash, .wx-sky-meteor,
+  .wx-sky, .wx-sky-aurora, .wx-sky-sun, .wx-sky-sun-rays, .wx-sky-moon, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash, .wx-sky-meteor,
   .wx-sun-pulse, .wx-arc-rays, .wx-cond svg { animation: none !important; }
   .wx-sky-rain, .wx-sky-snowflake, .wx-sky-flash, .wx-sky-meteor { display: none; }
   .wx-arc-draw { stroke-dashoffset: 0; }
