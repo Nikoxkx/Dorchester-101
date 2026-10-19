@@ -12,7 +12,12 @@ import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
 
 /**
- * The "right now" strip. The weather chip reads the shared NWS payload
+ * The "right now" strip — built as an ordinary site card on purpose: a
+ * `section` with the standard card tokens, so the resident's surface
+ * (glass/frost/tinted/aurora), palette and homepage card style dress it
+ * exactly like every other section, and its wash is the site's own
+ * aurora recipe rather than a private glow. The weather chip reads the
+ * shared NWS payload
  * (`useWeather`) — the same source as the homepage panel, the storm banner
  * and the weather page — so the strip can never show a different number
  * than the rest of the page. (It used to call Open-Meteo on its own with
@@ -74,26 +79,18 @@ export function NowBar() {
   }).format(now);
 
   const statLink =
-    'group flex min-w-0 items-center gap-2.5 rounded-2xl px-2.5 py-1.5 transition-colors hover:bg-white/40 dark:hover:bg-white/10';
+    'group flex min-w-0 items-center gap-2.5 rounded-2xl px-2.5 py-1.5 transition-colors hover:bg-[var(--color-bg-tertiary)]';
 
   return (
-    <div
-      role="region"
+    <section
       aria-label={t('dashboard.nowTitle')}
-      className="relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)]/85 px-3 py-2.5 shadow-[var(--shadow)] backdrop-blur-xl sm:px-4 drop-shadow-sm"
+      className="dor101-glass relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2.5 shadow-[var(--shadow)] sm:px-4"
     >
-      {/* Ambient glow in the resident's own UI colors: the strip takes the
-          active palette accents, so recoloring the site recolors this
-          bar in the same instant — it must never wear the weather's sky
-          while the rest of the page wears forest green. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.14]"
-        style={{
-          background:
-            'linear-gradient(115deg, color-mix(in srgb, var(--color-accent-primary) 60%, transparent), color-mix(in srgb, var(--color-accent-secondary) 45%, transparent))',
-        }}
-      />
+      {/* The site's own aurora wash (shared recipe): two radial accent
+          glows + the 135° sheen. Recoloring the site recolors this bar in
+          the same instant — it must never wear a private color story
+          while the rest of the page wears the resident's palette. */}
+      <div aria-hidden="true" className="dor101-aurora-wash pointer-events-none absolute inset-0 -z-10" />
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
         <span className="flex items-center gap-2.5 pe-1">
           <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
@@ -168,6 +165,6 @@ export function NowBar() {
           {t('dashboard.liveNowMap')}
         </Link>
       </div>
-    </div>
+    </section>
   );
 }

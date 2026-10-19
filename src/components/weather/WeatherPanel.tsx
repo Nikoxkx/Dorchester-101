@@ -48,7 +48,7 @@ export function WeatherPanel() {
   return (
     <section
       aria-labelledby="home-weather-title"
-      className={`relative overflow-hidden rounded-[2rem] shadow-[var(--shadow-lg)] ring-1 ring-black/10 ${data ? 'text-white' : 'bg-[var(--color-bg-card)] ring-[var(--color-border)]'}`}
+      className={`wx-sky-host relative overflow-hidden rounded-[2rem] shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-border)] ${data ? 'text-white' : 'bg-[var(--color-bg-card)]'}`}
     >
       {data && <SkyBackdrop key={`${skyKind}-${skyIsDay ? 'day' : 'night'}`} kind={skyKind} isDay={skyIsDay} />}
       <div className={data ? 'wx-glass-scope relative' : 'relative'}>
@@ -105,12 +105,12 @@ export function WeatherPanel() {
               <button
                 type="button"
                 onClick={refresh}
-                className="rounded-full border border-white/30 bg-white/10 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-[var(--color-bg-tertiary)]"
                 aria-label={t('weather.retry')}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
               </button>
-              <Link href="/weather" className="inline-flex items-center gap-1 font-heading text-sm font-bold text-white hover:underline">
+              <Link href="/weather" className="inline-flex items-center gap-1 rounded-full bg-[linear-gradient(135deg,var(--wx-accent),var(--wx-accent-2))] px-3.5 py-1.5 font-heading text-sm font-bold text-white shadow-[var(--shadow)] transition-transform hover:scale-[1.03] active:scale-95">
                 {t('weather.viewFull')} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Link>
             </div>
@@ -159,7 +159,7 @@ function HourlyStrip({ hours, unit }: { hours: HourlyPeriod[]; unit: TempUnit })
   };
 
   const arrowClass =
-    'grid h-8 w-8 place-items-center rounded-full bg-white/18 text-white ring-1 ring-white/30 backdrop-blur-md transition enabled:hover:bg-white/35 disabled:opacity-35';
+    'grid h-8 w-8 place-items-center rounded-full bg-[var(--color-bg-card)] text-white ring-1 ring-[var(--color-border)] backdrop-blur-md transition enabled:hover:bg-[var(--color-bg-tertiary)] disabled:opacity-35';
 
   return (
     <div className="mt-4">
@@ -182,7 +182,7 @@ function HourlyStrip({ hours, unit }: { hours: HourlyPeriod[]; unit: TempUnit })
         {hours.map((h, i) => (
           <div
             key={h.start}
-            className={`flex w-[4.3rem] shrink-0 select-none snap-start flex-col items-center gap-1 rounded-2xl px-2 py-2.5 text-center shadow-sm backdrop-blur-md ring-1 ${i === 0 ? 'bg-white/25 ring-white/40' : 'bg-white/15 ring-white/20'}`}
+            className={`flex w-[4.3rem] shrink-0 select-none snap-start flex-col items-center gap-1 rounded-2xl px-2 py-2.5 text-center shadow-sm backdrop-blur-md ring-1 ring-[var(--color-border)] ${i === 0 ? 'bg-[var(--color-bg-tertiary)]' : 'bg-[var(--color-bg-card)]'}`}
           >
             <span className="whitespace-nowrap text-[11px] font-semibold text-white/90">{i === 0 ? t('weather.now') : format.time(h.start)}</span>
             <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5" />
@@ -199,7 +199,7 @@ function HourlyStrip({ hours, unit }: { hours: HourlyPeriod[]; unit: TempUnit })
             <button
               type="button"
               onClick={() => scroller.current?.scrollTo({ left: 0, behavior: reduceMotion ? 'auto' : 'smooth' })}
-              className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 font-heading text-[11px] font-extrabold text-slate-700 shadow-md transition-transform active:scale-95"
+              className="inline-flex items-center gap-1 rounded-full bg-[linear-gradient(135deg,var(--wx-accent),var(--wx-accent-2))] px-2.5 py-1 font-heading text-[11px] font-extrabold text-white shadow-[var(--shadow)] transition-transform active:scale-95"
             >
               <LocateFixed className="h-3 w-3" aria-hidden="true" /> {t('weather.now')}
             </button>

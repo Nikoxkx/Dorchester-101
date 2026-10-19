@@ -1215,6 +1215,39 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
  * single prop being threaded through. Sky colors stay literal — a sky is
  * not a theme token.
  */
+/* The sky wears the site's own colors. `.wx-sky-host` captures the active
+   palette accents BEFORE any scope below re-points them, and everything
+   sky-side derives from those two values: the aurora wash over the
+   gradient, the tinted glass, the in-scope accent, and the primary
+   buttons — so picking Violet, Lagoon or Sunset in Settings recolors
+   the weather sky the same instant it recolors the rest of the site,
+   exactly the way the aurora surface recolors the backdrop. */
+.wx-sky-host {
+  --wx-accent: var(--color-accent-primary);
+  --wx-accent-2: var(--color-accent-secondary);
+}
+/* The site's aurora recipe (see [data-surface="aurora"] .dor101-backdrop:
+   two radial accent glows) at sky strength, blended over the condition
+   gradient so the palette tints the weather without flattening day,
+   night or storm into one another. */
+.wx-sky-aurora {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(62% 46% at 16% 6%, color-mix(in srgb, var(--wx-accent, #7FB4E8) 42%, transparent), transparent 70%),
+    radial-gradient(56% 42% at 88% 94%, color-mix(in srgb, var(--wx-accent-2, #E4572E) 34%, transparent), transparent 70%);
+  mix-blend-mode: soft-light;
+}
+/* The same aurora wash at card strength for site-chrome surfaces (the
+   NowBar), including the 135° sheen the homepage aurora cards use. It
+   drifts only while the aurora surface is active, like the backdrop. */
+.dor101-aurora-wash {
+  background:
+    radial-gradient(62% 46% at 16% 6%, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), transparent 70%),
+    radial-gradient(56% 42% at 88% 94%, color-mix(in srgb, var(--color-accent-secondary) 16%, transparent), transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), color-mix(in srgb, var(--color-accent-secondary) 8%, transparent));
+}
+html[data-surface="aurora"] .dor101-aurora-wash { animation: dor101-aurora 26s var(--ease-in-out, ease-in-out) infinite alternate; }
+
 .wx-glass-scope {
   --color-text-primary: #FFFFFF;
   --color-text-secondary: rgba(255, 255, 255, 0.88);
@@ -1224,12 +1257,18 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
   --color-bg-card: rgba(255, 255, 255, 0.16);
   --color-bg-tertiary: rgba(255, 255, 255, 0.22);
   --color-bg-secondary: rgba(255, 255, 255, 0.12);
-  --color-accent-primary: #A9DCFF;
+  --color-bg-raised: rgba(255, 255, 255, 0.2);
+  /* The resident's own accent, lightened just enough to read on sky —
+     charts, links and toggles inside the weather follow their palette. */
+  --color-accent-primary: color-mix(in srgb, var(--wx-accent, #7FB4E8) 42%, #FFFFFF);
+  --color-accent-secondary: color-mix(in srgb, var(--wx-accent-2, #E4572E) 55%, #FFFFFF);
   color: #FFFFFF;
 }
 .wx-module {
   border-radius: 1.35rem;
-  background: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--wx-accent, #7FB4E8) 17%, transparent), color-mix(in srgb, var(--wx-accent-2, #E4572E) 11%, transparent)),
+    rgba(255, 255, 255, 0.13);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px -18px rgba(5, 20, 40, 0.55);
   -webkit-backdrop-filter: blur(14px) saturate(1.35);
   backdrop-filter: blur(14px) saturate(1.35);
@@ -1348,7 +1387,7 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
 @keyframes wx-icon-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .wx-sky, .wx-sky-sun, .wx-sky-sun-rays, .wx-sky-moon, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash, .wx-sky-meteor,
+  .wx-sky, .wx-sky-aurora, .dor101-aurora-wash, .wx-sky-sun, .wx-sky-sun-rays, .wx-sky-moon, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash, .wx-sky-meteor,
   .wx-sun-pulse, .wx-arc-rays, .wx-cond svg { animation: none !important; }
   .wx-sky-rain, .wx-sky-snowflake, .wx-sky-flash, .wx-sky-meteor { display: none; }
   .wx-arc-draw { stroke-dashoffset: 0; }

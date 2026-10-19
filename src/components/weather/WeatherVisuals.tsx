@@ -120,6 +120,9 @@ export function SkyBackdrop({ kind, isDay }: { kind: ConditionKind; isDay: boole
 
   return (
     <div className="wx-sky" style={{ background: skyGradient(kind, isDay) }} aria-hidden="true">
+      {/* The resident's palette, washed over the sky (site aurora recipe):
+          recolor the site and the weather recolors with it. */}
+      <div className="wx-sky-aurora" />
       <div className="absolute inset-0 bg-[radial-gradient(130%_100%_at_85%_-15%,rgba(255,255,255,0.30),transparent_55%)]" />
       {layers.sun && <div className="wx-sky-sun-rays" />}
       {layers.sun && <div className="wx-sky-sun" />}

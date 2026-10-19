@@ -128,9 +128,10 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
   return (
     <section
       aria-label={t('weather.wearToday')}
-      className={variant === 'glass' ? 'wx-module relative overflow-hidden text-white' : 'relative overflow-hidden rounded-[1.4rem] text-white shadow-[var(--shadow)]'}
+      className={variant === 'glass' ? 'wx-sky-host wx-module relative overflow-hidden text-white' : 'wx-sky-host relative overflow-hidden rounded-[1.4rem] text-white shadow-[var(--shadow)] ring-1 ring-[var(--color-border)]'}
       style={variant === 'glass' ? undefined : { background: skyGradient(kind, isDay) }}
     >
+      {variant === 'sky' && <div className="wx-sky-aurora" aria-hidden="true" />}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_90%_-20%,rgba(255,255,255,0.3),transparent_55%)]" aria-hidden="true" />
       <div className="relative flex h-full flex-col p-5">
         <div className="flex items-center justify-between gap-2">
@@ -209,7 +210,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {tipsNeedCoat(tips) && (
-            <Link href="/winter-clothing" className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 font-heading text-sm font-extrabold text-[var(--color-accent-primary)] shadow transition-transform active:scale-[0.97]">
+            <Link href="/winter-clothing" className="inline-flex items-center gap-1.5 rounded-full bg-[linear-gradient(135deg,var(--wx-accent),var(--wx-accent-2))] px-3.5 py-2 font-heading text-sm font-extrabold text-white shadow-[var(--shadow)] transition-transform hover:scale-[1.03] active:scale-[0.97]">
               {t('weather.noCoatShort')} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </Link>
           )}

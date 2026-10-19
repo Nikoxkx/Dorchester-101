@@ -195,8 +195,9 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
   const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-white/75";
 
   return (
-    <section aria-labelledby="wx-current" className="wx-glass-scope relative overflow-hidden rounded-[2rem] text-white shadow-[var(--shadow-lg)] ring-1 ring-black/10">
+    <section aria-labelledby="wx-current" className="wx-sky-host relative overflow-hidden rounded-[2rem] text-white shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-border)]">
       <SkyBackdrop key={`${cur.kind}-${cur.isDay ? 'day' : 'night'}`} kind={cur.kind} isDay={cur.isDay} />
+      <div className="wx-glass-scope relative">
       {/* Sky hero: the animated backdrop follows the live condition, Apple-style. */}
       <div className="relative px-5 pb-2 pt-8 text-center text-white md:px-6">
         <div className="relative">
@@ -283,6 +284,7 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
             <p className="mt-1 font-heading text-3xl font-extrabold">{format.number(cur.pressureInHg)} <span className="text-base">inHg</span></p>
           </div>
         )}
+      </div>
       </div>
     </section>
   );
