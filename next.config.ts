@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import socialImage from "./src/lib/social-image.json";
 import { readFileSync } from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -135,6 +136,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }],
       },
       {
+        source: "/social/dorchester-101-:hash.jpg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         source: "/icons/(.*)",
         headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }],
       },
@@ -165,6 +170,11 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Old shared-image URLs keep working for cached posts and external links.
+      // Metadata itself points directly to the static JPEG (no redirect needed).
+      ...["/opengraph-image", "/twitter-image", "/api/og"].map((source) => ({
+        source, destination: socialImage.url, permanent: false,
+      })),
       { source: "/home", destination: "/", permanent: true },
       { source: "/index.html", destination: "/", permanent: true },
       // Normalize trailing slash to avoid duplicate indexing (Google sees /food and /food/ as distinct)

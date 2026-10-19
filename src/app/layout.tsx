@@ -1,3 +1,4 @@
+import { socialMetadata, SOCIAL_DESCRIPTION } from "@/lib/social";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
@@ -28,12 +29,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     // The name a resident types into a search bar is "dorchester 101", so
-    // that phrase leads; DOR101 follows as the short name the app answers to.
-    default: "Dorchester 101 (DOR101) — Free housing, food, live MBTA map, Boston weather & help in Dorchester",
+    // that phrase leads, followed by a short description of what is inside.
+    default: "Dorchester 101 — Housing, food & everyday help",
     template: "%s · Dorchester 101",
   },
-  description:
-    "Dorchester 101 is Dorchester, Boston's free community guide: affordable housing and tenant rights, food pantries open now, a live MBTA map with real buses and trains, live Boston weather with storm warnings and what to wear, and free winter coats and clothing — in nine languages, no account, no ads.",
+  description: SOCIAL_DESCRIPTION,
   keywords: [
     "Dorchester 101", "DOR101", "Dorchester", "Dorchester Boston", "Boston",
     "affordable housing Dorchester", "free food Dorchester", "food pantry Dorchester",
@@ -50,24 +50,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   manifest: "/manifest.json",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DOR101" },
-  // No `images` here on purpose: `opengraph-image.tsx` / `twitter-image.tsx`
-  // generate the one shared card (src/lib/ogCard.tsx). Declaring images in
-  // both places made platforms race between a ~1 MB photo and generated
-  // cards, so a pasted link did not preview consistently.
-  openGraph: {
-    type: "website",
-    siteName: "Dorchester 101",
-    title: "Dorchester 101 (DOR101) — Your neighborhood. Your rights. Your future.",
-    description: "Free housing, food open now, a live MBTA map, Boston weather with what to wear, and free winter clothing — for Dorchester, Boston, in nine languages.",
-    url: "/",
-    locale: "en_US",
-    alternateLocale: ["es_MX", "fr_HT", "pt_BR", "vi_VN", "zh_CN", "ar"],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Dorchester 101 (DOR101)",
-    description: "Free housing, food, live MBTA, Boston weather and free winter clothing for Dorchester, Boston — in nine languages.",
-  },
+  ...socialMetadata(),
   robots: {
     index: true,
     follow: true,

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: Public; src: url('{{SANS}}') format('woff2'); font-weight: 400; }
+@font-face { font-family: Public; src: url('{{BOLD}}') format('woff2'); font-weight: 700; }
+@font-face { font-family: Fraunces; src: url('{{DISPLAY}}') format('woff2'); font-weight: 100 900; }
+* { box-sizing: border-box; }
+body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #102b46; color: #faf6ee; font-family: Public, sans-serif; }
+.card { position: relative; width: 100%; height: 100%; overflow: hidden; background: radial-gradient(ellipse at 85% 15%, #31566d 0, transparent 65%); }
+.brand { position: absolute; left: 48px; top: 43px; display: flex; align-items: center; gap: 13px; font-size: 15px; letter-spacing: 2.2px; font-weight: 700; }
+.mark { width: 37px; height: 37px; display: grid; place-items: center; border: 1px solid #8799a5; border-radius: 10px; font-size: 14px; letter-spacing: -1px; }
+h1 { position: absolute; left: 48px; top: 139px; margin: 0; font: 650 60px/1.04 Fraunces, serif; letter-spacing: -2.8px; }
+h1 span { color: #efb99a; }
+.promise { position: absolute; left: 48px; top: 301px; margin: 0; font-size: 25px; line-height: 1.42; letter-spacing: -.6px; }
+.details { position: absolute; left: 48px; top: 412px; color: #c7d4dd; font-size: 17px; line-height: 1.7; margin: 0; }
+.badge { position: absolute; left: 48px; top: 501px; display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; }
+.dot { width: 7px; height: 7px; background: #b9d6bf; border-radius: 50%; }
+.domain { position: absolute; left: 48px; bottom: 44px; color: #c7d4dd; font-size: 15px; }
+.browser { position: absolute; left: 443px; top: 103px; width: 900px; border: 1px solid #ffffff5c; border-radius: 14px; overflow: hidden; background: #f8f5ef; box-shadow: 0 24px 65px #0007; transform: rotate(-2deg); transform-origin: top left; }
+.toolbar { height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #e9e5dd; border-bottom: 1px solid #d6d1c7; }
+.toolbar i { height: 6px; width: 6px; background: #aaa69f; border-radius: 50%; }
+.toolbar span { margin-left: 19px; font-size: 10px; color: #51616b; }
+.screenshot { display: block; width: 900px; height: 500px; object-fit: cover; object-position: top left; }
+.credit { position: absolute; bottom: 10px; right: 14px; padding: 4px 7px; border-radius: 4px; background: #102b46; font-size: 9px; color: #d1dce3; }
+</style>
+</head>
+<body><main class="card">
+  <div class="brand"><div class="mark">101</div>DORCHESTER, BOSTON</div>
+  <h1>Dorchester<br><span>101.</span></h1>
+  <p class="promise">Your neighborhood.<br>A little easier.</p>
+  <p class="details">Housing. Food. Transit. Help.<br>One free community guide.</p>
+  <div class="badge"><i class="dot"></i>9 languages &nbsp;·&nbsp; No account. No ads.</div>
+  <div class="domain">{{DOMAIN}}</div>
+  <div class="browser">
+    <div class="toolbar"><i></i><i></i><i></i><span>{{DOMAIN}}</span></div>
+    <img class="screenshot" src="{{SCREENSHOT}}" alt="Actual Dorchester 101 homepage">
+  </div>
+  <div class="credit">Site screenshot · Photo: Sswonk / CC BY-SA 3.0</div>
+</main></body>
+</html>
