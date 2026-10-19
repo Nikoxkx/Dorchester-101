@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { moonPhase } from '@/lib/moon';
 import { useReduceMotion } from '@/stores/appStore';
 import type { ConditionKind, HourlyPeriod } from '@/lib/weather';
 
@@ -54,15 +55,16 @@ export interface SkyLayers {
   snow: number;
   fog: number;
   flash: boolean;
+  meteor: boolean;
 }
 
 export function skyLayers(kind: ConditionKind, isDay: boolean): SkyLayers {
-  const base: SkyLayers = { sun: false, moon: false, stars: 0, clouds: 0, darkClouds: false, rain: 0, snow: 0, fog: 0, flash: false };
+  const base: SkyLayers = { sun: false, moon: false, stars: 0, clouds: 0, darkClouds: false, rain: 0, snow: 0, fog: 0, flash: false, meteor: false };
   switch (kind) {
     case 'clear':
-      return isDay ? { ...base, sun: true, clouds: 1 } : { ...base, moon: true, stars: 42, clouds: 1 };
+      return isDay ? { ...base, sun: true, clouds: 1 } : { ...base, moon: true, stars: 42, clouds: 1, meteor: true };
     case 'partly':
-      return isDay ? { ...base, sun: true, clouds: 3 } : { ...base, moon: true, stars: 22, clouds: 3 };
+      return isDay ? { ...base, sun: true, clouds: 3 } : { ...base, moon: true, stars: 22, clouds: 3, meteor: true };
     case 'cloudy':
       return { ...base, clouds: 5 };
     case 'fog':
@@ -119,8 +121,14 @@ export function SkyBackdrop({ kind, isDay }: { kind: ConditionKind; isDay: boole
   return (
     <div className="wx-sky" style={{ background: skyGradient(kind, isDay) }} aria-hidden="true">
       <div className="absolute inset-0 bg-[radial-gradient(130%_100%_at_85%_-15%,rgba(255,255,255,0.30),transparent_55%)]" />
+      {layers.sun && <div className="wx-sky-sun-rays" />}
       {layers.sun && <div className="wx-sky-sun" />}
-      {layers.moon && <div className="wx-sky-moon" />}
+      {layers.moon && mounted && (
+        <div className="wx-sky-moon">
+          <MoonDisc fraction={moonPhase(new Date()).fraction} size={58} />
+        </div>
+      )}
+      {layers.meteor && mounted && !reduceMotion && <span className="wx-sky-meteor" />}
       {mounted && stars.map((st, i) => (
         <span
           key={`star-${i}`}
@@ -454,29 +462,139 @@ export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]
 }
 
 /** The sun's path today, with the current position if it is above the horizon. */
+/**
+ * Tonight's moon, drawn true: the lit region is the real terminator
+ * geometry for `fraction` (0 = new, 0.5 = full) — a semicircle limb plus
+ * the terminator semi-ellipse whose width is r·|cos 2πf|. Northern-
+ * hemisphere view (waxing lit on the right), craters clipped to the lit
+ * face, the dark side left as faint earthshine so crescents still read
+ * as a whole moon. Decorative: the words next to it carry the facts.
+ */
+export function MoonDisc({ fraction, size = 44 }: { fraction: number; size?: number }) {
+  const rawId = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const clipId = `moonlit-${rawId}`;
+  const gradId = `moongrad-${rawId}`;
+  const r = 19;
+  const c = 20;
+  const cos = Math.cos(2 * Math.PI * fraction);
+  const rx = Math.max(0.01, Math.abs(cos) * r);
+  const waxing = fraction < 0.5;
+  const limbSweep = waxing ? 1 : 0;
+  const termSweep = waxing ? (cos >= 0 ? 0 : 1) : cos >= 0 ? 1 : 0;
+  const lit = `M ${c} ${c - r} A ${r} ${r} 0 0 ${limbSweep} ${c} ${c + r} A ${rx.toFixed(2)} ${r} 0 0 ${termSweep} ${c} ${c - r} Z`;
+  return (
+    <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden="true" className="block">
+      <defs>
+        <radialGradient id={gradId} cx="38%" cy="34%" r="80%">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="55%" stopColor="#E9EFF8" />
+          <stop offset="100%" stopColor="#C2D2E6" />
+        </radialGradient>
+        <clipPath id={clipId}>
+          <path d={lit} />
+        </clipPath>
+      </defs>
+      <circle cx={c} cy={c} r={r} fill="rgba(13, 22, 42, 0.5)" />
+      <path d={lit} fill={`url(#${gradId})`} />
+      <g clipPath={`url(#${clipId})`} fill="rgba(148, 166, 196, 0.38)">
+        <circle cx="15" cy="14" r="3.1" />
+        <circle cx="24.5" cy="21" r="2.2" />
+        <circle cx="17.5" cy="27" r="1.7" />
+        <circle cx="26" cy="11.5" r="1.3" />
+      </g>
+      <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="0.7" />
+    </svg>
+  );
+}
+
+const ARC_W = 260;
+const ARC_H = 92;
+const ARC_R = 108;
+
+/** A point on the sun/moon arc as container percentages, for overlays. */
+export function sunArcPoint(frac: number): { xPct: number; yPct: number } {
+  const clamped = Math.min(1, Math.max(0, frac));
+  const angle = Math.PI * (1 - clamped);
+  const x = ARC_W / 2 + ARC_R * Math.cos(angle);
+  const y = ARC_H - 8 - ARC_R * Math.sin(angle);
+  return { xPct: (x / ARC_W) * 100, yPct: (y / ARC_H) * 100 };
+}
+
+/**
+ * The sun's path today: a dawn-to-dusk gradient arc that draws itself in,
+ * the travelled part solid, the rest dashed, and the sun riding it with a
+ * pulsing halo and slowly turning rays. Below the horizon the arc dims —
+ * the caller (SunMoonCycle) puts the moon on the same path at night.
+ */
 export function SunArc({ sunrise, sunset, nowMs }: { sunrise: string; sunset: string; nowMs: number }) {
+  const gid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const rise = new Date(sunrise).getTime();
   const set = new Date(sunset).getTime();
   if (Number.isNaN(rise) || Number.isNaN(set) || set <= rise) return null;
   const frac = (nowMs - rise) / (set - rise);
-  const W = 260;
-  const H = 92;
+  const W = ARC_W;
+  const H = ARC_H;
   const cx = W / 2;
   const cy = H - 8;
-  const r = 108;
+  const r = ARC_R;
+  const up = frac >= 0 && frac <= 1;
   const angle = Math.PI * (1 - Math.min(1, Math.max(0, frac)));
   const sunX = cx + r * Math.cos(angle);
   const sunY = cy - r * Math.sin(angle);
   const daylightMin = Math.round((set - rise) / 60_000);
+  const travelled = up ? `M ${cx - r} ${cy} A ${r} ${r} 0 ${frac > 0.5 ? 1 : 0} 1 ${sunX.toFixed(1)} ${sunY.toFixed(1)}` : null;
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${Math.floor(daylightMin / 60)}h ${daylightMin % 60}m`} style={{ height: 84 }}>
-        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="var(--color-border-strong)" strokeWidth="2" strokeDasharray="3 5" strokeLinecap="round" />
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={`${Math.floor(daylightMin / 60)}h ${daylightMin % 60}m`}>
+        <defs>
+          <linearGradient id={`sunarc-${gid}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#FF9A56" />
+            <stop offset="50%" stopColor="#FFC93B" />
+            <stop offset="100%" stopColor="#FF7E47" />
+          </linearGradient>
+        </defs>
+        <path
+          d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+          fill="none"
+          stroke="var(--color-border-strong)"
+          strokeWidth="2"
+          strokeDasharray="3 5"
+          strokeLinecap="round"
+          opacity={up ? 0.65 : 0.35}
+        />
         <line x1="6" y1={cy} x2={W - 6} y2={cy} stroke="var(--color-border)" strokeWidth="1.5" />
-        {frac >= 0 && frac <= 1 && (
+        <circle cx={cx - r} cy={cy} r="2.6" fill="#FF9A56" opacity="0.9" />
+        <circle cx={cx + r} cy={cy} r="2.6" fill="#FF7E47" opacity="0.9" />
+        {travelled && (
+          <path
+            d={travelled}
+            fill="none"
+            stroke={`url(#sunarc-${gid})`}
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            pathLength={1}
+            className={`wx-arc-draw${mounted ? ' is-on' : ''}`}
+          />
+        )}
+        {up && (
           <>
-            <circle className="wx-sun-pulse" cx={sunX} cy={sunY} r="11" fill="#F6B93B" opacity="0.3" />
-            <circle cx={sunX} cy={sunY} r="6" fill="#F6B93B" stroke="#D9930D" strokeWidth="1.4" />
+            <circle className="wx-sun-pulse" cx={sunX} cy={sunY} r="12" fill="#F6B93B" opacity="0.3" />
+            <g className="wx-arc-rays" stroke="#F6B93B" strokeWidth="1.6" strokeLinecap="round" opacity="0.85">
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+                const rad = (deg * Math.PI) / 180;
+                return (
+                  <line
+                    key={deg}
+                    x1={sunX + 8.5 * Math.cos(rad)}
+                    y1={sunY + 8.5 * Math.sin(rad)}
+                    x2={sunX + 12 * Math.cos(rad)}
+                    y2={sunY + 12 * Math.sin(rad)}
+                  />
+                );
+              })}
+            </g>
+            <circle cx={sunX} cy={sunY} r="6" fill="#FFD34D" stroke="#D9930D" strokeWidth="1.4" />
           </>
         )}
       </svg>

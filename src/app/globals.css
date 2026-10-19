@@ -1237,24 +1237,57 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
 }
 
 /* Sky layers (SkyBackdrop). Pure decoration: aria-hidden, pointer-none. */
-.wx-sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.wx-sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; animation: wx-sky-in 900ms ease both; }
+@keyframes wx-sky-in { from { opacity: 0; } to { opacity: 1; } }
 .wx-sky-sun {
   position: absolute; top: -4.5rem; right: -2.5rem; width: 13rem; height: 13rem; border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 244, 195, 0.95) 0%, rgba(255, 214, 110, 0.55) 32%, rgba(255, 190, 80, 0.18) 58%, transparent 72%);
+  background: radial-gradient(circle, rgba(255, 248, 214, 0.98) 0%, rgba(255, 228, 138, 0.75) 24%, rgba(255, 205, 86, 0.38) 46%, rgba(255, 190, 80, 0.13) 62%, transparent 74%);
   animation: wx-sun-pulse 7s ease-in-out infinite alternate;
 }
+/* Sun rays: a very slow conic shimmer behind the glow, masked to a halo. */
+.wx-sky-sun-rays {
+  position: absolute; top: -8.5rem; right: -6.5rem; width: 21rem; height: 21rem; border-radius: 999px;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 170, 0.20) 0deg 7deg, transparent 7deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 26%, #000 42%, transparent 72%);
+  mask-image: radial-gradient(circle, transparent 26%, #000 42%, transparent 72%);
+  animation: wx-sun-rays-spin 90s linear infinite;
+}
+@keyframes wx-sun-rays-spin { to { transform: rotate(360deg); } }
+/* The moon is an SVG (MoonDisc) drawn at tonight's real phase; this class
+   only parks it in the sky and gives it its halo. */
 .wx-sky-moon {
-  position: absolute; top: 1.6rem; right: 2.2rem; width: 3.4rem; height: 3.4rem; border-radius: 999px;
-  background: radial-gradient(circle at 38% 34%, #FFFFFF 0%, #E8EEF7 55%, #C6D2E4 100%);
-  box-shadow: 0 0 42px 10px rgba(220, 232, 255, 0.35);
+  position: absolute; top: 1.5rem; right: 2rem; width: 3.6rem; height: 3.6rem;
+  filter: drop-shadow(0 0 18px rgba(214, 228, 255, 0.55)) drop-shadow(0 0 44px rgba(180, 200, 255, 0.28));
+  animation: wx-moon-breathe 9s ease-in-out infinite alternate;
+}
+@keyframes wx-moon-breathe { from { transform: scale(1); } to { transform: scale(1.045); } }
+/* A lone meteor on clear nights: a two-second streak every ~19s. */
+.wx-sky-meteor {
+  position: absolute; top: 12%; left: 58%; width: 7.5rem; height: 2px; border-radius: 999px;
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0.95), rgba(190, 215, 255, 0.35) 45%, transparent);
+  transform: rotate(-24deg); transform-origin: right center; opacity: 0;
+  animation: wx-meteor 19s linear infinite; animation-delay: 6s;
+}
+@keyframes wx-meteor {
+  0%, 88% { opacity: 0; transform: rotate(-24deg) translateX(0); }
+  90% { opacity: 1; }
+  96%, 100% { opacity: 0; transform: rotate(-24deg) translateX(-13rem); }
 }
 .wx-sky-star { position: absolute; border-radius: 999px; background: #FFFFFF; animation: wx-twinkle 3.4s ease-in-out infinite alternate; }
 .wx-sky-cloud {
-  position: absolute; border-radius: 999px; filter: blur(14px);
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 60%, transparent 75%);
+  position: absolute; border-radius: 999px; filter: blur(10px);
+  background:
+    radial-gradient(ellipse 46% 62% at 32% 58%, rgba(255, 255, 255, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 52% 72% at 55% 42%, rgba(255, 255, 255, 0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 55% at 74% 60%, rgba(255, 255, 255, 0.45) 0%, transparent 70%);
   animation-name: wx-drift; animation-timing-function: linear; animation-iteration-count: infinite;
 }
-.wx-sky-cloud.dark-cloud { background: radial-gradient(ellipse at center, rgba(38, 54, 84, 0.55) 0%, rgba(38, 54, 84, 0.2) 60%, transparent 75%); }
+.wx-sky-cloud.dark-cloud {
+  background:
+    radial-gradient(ellipse 46% 62% at 32% 58%, rgba(34, 50, 80, 0.6) 0%, transparent 70%),
+    radial-gradient(ellipse 52% 72% at 55% 42%, rgba(40, 58, 92, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 55% at 74% 60%, rgba(30, 44, 72, 0.5) 0%, transparent 70%);
+}
 /* Drops/flakes are full-height columns with the streak painted at the
    top (background-size), so translateY % travels the whole panel. */
 .wx-sky-rain {
@@ -1298,6 +1331,9 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
 .wx-curve-fill { opacity: 0; }
 .wx-curve-fill.is-on { opacity: 1; transition: opacity 700ms ease 320ms; }
 .wx-sun-pulse { animation: wx-sun-r 2.6s ease-in-out infinite alternate; }
+.wx-arc-rays { transform-box: fill-box; transform-origin: center; animation: wx-sun-rays-spin 46s linear infinite; }
+.wx-arc-draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.wx-arc-draw.is-on { stroke-dashoffset: 0; transition: stroke-dashoffset 1300ms cubic-bezier(0.22, 1, 0.36, 1) 120ms; }
 @keyframes wx-sun-r { from { opacity: 0.18; } to { opacity: 0.42; } }
 
 .wx-cond { display: inline-flex; }
@@ -1312,9 +1348,10 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
 @keyframes wx-icon-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .wx-sky-sun, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash,
-  .wx-sun-pulse, .wx-cond svg { animation: none !important; }
-  .wx-sky-rain, .wx-sky-snowflake, .wx-sky-flash { display: none; }
+  .wx-sky, .wx-sky-sun, .wx-sky-sun-rays, .wx-sky-moon, .wx-sky-star, .wx-sky-cloud, .wx-sky-rain, .wx-sky-snowflake, .wx-sky-fogband, .wx-sky-flash, .wx-sky-meteor,
+  .wx-sun-pulse, .wx-arc-rays, .wx-cond svg { animation: none !important; }
+  .wx-sky-rain, .wx-sky-snowflake, .wx-sky-flash, .wx-sky-meteor { display: none; }
+  .wx-arc-draw { stroke-dashoffset: 0; }
   .wx-curve-line { stroke-dashoffset: 0; }
   .wx-curve-fill { opacity: 1; }
 }

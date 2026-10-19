@@ -8,6 +8,7 @@ import {
   Eye,
   Gauge,
   RefreshCw,
+  SunMoon,
   Sunrise,
   Sunset,
   Thermometer,
@@ -23,7 +24,10 @@ import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, TempUnitToggle, tempText, useTempUnit, type TempUnit } from '@/components/weather/shared';
 import { StyleTips } from '@/components/weather/StyleTips';
-import { PrecipBars, SkyBackdrop, SunArc, TempCurve, TempRangeBar, WindCompass } from '@/components/weather/WeatherVisuals';
+import { MoonDisc, PrecipBars, SkyBackdrop, SunArc, sunArcPoint, TempCurve, TempRangeBar, WindCompass } from '@/components/weather/WeatherVisuals';
+import { WearSpotlight } from '@/components/weather/WearSpotlight';
+import { MOON_PHASE_KEYS, moonPhase, nextFullMoon, nextNewMoon } from '@/lib/moon';
+import { motion } from 'framer-motion';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useNow } from '@/hooks/useNow';
 import { coldSignal, type WeatherAlert, type WeatherPayload } from '@/lib/weather';
@@ -98,6 +102,7 @@ export default function WeatherPageView() {
           <>
             <AlertsSection payload={data} />
             <CurrentSection payload={data} unit={unit} />
+            <WearSpotlight payload={data} unit={unit} variant="sky" />
             <section className={card} aria-labelledby="wx-tips">
               <StyleTips payload={data} unit={unit} headingLevel={2} />
             </section>
@@ -189,13 +194,9 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
   const tile = "wx-module p-4";
   const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-white/75";
 
-  const daylight = payload.astronomy
-    ? Math.round((new Date(payload.astronomy.sunset).getTime() - new Date(payload.astronomy.sunrise).getTime()) / 60_000)
-    : null;
-
   return (
     <section aria-labelledby="wx-current" className="wx-glass-scope relative overflow-hidden rounded-[2rem] text-white shadow-[var(--shadow-lg)] ring-1 ring-black/10">
-      <SkyBackdrop kind={cur.kind} isDay={cur.isDay} />
+      <SkyBackdrop key={`${cur.kind}-${cur.isDay ? 'day' : 'night'}`} kind={cur.kind} isDay={cur.isDay} />
       {/* Sky hero: the animated backdrop follows the live condition, Apple-style. */}
       <div className="relative px-5 pb-2 pt-8 text-center text-white md:px-6">
         <div className="relative">
@@ -264,17 +265,10 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
           <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{t('weather.today')}</p>
         </div>
 
-        {payload.astronomy && (
-          <div className={`${tile} col-span-2`}>
-            <p className={tileTitle}><Sunrise className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.daylight')}</p>
-            <SunArc sunrise={payload.astronomy.sunrise} sunset={payload.astronomy.sunset} nowMs={now} />
-            <div className="mt-1 flex items-center justify-between text-xs font-semibold">
-              <span>{t('weather.sunrise')} {format.time(payload.astronomy.sunrise)}</span>
-              {daylight != null && <span className="text-[var(--color-text-muted)]">{Math.floor(daylight / 60)}h {daylight % 60}m</span>}
-              <span>{t('weather.sunset')} {format.time(payload.astronomy.sunset)}</span>
-            </div>
-          </div>
-        )}
+        <div className={`${tile} col-span-2 lg:col-span-4`}>
+          <p className={tileTitle}><SunMoon className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.sunMoon')}</p>
+          <SunMoonCycle astronomy={payload.astronomy} nowMs={now} />
+        </div>
 
         {cur.visibilityMi != null && (
           <div className={tile}>
@@ -291,6 +285,91 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
         )}
       </div>
     </section>
+  );
+}
+
+
+/**
+ * The sun & moon module: today's sun path (the moon rides the same arc at
+ * night), then tonight's moon drawn at its real phase — computed
+ * astronomy (`@/lib/moon`), so it is exact for the reader's instant with
+ * no extra API. The week strip previews the next seven nights. The
+ * moon's position on the night arc is the one schematic part (sunset→
+ * sunrise), and the caption says so; the phase itself is never faked.
+ */
+function SunMoonCycle({ astronomy, nowMs }: { astronomy: WeatherPayload['astronomy']; nowMs: number }) {
+  const { t, format } = useI18n();
+  const now = new Date(nowMs);
+  const moon = moonPhase(now);
+  const rise = astronomy ? new Date(astronomy.sunrise).getTime() : null;
+  const set = astronomy ? new Date(astronomy.sunset).getTime() : null;
+  const daylightMin = rise != null && set != null && set > rise ? Math.round((set - rise) / 60_000) : null;
+
+  let moonPt: { xPct: number; yPct: number } | null = null;
+  if (rise != null && set != null) {
+    const DAY = 86_400_000;
+    if (nowMs > set) moonPt = sunArcPoint((nowMs - set) / (rise + DAY - set));
+    else if (nowMs < rise) moonPt = sunArcPoint((nowMs - (set - DAY)) / (rise - (set - DAY)));
+  }
+
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(nowMs + i * 86_400_000);
+    return { date: d, fraction: moonPhase(d).fraction };
+  });
+
+  return (
+    <div>
+      {astronomy && (
+        <>
+          <div className="relative">
+            <SunArc sunrise={astronomy.sunrise} sunset={astronomy.sunset} nowMs={nowMs} />
+            {moonPt && (
+              <span
+                className="pointer-events-none absolute"
+                style={{ left: `${moonPt.xPct}%`, top: `${moonPt.yPct}%`, transform: 'translate(-50%, -50%)' }}
+                aria-hidden="true"
+              >
+                <MoonDisc fraction={moon.fraction} size={20} />
+              </span>
+            )}
+          </div>
+          <div className="mt-1 flex items-center justify-between text-xs font-semibold">
+            <span className="inline-flex items-center gap-1"><Sunrise className="h-3.5 w-3.5" aria-hidden="true" /> {format.time(astronomy.sunrise)}</span>
+            {daylightMin != null && (
+              <span className="text-white/70">{t('weather.daylight')} {Math.floor(daylightMin / 60)}h {daylightMin % 60}m</span>
+            )}
+            <span className="inline-flex items-center gap-1"><Sunset className="h-3.5 w-3.5" aria-hidden="true" /> {format.time(astronomy.sunset)}</span>
+          </div>
+        </>
+      )}
+
+      <div className="mt-3 flex items-center gap-3.5 border-t border-white/15 pt-3.5">
+        <span className="shrink-0 drop-shadow-[0_0_10px_rgba(214,228,255,0.45)]">
+          <MoonDisc fraction={moon.fraction} size={48} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-white/75">{t('weather.moonTonight')}</p>
+          <p className="font-heading text-xl font-extrabold leading-tight">{t(MOON_PHASE_KEYS[moon.phaseIndex] as never)}</p>
+          <p className="text-xs text-white/85">
+            {t('weather.moonIllumination')} {format.percent(moon.illumination, 0)} · {t('weather.moonAgeDays', { days: format.number(Math.floor(moon.ageDays) + 1) })}
+          </p>
+          <p className="text-xs text-white/85">
+            {t('weather.nextFullMoon', { date: format.date(nextFullMoon(now)) })} · {t('weather.nextNewMoon', { date: format.date(nextNewMoon(now)) })}
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-3.5 text-[11px] font-bold uppercase tracking-wide text-white/75">{t('weather.moonWeek')}</p>
+      <div className="mt-1.5 flex items-start justify-between gap-1">
+        {week.map((d) => (
+          <span key={d.date.toISOString()} className="flex flex-col items-center gap-1">
+            <MoonDisc fraction={d.fraction} size={26} />
+            <span className="text-[10px] font-semibold text-white/80">{format.weekday(d.date)}</span>
+          </span>
+        ))}
+      </div>
+      <p className="mt-2.5 text-[10px] leading-snug text-white/60">{t('weather.moonPathNote')}</p>
+    </div>
   );
 }
 
@@ -318,7 +397,7 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
   const rows = payload.hourly.filter((h) => new Date(h.end).getTime() > readAt).slice(0, 48);
   if (!rows.length) return null;
   return (
-    <section className={card} aria-labelledby="wx-hourly">
+    <motion.section className={card} aria-labelledby="wx-hourly" initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
       <h2 id="wx-hourly" className="font-heading text-base font-bold">{t('weather.hourly')}</h2>
       <h3 className="mt-3 font-heading text-sm font-bold">{t('weather.tempNext24')}</h3>
       <TempCurve hours={rows.slice(0, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
@@ -348,7 +427,7 @@ function HourlySection({ payload, unit }: { payload: WeatherPayload; unit: TempU
           </li>
         ))}
       </ul>
-    </section>
+    </motion.section>
   );
 }
 
@@ -356,7 +435,7 @@ function DailySection({ payload, unit }: { payload: WeatherPayload; unit: TempUn
   const { t, format } = useI18n();
   if (!payload.daily.length) return null;
   return (
-    <section className={card} aria-labelledby="wx-daily">
+    <motion.section className={card} aria-labelledby="wx-daily" initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
       <h2 id="wx-daily" className="font-heading text-base font-bold">{t('weather.daily')}</h2>
       {(() => {
         const days = payload.days.slice(0, 7);
@@ -404,6 +483,6 @@ function DailySection({ payload, unit }: { payload: WeatherPayload; unit: TempUn
         ))}
       </ul>
       <p className="mt-3 text-xs text-[var(--color-text-muted)]">{t('weather.forecastTextNote')}</p>
-    </section>
+    </motion.section>
   );
 }

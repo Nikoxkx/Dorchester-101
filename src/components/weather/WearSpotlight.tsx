@@ -183,7 +183,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
         </div>
 
         {fact && (
-          <div className="relative mt-3 min-h-[2.6rem] overflow-hidden rounded-2xl bg-white/12 px-3 py-2 ring-1 ring-white/20 backdrop-blur-sm" aria-live="off">
+          <div className="mt-3 min-h-[2.6rem] overflow-hidden rounded-2xl bg-white/12 px-3 py-2 ring-1 ring-white/20 backdrop-blur-sm" aria-live="off">
             <AnimatePresence mode="wait" initial={false}>
               <motion.p
                 key={fact}
@@ -198,7 +198,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
               </motion.p>
             </AnimatePresence>
             {facts.length > 1 && (
-              <span className="absolute bottom-1 end-2 flex gap-1" aria-hidden="true">
+              <span className="mt-1.5 flex justify-end gap-1" aria-hidden="true">
                 {facts.map((f, i) => (
                   <span key={f.slice(0, 24) + i} className={`h-1 rounded-full transition-all ${i === Math.min(factIndex, facts.length - 1) ? 'w-3 bg-white' : 'w-1 bg-white/40'}`} />
                 ))}

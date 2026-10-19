@@ -25,6 +25,7 @@ describe('skyLayers', () => {
     expect(layers.stars).toBeGreaterThan(0);
     expect(layers.rain).toBe(0);
     expect(layers.snow).toBe(0);
+    expect(layers.meteor).toBe(true);
   });
 
   it('storms rain hard behind dark clouds and flash lightning, day or night', () => {
@@ -86,6 +87,11 @@ describe('skyLayers', () => {
         expect(layers.rain + layers.snow + layers.stars + layers.clouds + layers.fog).toBeLessThanOrEqual(60);
         // Never a sun and a moon at once; stars only at night.
         expect(layers.sun && layers.moon).toBe(false);
+        // Meteors only streak through clear-ish night skies.
+        if (layers.meteor) {
+          expect(isDay).toBe(false);
+          expect(['clear', 'partly']).toContain(kind);
+        }
         if (isDay) expect(layers.stars).toBe(0);
         if (isDay) expect(layers.moon).toBe(false);
         if (!isDay) expect(layers.sun).toBe(false);

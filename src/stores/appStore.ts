@@ -125,6 +125,12 @@ export type HomeSectionId =
   | 'map'
   | 'extras';
 export const HOME_SECTION_ORDER: HomeSectionId[] = [
+  'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras', 'nowbar',
+];
+/** The 4.3–4.4 shipped order (NowBar first). Kept only so the persist
+ *  migration can recognize an un-customized layout and move the NowBar to
+ *  the bottom for those visitors too; anyone who rearranged keeps theirs. */
+const HOME_SECTION_ORDER_V2: HomeSectionId[] = [
   'nowbar', 'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
 ];
 export type HomeCardStyle = 'match' | 'solid' | 'glass' | 'tinted' | 'aurora';
@@ -359,7 +365,21 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 2,
+      version: 3,
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Partial<AppState>;
+        if (version < 3 && state.homeLayout) {
+          const order = state.homeLayout.order;
+          const isOldDefault =
+            Array.isArray(order) &&
+            order.length === HOME_SECTION_ORDER_V2.length &&
+            order.every((id, i) => id === HOME_SECTION_ORDER_V2[i]);
+          if (isOldDefault) {
+            state.homeLayout = { ...state.homeLayout, order: [...HOME_SECTION_ORDER] };
+          }
+        }
+        return state as AppState;
+      },
       partialize: (s) => ({
         theme: s.theme,
         language: s.language,
