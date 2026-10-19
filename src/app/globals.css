@@ -1238,8 +1238,9 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
   mix-blend-mode: soft-light;
 }
 /* The same aurora wash at card strength for site-chrome surfaces (the
-   NowBar), including the 135° sheen the homepage aurora cards use. It
-   drifts only while the aurora surface is active, like the backdrop. */
+   help-today band), including the 135° sheen the homepage aurora cards
+   use. It drifts only while the aurora surface is active, like the
+   backdrop. */
 .dor101-aurora-wash {
   background:
     radial-gradient(62% 46% at 16% 6%, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), transparent 70%),

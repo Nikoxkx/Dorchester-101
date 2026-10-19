@@ -33,7 +33,7 @@ import type { TranslationKey } from '@/i18n/en';
 
 /**
  * Shared weather presentation: the °F/°C choice, temperature text, condition
- * and tip icons, and the tip sentence builder. One copy, so the NowBar chip,
+ * and tip icons, and the tip sentence builder. One copy, so the homepage
  * the homepage panel and the weather page cannot drift apart.
  */
 
@@ -53,7 +53,7 @@ function readStoredUnit(): TempUnit {
  * Boston defaults to °F; the choice is the visitor's and sticks on device.
  * An external store (not an effect) so the server render says °F, the first
  * client render reads the saved unit without a hydration mismatch, and the
- * NowBar chip, panel and weather page all flip together.
+ * panel, pop-up and weather page all flip together.
  */
 export function useTempUnit(): [TempUnit, (unit: TempUnit) => void] {
   const unit = useSyncExternalStore(

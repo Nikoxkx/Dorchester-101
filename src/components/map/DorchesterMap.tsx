@@ -623,14 +623,14 @@ export function DorchesterMap() {
             <Layers className="h-4 w-4" />
           </span>
           <select
-            value={categories.length === 0 ? '' : 'custom'}
+            value={categories.length === 0 ? 'none' : categories.length === CATEGORIES.length ? 'all' : 'custom'}
             onChange={(event) => {
               if (event.target.value === 'all') setCategories(CATEGORIES);
               if (event.target.value === 'none') setCategories([]);
             }}
             className="h-9 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2 font-heading text-xs font-semibold"
           >
-            <option value="" disabled>
+            <option value="custom" disabled hidden>
               {t('map.placeLayers')}
             </option>
             <option value="all">{t('common.all')}</option>
@@ -912,6 +912,38 @@ export function DorchesterMap() {
             </section>
           )}
 
+          {pins.length > 0 && (
+            <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 p-3" aria-label={t('map.placesOnMap')}>
+              <h2 className="font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('map.placesOnMap')}</h2>
+              <ul className="mt-2 max-h-52 space-y-0.5 overflow-y-auto pe-1">
+                {pins.map((pin) => {
+                  const isSelected = selectedResource?.id === pin.id;
+                  return (
+                    <li key={pin.id}>
+                      <button
+                        type="button"
+                        onClick={() => selectPin(pin.id)}
+                        aria-current={isSelected ? 'true' : undefined}
+                        className={cn(
+                          'flex w-full items-center gap-2 rounded-lg px-2 py-1 text-start text-xs transition-colors hover:bg-[var(--color-bg-tertiary)]',
+                          isSelected && 'bg-[var(--color-accent-primary)]/10 font-bold'
+                        )}
+                      >
+                        <CategoryPin category={pin.category} size={16} />
+                        <span className="min-w-0 flex-1 truncate" dir="auto">{pin.name}</span>
+                        {pin.openNow != null && (
+                          <span className="shrink-0 text-[10px] text-[var(--color-text-muted)]">
+                            {pin.openNow ? t('common.open') : t('common.closed')}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           <AnimatePresence mode="wait" initial={false}>
             {selectedResource ? (
               <motion.section
@@ -930,7 +962,7 @@ export function DorchesterMap() {
                   </div>
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-                  Photo, hours, nearest stations, walking time, fare and directions are in the panel on the map.
+                  {t('map.panelPointer')}
                 </p>
               </motion.section>
             ) : (
@@ -969,11 +1001,11 @@ export function DorchesterMap() {
                   {focusedLine && (
                     <>
                       <div>
-                        <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.first')}</dt>
+                        <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.firstTrain')}</dt>
                         <dd className="font-heading font-bold tabular-nums">{focusedLine.firstDeparts}</dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.last')}</dt>
+                        <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.lastTrain')}</dt>
                         <dd className="font-heading font-bold tabular-nums">{focusedLine.lastDeparts}</dd>
                       </div>
                       <div className="col-span-2">
@@ -1018,7 +1050,7 @@ export function DorchesterMap() {
                   )}
                   {alert.validUntil && (
                     <p className="mt-1.5 text-[11px] text-[var(--color-text-muted)]">
-                      {t('map.last', { time: format.time(alert.validUntil) })}
+                      {t('weather.alertEnds', { time: format.time(alert.validUntil) })}
                     </p>
                   )}
                 </article>

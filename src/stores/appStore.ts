@@ -113,7 +113,6 @@ export interface CustomFeed {
  * in this list — it is a safety surface, not furniture.
  */
 export type HomeSectionId =
-  | 'nowbar'
   | 'hero'
   | 'greeting'
   | 'weather'
@@ -125,12 +124,13 @@ export type HomeSectionId =
   | 'map'
   | 'extras';
 export const HOME_SECTION_ORDER: HomeSectionId[] = [
-  'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras', 'nowbar',
+  'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
 ];
-/** The 4.3–4.4 shipped order (NowBar first). Kept only so the persist
- *  migration can recognize an un-customized layout and move the NowBar to
- *  the bottom for those visitors too; anyone who rearranged keeps theirs. */
-const HOME_SECTION_ORDER_V2: HomeSectionId[] = [
+/** The 4.3–4.4 shipped order (the since-removed NowBar strip first).
+ *  Kept — as plain strings, since 'nowbar' is no longer a section — only
+ *  so the persist migration can recognize an un-customized layout from
+ *  that era; anyone who rearranged keeps theirs. */
+const HOME_SECTION_ORDER_V2: string[] = [
   'nowbar', 'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
 ];
 export type HomeCardStyle = 'match' | 'solid' | 'glass' | 'tinted' | 'aurora';
@@ -304,17 +304,36 @@ export function migrateSettings(persisted: unknown, version: number): AppState {
   // homepage had chosen a page *with* weather on it, so their weather
   // stays on; everyone still on the shipped layout gets the new default
   // (off). A layout counts as arranged if its order, hidden list or card
-  // style differs from the shipped default in any way.
+  // style differs from the shipped default in any way. The comparison
+  // ignores the since-retired 'nowbar' slot (removed in v5 below), so a
+  // shipped-default layout from the NowBar era still reads as default.
   if (version < 4) {
     const layout = state.homeLayout;
+    const order = Array.isArray(layout?.order) ? (layout.order as string[]).filter((id) => id !== 'nowbar') : layout?.order;
     const customized =
       !!layout &&
-      (!Array.isArray(layout.order) ||
-        layout.order.length !== HOME_SECTION_ORDER.length ||
-        layout.order.some((id, i) => id !== HOME_SECTION_ORDER[i]) ||
+      (!Array.isArray(order) ||
+        order.length !== HOME_SECTION_ORDER.length ||
+        order.some((id, i) => id !== HOME_SECTION_ORDER[i]) ||
         (Array.isArray(layout.hidden) && layout.hidden.length > 0) ||
         (layout.cardStyle !== undefined && layout.cardStyle !== 'match'));
     state.weatherEnabled = customized;
+  }
+
+  // v5 (4.9): the NowBar strip was removed from the homepage entirely.
+  // Stored layouts simply lose the slot; everything else keeps its place.
+  if (version < 5 && state.homeLayout) {
+    const order = Array.isArray(state.homeLayout.order)
+      ? (state.homeLayout.order as string[]).filter((id) => id !== 'nowbar')
+      : state.homeLayout.order;
+    const hidden = Array.isArray(state.homeLayout.hidden)
+      ? (state.homeLayout.hidden as string[]).filter((id) => id !== 'nowbar')
+      : state.homeLayout.hidden;
+    state.homeLayout = {
+      ...state.homeLayout,
+      order: order as HomeSectionId[],
+      hidden: hidden as HomeSectionId[],
+    };
   }
 
   return state as AppState;
@@ -441,7 +460,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 4,
+      version: 5,
       migrate: migrateSettings,
       partialize: (s) => ({
         theme: s.theme,

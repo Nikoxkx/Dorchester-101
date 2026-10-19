@@ -49,10 +49,16 @@ export function VehicleSheet({
 
   useEffect(() => {
     if (!vehicle) return;
+    // Return focus to whatever opened the sheet (usually the vehicle marker
+    // or a dock list row) so closing never strands a keyboard user.
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     closeRef.current?.focus({ preventScroll: true });
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus({ preventScroll: true });
+    };
   }, [vehicle, onClose]);
 
   const stopId = vehicle?.stopId ?? null;
@@ -118,7 +124,7 @@ export function VehicleSheet({
               type="button"
               onClick={onClose}
               aria-label={t('common.close')}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -207,7 +213,7 @@ export function VehicleSheet({
                               </span>
                             </span>
                             <span className="shrink-0 text-end font-heading text-sm font-extrabold tabular-nums">
-                              {mins <= 0 ? t('weather.now') : `${format.number(mins)} min`}
+                              {mins <= 0 ? t('weather.now') : t('map.arrivalMinutes', { count: mins })}
                             </span>
                           </button>
                         </li>

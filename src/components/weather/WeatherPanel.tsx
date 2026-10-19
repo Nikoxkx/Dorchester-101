@@ -26,7 +26,7 @@ import { WearSpotlight } from './WearSpotlight';
  * `/weather` remains the deep end (sun & moon cycle, 48 hourly rows,
  * every instrument tile, the full tips list). Every number is the
  * shared NWS payload (`useWeather`), the same one driving the storm
- * banner and the NowBar chip, so the site can never show two weathers.
+ * banner above every page, so the site can never show two weathers.
  *
  * Honesty rules unchanged: cached readings are labelled with their age,
  * the publisher is named, and total failure shows a retry box, not numbers.

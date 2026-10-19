@@ -5,7 +5,7 @@ import { useLivePolling } from './useLivePolling';
 import type { WeatherPayload } from '@/lib/weather';
 
 /**
- * The one weather reader for every panel (NowBar chip, homepage panel,
+ * The one weather reader for every panel (homepage panel, storm banner,
  * warning banner, weather page), so they can never disagree with each other.
  *
  * Source order, all labelled in the payload itself:

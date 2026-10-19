@@ -70,10 +70,16 @@ export function PlaceSheet({
 
   useEffect(() => {
     if (!target) return;
+    // Remember what opened the sheet so closing returns focus there — without
+    // this a keyboard user is dropped at the top of the page after Escape.
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     closeRef.current?.focus({ preventScroll: true });
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus({ preventScroll: true });
+    };
   }, [target, onClose]);
 
   return (
@@ -123,7 +129,7 @@ function SheetHeader({ eyebrow, title, onClose, closeRef, badge }: { eyebrow: Re
         type="button"
         onClick={onClose}
         aria-label={t('common.close')}
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
       >
         <X className="h-4 w-4" />
       </button>
@@ -132,6 +138,7 @@ function SheetHeader({ eyebrow, title, onClose, closeRef, badge }: { eyebrow: Re
 }
 
 function Photo({ stopId, lat, lng, label }: { stopId?: string; lat: number; lng: number; label: string }) {
+  const { t } = useI18n();
   const photo = stopId ? STATION_PHOTOS[stopId] : undefined;
   if (photo) {
     return (
@@ -152,14 +159,14 @@ function Photo({ stopId, lat, lng, label }: { stopId?: string; lat: number; lng:
     <div className="px-3 pt-3">
       <SiteImagery lat={lat} lng={lng} label={label} />
       <p className="mt-1 flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
-        <ImageOff className="h-3 w-3" aria-hidden="true" /> No licensed street-level photo yet — showing the current aerial view instead.
+        <ImageOff className="h-3 w-3" aria-hidden="true" /> {t('map.noPhotoNote')}
       </p>
     </div>
   );
 }
 
 function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; userPosition: [number, number] | null; onLocate: () => void }) {
-  const { meta } = useI18n();
+  const { t, meta } = useI18n();
   const [resolving, setResolving] = useState<'walking' | 'transit' | null>(null);
   const meters = userPosition ? haversineMeters(userPosition, dest) : null;
 
@@ -194,16 +201,16 @@ function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; us
   return (
     <section className="px-3 pt-3">
       <h3 className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <Navigation className="h-3.5 w-3.5" aria-hidden="true" /> Get there
+        <Navigation className="h-3.5 w-3.5" aria-hidden="true" /> {t('map.getThere')}
       </h3>
       {meters !== null ? (
         <p className="mt-1 text-sm">
           <Footprints className="me-1 inline h-4 w-4 align-[-3px] text-[var(--color-accent-primary)]" aria-hidden="true" />
-          About <strong>{walkMinutes(meters)} min walk</strong> from you ({formatDistance(meters, meta.intlLocale)}).
+          {t('map.walkFromYou', { minutes: String(walkMinutes(meters)), distance: formatDistance(meters, meta.intlLocale) })}
         </p>
       ) : (
         <button type="button" onClick={onLocate} className="mt-1 text-sm font-heading font-semibold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">
-          Use my location to see walking time
+          {t('map.useLocationWalk')}
         </button>
       )}
       <div className="mt-2 grid grid-cols-2 gap-1.5">
@@ -213,7 +220,7 @@ function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; us
           disabled={resolving !== null}
           className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3 py-2 font-heading text-xs font-bold text-white disabled:opacity-70"
         >
-          <Bus className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'transit' ? 'Finding you…' : 'Bus / train route'}
+          <Bus className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'transit' ? t('map.findingYou') : t('map.routeTransit')}
         </button>
         <button
           type="button"
@@ -221,12 +228,12 @@ function GetThere({ dest, userPosition, onLocate }: { dest: [number, number]; us
           disabled={resolving !== null}
           className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-2 font-heading text-xs font-bold hover:border-[var(--color-accent-primary)] disabled:opacity-70"
         >
-          <Footprints className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'walking' ? 'Finding you…' : 'Walking route'}
+          <Footprints className="h-3.5 w-3.5" aria-hidden="true" /> {resolving === 'walking' ? t('map.findingYou') : t('map.routeWalking')}
         </button>
       </div>
       <p className="mt-1 text-[10px] leading-snug text-[var(--color-text-muted)]">
-        Opens Google Maps with the route from where you are to this place, step by step, using live MBTA times.{' '}
-        <a href={appleDirections(dest, 'transit')} className="underline decoration-dotted underline-offset-2">Apple Maps instead</a>.
+        {t('map.directionsNote')}{' '}
+        <a href={appleDirections(dest, 'transit')} className="underline decoration-dotted underline-offset-2">{t('map.appleMapsInstead')}</a>.
       </p>
     </section>
   );
@@ -246,7 +253,7 @@ function Departures({ arrivals, live, stopId }: { arrivals: Arrival[]; live: boo
   return (
     <section className="px-3 pt-3">
       <h3 className="flex items-center justify-between font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" aria-hidden="true" /> Next departures</span>
+        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" aria-hidden="true" /> {t('map.departures')}</span>
         <span className={cn('inline-flex items-center gap-1 text-[10px] normal-case tracking-normal', live ? 'text-[var(--color-accent-green)]' : '')}>
           <span className={cn('h-1.5 w-1.5 rounded-full', live ? 'bg-[var(--color-accent-green)] animate-pulse' : 'bg-[var(--color-text-muted)]')} aria-hidden="true" />
           {live ? t('map.live') : t('map.schedule')}
@@ -273,17 +280,17 @@ function Departures({ arrivals, live, stopId }: { arrivals: Arrival[]; live: boo
 }
 
 function Fare({ mode }: { mode: 'subway' | 'bus' | 'commuter-rail' | 'mixed' }) {
-  const { format } = useI18n();
+  const { t, format } = useI18n();
   const rows =
     mode === 'bus'
-      ? [{ label: 'Local bus', price: 1.7 }, { label: 'Reduced fare', price: 0.85 }]
+      ? [{ label: t('map.fareLocalBus'), price: 1.7 }, { label: t('map.fareReduced'), price: 0.85 }]
       : mode === 'commuter-rail'
-        ? [{ label: 'Fairmount Line, any stop (Zone 1A)', price: 2.4 }, { label: 'Reduced fare', price: 1.1 }]
-        : [{ label: 'Subway (any distance, free bus transfer)', price: 2.4 }, { label: 'Reduced fare', price: 1.1 }];
+        ? [{ label: t('map.fareFairmount'), price: 2.4 }, { label: t('map.fareReduced'), price: 1.1 }]
+        : [{ label: t('map.fareSubway'), price: 2.4 }, { label: t('map.fareReduced'), price: 1.1 }];
   return (
     <section className="px-3 pt-3">
       <h3 className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-        <Ticket className="h-3.5 w-3.5" aria-hidden="true" /> Fare
+        <Ticket className="h-3.5 w-3.5" aria-hidden="true" /> {t('map.fare')}
       </h3>
       <dl className="mt-1.5 grid grid-cols-2 gap-1.5 text-xs">
         {rows.map((r) => (
@@ -294,20 +301,21 @@ function Fare({ mode }: { mode: 'subway' | 'bus' | 'commuter-rail' | 'mixed' }) 
         ))}
       </dl>
       <p className="mt-1 text-[10px] leading-snug text-[var(--color-text-muted)]">
-        CharlieCard or contactless tap. Reduced fare is for seniors, people with disabilities, students, and adults 18–64 under 200% of the poverty level. Kids 11 and under ride free.{' '}
-        <Link href="/tools" className="underline decoration-dotted underline-offset-2">Check if you qualify</Link>.
+        {t('map.fareNote')}{' '}
+        <Link href="/tools" className="underline decoration-dotted underline-offset-2">{t('map.fareQualify')}</Link>.
       </p>
     </section>
   );
 }
 
 function Sources({ live, extra }: { live: boolean; extra?: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <footer className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--color-border)] px-3 py-2 text-[10px] text-[var(--color-text-muted)]">
       <SourceMark id="mbta" size="xs" withName />
-      {live ? 'live predictions' : 'published timetable'}
+      {live ? t('map.sourceLive') : t('map.sourceTimetable')}
       {extra}
-      <span className="ms-auto">Map © OpenStreetMap contributors · Imagery © Esri</span>
+      <span className="ms-auto">{t('map.sourceCredits')}</span>
     </footer>
   );
 }
@@ -344,7 +352,7 @@ function StopBody({ id, arrivals, live, userPosition, onClose, onLocate, closeRe
           </li>
         </ul>
         {stop.connects && stop.connects.length > 0 && (
-          <p className="mt-2 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">Connections:</strong> {stop.connects.join(' · ')}</p>
+          <p className="mt-2 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">{t('map.connections')}:</strong> {stop.connects.join(' · ')}</p>
         )}
       </section>
       <Departures arrivals={arrivals} live={live} stopId={id} />
@@ -353,7 +361,7 @@ function StopBody({ id, arrivals, live, userPosition, onClose, onLocate, closeRe
       {nearby.length > 0 && (
         <section className="px-3 pt-3">
           <h3 className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> Within a short walk
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {t('map.shortWalk')}
           </h3>
           <ul className="mt-1.5 space-y-1">
             {nearby.map(({ r, m }) => (
@@ -361,7 +369,7 @@ function StopBody({ id, arrivals, live, userPosition, onClose, onLocate, closeRe
                 <Link href={`/map?place=${r.id}`} className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-xs no-underline hover:bg-[var(--color-bg-tertiary)]">
                   <CategoryPin category={r.category} size={16} />
                   <span className="min-w-0 flex-1 truncate">{r.name}</span>
-                  <span className="text-[10px] text-[var(--color-text-muted)]">{walkMinutes(m)} min</span>
+                  <span className="text-[10px] text-[var(--color-text-muted)]">{t('map.walkMinutes', { minutes: String(walkMinutes(m)) })}</span>
                 </Link>
               </li>
             ))}
@@ -370,7 +378,7 @@ function StopBody({ id, arrivals, live, userPosition, onClose, onLocate, closeRe
       )}
       <div className="px-3 pt-3">
         <a href={`https://www.mbta.com/stops/${id}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-heading text-xs font-bold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">
-          Station page on mbta.com <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          {t('map.stationPage')} <ExternalLink className="h-3 w-3" aria-hidden="true" />
         </a>
       </div>
       <Sources live={live} />
@@ -402,10 +410,10 @@ function PlaceBody({ id, userPosition, onClose, onSelectStop, onLocate, closeRef
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-2 py-0.5 font-heading text-[11px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.state === 'open' ? 'var(--color-accent-green)' : status.state === 'closing-soon' ? 'var(--color-accent-amber)' : 'var(--color-text-muted)' }} aria-hidden="true" />
               {t(STATUS_KEYS[status.state])}
-              {status.state !== 'closed' && 'closesAt' in status ? ` · until ${format.time(new Date(status.closesAt))}` : 'opensAt' in status ? ` · opens ${format.time(new Date(status.opensAt))}` : ''}
+              {status.state !== 'closed' && 'closesAt' in status ? ` · ${t('map.untilTime', { time: format.time(new Date(status.closesAt)) })}` : 'opensAt' in status ? ` · ${t('map.opensTime', { time: format.time(new Date(status.opensAt)) })}` : ''}
             </span>
           )}
-          {today.length > 0 && <span className="text-[11px] text-[var(--color-text-muted)]">Today {today.map((w) => formatWindow(w)).join(', ')}</span>}
+          {today.length > 0 && <span className="text-[11px] text-[var(--color-text-muted)]">{t('map.todayHours', { hours: today.map((w) => formatWindow(w)).join(', ') })}</span>}
           {r.hoursNote && <span className="text-[11px] text-[var(--color-text-muted)]">{r.hoursNote}</span>}
         </div>
         <p className="mt-2 flex items-start gap-1.5 text-xs"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />{r.address}</p>
@@ -416,19 +424,19 @@ function PlaceBody({ id, userPosition, onClose, onSelectStop, onLocate, closeRef
         )}
         <ul className="mt-2 flex flex-wrap gap-1 text-[10px]">
           {r.accessibility?.stepFree && <li className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">♿ {t('map.wheelchair')}</li>}
-          {r.acceptsEbt && <li className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">EBT accepted</li>}
-          {r.requiresId === false && <li className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">No ID needed</li>}
+          {r.acceptsEbt && <li className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">{t('map.ebtAccepted')}</li>}
+          {r.requiresId === false && <li className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">{t('clothing.noId')}</li>}
           {r.languages?.slice(0, 4).map((l) => <li key={l} className="rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5">{l}</li>)}
         </ul>
-        {r.eligibility && <p className="mt-2 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">Who can use it:</strong> {r.eligibility}</p>}
+        {r.eligibility && <p className="mt-2 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">{t('common.eligibility')}:</strong> {r.eligibility}</p>}
         {r.services.length > 0 && (
-          <p className="mt-1 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">Services:</strong> {r.services.slice(0, 6).join(' · ')}</p>
+          <p className="mt-1 text-xs text-[var(--color-text-secondary)]"><strong className="font-heading">{t('map.services')}:</strong> {r.services.slice(0, 6).join(' · ')}</p>
         )}
       </section>
 
       <section className="px-3 pt-3">
         <h3 className="flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
-          <TrainFront className="h-3.5 w-3.5" aria-hidden="true" /> Nearest transit
+          <TrainFront className="h-3.5 w-3.5" aria-hidden="true" /> {t('map.nearestTransit')}
         </h3>
         <ul className="mt-1.5 space-y-1">
           {nearestStops.map(({ s, m }) => (
@@ -436,23 +444,23 @@ function PlaceBody({ id, userPosition, onClose, onSelectStop, onLocate, closeRef
               <button type="button" onClick={() => onSelectStop(s.id)} className="flex w-full items-center gap-2 rounded-lg border border-[var(--color-border)]/70 px-2 py-1.5 text-left text-xs transition-colors hover:border-[var(--color-accent-primary)]">
                 <Shield label={s.line.label} mode={s.line.mode} color={`#${s.line.color.replace('#', '')}`} ink={`#${s.line.textColor.replace('#', '')}`} />
                 <span className="min-w-0 flex-1 truncate"><span className="font-heading font-semibold">{s.name}</span> <span className="text-[var(--color-text-muted)]">· {s.line.name}</span></span>
-                <span className="shrink-0 font-heading font-bold tabular-nums">{walkMinutes(m)} min walk</span>
+                <span className="shrink-0 font-heading font-bold tabular-nums">{t('map.walkMinutes', { minutes: String(walkMinutes(m)) })}</span>
               </button>
             </li>
           ))}
         </ul>
         {buses.length > 0 && (
           <p className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-[var(--color-text-secondary)]">
-            <Bus className="h-3.5 w-3.5 text-[var(--color-text-muted)]" aria-hidden="true" /> Buses:
+            <Bus className="h-3.5 w-3.5 text-[var(--color-text-muted)]" aria-hidden="true" /> {t('map.buses')}:
             {buses.map((b) => (
               <button key={b.id} type="button" onClick={() => onSelectStop(`route:${b.id}`)} className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] px-1.5 py-0.5 font-heading text-[10px] font-bold hover:border-[var(--color-accent-primary)]" title={b.longName}>
-                {b.name} <span className="font-normal text-[var(--color-text-muted)]">every {b.headwayMinutes} min</span>
+                {b.name} <span className="font-normal text-[var(--color-text-muted)]">{t('map.headwayValue', { minutes: String(b.headwayMinutes) })}</span>
               </button>
             ))}
           </p>
         )}
         {r.transit && <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{r.transit}</p>}
-        <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">Tap a station for live arrival times. Walking times are estimates at 3 mph.</p>
+        <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('map.transitNote')}</p>
       </section>
 
       <GetThere dest={[r.lat, r.lng]} userPosition={userPosition} onLocate={onLocate} />
@@ -464,7 +472,7 @@ function PlaceBody({ id, userPosition, onClose, onSelectStop, onLocate, closeRef
         </Link>
         {r.website && (
           <a href={r.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-heading text-xs font-bold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">
-            Website <ExternalLink className="h-3 w-3" aria-hidden="true" />
+            {t('common.website')} <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </a>
         )}
       </div>
@@ -472,8 +480,8 @@ function PlaceBody({ id, userPosition, onClose, onSelectStop, onLocate, closeRef
         live={false}
         extra={
           <span className="inline-flex items-center gap-1">
-            · <SourceMark id="dor101" size="xs" /> checked {r.verification.checkedOn}
-            {r.verification.status === 'needs-review' && <span className="text-[var(--color-accent-amber)]"> (needs review)</span>}
+            · <SourceMark id="dor101" size="xs" /> {t('resources.checkedOn', { date: r.verification.checkedOn })}
+            {r.verification.status === 'needs-review' && <span className="text-[var(--color-accent-amber)]"> ({t('directory.needsReview')})</span>}
           </span>
         }
       />

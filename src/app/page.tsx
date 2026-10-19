@@ -14,7 +14,6 @@ import { ProjectNote } from '@/components/layout/ProjectNote';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { QuickLinks } from '@/components/dashboard/QuickLinks';
 import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
-import { NowBar } from '@/components/dashboard/NowBar';
 import { WeatherPanel } from '@/components/weather/WeatherPanel';
 import { ClothingPreview } from '@/components/clothing/ClothingPreview';
 import { BadgeWall } from '@/components/gamification/BadgeWall';
@@ -198,12 +197,6 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <motion.div variants={pv} initial="initial" animate="enter" className="dor101-home flex flex-col gap-7 pb-10" data-cards={homeLayout.cardStyle === 'match' ? undefined : homeLayout.cardStyle}>
-{show('nowbar') && (
-          <div style={slot('nowbar')}>
-        <NowBar />
-
-          </div>
-        )}
 {show('hero') && (
           <div style={slot('hero')}>
         {/* ── Photo hero: Dorchester Bay at sunset, not a gradient ── */}

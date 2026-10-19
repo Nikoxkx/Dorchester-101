@@ -65,7 +65,6 @@ const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
 
 /** Labels for the homepage section list, reusing existing keys where they exist. */
 const HOME_SECTION_LABEL: Record<HomeSectionId, TranslationKey> = {
-  nowbar: 'settings.home.section.nowbar',
   hero: 'settings.home.section.hero',
   greeting: 'settings.home.section.greeting',
   weather: 'settings.home.section.weather',

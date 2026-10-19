@@ -61,6 +61,35 @@ describe('migrateSettings — weather opt-in (v4)', () => {
     expect(out.weatherEnabled).toBe(false);
   });
 
+  it('v5 strips the retired nowbar slot from order and hidden, keeping the rest put', () => {
+    const stored = {
+      homeLayout: {
+        order: ['hero', 'nowbar', 'weather', 'greeting', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras'],
+        hidden: ['nowbar'],
+        cardStyle: 'glass' as const,
+      },
+      weatherEnabled: true,
+    } as never;
+    const out = migrateSettings(stored, 4);
+    expect(out.homeLayout.order).not.toContain('nowbar');
+    expect(out.homeLayout.order.slice(0, 3)).toEqual(['hero', 'weather', 'greeting']);
+    expect(out.homeLayout.hidden).toEqual([]);
+    // A card style choice is a customization: untouched, weather kept on.
+    expect(out.homeLayout.cardStyle).toBe('glass');
+    expect(out.weatherEnabled).toBe(true);
+  });
+
+  it('v4 reads a NowBar-era shipped default as un-customized (weather off)', () => {
+    const v4Default = {
+      order: [...HOME_SECTION_ORDER, 'nowbar'],
+      hidden: [],
+      cardStyle: 'match' as const,
+    } as never;
+    const out = migrateSettings({ homeLayout: v4Default }, 3);
+    expect(out.weatherEnabled).toBe(false);
+    expect(out.homeLayout.order).toEqual(HOME_SECTION_ORDER);
+  });
+
   it('survives empty and shapeless persisted state', () => {
     expect(migrateSettings(null, 1).weatherEnabled).toBe(false);
     expect(migrateSettings(undefined, 3).weatherEnabled).toBe(false);

@@ -8,9 +8,9 @@ describe('homepage layout defaults', () => {
     expect(DEFAULT_HOME_LAYOUT.order).toEqual(HOME_SECTION_ORDER);
     expect(DEFAULT_HOME_LAYOUT.hidden).toEqual([]);
     expect(DEFAULT_HOME_LAYOUT.cardStyle).toBe('match');
-    // The live NowBar strip closes the page (4.5) instead of opening it:
-    // the weather up top already carries its temperature.
-    expect(HOME_SECTION_ORDER[HOME_SECTION_ORDER.length - 1]).toBe('nowbar');
+    // The NowBar strip was removed entirely (4.9): it is not a section.
+    expect(HOME_SECTION_ORDER).not.toContain('nowbar');
+    expect(HOME_SECTION_ORDER).toHaveLength(10);
     // The emergency banner is not furniture: it can never be a slot.
     expect(HOME_SECTION_ORDER).not.toContain('emergency');
   });

@@ -15,6 +15,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon, vehicleIcon } from './icons';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/hook';
 import type { ResourceCategory } from '@/data/resources';
 import type { ShieldMode } from './icons';
 
@@ -154,6 +155,7 @@ export function MapCanvas({
   onMapReady: (map: LeafletMap) => void;
   onBlankClick: () => void;
 }) {
+  const { t } = useI18n();
   const layers = BASE_LAYERS[style];
 
   return (
@@ -217,7 +219,8 @@ export function MapCanvas({
                 ? routeShieldIcon(stop.label, stop.mode, stop.color, { selected })
                 : stationDotIcon(stop.color, { selected, accessible: stop.accessible })
             }
-            alt={`Station ${stop.name}`}
+            alt={t('map.stationName', { name: stop.name })}
+            title={t('map.stationName', { name: stop.name })}
             zIndexOffset={selected ? 500 : emphasisRouteId ? 300 : 0}
             eventHandlers={{ click: () => onSelectStop(stop.id) }}
           >
@@ -236,6 +239,7 @@ export function MapCanvas({
             position={[pin.lat, pin.lng]}
             icon={resourcePinIcon(pin.category, { selected, openNow: pin.openNow })}
             alt={pin.name}
+            title={pin.name}
             zIndexOffset={selected ? 700 : 100}
             eventHandlers={{ click: () => onSelectPin(pin.id) }}
           >
@@ -255,6 +259,7 @@ export function MapCanvas({
             position={[vehicle.lat, vehicle.lng]}
             icon={vehicleIcon(vehicle.routeLabel, vehicle.color, { selected, bearing: vehicle.bearing })}
             alt={`${vehicle.routeLabel} ${vehicle.label}`.trim()}
+            title={`${vehicle.routeLabel} ${vehicle.label}`.trim()}
             zIndexOffset={selected ? 900 : 300}
             eventHandlers={{ click: () => onSelectVehicle(vehicle.id) }}
           >
@@ -266,7 +271,7 @@ export function MapCanvas({
       })}
 
       {userPosition && (
-        <Marker position={userPosition} icon={userLocationIcon()} alt="Your location" interactive={false} />
+        <Marker position={userPosition} icon={userLocationIcon()} alt={t('map.yourLocation')} title={t('map.yourLocation')} interactive={false} />
       )}
     </MapContainer>
   );

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useI18n } from '@/i18n/hook';
 
 /**
  * Leaflet touches `window` the moment it is imported, so the map can only exist
@@ -51,9 +52,10 @@ export function MapPreview({ height = '15rem' }: { height?: string }) {
 }
 
 export function MapSkeleton() {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-2.5" role="status" aria-live="polite">
-      <span className="sr-only">Map loading</span>
+      <span className="sr-only">{t('common.loading')}</span>
       <div className="h-12 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]" />
       <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Skeleton className="h-[54vh] min-h-[20rem] rounded-2xl lg:h-[38rem]" />
