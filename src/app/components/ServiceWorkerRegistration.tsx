@@ -1,24 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore } from '@/stores/appStore';
+import { updateAction } from '@/lib/updatePolicy';
 
 /**
- * Registers the offline worker and tells the visitor when a new version is
- * waiting. Nothing else.
+ * Registers the offline worker and applies updates with zero reinstalls —
+ * and zero ambushes.
  *
- * The version this replaces did three things that each cost a resident something:
- * it deleted every cache on load, it removed the `dor101-*` keys from
- * localStorage — which is where the language, theme and saved places live, so the
- * settings were reset on every visit — and it called `location.reload()` the
- * moment a worker installed, which wipes a half-filled form. Awaiting the
- * visitor's own reload is the normal, polite contract, so that is what this does.
+ * The version this replaces did three things that each cost a resident
+ * something: it deleted every cache on load, it removed the `dor101-*`
+ * keys from localStorage — which is where the language, theme and saved
+ * places live, so the settings were reset on every visit — and it called
+ * `location.reload()` the moment a worker installed, which wipes a
+ * half-filled form.
+ *
+ * The contract here (`updatePolicy`): while the page is visible, a found
+ * update *asks* — the Reload tap is the visitor's. The moment the app is
+ * backgrounded, a waiting update activates silently in place (no reload;
+ * the next open is simply the new version), so an installed app nobody
+ * ever swipes closed still ends up current, and dismissing the prompt
+ * defers to the next backgrounding instead of stranding the update.
+ * Deploying a new version therefore reaches residents on its own; nobody
+ * ever reinstalls Dorchester 101 to get it.
  */
 export default function ServiceWorkerRegistration() {
   const { t } = useI18n();
   const announce = useAppStore((s) => s.announce);
   const [updateReady, setUpdateReady] = useState(false);
+  /** A downloaded worker waiting to take over. Survives a dismissed
+   *  prompt so the next backgrounding can still apply it silently. */
+  const waitingRef = useRef<ServiceWorker | null>(null);
+
+  // A dismissed-or-ignored prompt stops nagging after a while; the update
+  // itself is not lost (see the visibility handler).
+  useEffect(() => {
+    if (!updateReady) return;
+    const id = window.setTimeout(() => setUpdateReady(false), 45_000);
+    return () => window.clearTimeout(id);
+  }, [updateReady]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -27,7 +48,10 @@ export default function ServiceWorkerRegistration() {
     const cleanups: Array<() => void> = [];
 
     const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'DOR101_CLAIMED') setUpdateReady(false);
+      if (event.data?.type === 'DOR101_CLAIMED') {
+        waitingRef.current = null;
+        setUpdateReady(false);
+      }
     };
     navigator.serviceWorker.addEventListener('message', onMessage);
 
@@ -36,8 +60,18 @@ export default function ServiceWorkerRegistration() {
       .then((result) => {
         if (cancelled) return;
         registration = result;
+        const applySilently = () => {
+          // Activation without a reload: the new worker takes over the
+          // shell, this page keeps running until its next navigation.
+          waitingRef.current?.postMessage({ type: 'SKIP_WAITING' });
+          setUpdateReady(false);
+        };
         const markReady = () => {
-          if (result.waiting) {
+          if (!result.waiting) return;
+          waitingRef.current = result.waiting;
+          if (updateAction({ waiting: true, visible: !document.hidden }) === 'apply-silently') {
+            applySilently();
+          } else {
             setUpdateReady(true);
             announce(t('offline.updateReady'), 'polite');
           }
@@ -46,20 +80,25 @@ export default function ServiceWorkerRegistration() {
         // Self-updating means asking, not waiting to be told: long-lived
         // tabs and installed PWAs re-check for a newer build every hour,
         // and again whenever the app comes back to the foreground or the
-        // connection returns. The polite part is unchanged — a found
-        // update still waits for the visitor's tap before reloading.
+        // connection returns. Going to the background is the other half
+        // of the contract: a waiting update applies itself there, so a
+        // dismissed prompt can never strand a resident on an old build.
         const checkForUpdate = () => {
           if (navigator.onLine !== false) void result.update().catch(() => {});
         };
         const hourly = window.setInterval(checkForUpdate, 60 * 60_000);
-        const onVisible = () => {
-          if (!document.hidden) checkForUpdate();
+        const onVisibility = () => {
+          if (document.hidden) {
+            if (waitingRef.current) applySilently();
+          } else {
+            checkForUpdate();
+          }
         };
-        document.addEventListener('visibilitychange', onVisible);
+        document.addEventListener('visibilitychange', onVisibility);
         window.addEventListener('online', checkForUpdate);
         cleanups.push(() => {
           window.clearInterval(hourly);
-          document.removeEventListener('visibilitychange', onVisible);
+          document.removeEventListener('visibilitychange', onVisibility);
           window.removeEventListener('online', checkForUpdate);
         });
         result.addEventListener('updatefound', () => {
@@ -95,10 +134,8 @@ export default function ServiceWorkerRegistration() {
         onClick={() => {
           // Skip the waiting worker, then reload: the new shell takes over on this
           // navigation instead of the next one, and the visitor chose both steps.
-          void navigator.serviceWorker
-            .getRegistration()
-            ?.then((reg) => reg?.waiting?.postMessage({ type: 'SKIP_WAITING' }))
-            .finally(() => window.location.reload());
+          waitingRef.current?.postMessage({ type: 'SKIP_WAITING' });
+          window.setTimeout(() => window.location.reload(), 60);
         }}
         className="rounded-full bg-[var(--color-accent-primary)] px-3 py-1.5 font-heading text-xs font-bold text-white transition-transform active:scale-[0.97]"
       >

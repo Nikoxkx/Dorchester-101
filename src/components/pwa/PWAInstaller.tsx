@@ -35,17 +35,8 @@ export function PWAInstaller() {
   );
 
   useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          console.log('[DOR101] Service worker registered:', reg.scope);
-        })
-        .catch((err) => {
-          console.error('[DOR101] Service worker registration failed:', err);
-        });
-    }
+    // The service worker is registered (and kept updated) solely by
+    // ServiceWorkerRegistration — one owner for the update lifecycle.
 
     // Listen for install prompt
     const handler = (e: Event) => {

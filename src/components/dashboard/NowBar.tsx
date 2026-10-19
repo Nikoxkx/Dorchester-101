@@ -86,11 +86,20 @@ export function NowBar() {
       aria-label={t('dashboard.nowTitle')}
       className="dor101-glass relative isolate overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2.5 shadow-[var(--shadow)] sm:px-4"
     >
-      {/* The site's own aurora wash (shared recipe): two radial accent
-          glows + the 135° sheen. Recoloring the site recolors this bar in
-          the same instant — it must never wear a private color story
-          while the rest of the page wears the resident's palette. */}
+      {/* The site's own aurora wash (shared recipe) plus the bar's
+          signature diagonal sheen — both mixed from the same palette
+          accents, so recoloring the site recolors this bar in the same
+          instant. It must never wear a private color story while the
+          rest of the page wears the resident's palette. */}
       <div aria-hidden="true" className="dor101-aurora-wash pointer-events-none absolute inset-0 -z-10" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            'linear-gradient(115deg, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), transparent 52%, color-mix(in srgb, var(--color-accent-secondary) 14%, transparent))',
+        }}
+      />
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
         <span className="flex items-center gap-2.5 pe-1">
           <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">

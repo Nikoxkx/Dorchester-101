@@ -10,21 +10,23 @@ import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
 import { pickSpotlightTip, type HourlyPeriod, type WeatherPayload } from '@/lib/weather';
 import { ConditionIcon, TempUnitToggle, tempText, tipText, useTempUnit, type TempUnit } from './shared';
-import { SkyBackdrop, TempRangeBar } from './WeatherVisuals';
+import { PrecipBars, SkyBackdrop, TempCurve, TempRangeBar } from './WeatherVisuals';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
+import { WearSpotlight } from './WearSpotlight';
 
 /**
- * The homepage weather section, Apple-Weather-shaped and deliberately
- * small: one living sky (SkyBackdrop — sun/moon at tonight's real phase,
+ * The homepage weather section in its full Apple-Weather composition:
+ * one living sky (SkyBackdrop — sun/moon at tonight's real phase,
  * twinkling stars, drifting clouds, falling rain or snow for the live
- * condition) carrying exactly four things — the hero (count-up
- * temperature, condition, H/L, one what-to-wear line), the hour-by-hour
- * glass strip, a compact 7-day list in frosted glass, and a slim footer.
- * The graphs, precipitation bars and the full what-to-wear spotlight
- * headline `/weather` instead, so the homepage stays a glance and the
- * weather page is the destination. Every number is the shared NWS
- * payload (`useWeather`), the same one driving the storm banner and the
- * NowBar chip, so the site can never show two weathers.
+ * condition) washed in the resident's own palette (the site aurora
+ * recipe, via .wx-sky-host) and carrying frosted-glass modules — the
+ * hero (count-up temperature, condition, H/L, one what-to-wear line)
+ * with the hour-by-hour strip, then the 24-hour temperature curve,
+ * precipitation bars and 7-day list beside the what-to-wear spotlight.
+ * `/weather` remains the deep end (sun & moon cycle, 48 hourly rows,
+ * every instrument tile, the full tips list). Every number is the
+ * shared NWS payload (`useWeather`), the same one driving the storm
+ * banner and the NowBar chip, so the site can never show two weathers.
  *
  * Honesty rules unchanged: cached readings are labelled with their age,
  * the publisher is named, and total failure shows a retry box, not numbers.
@@ -88,15 +90,51 @@ export function WeatherPanel() {
             </p>
           ) : null}
 
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="wx-module mx-4 mb-1 mt-3 p-4 sm:mx-5 md:mx-6"
-          >
-            <WeekList payload={data} unit={unit} />
-          </motion.div>
+          <div className="grid gap-3 px-4 pt-4 sm:gap-4 sm:px-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+            <div className="min-w-0 space-y-3 sm:space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="wx-module p-4"
+              >
+                <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-white/75">{t('weather.tempNext24')}</h3>
+                <div className="mt-1.5">
+                  <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
+                </div>
+              </motion.div>
+              {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.55, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+                  className="wx-module p-4"
+                >
+                  <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-white/75">{t('weather.precipNext24')}</h3>
+                  <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
+                </motion.div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className="wx-module p-4"
+              >
+                <WeekList payload={data} unit={unit} />
+              </motion.div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.55, delay: 0.09, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <WearSpotlight payload={data} unit={unit} variant="glass" />
+            </motion.div>
+          </div>
 
           <div className="flex items-center justify-between gap-2 px-5 pb-5 pt-3 md:px-6">
             <p className="text-xs text-white/75">{updatedLine}</p>

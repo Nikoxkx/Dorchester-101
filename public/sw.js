@@ -16,7 +16,7 @@
 /// Bumped when the About-page photographs were replaced, so caches holding the
 /// old `/img/...` responses have to go with them. This is a cache version, not
 /// the app version: the app's own version lives in package.json.
-const VERSION = 'v4.9.0';
+const VERSION = 'v4.10.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
@@ -145,7 +145,10 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
   if (!event.data || typeof event.data !== 'object') return;
-  // The page asks for this only after the visitor said "reload", which is the
-  // difference between an update and a page that changes under someone's feet.
+  // The page sends this in exactly two cases: the visitor tapped "reload",
+  // or the app just went to the background with an update waiting (see
+  // src/lib/updatePolicy.ts). Activating never reloads a page by itself —
+  // that is the difference between an update and a page that changes
+  // under someone's feet.
   if (event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
