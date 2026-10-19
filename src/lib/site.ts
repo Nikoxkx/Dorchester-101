@@ -55,6 +55,8 @@ export const PUBLIC_ROUTES = [
   '/resources',
   '/tools',
   '/directory',
+  '/weather',
+  '/winter-clothing',
   '/settings',
   '/privacy',
   '/terms',

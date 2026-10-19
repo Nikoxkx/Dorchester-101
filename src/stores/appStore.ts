@@ -9,15 +9,47 @@ export type Language = LanguageCode;
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 export type MapStyle = 'satellite' | 'street' | 'hybrid';
 /**
- * Surface treatment. `solid` is the default opaque UI; `glass` lets the
- * Dorchester photograph show through every panel and the menu rail with a blur
- * behind the text. Contrast is protected in CSS: text colours never change and
- * every glass surface keeps at least ~70% of its base colour.
+ * Surface treatment — how panels sit over the Dorchester photograph.
+ * `solid` is the default opaque UI. The translucent styles differ in both
+ * transparency and hue, and all of them derive from the active palette in CSS
+ * (`color-mix` over the `--bg-*-solid` tokens), so a style never washes the
+ * chosen colours back to harbor: `glass` is the classic soft blur, `frost` is
+ * more see-through with a heavy frost blur and a bright sheen, `tinted`
+ * washes every panel in the palette's own accent hue, and `aurora` lays a
+ * slow two-colour glow (accent + secondary) over glass. Contrast is protected
+ * in CSS: text colours never change, high-contrast mode and
+ * `prefers-reduced-transparency` both win back the solid palette.
  */
-export type Surface = 'solid' | 'glass';
+export type Surface = 'solid' | 'glass' | 'frost' | 'tinted' | 'aurora';
+export const SURFACES: Surface[] = ['solid', 'glass', 'frost', 'tinted', 'aurora'];
 /** Colour palette for the whole interface. Each has a light and a dark variant. */
-export type Palette = 'harbor' | 'midnight' | 'forest' | 'brick' | 'slate' | 'sand' | 'violet';
-export const PALETTES: Palette[] = ['harbor', 'midnight', 'forest', 'brick', 'slate', 'sand', 'violet'];
+export type Palette =
+  | 'harbor'
+  | 'midnight'
+  | 'forest'
+  | 'brick'
+  | 'slate'
+  | 'sand'
+  | 'violet'
+  | 'lagoon'
+  | 'rose'
+  | 'sunset'
+  | 'cobalt'
+  | 'orchid';
+export const PALETTES: Palette[] = [
+  'harbor',
+  'midnight',
+  'forest',
+  'brick',
+  'slate',
+  'sand',
+  'violet',
+  'lagoon',
+  'rose',
+  'sunset',
+  'cobalt',
+  'orchid',
+];
 
 export const FONT_SIZE_VALUES: Record<FontSize, string> = {
   small: '15px',
@@ -75,6 +107,65 @@ export interface CustomFeed {
   label: string;
 }
 
+/**
+ * Homepage customization (Settings → Homepage). The sections a resident
+ * can hide or rearrange; the storm/emergency banner is deliberately not
+ * in this list — it is a safety surface, not furniture.
+ */
+export type HomeSectionId =
+  | 'hero'
+  | 'greeting'
+  | 'weather'
+  | 'permissions'
+  | 'glance'
+  | 'quick'
+  | 'clothing'
+  | 'news'
+  | 'map'
+  | 'extras';
+export const HOME_SECTION_ORDER: HomeSectionId[] = [
+  'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
+];
+/** The 4.3–4.4 shipped order (the since-removed NowBar strip first).
+ *  Kept — as plain strings, since 'nowbar' is no longer a section — only
+ *  so the persist migration can recognize an un-customized layout from
+ *  that era; anyone who rearranged keeps theirs. */
+const HOME_SECTION_ORDER_V2: string[] = [
+  'nowbar', 'hero', 'greeting', 'weather', 'permissions', 'glance', 'quick', 'clothing', 'news', 'map', 'extras',
+];
+export type HomeCardStyle = 'match' | 'solid' | 'glass' | 'tinted' | 'aurora';
+export const HOME_CARD_STYLES: HomeCardStyle[] = ['match', 'solid', 'glass', 'tinted', 'aurora'];
+export interface HomeLayout {
+  order: HomeSectionId[];
+  hidden: HomeSectionId[];
+  cardStyle: HomeCardStyle;
+}
+export const DEFAULT_HOME_LAYOUT: HomeLayout = {
+  order: HOME_SECTION_ORDER,
+  hidden: [],
+  cardStyle: 'match',
+};
+
+/**
+ * Weather is opt-in (4.8). `weatherEnabled` gates the weather *features*:
+ * the homepage panel, the /weather page and its menu links, the
+ * what-to-wear pop-up and the status-bar weather chip. Storm warnings are
+ * deliberately NOT behind this switch — they are a safety surface and
+ * always show. `weatherLayout` arranges the /weather page's blocks the
+ * way `homeLayout` arranges the homepage; the alerts block is pinned
+ * first on that page and is never furniture either.
+ */
+export type WeatherBlockId = 'current' | 'spotlight' | 'tips' | 'hourly' | 'daily' | 'method';
+export const WEATHER_BLOCK_ORDER: WeatherBlockId[] = ['current', 'spotlight', 'tips', 'hourly', 'daily', 'method'];
+export interface WeatherLayout {
+  order: WeatherBlockId[];
+  hidden: WeatherBlockId[];
+}
+export const DEFAULT_WEATHER_LAYOUT: WeatherLayout = {
+  order: WEATHER_BLOCK_ORDER,
+  hidden: [],
+};
+
 interface AppState {
   theme: Theme;
   language: Language;
@@ -90,6 +181,13 @@ interface AppState {
   mapStyle: MapStyle;
   surface: Surface;
   palette: Palette;
+  homeLayout: HomeLayout;
+  /** Master switch for weather features (Settings → Weather). Off by
+   *  default; storm warnings ignore it and always show. */
+  weatherEnabled: boolean;
+  weatherLayout: WeatherLayout;
+  /** The plain-language privacy notice has been shown and acknowledged. */
+  consentSeen: boolean;
   accessibility: AccessibilityPrefs;
   speechRate: number;
   /**
@@ -127,6 +225,12 @@ interface AppState {
   setMapStyle: (style: MapStyle) => void;
   setSurface: (surface: Surface) => void;
   setPalette: (palette: Palette) => void;
+  setHomeLayout: (layout: HomeLayout) => void;
+  resetHomeLayout: () => void;
+  setWeatherEnabled: (enabled: boolean) => void;
+  setWeatherLayout: (layout: WeatherLayout) => void;
+  resetWeatherLayout: () => void;
+  setConsentSeen: (seen: boolean) => void;
   setAccessibility: <K extends keyof AccessibilityPrefs>(key: K, value: AccessibilityPrefs[K]) => void;
   toggleAccessibility: (key: keyof Pick<AccessibilityPrefs, 'underlineLinks' | 'largeFocus' | 'legibleFont' | 'textSpacing' | 'announceUpdates'>) => void;
   setAccessibilityAuto: (key: 'reduceMotion' | 'highContrast') => void;
@@ -174,6 +278,67 @@ const customStorage = {
   },
 };
 
+/**
+ * Persisted-settings migrations, applied in version order. Exported (not
+ * inlined in the persist config) so the upgrade contract is unit-tested:
+ * a resident's saved choices must survive every release.
+ */
+export function migrateSettings(persisted: unknown, version: number): AppState {
+  const state = (persisted ?? {}) as Partial<AppState>;
+
+  // v3 (4.5): the shipped homepage order moved the NowBar from first to
+  // last. Layouts still equal to the old shipped order follow it;
+  // rearranged layouts are untouched.
+  if (version < 3 && state.homeLayout) {
+    const order = state.homeLayout.order;
+    const isOldDefault =
+      Array.isArray(order) &&
+      order.length === HOME_SECTION_ORDER_V2.length &&
+      order.every((id, i) => id === HOME_SECTION_ORDER_V2[i]);
+    if (isOldDefault) {
+      state.homeLayout = { ...state.homeLayout, order: [...HOME_SECTION_ORDER] };
+    }
+  }
+
+  // v4 (4.8): weather becomes opt-in. A resident who had arranged their
+  // homepage had chosen a page *with* weather on it, so their weather
+  // stays on; everyone still on the shipped layout gets the new default
+  // (off). A layout counts as arranged if its order, hidden list or card
+  // style differs from the shipped default in any way. The comparison
+  // ignores the since-retired 'nowbar' slot (removed in v5 below), so a
+  // shipped-default layout from the NowBar era still reads as default.
+  if (version < 4) {
+    const layout = state.homeLayout;
+    const order = Array.isArray(layout?.order) ? (layout.order as string[]).filter((id) => id !== 'nowbar') : layout?.order;
+    const customized =
+      !!layout &&
+      (!Array.isArray(order) ||
+        order.length !== HOME_SECTION_ORDER.length ||
+        order.some((id, i) => id !== HOME_SECTION_ORDER[i]) ||
+        (Array.isArray(layout.hidden) && layout.hidden.length > 0) ||
+        (layout.cardStyle !== undefined && layout.cardStyle !== 'match'));
+    state.weatherEnabled = customized;
+  }
+
+  // v5 (4.9): the NowBar strip was removed from the homepage entirely.
+  // Stored layouts simply lose the slot; everything else keeps its place.
+  if (version < 5 && state.homeLayout) {
+    const order = Array.isArray(state.homeLayout.order)
+      ? (state.homeLayout.order as string[]).filter((id) => id !== 'nowbar')
+      : state.homeLayout.order;
+    const hidden = Array.isArray(state.homeLayout.hidden)
+      ? (state.homeLayout.hidden as string[]).filter((id) => id !== 'nowbar')
+      : state.homeLayout.hidden;
+    state.homeLayout = {
+      ...state.homeLayout,
+      order: order as HomeSectionId[],
+      hidden: hidden as HomeSectionId[],
+    };
+  }
+
+  return state as AppState;
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -186,6 +351,10 @@ export const useAppStore = create<AppState>()(
       mapStyle: 'satellite',
       surface: 'solid',
       palette: 'harbor',
+      homeLayout: DEFAULT_HOME_LAYOUT,
+      weatherEnabled: false,
+      weatherLayout: DEFAULT_WEATHER_LAYOUT,
+      consentSeen: false,
       accessibility: DEFAULT_ACCESSIBILITY,
       speechRate: 1,
       speechVoiceURI: null,
@@ -215,6 +384,12 @@ export const useAppStore = create<AppState>()(
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setSurface: (surface) => set({ surface }),
       setPalette: (palette) => set({ palette }),
+      setHomeLayout: (homeLayout) => set({ homeLayout }),
+      resetHomeLayout: () => set({ homeLayout: DEFAULT_HOME_LAYOUT }),
+      setWeatherEnabled: (weatherEnabled) => set({ weatherEnabled }),
+      setWeatherLayout: (weatherLayout) => set({ weatherLayout }),
+      resetWeatherLayout: () => set({ weatherLayout: DEFAULT_WEATHER_LAYOUT }),
+      setConsentSeen: (consentSeen) => set({ consentSeen }),
 
       setAccessibility: (key, value) =>
         set((s) => ({ accessibility: { ...s.accessibility, [key]: value } })),
@@ -265,6 +440,10 @@ export const useAppStore = create<AppState>()(
           mapStyle: 'satellite',
           surface: 'solid',
           palette: 'harbor',
+          homeLayout: DEFAULT_HOME_LAYOUT,
+          weatherEnabled: false,
+          weatherLayout: DEFAULT_WEATHER_LAYOUT,
+          consentSeen: false,
           accessibility: DEFAULT_ACCESSIBILITY,
           speechRate: 1,
           speechVoiceURI: null,
@@ -281,7 +460,8 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 2,
+      version: 5,
+      migrate: migrateSettings,
       partialize: (s) => ({
         theme: s.theme,
         language: s.language,
@@ -290,6 +470,10 @@ export const useAppStore = create<AppState>()(
         mapStyle: s.mapStyle,
         surface: s.surface,
         palette: s.palette,
+        homeLayout: s.homeLayout,
+        weatherEnabled: s.weatherEnabled,
+        weatherLayout: s.weatherLayout,
+        consentSeen: s.consentSeen,
         accessibility: s.accessibility,
         speechRate: s.speechRate,
         speechVoiceURI: s.speechVoiceURI,

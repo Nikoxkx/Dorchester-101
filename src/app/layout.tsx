@@ -27,14 +27,20 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "DOR101 — Dorchester 101",
-    template: "%s · DOR101",
+    // The name a resident types into a search bar is "dorchester 101", so
+    // that phrase leads; DOR101 follows as the short name the app answers to.
+    default: "Dorchester 101 (DOR101) — Free housing, food, live MBTA map, Boston weather & help in Dorchester",
+    template: "%s · Dorchester 101",
   },
   description:
-    "Your neighborhood. Your rights. Your future. Free housing, food, and community resources for Dorchester residents.",
+    "Dorchester 101 is Dorchester, Boston's free community guide: affordable housing and tenant rights, food pantries open now, a live MBTA map with real buses and trains, live Boston weather with storm warnings and what to wear, and free winter coats and clothing — in nine languages, no account, no ads.",
   keywords: [
-    "Dorchester", "Boston", "housing", "affordable housing", "food assistance",
-    "community resources", "MBTA", "Section 8", "BHA",
+    "Dorchester 101", "DOR101", "Dorchester", "Dorchester Boston", "Boston",
+    "affordable housing Dorchester", "free food Dorchester", "food pantry Dorchester",
+    "MBTA Dorchester", "Red Line Dorchester", "live bus tracker Boston",
+    "Dorchester Boston weather", "Boston weather warnings",
+    "free winter coats Boston", "free winter clothing Dorchester",
+    "community resources", "Section 8", "BHA", "tenant rights Massachusetts",
   ],
   authors: [{ name: AUTHOR_NAME, url: AUTHOR_URL }],
   creator: "DOR101",
@@ -44,21 +50,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   manifest: "/manifest.json",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DOR101" },
+  // No `images` here on purpose: `opengraph-image.tsx` / `twitter-image.tsx`
+  // generate the one shared card (src/lib/ogCard.tsx). Declaring images in
+  // both places made platforms race between a ~1 MB photo and generated
+  // cards, so a pasted link did not preview consistently.
   openGraph: {
     type: "website",
-    siteName: "DOR101 — Dorchester 101",
-    title: "DOR101 — Dorchester 101",
-    description: "Free housing, food, and community resources for Dorchester residents, in nine languages.",
+    siteName: "Dorchester 101",
+    title: "Dorchester 101 (DOR101) — Your neighborhood. Your rights. Your future.",
+    description: "Free housing, food open now, a live MBTA map, Boston weather with what to wear, and free winter clothing — for Dorchester, Boston, in nine languages.",
     url: "/",
     locale: "en_US",
     alternateLocale: ["es_MX", "fr_HT", "pt_BR", "vi_VN", "zh_CN", "ar"],
-    images: [{ url: "/og.png", width: 1200, height: 630, type: "image/png", alt: "DOR101 — Boston skyline across Dorchester Bay; free housing, food, transit and legal help for Dorchester" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DOR101 — Dorchester 101",
-    description: "Free housing, food, and community resources for Dorchester residents.",
-    images: ["/og.png"],
+    title: "Dorchester 101 (DOR101)",
+    description: "Free housing, food, live MBTA, Boston weather and free winter clothing for Dorchester, Boston — in nine languages.",
   },
   robots: {
     index: true,
@@ -95,6 +103,7 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#0F1720" },
   ],
   width: "device-width",
+  viewportFit: "cover",
   initialScale: 1,
   // Pinch zoom is never disabled: maximumScale=5 keeps it generous while
   // blocking the accidental double-tap zoom that breaks map interactions.
@@ -112,8 +121,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="DOR101" />
         {/* Only same-origin data endpoints are prefetched; no third party is contacted. */}
+        {/* Address-bar search: browsers register Dorchester 101 as a search engine. */}
+        <link rel="search" type="application/opensearchdescription+xml" title="Dorchester 101" href="/opensearch.xml" />
         <link rel="prefetch" href="/api/news" />
         <link rel="prefetch" href="/api/notifications" />
+        {/* The storm-warning banner renders on every page; warming its feed
+            means a live warning is already on screen when the page settles. */}
+        <link rel="prefetch" href="/api/weather" />
         <link rel="preload" href="/img/dorchester-bay-sunset.jpg" as="image" />
         <noscript>
           <style>{`.dor101-js-only { display: none !important; } .dor101-nojs { display: block !important; }`}</style>
@@ -129,8 +143,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
-                name: "DOR101 — Dorchester 101",
-                alternateName: "DOR101",
+                name: "Dorchester 101",
+                alternateName: ["DOR101", "Dorchester101", "DOR 101", "Dorchester 101 Boston"],
                 url: SITE_URL,
                 description: "Free housing, food, transit and legal help for Dorchester residents, in nine languages.",
                 inLanguage: ["en", "es", "ht", "pt", "vi", "zh", "ar", "so", "kea"],
@@ -149,9 +163,45 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 url: SITE_URL,
                 founder: { "@type": "Person", name: AUTHOR_NAME, url: AUTHOR_URL },
                 logo: `${SITE_URL}/icons/logo-1024.png`,
-                image: `${SITE_URL}/og.png`,
+                image: `${SITE_URL}/opengraph-image`,
                 sameAs: ["https://github.com/Nikoxkx/Dorchester-101"],
                 areaServed: { "@type": "Place", name: "Dorchester, Boston, Massachusetts" },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                name: "Dorchester 101",
+                alternateName: "DOR101",
+                url: SITE_URL,
+                applicationCategory: "UtilitiesApplication",
+                operatingSystem: "Web, Android, iOS, Windows",
+                offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+                inLanguage: ["en", "es", "ht", "pt", "vi", "zh", "ar", "so", "kea"],
+                featureList: [
+                  "Affordable housing and tenant rights for Dorchester, Boston",
+                  "Food pantries and free meals with live open-now status",
+                  "Live MBTA map with real-time buses, trains and service alerts",
+                  "Live Boston weather, storm warnings and what-to-wear advice",
+                  "Free winter coats and clothing directory",
+                ].join("; "),
+                publisher: { "@id": `${SITE_URL}/#org` },
+              },
+              {
+                // The sections a search result should offer as sitelinks.
+                // Names carry the phrases residents actually type.
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                name: "Dorchester 101 — main sections",
+                itemListElement: [
+                  { "@type": "SiteNavigationElement", position: 1, name: "Affordable housing in Dorchester", url: `${SITE_URL}/affordable-housing` },
+                  { "@type": "SiteNavigationElement", position: 2, name: "Food pantries open now", url: `${SITE_URL}/food` },
+                  { "@type": "SiteNavigationElement", position: 3, name: "Live MBTA map — buses & trains", url: `${SITE_URL}/map` },
+                  { "@type": "SiteNavigationElement", position: 4, name: "Boston weather & what to wear", url: `${SITE_URL}/weather` },
+                  { "@type": "SiteNavigationElement", position: 5, name: "Free winter coats & clothing", url: `${SITE_URL}/winter-clothing` },
+                  { "@type": "SiteNavigationElement", position: 6, name: "Directory of local help", url: `${SITE_URL}/directory` },
+                  { "@type": "SiteNavigationElement", position: 7, name: "Dorchester news", url: `${SITE_URL}/news` },
+                  { "@type": "SiteNavigationElement", position: 8, name: "Common questions (FAQ)", url: `${SITE_URL}/faq` },
+                ],
               },
             ]),
           }}

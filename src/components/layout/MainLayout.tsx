@@ -5,6 +5,9 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { SiteFooter } from './SiteFooter';
 import { OfflineBanner } from './OfflineBanner';
+import { WeatherAlertBanner } from '@/components/weather/WeatherAlertBanner';
+import { WearTodayToast } from '@/components/weather/WearTodayToast';
+import { ConsentNotice } from '@/components/a11y/ConsentNotice';
 import { PWAInstaller } from '@/components/pwa/PWAInstaller';
 import { useAppStore } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
@@ -39,12 +42,15 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <div className={cn('dor101-content')}>
         <Header />
         <OfflineBanner />
+        <WeatherAlertBanner />
         <main id="main" tabIndex={-1} className="focus:outline-none">
           <div className="mx-auto w-full max-w-[86rem] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
         </main>
         <SiteFooter />
       </div>
 
+      <WearTodayToast />
+      <ConsentNotice />
       <PWAInstaller />
     </div>
   );

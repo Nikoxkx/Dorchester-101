@@ -7,6 +7,7 @@ import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { ReportProblem } from '@/components/a11y';
 import { RESOURCES, lastReviewedOn, reviewBacklog } from '@/data/resources';
 import { APP_VERSION, REPO_URL } from '@/lib/site';
+import { useAppStore } from '@/stores/appStore';
 
 /**
  * Site-wide footer, rendered by the layout instead of by individual pages, so a
@@ -19,12 +20,13 @@ import { APP_VERSION, REPO_URL } from '@/lib/site';
  */
 export function SiteFooter() {
   const { t, format } = useI18n();
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const reviewed = lastReviewedOn();
   const backlog = reviewBacklog();
 
   return (
     <footer className="mt-12 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/70 backdrop-blur-sm">
-      <div className="mx-auto grid w-full max-w-[86rem] gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
+      <div className="mx-auto grid w-full max-w-[86rem] gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-8">
         <div>
           <p className="font-display text-base font-bold">{t('site.name')}</p>
           <p className="mt-1 max-w-prose text-sm text-[var(--color-text-secondary)]">{t('dashboard.footer.line1')}</p>
@@ -50,6 +52,29 @@ export function SiteFooter() {
             </div>
           </dl>
         </div>
+
+        {/* Every page links to every main section: residents land deep from
+            search results, and crawlers map the site from here. */}
+        <nav aria-label={t('dashboard.quickAccess')}>
+          <ul className="space-y-1.5 text-sm">
+            {[
+              ['/affordable-housing', 'nav.affordable'],
+              ['/food', 'nav.food'],
+              ['/map', 'nav.map'],
+              ['/weather', 'weather.homeTitle'],
+              ['/winter-clothing', 'nav.clothing'],
+              ['/directory', 'nav.directory'],
+              ['/news', 'nav.news'],
+              ['/faq', 'nav.faq'],
+            ].filter(([href]) => weatherEnabled || href !== '/weather').map(([href, key]) => (
+              <li key={href}>
+                <Link href={href} className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline">
+                  {t(key as 'nav.food')}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         <nav aria-label={t('site.name')}>
           <ul className="space-y-1.5 text-sm">

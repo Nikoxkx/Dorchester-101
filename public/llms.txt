@@ -1,18 +1,19 @@
-# DOR101 — llms.txt
+# Dorchester 101 (DOR101) — llms.txt
 # Guidance for AI crawlers, per https://llmstxt.org/
 # This file tells automated agents what DOR101 is and where its data lives.
 # It does NOT grant rights to republish restricted content — all pages carry
 # standard copyright + MIT code licence; photographs are under their own CC licences.
 
-Name: DOR101 — Dorchester 101
+Name: Dorchester 101 (DOR101)
 URL: https://dorchester-101.vercel.app
-Description: Free housing, food, transit and community resources for Dorchester, Boston — in nine languages, with each listing's verification date.
+Description: Free housing, food open now, a live MBTA map with real buses and trains, live Boston weather with storm warnings and what-to-wear advice, and free winter coats and clothing for Dorchester, Boston — in nine languages, with each listing's verification date.
 Author: Yeisbel (https://github.com/Nikoxkx)
 Licence: MIT (code) — see /LICENSE ; photographs credited individually in /public/IMAGE-CREDITS.md
 
 ## Allow / Disallow (polite crawl budget)
 Allow: /
 Allow: /about
+Allow: /faq
 Allow: /affordable-housing
 Allow: /food
 Allow: /map
@@ -23,7 +24,10 @@ Allow: /projects
 Allow: /resources
 Allow: /tools
 Allow: /directory
+Allow: /weather
+Allow: /winter-clothing
 Allow: /sitemap.xml
+Allow: /opensearch.xml
 Allow: /robots.txt
 Disallow: /api/
 Disallow: /settings
@@ -32,7 +36,8 @@ Disallow: /settings
 - City of Boston open data: data.boston.gov
 - U.S. Census Bureau ACS 5-year (2020–2024): data.census.gov + api.census.gov
 - HUD FY2026 income limits + Fair Market Rents: huduser.gov
-- MBTA real-time GTFS-realtime CDN + v3 API: cdn.mbta.com / api-v3.mbta.com
+- MBTA real-time GTFS-realtime CDN (arrivals, alerts, live vehicle GPS positions) + v3 API: cdn.mbta.com / api-v3.mbta.com
+- National Weather Service: api.weather.gov (forecast, warnings, station observations); Open-Meteo labelled backup
 - News RSS: Dorchester Reporter (/feed/), City of Boston news (/rss/news), WBUR (rss.wbur.org), Boston Globe ARC feed
 - Map tiles: Esri World Imagery (services.arcgisonline.com), OpenStreetMap
 

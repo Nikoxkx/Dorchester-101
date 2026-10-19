@@ -107,6 +107,28 @@ export function resourcePinIcon(category: ResourceCategory, opts: { selected?: b
   });
 }
 
+/**
+ * A live vehicle: the route's own colour formed into a pill with the route
+ * label and a bearing arrow — the visual grammar of the Transit app and the
+ * MBTA's own tracker, so a rider needs no legend to read it.
+ */
+export function vehicleIcon(
+  label: string,
+  color: string,
+  opts: { selected?: boolean; bearing?: number | null } = {}
+) {
+  const rot = typeof opts.bearing === 'number' ? `${Math.round(opts.bearing)}deg` : '0deg';
+  const html = `<span class="veh${opts.selected ? ' is-selected' : ''}" style="--veh:${color};--veh-rot:${rot}"><span class="veh__arrow" aria-hidden="true"></span>${escapeHtml(label)}</span>`;
+  const width = Math.min(64, 26 + label.length * 7);
+  return L.divIcon({
+    className: 'dor101-icon',
+    html,
+    iconSize: [width, 22],
+    iconAnchor: [width / 2, 11],
+    tooltipAnchor: [0, -12],
+  });
+}
+
 export function stationDotIcon(color: string, opts: { interchange?: boolean; selected?: boolean; accessible?: boolean } = {}) {
   const size = opts.interchange ? 14 : 11;
   return L.divIcon({

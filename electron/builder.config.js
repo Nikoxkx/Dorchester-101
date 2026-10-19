@@ -106,6 +106,11 @@ module.exports = {
     artifactName: 'DOR101-Portable-${version}.${ext}',
   },
 
+  // Auto-update feed: electron-updater reads `latest.yml` from the newest
+  // GitHub release, so the installed app updates itself instead of sending
+  // residents back to download a new .exe (see main.js `initAutoUpdates`).
+  publish: [{ provider: 'github', owner: 'Nikoxkx', repo: 'Dorchester-101' }],
+
   extraMetadata: {
     main: 'electron/main.js',
   },

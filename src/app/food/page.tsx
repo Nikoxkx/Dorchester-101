@@ -13,6 +13,7 @@ export const metadata = {
     'Food pantries, hot meals, senior and kids programs and help applying for SNAP or WIC in Dorchester, Boston, with hours checked against each site and an open-now reading in your local time.',
   alternates: { canonical: '/food' },
   openGraph: {
+    images: [{ url: "/api/og?title=Food+help+in+Dorchester&desc=Pantries%2C+hot+meals+and+benefits+%E2%80%94+with+honest+hours+and+what+is+open+right+now.&kicker=DOR101+%C2%B7+FOOD+HELP", width: 1200, height: 630, type: "image/png", alt: "Dorchester 101" }],
     title: 'Food help in Dorchester',
     description: 'Every site comes from the same checked dataset the map and directory use.',
     url: `${SITE_URL}/food`,

@@ -13,8 +13,9 @@ import {
 } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon } from './icons';
+import { resourcePinIcon, routeShieldIcon, stationDotIcon, userLocationIcon, vehicleIcon } from './icons';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/hook';
 import type { ResourceCategory } from '@/data/resources';
 import type { ShieldMode } from './icons';
 
@@ -50,6 +51,17 @@ export interface MapStop {
   label: string;
   interchange?: boolean;
   accessible?: boolean;
+}
+
+export interface MapVehicle {
+  id: string;
+  label: string;
+  routeId: string;
+  routeLabel: string;
+  lat: number;
+  lng: number;
+  color: string;
+  bearing: number | null;
 }
 
 export interface MapPin {
@@ -112,12 +124,16 @@ export function MapCanvas({
   shapes,
   stops,
   pins,
+  vehicles,
+  selectedVehicleId,
+  emphasisRouteId,
   selectedStopId,
   selectedPinId,
   userPosition,
   focusRequest,
   onSelectStop,
   onSelectPin,
+  onSelectVehicle,
   onMapReady,
   onBlankClick,
 }: {
@@ -125,15 +141,21 @@ export function MapCanvas({
   shapes: ShapeData[];
   stops: MapStop[];
   pins: MapPin[];
+  vehicles: MapVehicle[];
+  selectedVehicleId: string | null;
+  /** When set (a vehicle is tapped), this route glows at full strength and every other route dims, so the full route reads at a glance. */
+  emphasisRouteId?: string | null;
   selectedStopId: string | null;
   selectedPinId: string | null;
   userPosition: [number, number] | null;
   focusRequest: { lat: number; lng: number; zoom?: number; token: number } | null;
   onSelectStop: (id: string) => void;
   onSelectPin: (id: string) => void;
+  onSelectVehicle: (id: string) => void;
   onMapReady: (map: LeafletMap) => void;
   onBlankClick: () => void;
 }) {
+  const { t } = useI18n();
   const layers = BASE_LAYERS[style];
 
   return (
@@ -155,25 +177,31 @@ export function MapCanvas({
         focusRequest={focusRequest}
         onBlankClick={onBlankClick}
       />
-      <ResilientTileLayer providers={layers} maxZoom={19} updateWhenIdle={style === 'satellite'} />
+      {/* Keyed by style: switching back to satellite must restart the provider walk at the first imagery endpoint. Before, a layer that had degraded to a fallback once stayed there forever, so 'satellite' quietly vanished. */}
+      <ResilientTileLayer key={`base-${style}`} providers={layers} maxZoom={19} updateWhenIdle={false} />
       {style === 'hybrid' && (
-        <ResilientTileLayer key="hybrid-labels" providers={[OSM_STREET]} maxZoom={19} opacity={0.6} />
+        <ResilientTileLayer key="hybrid-labels" providers={[OSM_STREET]} maxZoom={19} opacity={0.55} />
       )}
       <AttributionControl position="bottomleft" prefix={false} />
 
       {shapes.flatMap((shape) => {
         const color = ROUTE_HEX[shape.routeId] ?? '#7A6B5D';
+        const emphasized = emphasisRouteId != null && shape.routeId === emphasisRouteId;
+        const dimmed = emphasisRouteId != null && !emphasized;
         return shape.paths.map((path, index) => (
           <Fragment key={`${shape.routeId}-${index}`}>
-            <Polyline positions={path} pathOptions={{ color: '#1B2430', opacity: 0.55, weight: 11, lineCap: 'round', className: 'route-casing' }} interactive={false} />
-            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.95, weight: 8.5, lineCap: 'round', className: 'route-casing' }} interactive={false} />
+            {emphasized && (
+              <Polyline positions={path} pathOptions={{ color, opacity: 0.22, weight: 16, lineCap: 'round', className: 'route-glow' }} interactive={false} />
+            )}
+            <Polyline positions={path} pathOptions={{ color: '#1B2430', opacity: dimmed ? 0.18 : 0.55, weight: emphasized ? 12.5 : 11, lineCap: 'round', className: 'route-casing' }} interactive={false} />
+            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: dimmed ? 0.4 : 0.95, weight: emphasized ? 10 : 8.5, lineCap: 'round', className: 'route-casing' }} interactive={false} />
             <Polyline
               positions={path}
-              pathOptions={{ color, opacity: 1, weight: 5.5, lineCap: 'round', className: cn('route-core', shape.source !== 'mbta-live' && 'route-timetable') }}
+              pathOptions={{ color, opacity: dimmed ? 0.3 : 1, weight: emphasized ? 7 : 5.5, lineCap: 'round', className: cn('route-core', shape.source !== 'mbta-live' && 'route-timetable') }}
               eventHandlers={{ click: () => onSelectStop(`route:${shape.routeId}`) }}
             />
-            <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.35, weight: 1.5, lineCap: 'round', className: 'route-highlight' }} interactive={false} />
-            {shape.source === 'mbta-live' && (
+            {!dimmed && <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.35, weight: 1.5, lineCap: 'round', className: 'route-highlight' }} interactive={false} />}
+            {(shape.source === 'mbta-live' || emphasized) && !dimmed && (
               <Polyline positions={path} pathOptions={{ color: '#FFFFFF', opacity: 0.85, weight: 3, className: 'route-flow' }} interactive={false} />
             )}
           </Fragment>
@@ -191,8 +219,9 @@ export function MapCanvas({
                 ? routeShieldIcon(stop.label, stop.mode, stop.color, { selected })
                 : stationDotIcon(stop.color, { selected, accessible: stop.accessible })
             }
-            alt={`Station ${stop.name}`}
-            zIndexOffset={selected ? 500 : 0}
+            alt={t('map.stationName', { name: stop.name })}
+            title={t('map.stationName', { name: stop.name })}
+            zIndexOffset={selected ? 500 : emphasisRouteId ? 300 : 0}
             eventHandlers={{ click: () => onSelectStop(stop.id) }}
           >
             <Tooltip direction="top" offset={[0, -10]} opacity={1} className="map-tooltip">
@@ -210,6 +239,7 @@ export function MapCanvas({
             position={[pin.lat, pin.lng]}
             icon={resourcePinIcon(pin.category, { selected, openNow: pin.openNow })}
             alt={pin.name}
+            title={pin.name}
             zIndexOffset={selected ? 700 : 100}
             eventHandlers={{ click: () => onSelectPin(pin.id) }}
           >
@@ -221,8 +251,27 @@ export function MapCanvas({
         );
       })}
 
+      {vehicles.map((vehicle) => {
+        const selected = vehicle.id === selectedVehicleId;
+        return (
+          <Marker
+            key={`veh-${vehicle.id}`}
+            position={[vehicle.lat, vehicle.lng]}
+            icon={vehicleIcon(vehicle.routeLabel, vehicle.color, { selected, bearing: vehicle.bearing })}
+            alt={`${vehicle.routeLabel} ${vehicle.label}`.trim()}
+            title={`${vehicle.routeLabel} ${vehicle.label}`.trim()}
+            zIndexOffset={selected ? 900 : 300}
+            eventHandlers={{ click: () => onSelectVehicle(vehicle.id) }}
+          >
+            <Tooltip direction="top" offset={[0, -12]} opacity={1} className="map-tooltip">
+              <span className="font-heading text-xs font-semibold">{vehicle.routeLabel}{vehicle.label ? ` · ${vehicle.label}` : ''}</span>
+            </Tooltip>
+          </Marker>
+        );
+      })}
+
       {userPosition && (
-        <Marker position={userPosition} icon={userLocationIcon()} alt="Your location" interactive={false} />
+        <Marker position={userPosition} icon={userLocationIcon()} alt={t('map.yourLocation')} title={t('map.yourLocation')} interactive={false} />
       )}
     </MapContainer>
   );
@@ -250,8 +299,7 @@ function ResilientTileLayer({
   const errors = useRef(0);
   const advanced = useRef(false);
 
-  if (index >= providers.length) return null;
-  const provider = providers[index];
+  const provider = providers[Math.min(index, providers.length - 1)];
 
   return (
     <TileLayer

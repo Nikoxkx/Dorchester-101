@@ -76,6 +76,8 @@ jobs:
           name: DOR101-Windows
           path: |
             dist-electron/DOR101 Setup *.exe
+            dist-electron/latest.yml
+            dist-electron/*.blockmap
             dist-electron/DOR101-Portable-*.exe
             dist-electron/SHA256SUMS.txt
             verify-desktop.log
@@ -93,6 +95,8 @@ jobs:
             dist-electron/DOR101 Setup *.exe
             dist-electron/DOR101-Portable-*.exe
             dist-electron/SHA256SUMS.txt
+            dist-electron/latest.yml
+            dist-electron/*.blockmap
           generate_release_notes: true
           # Deliberately not fail_on_unmatched_files: a single-target build
           # legitimately leaves one of those globs empty, and failing the run

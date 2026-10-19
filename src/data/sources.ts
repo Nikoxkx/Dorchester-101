@@ -27,6 +27,26 @@ export interface SourceInfo {
 }
 
 const SOURCE_TABLE = {
+  nws: {
+    id: 'nws',
+    name: 'National Weather Service',
+    short: 'NWS',
+    url: 'https://www.weather.gov/box/',
+    provides: 'Forecast, hour-by-hour conditions, station observations and active storm watches, warnings and advisories for the Dorchester grid point (Boston office).',
+    color: '#003366',
+    cadence: 'Live; forecasts reissued through the day, warnings as issued',
+    licence: 'Public domain (U.S. federal government work)',
+  },
+  openmeteo: {
+    id: 'openmeteo',
+    name: 'Open-Meteo',
+    short: 'OM',
+    url: 'https://open-meteo.com',
+    provides: 'Backup forecast and astronomy, shown and labelled only when the National Weather Service cannot be reached; never used to stand in for storm warnings.',
+    color: '#FF385C',
+    cadence: 'Live; model runs update hourly',
+    licence: 'CC BY 4.0',
+  },
   census: {
     id: 'census',
     name: 'U.S. Census Bureau',
