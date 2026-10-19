@@ -1,3 +1,4 @@
+import { socialMetadata } from "@/lib/social";
 import { NewsPageView } from './NewsPageView';
 import { SITE_URL } from '@/lib/site';
 
@@ -12,12 +13,11 @@ export const metadata = {
   description:
     'Housing, transit, food and community coverage for Dorchester, pulled from each publisher’s own RSS feed with publication time and source named. No rewriting, no invented stories.',
   alternates: { canonical: '/news' },
-  openGraph: {
+  ...socialMetadata({
     title: 'Dorchester local news',
     description: 'Publisher headlines with age and source attached, refreshed while the page is open.',
     url: `${SITE_URL}/news`,
-    type: 'website',
-  },
+  }),
 };
 
 export default function NewsPage() {

@@ -1,3 +1,5 @@
+> **Social-preview update (19 October 2026):** The OG-generation recommendations below are historical. Screenshot-led static cards and the current capture/metadata workflow are documented in [SOCIAL-PREVIEWS.md](SOCIAL-PREVIEWS.md).
+
 # DOR101 — Vercel Free-Tier Maximization Plan
 ### Deep Research Audit + Implementation Roadmap
 **Date:** 2026-10-18 (UTC) · **Project:** `dorchester-101` (`prj_URHaWEF9vbsCfuk2e7CL3Ivch8hd`) · **Team:** `team-tung-tung-yaya` (Hobby) · **Production URL:** `dorchester-101.vercel.app` · **GitHub:** `Nikoxkx/Dorchester-101` (branch `main` → production)

@@ -1,3 +1,4 @@
+import { socialMetadata } from "@/lib/social";
 import fs from 'node:fs';
 import path from 'node:path';
 import { AboutView } from './AboutView';
@@ -18,11 +19,11 @@ export const metadata = {
   description:
     'Who maintains the Dorchester 101 directory, how every listing is checked against its source, which feeds the site reads and how often, and the licence for each photograph.',
   alternates: { canonical: '/about' },
-  openGraph: {
+  ...socialMetadata({
     title: `About ${SITE_FULL_NAME}`,
     description: 'Method, data sources, refresh cadence and photo credits.',
     url: `${SITE_URL}/about`,
-  },
+  }),
 };
 
 export interface PhotoCredit {
