@@ -85,7 +85,8 @@ export default function DashboardPage() {
   // without touching this file's data wiring. The emergency banner is not
   // a slot: it always rides just ahead of the weather, hidden or not.
   const homeLayout = useAppStore((s) => s.homeLayout);
-  const show = (id: HomeSectionId) => !homeLayout.hidden.includes(id);
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
+  const show = (id: HomeSectionId) => (id !== 'weather' || weatherEnabled) && !homeLayout.hidden.includes(id);
   const slot = (id: HomeSectionId): CSSProperties => ({ order: Math.max(0, homeLayout.order.indexOf(id)) * 10 });
   const emergencySlot: CSSProperties = { order: Math.max(0, homeLayout.order.indexOf('weather')) * 10 - 1 };
   const [news, setNews] = useState<NewsItem[]>([]);

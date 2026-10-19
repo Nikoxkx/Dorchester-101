@@ -101,6 +101,7 @@ export function Sidebar() {
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
   const surface = useAppStore((s) => s.surface);
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const setSurface = useAppStore((s) => s.setSurface);
 
   // A drawer that stays open after the tap is a drawer that hides the page.
@@ -142,7 +143,7 @@ export function Sidebar() {
               </h2>
             )}
             <ul className="space-y-1 px-2">
-              {section.items.map((item) => (
+              {section.items.filter((item) => weatherEnabled || item.href !== '/weather').map((item) => (
                 <li key={item.href}>
                   <NavLink
                     href={item.href}

@@ -7,6 +7,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { Badge } from '@/components/ui/Badge';
 import { coldSignal } from '@/lib/weather';
+import { useAppStore } from '@/stores/appStore';
 
 /**
  * The homepage door into the free winter-clothing list. It shows the three
@@ -20,7 +21,8 @@ export function ClothingPreview() {
   const { t } = useI18n();
   const { places } = useWinterClothing();
   const { data: weather } = useWeather();
-  const cold = weather ? coldSignal(weather) : false;
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
+  const cold = weatherEnabled && weather ? coldSignal(weather) : false;
 
   const rank = (p: (typeof places)[number]) =>
     (p.neighborhood.toLowerCase().includes('dorchester') || p.neighborhood.toLowerCase().includes('upham') || p.neighborhood.toLowerCase().includes('bowdoin') ? 0 : 4) +

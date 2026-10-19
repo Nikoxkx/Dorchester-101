@@ -86,13 +86,29 @@ test.describe('Navigation', () => {
       ['Directory', '/resources'],
       ['News', '/news'],
       ['Food', '/food'],
-      ['Weather', '/weather'],
+      // No Weather entry: weather is opt-in (4.8) and a fresh profile has it
+      // off, so the nav must NOT link to /weather. The opt-in round trip is
+      // asserted in its own test below.
       ['Free winter clothing', '/winter-clothing'],
     ] as const) {
       const link = nav.locator(`a[href="${href}"]`).first();
       await expect(link, `nav should link to ${href}`).toHaveCount(1);
       await expect(link).toContainText(new RegExp(label.split(' ')[0], 'i'));
     }
+  });
+
+  test('weather is opt-in: no nav link until a resident turns it on', async ({ page }) => {
+    await page.goto('/');
+    const nav = page.locator('nav').first();
+    await expect(nav.locator('a[href="/weather"]'), 'weather starts off').toHaveCount(0);
+
+    // The page itself explains and offers the switch; turning it on puts
+    // the nav link back (persisted on this device, like every setting).
+    await page.goto('/weather');
+    await expect(page.getByRole('heading', { name: /weather is turned off/i })).toBeVisible();
+    const enable = page.getByRole('button', { name: /turn on weather/i });
+    await clickUntil(page, enable, page.locator('nav').first().locator('a[href="/weather"]'));
+    await expect(page.getByRole('heading', { name: /weather is turned off/i })).toHaveCount(0);
   });
 
   test('following a nav link loads the destination', async ({ page }) => {

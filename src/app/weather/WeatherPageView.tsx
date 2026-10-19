@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { Fragment, type ReactNode } from 'react';
 import {
+  CloudOff,
   CloudSun,
   Droplets,
   ExternalLink,
@@ -31,6 +33,7 @@ import { motion } from 'framer-motion';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useNow } from '@/hooks/useNow';
 import { coldSignal, type WeatherAlert, type WeatherPayload } from '@/lib/weather';
+import { useAppStore, type WeatherBlockId } from '@/stores/appStore';
 
 /**
  * The full Dorchester forecast: current conditions in detail, active NWS
@@ -51,6 +54,36 @@ export default function WeatherPageView() {
   const { t, format } = useI18n();
   const { data, loading, unavailable, fromCacheAt, refresh } = useWeather();
   const [unit, setUnit] = useTempUnit();
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
+  const setWeatherEnabled = useAppStore((s) => s.setWeatherEnabled);
+  const weatherLayout = useAppStore((s) => s.weatherLayout);
+
+  // The page's blocks in the resident's own arrangement (Settings →
+  // Weather): rendered in their order, hidden ones skipped. Active
+  // alerts are pinned above the blocks and are not themselves a block —
+  // safety is not furniture, on this page or the homepage.
+  const blocks: Record<WeatherBlockId, ReactNode> | null = data
+    ? {
+        current: <CurrentSection payload={data} unit={unit} />,
+        spotlight: <WearSpotlight payload={data} unit={unit} variant="sky" />,
+        tips: (
+          <>
+            <section className={card} aria-labelledby="wx-tips">
+              <StyleTips payload={data} unit={unit} headingLevel={2} />
+            </section>
+            {coldSignal(data) && <ColdCta />}
+          </>
+        ),
+        hourly: <HourlySection payload={data} unit={unit} />,
+        daily: <DailySection payload={data} unit={unit} />,
+        method: (
+          <section className={card} aria-labelledby="wx-method">
+            <h2 id="wx-method" className="font-heading text-base font-bold">{t('weather.methodTitle')}</h2>
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('weather.methodBody')}</p>
+          </section>
+        ),
+      }
+    : null;
 
   return (
     <MainLayout>
@@ -62,7 +95,7 @@ export default function WeatherPageView() {
             </p>
             <h1 className="mt-1 font-heading text-2xl font-extrabold leading-tight sm:text-3xl">{t('weather.title')}</h1>
             <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('weather.subtitle')}</p>
-            {data && (
+            {weatherEnabled && data && (
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {fromCacheAt
                   ? t('weather.stale', { time: format.time(fromCacheAt) })
@@ -70,6 +103,7 @@ export default function WeatherPageView() {
               </p>
             )}
           </div>
+          {weatherEnabled && (
           <div className="flex items-center gap-2">
             <TempUnitToggle unit={unit} onChange={setUnit} />
             <button
@@ -80,8 +114,30 @@ export default function WeatherPageView() {
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> {t('weather.retry')}
             </button>
           </div>
+          )}
         </header>
 
+        {!weatherEnabled ? (
+          <>
+            {data && <AlertsSection payload={data} />}
+            <section className={`${card} border-dashed`} aria-labelledby="wx-off">
+              <h2 id="wx-off" className="flex items-center gap-2 font-heading text-base font-bold">
+                <CloudOff className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+                {t('weather.offTitle')}
+              </h2>
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('weather.offBody')}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => setWeatherEnabled(true)} className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white transition-transform active:scale-[0.98]">
+                  {t('weather.offEnable')}
+                </button>
+                <Link href="/settings#weather" className="rounded-full border border-[var(--color-border-strong)] px-4 py-2 font-heading text-sm font-bold">
+                  {t('settings.title')}
+                </Link>
+              </div>
+            </section>
+          </>
+        ) : (
+          <>
         {loading && !data && (
           <div className={`${card} space-y-3`} aria-busy="true" aria-label={t('weather.loading')}>
             <div className="h-20 w-56 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-bg-tertiary)]" />
@@ -98,21 +154,16 @@ export default function WeatherPageView() {
           </div>
         )}
 
-        {data && (
+        {data && blocks && (
           <>
             <AlertsSection payload={data} />
-            <CurrentSection payload={data} unit={unit} />
-            <WearSpotlight payload={data} unit={unit} variant="sky" />
-            <section className={card} aria-labelledby="wx-tips">
-              <StyleTips payload={data} unit={unit} headingLevel={2} />
-            </section>
-            {coldSignal(data) && <ColdCta />}
-            <HourlySection payload={data} unit={unit} />
-            <DailySection payload={data} unit={unit} />
-            <section className={card} aria-labelledby="wx-method">
-              <h2 id="wx-method" className="font-heading text-base font-bold">{t('weather.methodTitle')}</h2>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('weather.methodBody')}</p>
-            </section>
+            {weatherLayout.order
+              .filter((id) => !weatherLayout.hidden.includes(id))
+              .map((id) => (
+                <Fragment key={id}>{blocks[id]}</Fragment>
+              ))}
+          </>
+        )}
           </>
         )}
 

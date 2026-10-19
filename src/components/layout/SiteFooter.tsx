@@ -7,6 +7,7 @@ import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { ReportProblem } from '@/components/a11y';
 import { RESOURCES, lastReviewedOn, reviewBacklog } from '@/data/resources';
 import { APP_VERSION, REPO_URL } from '@/lib/site';
+import { useAppStore } from '@/stores/appStore';
 
 /**
  * Site-wide footer, rendered by the layout instead of by individual pages, so a
@@ -19,6 +20,7 @@ import { APP_VERSION, REPO_URL } from '@/lib/site';
  */
 export function SiteFooter() {
   const { t, format } = useI18n();
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const reviewed = lastReviewedOn();
   const backlog = reviewBacklog();
 
@@ -64,7 +66,7 @@ export function SiteFooter() {
               ['/directory', 'nav.directory'],
               ['/news', 'nav.news'],
               ['/faq', 'nav.faq'],
-            ].map(([href, key]) => (
+            ].filter(([href]) => weatherEnabled || href !== '/weather').map(([href, key]) => (
               <li key={href}>
                 <Link href={href} className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] hover:underline">
                   {t(key as 'nav.food')}

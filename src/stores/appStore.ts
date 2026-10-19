@@ -146,6 +146,26 @@ export const DEFAULT_HOME_LAYOUT: HomeLayout = {
   cardStyle: 'match',
 };
 
+/**
+ * Weather is opt-in (4.8). `weatherEnabled` gates the weather *features*:
+ * the homepage panel, the /weather page and its menu links, the
+ * what-to-wear pop-up and the status-bar weather chip. Storm warnings are
+ * deliberately NOT behind this switch — they are a safety surface and
+ * always show. `weatherLayout` arranges the /weather page's blocks the
+ * way `homeLayout` arranges the homepage; the alerts block is pinned
+ * first on that page and is never furniture either.
+ */
+export type WeatherBlockId = 'current' | 'spotlight' | 'tips' | 'hourly' | 'daily' | 'method';
+export const WEATHER_BLOCK_ORDER: WeatherBlockId[] = ['current', 'spotlight', 'tips', 'hourly', 'daily', 'method'];
+export interface WeatherLayout {
+  order: WeatherBlockId[];
+  hidden: WeatherBlockId[];
+}
+export const DEFAULT_WEATHER_LAYOUT: WeatherLayout = {
+  order: WEATHER_BLOCK_ORDER,
+  hidden: [],
+};
+
 interface AppState {
   theme: Theme;
   language: Language;
@@ -162,6 +182,10 @@ interface AppState {
   surface: Surface;
   palette: Palette;
   homeLayout: HomeLayout;
+  /** Master switch for weather features (Settings → Weather). Off by
+   *  default; storm warnings ignore it and always show. */
+  weatherEnabled: boolean;
+  weatherLayout: WeatherLayout;
   /** The plain-language privacy notice has been shown and acknowledged. */
   consentSeen: boolean;
   accessibility: AccessibilityPrefs;
@@ -203,6 +227,9 @@ interface AppState {
   setPalette: (palette: Palette) => void;
   setHomeLayout: (layout: HomeLayout) => void;
   resetHomeLayout: () => void;
+  setWeatherEnabled: (enabled: boolean) => void;
+  setWeatherLayout: (layout: WeatherLayout) => void;
+  resetWeatherLayout: () => void;
   setConsentSeen: (seen: boolean) => void;
   setAccessibility: <K extends keyof AccessibilityPrefs>(key: K, value: AccessibilityPrefs[K]) => void;
   toggleAccessibility: (key: keyof Pick<AccessibilityPrefs, 'underlineLinks' | 'largeFocus' | 'legibleFont' | 'textSpacing' | 'announceUpdates'>) => void;
@@ -251,6 +278,48 @@ const customStorage = {
   },
 };
 
+/**
+ * Persisted-settings migrations, applied in version order. Exported (not
+ * inlined in the persist config) so the upgrade contract is unit-tested:
+ * a resident's saved choices must survive every release.
+ */
+export function migrateSettings(persisted: unknown, version: number): AppState {
+  const state = (persisted ?? {}) as Partial<AppState>;
+
+  // v3 (4.5): the shipped homepage order moved the NowBar from first to
+  // last. Layouts still equal to the old shipped order follow it;
+  // rearranged layouts are untouched.
+  if (version < 3 && state.homeLayout) {
+    const order = state.homeLayout.order;
+    const isOldDefault =
+      Array.isArray(order) &&
+      order.length === HOME_SECTION_ORDER_V2.length &&
+      order.every((id, i) => id === HOME_SECTION_ORDER_V2[i]);
+    if (isOldDefault) {
+      state.homeLayout = { ...state.homeLayout, order: [...HOME_SECTION_ORDER] };
+    }
+  }
+
+  // v4 (4.8): weather becomes opt-in. A resident who had arranged their
+  // homepage had chosen a page *with* weather on it, so their weather
+  // stays on; everyone still on the shipped layout gets the new default
+  // (off). A layout counts as arranged if its order, hidden list or card
+  // style differs from the shipped default in any way.
+  if (version < 4) {
+    const layout = state.homeLayout;
+    const customized =
+      !!layout &&
+      (!Array.isArray(layout.order) ||
+        layout.order.length !== HOME_SECTION_ORDER.length ||
+        layout.order.some((id, i) => id !== HOME_SECTION_ORDER[i]) ||
+        (Array.isArray(layout.hidden) && layout.hidden.length > 0) ||
+        (layout.cardStyle !== undefined && layout.cardStyle !== 'match'));
+    state.weatherEnabled = customized;
+  }
+
+  return state as AppState;
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -264,6 +333,8 @@ export const useAppStore = create<AppState>()(
       surface: 'solid',
       palette: 'harbor',
       homeLayout: DEFAULT_HOME_LAYOUT,
+      weatherEnabled: false,
+      weatherLayout: DEFAULT_WEATHER_LAYOUT,
       consentSeen: false,
       accessibility: DEFAULT_ACCESSIBILITY,
       speechRate: 1,
@@ -296,6 +367,9 @@ export const useAppStore = create<AppState>()(
       setPalette: (palette) => set({ palette }),
       setHomeLayout: (homeLayout) => set({ homeLayout }),
       resetHomeLayout: () => set({ homeLayout: DEFAULT_HOME_LAYOUT }),
+      setWeatherEnabled: (weatherEnabled) => set({ weatherEnabled }),
+      setWeatherLayout: (weatherLayout) => set({ weatherLayout }),
+      resetWeatherLayout: () => set({ weatherLayout: DEFAULT_WEATHER_LAYOUT }),
       setConsentSeen: (consentSeen) => set({ consentSeen }),
 
       setAccessibility: (key, value) =>
@@ -348,6 +422,8 @@ export const useAppStore = create<AppState>()(
           surface: 'solid',
           palette: 'harbor',
           homeLayout: DEFAULT_HOME_LAYOUT,
+          weatherEnabled: false,
+          weatherLayout: DEFAULT_WEATHER_LAYOUT,
           consentSeen: false,
           accessibility: DEFAULT_ACCESSIBILITY,
           speechRate: 1,
@@ -365,21 +441,8 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 3,
-      migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as Partial<AppState>;
-        if (version < 3 && state.homeLayout) {
-          const order = state.homeLayout.order;
-          const isOldDefault =
-            Array.isArray(order) &&
-            order.length === HOME_SECTION_ORDER_V2.length &&
-            order.every((id, i) => id === HOME_SECTION_ORDER_V2[i]);
-          if (isOldDefault) {
-            state.homeLayout = { ...state.homeLayout, order: [...HOME_SECTION_ORDER] };
-          }
-        }
-        return state as AppState;
-      },
+      version: 4,
+      migrate: migrateSettings,
       partialize: (s) => ({
         theme: s.theme,
         language: s.language,
@@ -389,6 +452,8 @@ export const useAppStore = create<AppState>()(
         surface: s.surface,
         palette: s.palette,
         homeLayout: s.homeLayout,
+        weatherEnabled: s.weatherEnabled,
+        weatherLayout: s.weatherLayout,
         consentSeen: s.consentSeen,
         accessibility: s.accessibility,
         speechRate: s.speechRate,

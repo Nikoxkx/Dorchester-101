@@ -37,6 +37,7 @@ export function WearTodayToast() {
   const [unit] = useTempUnit();
   const reduceMotion = useReduceMotion();
   const mobileOpen = useAppStore((s) => s.mobileNavOpen);
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const now = useNow(60_000);
   // Lazy read: the card is invisible until `settled`, so the server render
   // and the first client render agree (nothing on screen) — no effect, no
@@ -70,7 +71,7 @@ export function WearTodayToast() {
     return { top, tips, sig, needsCoat: tipsNeedCoat(tips) };
   }, [data, now, feelsNow]);
 
-  const visible = Boolean(derived && settled && !mobileOpen && dismissedSig !== derived.sig);
+  const visible = Boolean(weatherEnabled && derived && settled && !mobileOpen && dismissedSig !== derived.sig);
   const Icon = derived ? TIP_ICON[derived.top.kind] : Shirt;
 
   const dismiss = () => {

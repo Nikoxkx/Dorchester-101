@@ -10,6 +10,7 @@ import { useNow } from '@/hooks/useNow';
 import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
 import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/shared';
+import { useAppStore } from '@/stores/appStore';
 
 /**
  * The "right now" strip — built as an ordinary site card on purpose: a
@@ -27,6 +28,7 @@ import { ConditionIcon, tempText, useTempUnit } from '@/components/weather/share
 export function NowBar() {
   const { t, format } = useI18n();
   const { data: weatherData } = useWeather();
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const [unit] = useTempUnit();
   const [mbtaAlerts, setMbtaAlerts] = useState<number>(0);
   const [offline, setOffline] = useState<boolean>(false);
@@ -114,7 +116,7 @@ export function NowBar() {
 
         <span className="mx-1 hidden h-8 w-px bg-[var(--color-border-strong)]/60 sm:block" aria-hidden="true" />
 
-        {chipTemp !== undefined && chipKind && (
+        {weatherEnabled && chipTemp !== undefined && chipKind && (
           <Link
             href="/weather"
             className={statLink}

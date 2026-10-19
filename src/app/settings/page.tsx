@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   Palette as PaletteIcon,
   RefreshCw,
+  CloudSun,
   RotateCcw,
   BellRing,
   Check,
@@ -33,7 +34,7 @@ import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
-import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId } from '@/stores/appStore';
+import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId, type WeatherBlockId } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
@@ -57,7 +58,7 @@ import type { TranslationKey } from '@/i18n/en';
  * guessing.
  */
 
-const SECTION_IDS = ['language', 'appearance', 'homepage', 'accessibility', 'data', 'permissions', 'feeds', 'saved', 'privacy'] as const;
+const SECTION_IDS = ['language', 'appearance', 'homepage', 'weather', 'accessibility', 'data', 'permissions', 'feeds', 'saved', 'privacy'] as const;
 type SectionId = (typeof SECTION_IDS)[number];
 
 const SIZES: FontSize[] = ['small', 'medium', 'large', 'extra-large'];
@@ -75,6 +76,15 @@ const HOME_SECTION_LABEL: Record<HomeSectionId, TranslationKey> = {
   news: 'settings.home.section.news',
   map: 'dashboard.mapTitle',
   extras: 'settings.home.section.extras',
+};
+
+const WEATHER_BLOCK_LABEL: Record<WeatherBlockId, TranslationKey> = {
+  current: 'settings.weather.block.current',
+  spotlight: 'settings.weather.block.spotlight',
+  tips: 'settings.weather.block.tips',
+  hourly: 'settings.weather.block.hourly',
+  daily: 'settings.weather.block.daily',
+  method: 'settings.weather.block.method',
 };
 
 /** Preview swatches — the same hexes as the palette blocks in globals.css. */
@@ -237,6 +247,7 @@ export default function SettingsPage() {
     language: 'settings.section.locale',
     appearance: 'settings.section.appearance',
     homepage: 'settings.section.homepage',
+    weather: 'settings.section.weather',
     accessibility: 'settings.section.accessibility',
     data: 'settings.section.data',
     permissions: 'settings.section.permissions',
@@ -555,7 +566,12 @@ export default function SettingsPage() {
                   };
                   return (
                     <li key={id} className={cn('flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2 py-1.5', hidden && 'opacity-55')}>
-                      <span className="min-w-0 flex-1 truncate text-xs font-medium">{t(HOME_SECTION_LABEL[id])}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-medium">{t(HOME_SECTION_LABEL[id])}</span>
+                        {id === 'weather' && !store.weatherEnabled && (
+                          <span className="block text-[11px] leading-snug text-[var(--color-text-muted)]">{t('settings.home.weatherOffNote')}</span>
+                        )}
+                      </span>
                       <button type="button" onClick={() => move(-1)} disabled={index === 0} aria-label={`${t('settings.home.moveUp')}: ${t(HOME_SECTION_LABEL[id])}`} className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-30">
                         <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
@@ -583,6 +599,67 @@ export default function SettingsPage() {
               </ol>
             </div>
           </div>
+        </Section>
+
+        {/* ── Weather ──────────────────────────────────────────────── */}
+        <Section id="weather" title={t('settings.section.weather')} icon={<CloudSun className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.weather = node; }}>
+          <Toggle
+            label={t('settings.weather.enable')}
+            description={t('settings.weather.enableBody')}
+            checked={store.weatherEnabled}
+            onChange={(next) => store.setWeatherEnabled(next)}
+          />
+          {store.weatherEnabled && (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{t('settings.weather.blocksTitle')}</p>
+              <p className="mb-3 max-w-prose text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.weather.blocksIntro')}</p>
+              <ol className="space-y-1">
+                {store.weatherLayout.order.map((id, index) => {
+                  const hidden = store.weatherLayout.hidden.includes(id);
+                  const move = (dir: -1 | 1) => {
+                    const order = [...store.weatherLayout.order];
+                    const j = index + dir;
+                    if (j < 0 || j >= order.length) return;
+                    [order[index], order[j]] = [order[j], order[index]];
+                    store.setWeatherLayout({ ...store.weatherLayout, order });
+                  };
+                  return (
+                    <li key={id} className={cn('flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2 py-1.5', hidden && 'opacity-55')}>
+                      <span className="min-w-0 flex-1 truncate text-xs font-medium">{t(WEATHER_BLOCK_LABEL[id])}</span>
+                      <button type="button" onClick={() => move(-1)} disabled={index === 0} aria-label={`${t('settings.home.moveUp')}: ${t(WEATHER_BLOCK_LABEL[id])}`} className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-30">
+                        <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <button type="button" onClick={() => move(1)} disabled={index === store.weatherLayout.order.length - 1} aria-label={`${t('settings.home.moveDown')}: ${t(WEATHER_BLOCK_LABEL[id])}`} className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-30">
+                        <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!hidden}
+                        aria-label={`${hidden ? t('settings.home.show') : t('settings.home.hide')}: ${t(WEATHER_BLOCK_LABEL[id])}`}
+                        onClick={() =>
+                          store.setWeatherLayout({
+                            ...store.weatherLayout,
+                            hidden: hidden ? store.weatherLayout.hidden.filter((h) => h !== id) : [...store.weatherLayout.hidden, id],
+                          })
+                        }
+                        className="grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-[var(--color-bg-tertiary)]"
+                      >
+                        {hidden ? <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> : <Eye className="h-3.5 w-3.5" aria-hidden="true" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              <button
+                type="button"
+                onClick={() => store.resetWeatherLayout()}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 font-heading text-xs font-bold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]"
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> {t('settings.weather.reset')}
+              </button>
+            </div>
+          )}
         </Section>
 
         {/* ── Accessibility ────────────────────────────────────────── */}

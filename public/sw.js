@@ -16,7 +16,7 @@
 /// Bumped when the About-page photographs were replaced, so caches holding the
 /// old `/img/...` responses have to go with them. This is a cache version, not
 /// the app version: the app's own version lives in package.json.
-const VERSION = 'v4.10.0';
+const VERSION = 'v4.11.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;

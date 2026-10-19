@@ -8,6 +8,7 @@ import { useI18n } from '@/i18n/hook';
 import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
 import { useAnnounce } from '@/components/providers/LiveRegion';
+import { useAppStore } from '@/stores/appStore';
 
 /**
  * The header search, as a real combobox.
@@ -56,6 +57,7 @@ export function SearchDialog() {
   const { t } = useI18n();
   const router = useRouter();
   const announce = useAnnounce();
+  const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -121,10 +123,14 @@ export function SearchDialog() {
         const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&limit=16`, { signal: ctrl.signal });
         if (!res.ok) throw new Error(String(res.status));
         const json = (await res.json()) as Payload;
-        setPayload(json);
+        // Weather off means off everywhere — a search result is a menu by
+        // another name, so the weather page leaves the results too.
+        const pages = weatherEnabled ? json.pages : json.pages.filter((h) => h.href !== '/weather');
+        const filtered: Payload = { ...json, pages, total: json.total - (json.pages.length - pages.length) };
+        setPayload(filtered);
         setActive(0);
         setFailed(false);
-        announce(t('common.results', { count: json.total }), 'polite');
+        announce(t('common.results', { count: filtered.total }), 'polite');
       } catch (error) {
         if ((error as Error).name !== 'AbortError') setFailed(true);
       } finally {
@@ -134,7 +140,7 @@ export function SearchDialog() {
     return () => {
       if (debounce.current) window.clearTimeout(debounce.current);
     };
-  }, [term, open, announce, t]);
+  }, [term, open, announce, t, weatherEnabled]);
 
   function commit(query: string) {
     const next = [query, ...readRecent().filter((r) => r !== query)].slice(0, RECENT_MAX);
