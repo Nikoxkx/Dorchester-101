@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { fToC, type ConditionKind, type StyleTip, type TipKind } from '@/lib/weather';
 import type { TranslationKey } from '@/i18n/en';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * Shared weather presentation: the °F/°C choice, temperature text, condition
@@ -84,8 +85,9 @@ export function tempText(tempF: number, unit: TempUnit, formatNumber: (v: number
 }
 
 export function TempUnitToggle({ unit, onChange }: { unit: TempUnit; onChange: (u: TempUnit) => void }) {
+  const { t } = useTranslation();
   return (
-    <span className="inline-flex overflow-hidden rounded-full border border-[var(--color-border)] text-[11px] font-heading font-bold" role="group" aria-label="Temperature unit">
+    <span className="inline-flex overflow-hidden rounded-full border border-[var(--color-border)] text-[11px] font-heading font-bold" role="group" aria-label={t('weather.tempUnit')}>
       {(['F', 'C'] as const).map((u) => (
         <button
           key={u}

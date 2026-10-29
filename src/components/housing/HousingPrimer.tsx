@@ -4,37 +4,36 @@ import Link from 'next/link';
 import { BookOpenText, ClipboardList, FileCheck2, Landmark, ListOrdered, Ticket, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Cite, SourceMark } from '@/components/sources/SourceMark';
+import { useTranslation } from '@/lib/i18n';
 
 /** Always-visible three-sentence orientation above the tabs. */
 export function HousingStartHere({ onLearnMore }: { onLearnMore: () => void }) {
+  const { t } = useTranslation();
   return (
     <section aria-labelledby="start-here" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
       <h2 id="start-here" className="flex items-center gap-2 font-heading text-base font-bold">
-        <BookOpenText className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" /> Start here: what “affordable housing” means in Boston
+        <BookOpenText className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" /> {t('primer.heading')}
       </h2>
       <div className="mt-2 grid gap-3 text-sm leading-relaxed text-[var(--color-text-secondary)] md:grid-cols-3">
         <p>
-          <strong className="text-[var(--color-text-primary)]">It is a rent cap, not a discount.</strong> An income-restricted apartment has a rent fixed by the City or HUD so that a household at a given
-          income spends about 30% of it on housing. The building may look like any other; only the lease terms differ.
+          <strong className="text-[var(--color-text-primary)]">{t('primer.capTitle')}</strong> {t('primer.capBody')}
         </p>
         <p>
-          <strong className="text-[var(--color-text-primary)]">You qualify by income band.</strong> Each unit is tagged 30%, 50%, 60%, 70% or 80% of Area Median Income (AMI). Your household must earn <em>at or
-          below</em> that band, and usually above a floor of about 2.5× the rent, when you apply.
+          <strong className="text-[var(--color-text-primary)]">{t('primer.bandTitle')}</strong> {t('primer.bandBody')}
         </p>
         <p>
-          <strong className="text-[var(--color-text-primary)]">You get in by lottery or waitlist.</strong> New buildings run a one-time lottery; older ones keep waitlists; public housing and vouchers go through
-          the Boston Housing Authority. Applying is free, and no one can charge you to apply.
+          <strong className="text-[var(--color-text-primary)]">{t('primer.lotteryTitle')}</strong> {t('primer.lotteryBody')}
         </p>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <button type="button" onClick={onLearnMore} className="rounded-full bg-[var(--color-accent-primary)] px-3.5 py-1.5 font-heading font-bold text-white">
-          Step-by-step: how to apply
+          {t('primer.stepByStep')}
         </button>
         <Link href="/tools" className="rounded-full border border-[var(--color-border)] px-3.5 py-1.5 font-heading font-bold no-underline hover:border-[var(--color-accent-primary)]">
-          Find my AMI band
+          {t('primer.findBand')}
         </Link>
         <span className="ms-auto inline-flex items-center gap-1.5 text-[var(--color-text-muted)]">
-          Rules from <SourceMark id="bostongov" size="xs" withName /> · <SourceMark id="hud" size="xs" withName />
+          {t('primer.rulesFrom')} <SourceMark id="bostongov" size="xs" withName /> · <SourceMark id="hud" size="xs" withName />
         </span>
       </div>
     </section>
@@ -44,66 +43,54 @@ export function HousingStartHere({ onLearnMore }: { onLearnMore: () => void }) {
 const STEPS = [
   {
     icon: Users,
-    title: 'Work out your household and income',
-    body: 'Count everyone who will live in the home. Add up gross (before-tax) income for everyone 18+, including wages, SSI/SSDI, child support, unemployment, and regular gifts. Lotteries use the income you can document today, not last year’s taxes alone.',
-    tip: 'Use the AMI calculator on the Tools page — it gives you the band (e.g. “≤ 60% AMI”) that every listing is filtered by.',
+    key: '1',
   },
   {
     icon: ClipboardList,
-    title: 'Gather documents once, reuse them everywhere',
-    body: 'Photo ID for each adult; birth certificates or school records for children; 4–6 recent pay stubs or an employer letter; last 2 years of tax returns (or a non-filer statement); 6 months of bank statements; benefit award letters; current lease and landlord contact.',
-    tip: 'Scan everything to your phone. Most lotteries now accept uploads, and a missing document is the most common reason an application is rejected.',
+    key: '2',
   },
   {
     icon: Landmark,
-    title: 'Pick the right door',
-    body: 'Three systems run in parallel. (1) Boston Housing Authority — public housing is open to new applicants while the Section 8 voucher waiting list is closed; one application, long waits, priority for homelessness, domestic violence, and displacement. (2) Metrolist — the City of Boston’s list of income-restricted apartments and lotteries in private buildings. (3) Housing Navigator Massachusetts — the statewide list of income-restricted rentals, including accessible units; it replaced the retired MassAccess registry in 2022.',
-    tip: 'Apply to all three. They do not share applications, and being on one list never hurts your place on another.',
+    key: '3',
   },
   {
     icon: Ticket,
-    title: 'Enter every lottery you qualify for',
-    body: 'A lottery is a random draw among complete applications received by the deadline — not first-come. Each new building runs one, typically 4–8 weeks long, advertised on Metrolist and in the Dorchester Reporter. Preferences (Boston resident, household with a disability, a household member who works in Boston) move you up.',
-    tip: 'Winning a ranking is not a lease. You will be called in rank order for income verification; keep documents current for 6–12 months after the draw.',
+    key: '4',
   },
   {
     icon: FileCheck2,
-    title: 'Verification and lease-up',
-    body: 'The management company re-checks income, credit, criminal history (limited by Boston’s Fair Chance rules), and landlord references. Credit problems tied to medical debt or a past eviction must be explained, not automatically disqualifying. Rent is set to the unit’s band, and recertified each year.',
-    tip: 'If you are denied, you have the right to a written reason and an appeal. Greater Boston Legal Services and City Life/Vida Urbana help with appeals for free.',
+    key: '5',
   },
   {
     icon: ListOrdered,
-    title: 'Stay on waitlists and update them',
-    body: 'Older income-restricted buildings and BHA developments keep waitlists that move as people leave. Most require you to re-confirm interest every 12 months; if you miss the letter you are removed. Tell every list when your address, phone, income or household changes.',
-    tip: 'Ask the BHA and each building for your current position in writing once a year. It is your right under the tenant-selection plan.',
+    key: '6',
   },
 ];
 
 export function HowToApply() {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader>
-        <CardTitle>How to apply, step by step</CardTitle>
+        <CardTitle>{t('primer.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-          This is the process a Boston housing counsellor walks people through. Nothing here costs money. Anyone who asks for a fee to “get you in” is committing fraud — report them to the
-          Office of Housing at (617) 635-4200.
+          {t('primer.intro')}
         </p>
         <ol className="mt-4 space-y-3">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="flex gap-3 rounded-xl border border-[var(--color-border)] p-3">
+            <li key={s.key} className="flex gap-3 rounded-xl border border-[var(--color-border)] p-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)]">
                 <s.icon className="h-4 w-4" aria-hidden="true" />
               </span>
               <div className="min-w-0">
                 <p className="font-heading font-semibold">
                   <span className="me-1.5 font-mono text-xs text-[var(--color-text-muted)]">{i + 1}</span>
-                  {s.title}
+                  {t(`primer.step${s.key}.title` as 'primer.step1.title')}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{s.body}</p>
-                <p className="mt-1.5 rounded-lg bg-[var(--color-bg-tertiary)] px-2.5 py-1.5 text-xs leading-snug"><strong>Tip:</strong> {s.tip}</p>
+                <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`primer.step${s.key}.body` as 'primer.step1.body')}</p>
+                <p className="mt-1.5 rounded-lg bg-[var(--color-bg-tertiary)] px-2.5 py-1.5 text-xs leading-snug"><strong>{t('primer.tipLabel')}</strong> {t(`primer.step${s.key}.tip` as 'primer.step1.tip')}</p>
               </div>
             </li>
           ))}
@@ -111,18 +98,18 @@ export function HowToApply() {
         <div className="mt-4 grid gap-2 text-xs sm:grid-cols-3">
           <a href="https://www.bostonhousing.org" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="bha" size="sm" withName asSpan />
-            <p className="mt-1.5 text-[var(--color-text-secondary)]">Public housing applications are open; the Section 8 waiting list is closed. (617) 988-4000.</p>
+            <p className="mt-1.5 text-[var(--color-text-secondary)]">{t('primer.bhaCard')}</p>
           </a>
           <a href="https://www.boston.gov/metrolist" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="bostongov" size="sm" withName asSpan />
-            <p className="mt-1.5 text-[var(--color-text-secondary)]">Metrolist: every income-restricted listing and lottery in Boston.</p>
+            <p className="mt-1.5 text-[var(--color-text-secondary)]">{t('primer.metrolistCard')}</p>
           </a>
           <a href="https://housingnavigatorma.org" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
             <SourceMark id="massgov" size="sm" withName asSpan />
-            <p className="mt-1.5 text-[var(--color-text-secondary)]">Housing Navigator Massachusetts: statewide registry, including accessible units.</p>
+            <p className="mt-1.5 text-[var(--color-text-secondary)]">{t('primer.navigatorCard')}</p>
           </a>
         </div>
-        <Cite id="bostongov" note="Boston Office of Housing — Income-restricted housing guide and lottery preferences" href="https://www.boston.gov/departments/housing/income-restricted-housing" className="mt-3" />
+        <Cite id="bostongov" note={t('primer.citeNote')} href="https://www.boston.gov/departments/housing/income-restricted-housing" className="mt-3" />
       </CardContent>
     </Card>
   );

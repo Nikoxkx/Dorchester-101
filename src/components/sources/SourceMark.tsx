@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SOURCES, type SourceId } from '@/data/sources';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * Publisher badge.
@@ -106,12 +107,13 @@ export function Cite({
   href?: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const source = SOURCES[id];
   return (
     <p className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-snug text-[var(--color-text-muted)]', className)}>
-      <span className="font-heading font-semibold">Source</span>
+      <span className="font-heading font-semibold">{t('common.source')}</span>
       <SourceMark id={id} size="xs" withName href={href} />
-      {asOf && <span>· as of {asOf}</span>}
+      {asOf && <span>· {t('source.asOf', { date: asOf })}</span>}
       {note && <span>· {note}</span>}
       {source.licence && <span className="opacity-80">· {source.licence}</span>}
     </p>

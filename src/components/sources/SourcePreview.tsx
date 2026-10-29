@@ -4,6 +4,7 @@ import { ExternalLink, Globe } from 'lucide-react';
 import { SourceMark } from '@/components/sources/SourceMark';
 import { SOURCES, type SourceId } from '@/data/sources';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * A "link card" for the page a piece of information came from — publisher badge,
@@ -31,6 +32,7 @@ export function SourcePreview({
   secondary?: { label: string; url: string; sourceId: SourceId };
   className?: string;
 }) {
+  const { t } = useTranslation();
   const domain = safeDomain(url);
   const src = SOURCES[sourceId];
   return (
@@ -52,7 +54,7 @@ export function SourcePreview({
           {description && <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-text-secondary)]">{description}</p>}
           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
             {src.name}
-            {lastChecked && <> · last read by DOR101 on {lastChecked}</>}
+            {lastChecked && <> · {t('source.lastRead', { date: lastChecked })}</>}
           </p>
         </div>
         <div className="grid shrink-0 place-items-center px-3 text-[var(--color-text-muted)]">

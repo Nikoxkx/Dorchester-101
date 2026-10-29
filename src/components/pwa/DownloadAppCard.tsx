@@ -173,7 +173,7 @@ export function DownloadAppCard({ variant = 'full', className }: { variant?: 'he
           </p>
           {info.fallback && (
             <p role="status" className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-              GitHub could not be reached from this server, so the buttons point at the release matching the current version ({info.tag}). Once a newer release is published the site picks it up automatically.
+              {t('download.app.fallback', { tag: info.tag })}
             </p>
           )}
         </>

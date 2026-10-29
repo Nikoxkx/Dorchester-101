@@ -9,8 +9,7 @@ import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
-import { useAppStore } from '@/stores/appStore';
-import { useTranslation } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n';
 import { useIncomeLimits } from '@/hooks/useIncomeLimits';
 
 const pageVariants: Variants = {
@@ -19,8 +18,7 @@ const pageVariants: Variants = {
 };
 
 export default function ToolsPage() {
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
+  const { t, format } = useI18n();
   const [activeTab, setActiveTab] = useState<'rent' | 'ami' | 'movein' | 'benefits' | 'eviction' | 'documents'>('rent');
   
   // Rent burden calculator state
@@ -49,22 +47,22 @@ export default function ToolsPage() {
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <Calculator className="w-8 h-8 text-[var(--color-accent-primary)]" />
-            Financial Tools
+            {t('tools.heading')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Six calculators built from published rules — HUD income limits, the federal 30% rent-burden standard, Massachusetts tenant law and each benefit program&apos;s own thresholds. Everything runs in your browser; nothing you type is stored or sent.
+            {t('tools.intro')}
           </p>
         </header>
 
         {/* Tab Navigation */}
-        <div role="tablist" aria-label="Tools" className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
+        <div role="tablist" aria-label={t('tools.tabAria')} className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
           {[
-            { id: 'rent', label: 'Rent Burden', icon: DollarSign },
-            { id: 'ami', label: 'AMI Calculator', icon: Home },
-            { id: 'movein', label: 'Move-in Cost', icon: KeyRound },
-            { id: 'benefits', label: 'Benefits Screener', icon: ListChecks },
-            { id: 'eviction', label: 'Eviction Timeline', icon: CalendarClock },
-            { id: 'documents', label: 'Document Checklist', icon: FileText },
+            { id: 'rent', label: t('tools.tabRent'), icon: DollarSign },
+            { id: 'ami', label: t('tools.tabAmi'), icon: Home },
+            { id: 'movein', label: t('tools.tabMoveIn'), icon: KeyRound },
+            { id: 'benefits', label: t('tools.tabBenefits'), icon: ListChecks },
+            { id: 'eviction', label: t('tools.tabEviction'), icon: CalendarClock },
+            { id: 'documents', label: t('tools.tabDocs'), icon: FileText },
           ].map(tab => (
             <button
               key={tab.id}
@@ -88,12 +86,12 @@ export default function ToolsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Rent Burden Calculator</CardTitle>
+                <CardTitle>{t('tools.rentTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <label className="block text-sm font-heading font-medium mb-2">
-                    Monthly Gross Income (before taxes)
+                    {t('tools.monthlyGross')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
@@ -112,7 +110,7 @@ export default function ToolsPage() {
 
                 <div>
                   <label className="block text-sm font-heading font-medium mb-2">
-                    Monthly Rent
+                    {t('tool.moveIn.rent')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
@@ -137,7 +135,7 @@ export default function ToolsPage() {
               rentBurden.status === 'severely-burdened' && 'bg-[var(--color-accent-secondary)]/5',
             )}>
               <CardHeader>
-                <CardTitle>Your Results</CardTitle>
+                <CardTitle>{t('tools.results')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-4">
@@ -150,7 +148,7 @@ export default function ToolsPage() {
                     {rentBurden.percentage}%
                   </div>
                   <div className="text-lg font-heading font-medium mt-2">
-                    of income goes to rent
+                    {t('tools.incomeToRent')}
                   </div>
                 </div>
 
@@ -172,11 +170,11 @@ export default function ToolsPage() {
                   <div>
                     <p className="font-heading font-semibold">{rentBurden.label}</p>
                     <p className="text-sm text-[var(--color-text-muted)]">
-                      {rentBurden.status === 'affordable' 
-                        ? 'Your rent is at or below 30% of income—HUD\'s affordability standard.'
+                      {rentBurden.status === 'affordable'
+                        ? t('tools.burdenOk')
                         : rentBurden.status === 'cost-burdened'
-                        ? 'You pay 30-50% of income on rent. Consider exploring assistance programs.'
-                        : 'You pay over 50% of income on rent. You may qualify for emergency assistance.'
+                        ? t('tools.burdenMid')
+                        : t('tools.burdenHigh')
                       }
                     </p>
                   </div>
@@ -188,7 +186,7 @@ export default function ToolsPage() {
                     className="w-full"
                     onClick={() => window.location.href = '/affordable-housing'}
                   >
-                    Explore Affordable Housing Options
+                    {t('tools.explore')}
                   </Button>
                 )}
               </CardContent>
@@ -201,12 +199,12 @@ export default function ToolsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>AMI Income Calculator</CardTitle>
+                <CardTitle>{t('tools.amiTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <label className="block text-sm font-heading font-medium mb-2">
-                    Household Size
+                    {t('tools.householdSize')}
                   </label>
                   <select
                     value={householdSize}
@@ -227,7 +225,7 @@ export default function ToolsPage() {
 
                 <div>
                   <label className="block text-sm font-heading font-medium mb-2">
-                    Annual Household Income
+                    {t('tools.annualIncome')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
@@ -245,19 +243,19 @@ export default function ToolsPage() {
                 </div>
 
                 <div className="text-sm text-[var(--color-text-muted)]">
-                  {amiLoading && <p>Loading the current HUD income limits…</p>}
-                  {amiError && <p>HUD income limits are unavailable right now — no figure is shown rather than a stale one.</p>}
+                  {amiLoading && <p>{t('tools.loadingLimits')}</p>}
+                  {amiError && <p>{t('tools.limitsUnavailable')}</p>}
                   {!amiLoading && !amiError && (
                     <>
                       <p>
-                        FY{incomeLimits?.fiscalYear} Boston area AMI (HUD, effective {incomeLimits?.effectiveDate}) for {householdSize} person{householdSize > 1 ? 's' : ''}:
+                        {t('tools.fyLine', { fy: incomeLimits?.fiscalYear ?? '', date: incomeLimits?.effectiveDate ?? '', size: householdSize ?? 0 })}
                       </p>
                       <p className="font-mono font-medium text-[var(--color-text-primary)]">
-                        {formatCurrency(amiTable[householdSize] ?? amiTable[String(householdSize)] ?? 0)}
+                        {format.currency(amiTable[householdSize] ?? amiTable[String(householdSize)] ?? 0, { cents: true })}
                       </p>
                       {incomeLimits?.snapshot && (
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          HUD could not be reached from this server, so this is the verified FY{incomeLimits.fiscalYear} capture; live figures return on the next successful fetch.
+                          {t('tools.cachedNote', { fy: incomeLimits.fiscalYear ?? '' })}
                         </p>
                       )}
                     </>
@@ -268,7 +266,7 @@ export default function ToolsPage() {
 
             <Card className="bg-[var(--color-accent-primary)]/5">
               <CardHeader>
-                <CardTitle>Your AMI Level</CardTitle>
+                <CardTitle>{t('tools.amiLevel')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-4">
@@ -276,20 +274,19 @@ export default function ToolsPage() {
                     {amiPercentage}%
                   </div>
                   <div className="text-lg font-heading font-medium mt-2">
-                    of Area Median Income
+                    {t('tools.ofAmi')}
                   </div>
                 </div>
 
                 <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg text-center">
-                  <p className="text-sm text-[var(--color-text-muted)] mb-2">You qualify for:</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-2">{t('tools.qualifyFor')}</p>
                   <p className="font-heading font-bold text-lg text-[var(--color-accent-primary)]">
                     {amiBand}
                   </p>
                 </div>
 
                 <p className="text-sm text-[var(--color-text-secondary)]">
-                  You can apply for housing listed at {amiBand} or higher. The lower your AMI percentage, 
-                  the more housing options you may qualify for.
+                  {t('tools.canApply', { band: amiBand })}
                 </p>
 
                 <Button 
@@ -297,7 +294,7 @@ export default function ToolsPage() {
                   className="w-full"
                   onClick={() => window.location.href = '/affordable-housing'}
                 >
-                  Find Housing I Qualify For
+                  {t('tools.findHousing')}
                 </Button>
               </CardContent>
             </Card>
@@ -312,53 +309,25 @@ export default function ToolsPage() {
         {activeTab === 'documents' && (
           <Card>
             <CardHeader>
-              <CardTitle>Common Documents for Housing Applications</CardTitle>
+              <CardTitle>{t('tools.docsTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-[var(--color-text-muted)] mb-6">
-                Most affordable housing applications require these documents. Gather them before applying.
+                {t('tools.docsIntro')}
               </p>
               
               <div className="space-y-6">
                 {[
+                  { category: 'tools.docsIdentity', items: ['tools.doc.id1', 'tools.doc.id2', 'tools.doc.id3'] },
                   {
-                    category: 'Identity',
-                    items: [
-                      'Government-issued photo ID (driver\'s license, state ID, passport)',
-                      'Social Security cards for all household members',
-                      'Birth certificates for all household members',
-                    ],
+                    category: 'tools.docsIncome',
+                    items: ['tools.doc.inc1', 'tools.doc.inc0', 'tools.doc.inc2', 'tools.doc.inc3', 'tools.doc.inc4', 'tools.doc.inc5'],
                   },
-                  {
-                    category: 'Income',
-                    items: [
-                      'Pay stubs from last 4-8 weeks for all working adults',
-                      'Most recent federal tax return (1040)',
-                      'W-2 forms from past year',
-                      'Social Security/SSI award letters',
-                      'Unemployment benefit statements',
-                      'Child support documentation',
-                    ],
-                  },
-                  {
-                    category: 'Household',
-                    items: [
-                      'Current lease or proof of address (utility bill, bank statement)',
-                      'Landlord reference letter',
-                      'Custody documents (if applicable)',
-                    ],
-                  },
-                  {
-                    category: 'Assets',
-                    items: [
-                      'Bank statements (last 3 months)',
-                      'Retirement account statements',
-                      'Vehicle registration',
-                    ],
-                  },
+                  { category: 'tools.docsHousehold', items: ['tools.doc.hh1', 'tools.doc.hh2', 'tools.doc.hh3'] },
+                  { category: 'tools.docsAssets', items: ['tools.doc.as1', 'tools.doc.as2', 'tools.doc.as3'] },
                 ].map((section) => (
                   <div key={section.category}>
-                    <h3 className="font-heading font-semibold mb-3">{section.category}</h3>
+                    <h3 className="font-heading font-semibold mb-3">{t(section.category as 'tools.docsIdentity')}</h3>
                     <ul className="space-y-2">
                       {section.items.map((item, i) => (
                         <li key={i} className="flex items-start gap-3">
@@ -366,7 +335,7 @@ export default function ToolsPage() {
                             type="checkbox"
                             className="mt-1 w-4 h-4 rounded border-[var(--color-border)]"
                           />
-                          <span className="text-sm">{item}</span>
+                          <span className="text-sm">{t(item as 'tools.doc.id1')}</span>
                         </li>
                       ))}
                     </ul>
@@ -377,7 +346,7 @@ export default function ToolsPage() {
           </Card>
         )}
         <ProjectNote sources={['hud', 'massgov', 'census']}>
-          The calculators run entirely in your browser; nothing you type is sent anywhere. Income limits are HUD&apos;s Boston-metro figures for the year shown, and the 30% rent-burden rule is the federal standard.
+          {t('tools.footnote')}
         </ProjectNote>
       </motion.div>
     </MainLayout>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n/hook';
+import { useTranslation } from '@/lib/i18n';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -68,6 +69,7 @@ export function LoadingOverlay({ isLoading, children, text }: LoadingOverlayProp
 }
 
 export function PageLoader() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-[400px] flex items-center justify-center">
       <div className="text-center">
@@ -104,7 +106,7 @@ export function PageLoader() {
           transition={{ delay: 0.2 }}
           className="text-[var(--color-text-muted)] font-heading"
         >
-          Loading DOR101...
+          {t('ui.loadingSite')}
         </motion.p>
         <motion.div
           initial={{ width: 0 }}

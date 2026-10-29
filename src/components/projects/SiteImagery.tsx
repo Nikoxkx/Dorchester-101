@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { ExternalLink, ImageOff, Satellite } from 'lucide-react';
 import { SourceMark } from '@/components/sources/SourceMark';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * Current aerial view of a development site, from the same Esri World Imagery
@@ -79,6 +80,7 @@ function exportUrl(host: string, lat: number, lng: number): string {
 }
 
 export function SiteImagery({ lat, lng, label, className }: { lat: number; lng: number; label: string; className?: string }) {
+  const { t } = useTranslation();
   /** -1 while the single export is working, >= 0 counts tiles lost after that. */
   const [failedTiles, setFailedTiles] = useState(0);
   const [exportFailed, setExportFailed] = useState(false);
@@ -166,7 +168,7 @@ export function SiteImagery({ lat, lng, label, className }: { lat: number; lng: 
           <div className="absolute inset-0 grid place-items-center p-4 text-center text-xs text-[var(--color-text-muted)]">
             <div>
               <ImageOff className="mx-auto mb-1.5 h-6 w-6" aria-hidden="true" />
-              Satellite imagery could not be loaded (offline or blocked). The site is at {lat.toFixed(5)}, {lng.toFixed(5)}.
+              {t('imagery.unavailable', { lat: lat.toFixed(5), lng: lng.toFixed(5) })}
             </div>
           </div>
         )}
@@ -180,15 +182,15 @@ export function SiteImagery({ lat, lng, label, className }: { lat: number; lng: 
         )}
 
         <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wide text-white">
-          <Satellite className="h-3 w-3" aria-hidden="true" /> Current aerial view
+          <Satellite className="h-3 w-3" aria-hidden="true" /> {t('imagery.currentView')}
         </span>
       </div>
       <figcaption className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
         <span className="inline-flex items-center gap-1.5">
-          <SourceMark id="esri" size="xs" /> Imagery © Esri, Maxar, Earthstar Geographics — {label}
+          <SourceMark id="esri" size="xs" /> {t('imagery.credit', { label })}
         </span>
         <a href={gmaps} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-heading font-semibold text-[var(--color-text-secondary)] hover:underline">
-          Open in Google Maps <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          {t('imagery.openMaps')} <ExternalLink className="h-3 w-3" aria-hidden="true" />
         </a>
       </figcaption>
     </figure>

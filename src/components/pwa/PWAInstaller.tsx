@@ -157,9 +157,9 @@ export function PWAInstaller() {
         {/* Benefits list */}
         <div className="mt-4 pt-3 border-t border-[var(--color-border)] grid grid-cols-3 gap-2 text-[10px] text-[var(--color-text-muted)]">
           {[
-            { icon: CheckCircle, text: 'Works offline' },
-            { icon: CheckCircle, text: 'One-click launch' },
-            { icon: CheckCircle, text: 'Auto-updates' },
+            { icon: CheckCircle, text: t('pwa.benefit.offline') },
+            { icon: CheckCircle, text: t('pwa.benefit.launch') },
+            { icon: CheckCircle, text: t('pwa.benefit.updates') },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-1">
               <item.icon className="w-3 h-3 text-[var(--color-accent-green)]" />

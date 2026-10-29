@@ -8,6 +8,7 @@ import { RESOURCES, type ResourceCategory } from '@/data/resources';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
+import type { TranslationKey } from '@/i18n/en';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES: Array<ResourceCategory | 'all'> = [
@@ -20,9 +21,18 @@ const CATEGORIES: Array<ResourceCategory | 'all'> = [
   'school',
 ];
 
+const CATEGORY_KEYS: Record<ResourceCategory, TranslationKey> = {
+  housing: 'map.housing',
+  food: 'map.food',
+  health: 'map.health',
+  legal: 'map.legal',
+  community: 'map.community',
+  school: 'map.school',
+};
+
 function EmbedDirectoryInner() {
   const searchParams = useSearchParams();
-  const { pickContent } = useI18n();
+  const { t, pickContent } = useI18n();
   const initialCat = (searchParams.get('category') as ResourceCategory | null) ?? 'all';
   const neighborhoodFilter = searchParams.get('neighborhood')?.toLowerCase() ?? '';
   const [category, setCategory] = useState<ResourceCategory | 'all'>(
@@ -52,10 +62,10 @@ function EmbedDirectoryInner() {
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2.5">
           <div>
             <h1 className="font-heading text-base font-extrabold">
-              Dorchester 101 · Community Resource Directory
+              {t('embed.title')}
             </h1>
             <p className="text-xs text-[var(--color-text-muted)]">
-              Verified organizations in Dorchester, Boston · {items.length} shown
+              {t('embed.subtitle', { count: items.length })}
             </p>
           </div>
           <Link
@@ -64,7 +74,7 @@ function EmbedDirectoryInner() {
             rel="noreferrer noopener"
             className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-primary)] px-3 py-1 font-heading text-xs font-bold text-white"
           >
-            Full site <ExternalLink className="h-3 w-3" aria-hidden="true" />
+            {t('embed.fullSite')} <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </header>
 
@@ -78,7 +88,7 @@ function EmbedDirectoryInner() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search Dorchester resources…"
+              placeholder={t('embed.searchPlaceholder')}
               className="h-8 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] ps-8 pe-2.5 text-xs outline-none focus:border-[var(--color-accent-primary)]"
             />
           </div>
@@ -95,7 +105,7 @@ function EmbedDirectoryInner() {
                     : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
                 )}
               >
-                {cat}
+                {cat === 'all' ? t('common.all') : t(CATEGORY_KEYS[cat])}
               </button>
             ))}
           </div>
@@ -115,7 +125,7 @@ function EmbedDirectoryInner() {
                     <h2 className="font-heading text-sm font-bold leading-snug">{r.name}</h2>
                     {open !== null && (
                       <Badge variant={open ? 'green' : 'default'}>
-                        {open ? 'Open' : 'Closed'}
+                        {open ? t('common.openShort') : t('common.closed')}
                       </Badge>
                     )}
                   </div>
@@ -148,8 +158,9 @@ function EmbedDirectoryInner() {
 }
 
 export default function EmbedPage() {
+  const { t } = useI18n();
   return (
-    <Suspense fallback={<div className="p-4 text-xs">Loading directory…</div>}>
+    <Suspense fallback={<div className="p-4 text-xs">{t('embed.loading')}</div>}>
       <EmbedDirectoryInner />
     </Suspense>
   );

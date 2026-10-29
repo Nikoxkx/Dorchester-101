@@ -203,7 +203,7 @@ export default function DashboardPage() {
         <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
           <Image
             src="/img/dorchester-bay-sunset.jpg"
-            alt="Dorchester Bay and the Neponset River mouth at sunset"
+            alt={t('home.heroAlt')}
             fill
             priority
             sizes="100vw"
@@ -495,7 +495,7 @@ export default function DashboardPage() {
             <BadgeWall />
           </div>
           <div>
-            <FieldNotes scope="dashboard" title="Offline Field Notes" />
+            <FieldNotes scope="dashboard" title={t('notes.title')} />
           </div>
         </div>
 
@@ -511,7 +511,7 @@ export default function DashboardPage() {
 
         <div style={{ order: 901 }}>
         <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']} className="mt-10">
-          Every number on this page is computed from a dataset the site ships or from an API that names its own source and date. The directory counts are live from the listing data; the rent figure is the Census Bureau&apos;s; the headlines come from the publishers.
+          {t('note.home')}
         </ProjectNote>
         </div>
       </motion.div>

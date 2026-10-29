@@ -106,7 +106,7 @@ export function MapPageView() {
             </a>
           </article>
         <ProjectNote sources={['mbta', 'osm', 'esri', 'dor101']}>
-          Arrival times and alerts are live from the MBTA&apos;s public API when it answers, and fall back to the published timetable when it does not; the map says which. Basemap tiles are OpenStreetMap (streets) and Esri World Imagery (satellite). Pins are the same directory listings as the rest of the site.
+          {t('note.map')}
         </ProjectNote>
         </section>
       </motion.div>

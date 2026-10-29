@@ -7,6 +7,7 @@ import { REPO_URL } from '@/lib/site';
 import { SourceMark } from '@/components/sources/SourceMark';
 import type { SourceId } from '@/data/sources';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * The paragraph every section ends with: what this page draws on, that the
@@ -24,9 +25,10 @@ export function ProjectNote({
   children?: React.ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <aside
-      aria-label="About this information"
+      aria-label={t('project.aria')}
       className={cn(
         'dor101-glass rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4 text-sm leading-relaxed text-[var(--color-text-secondary)]',
         className
@@ -36,7 +38,7 @@ export function ProjectNote({
         <div>
           <h2 className="flex items-center gap-2 font-heading text-sm font-bold text-[var(--color-text-primary)]">
             <ShieldCheck className="h-4 w-4 text-[var(--color-accent-green)]" aria-hidden="true" />
-            Where this comes from
+            {t('project.whereFrom')}
           </h2>
           {children && <p className="mt-1.5">{children}</p>}
           {sources && sources.length > 0 && (
@@ -52,10 +54,10 @@ export function ProjectNote({
         <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-3">
           <h3 className="flex items-center gap-2 font-heading text-xs font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
             <HeartHandshake className="h-3.5 w-3.5" aria-hidden="true" />
-            Open source, kept by me
+            {t('project.openSource')}
           </h3>
           <p className="mt-1.5 text-xs">
-            I&apos;m Yeisbel, and I make and run DOR101, with AI tools helping with the code and the copy. The code, the listing data and every correction are public. Nobody pays to be listed and nothing here is sponsored.
+            {t('project.openSourceBody')}
           </p>
           <ul className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
             <li>
@@ -68,7 +70,7 @@ export function ProjectNote({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]"
               >
-                <Bug className="h-3.5 w-3.5" aria-hidden="true" /> Issue tracker
+                <Bug className="h-3.5 w-3.5" aria-hidden="true" /> {t('project.issueTracker')}
               </a>
             </li>
             <li>
@@ -78,12 +80,12 @@ export function ProjectNote({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]"
               >
-                <GitFork className="h-3.5 w-3.5" aria-hidden="true" /> Source code
+                <GitFork className="h-3.5 w-3.5" aria-hidden="true" /> {t('project.sourceCode')}
               </a>
             </li>
             <li>
               <Link href="/about" className="font-heading text-xs font-bold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">
-                About the project
+                {t('project.about')}
               </Link>
             </li>
           </ul>

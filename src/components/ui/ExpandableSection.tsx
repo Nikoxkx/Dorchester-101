@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface ExpandableSectionProps {
   title: string;
@@ -28,6 +29,7 @@ export function ExpandableSection({
   sourceUrl,
   sourceName,
 }: ExpandableSectionProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const contentId = useId();
 
@@ -96,7 +98,7 @@ export function ExpandableSection({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-primary)] hover:underline"
                   >
-                    Source: {sourceName}
+                    {t('ui.sourceNamed', { name: sourceName })}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>

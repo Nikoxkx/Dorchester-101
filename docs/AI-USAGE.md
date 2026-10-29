@@ -5,7 +5,7 @@ should say plainly which parts came from a model. This file is the full account.
 A short version is in the README and in the **How AI was used** section of the
 site's About page, in all nine languages.
 
-Last reviewed: 4 October 2026.
+Last reviewed: 29 October 2026.
 
 ## In one paragraph
 
@@ -28,6 +28,7 @@ is sent to a model, and nothing about a visitor is sent anywhere.
 | **Documentation** — this README, `BUILD.md`, `SECURITY.md`, this file, release notes | Drafted and maintained | Commands are run before they are written down; version numbers, paths and licence statements are read from the repository, not recalled |
 | **Build and asset scripts** — icon generation, source badges, the desktop packager | Written with AI assistance | Run locally; the desktop package is verified by `npm run verify:desktop` |
 | **Accessibility passes** — skip links, focus handling, reduced-motion, contrast | Suggested fixes and rewrites | Keyboard-only walkthrough of each page and a screen-reader pass on the main flows |
+| **Translation completeness** — finding the English that was still left in components | Wrote the conversion of the remaining screens to dictionary keys and the AST guard (`src/__tests__/i18n-hardcoded.test.ts`) that now fails the build when English prose reappears in JSX or a visible attribute | The guard is the check: it parses every page and component with the TypeScript compiler and fails on English literals, and a second test keeps the tracked backlog honest so it can only shrink. Non-English wording in the eight locales is still machine-produced first-pass text |
 
 ## Where AI was not used
 

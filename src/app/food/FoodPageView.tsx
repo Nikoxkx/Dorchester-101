@@ -492,7 +492,7 @@ export default function FoodPageView() {
             <ReportProblem />
           </div>
         <ProjectNote sources={['gbfb', 'dta', 'bostongov', 'dor101']}>
-          Pantry hours and eligibility on this page are checked by hand against each organisation&apos;s own posted schedule and the Greater Boston Food Bank partner list; the date of the last check is printed on every card, and “open now” is computed from those hours in Boston time. SNAP rules follow the Massachusetts Department of Transitional Assistance.
+          {t('note.food')}
         </ProjectNote>
         </section>
       </div>

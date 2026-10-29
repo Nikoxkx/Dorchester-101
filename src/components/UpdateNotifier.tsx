@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { isDesktopApp } from '@/lib/desktop';
+import { useTranslation } from '@/lib/i18n';
 
 export function UpdateNotifier() {
+  const { t } = useTranslation();
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [updateDownloaded, setUpdateDownloaded] = useState(false);
   const [isElectron] = useState(isDesktopApp);
@@ -51,9 +53,9 @@ export function UpdateNotifier() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Download className="h-5 w-5 text-blue-600" />
-              Update Available
+              {t('update.title')}
             </CardTitle>
-            <CardDescription>A new version is being downloaded in the background.</CardDescription>
+            <CardDescription>{t('update.downloading')}</CardDescription>
           </CardHeader>
         </Card>
       )}
@@ -63,16 +65,16 @@ export function UpdateNotifier() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <AlertCircle className="h-5 w-5 text-green-600" />
-              Update Ready to Install
+              {t('update.readyTitle')}
             </CardTitle>
-            <CardDescription>Restart the app to apply the latest version.</CardDescription>
+            <CardDescription>{t('update.readyBody')}</CardDescription>
           </CardHeader>
           <CardContent>
             <button
               onClick={handleRestartAndInstall}
               className="w-full rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
             >
-              Restart Now
+              {t('update.restart')}
             </button>
           </CardContent>
         </Card>

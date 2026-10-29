@@ -595,7 +595,7 @@ export function ResourcesView() {
             <ReportProblem />
           </div>
         <ProjectNote sources={['dor101', 'bostongov', 'masslegal', 'bha']}>
-          Program descriptions are written from the official page or printed schedule of each organisation and re-checked on the date shown. Legal rights summaries follow MassLegalHelp; nothing here is legal advice.
+          {t('note.resources')}
         </ProjectNote>
         </section>
       </div>

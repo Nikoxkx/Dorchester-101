@@ -220,7 +220,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
                 {t('weather.wearNext')}: {t(SCOPE_KEY[nextTip.scope])}
               </span>
             )}
-            <button type="button" onClick={() => step(-1)} disabled={tips.length < 2} aria-label="Previous tip" className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
+            <button type="button" onClick={() => step(-1)} disabled={tips.length < 2} aria-label={t('weather.prevTip')} className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
               <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
             <span className="flex gap-1" aria-hidden="true">
@@ -228,7 +228,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
                 <span key={tp.kind} className={`h-1.5 rounded-full transition-all ${i === index ? 'w-4 bg-white' : 'w-1.5 bg-white/45'}`} />
               ))}
             </span>
-            <button type="button" onClick={() => step(1)} disabled={tips.length < 2} aria-label="Next tip" className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
+            <button type="button" onClick={() => step(1)} disabled={tips.length < 2} aria-label={t('weather.nextTip')} className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
               <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
           </div>
