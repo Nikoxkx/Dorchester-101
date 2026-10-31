@@ -33,7 +33,7 @@ jobs:
           path: freshness-report.md
           retention-days: 30
       - name: Create or update the review issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
