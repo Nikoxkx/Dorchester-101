@@ -144,9 +144,9 @@ export function DataRefreshIndicator({
         </>
       ) : (
         <>
-          <span className="live-dot h-2 w-2" aria-hidden="true" />
+          <span className={lastUpdated ? 'live-dot h-2 w-2' : 'h-2 w-2 rounded-full bg-[var(--color-text-muted)]'} aria-hidden="true" />
           <span>
-            {lastUpdated ? `${t('common.updated')} ${format.time(lastUpdated)}` : t('time.justNow')}
+            {lastUpdated ? `${t('common.updated')} ${format.time(lastUpdated)}` : t('common.notUpdatedYet')}
           </span>
         </>
       )}

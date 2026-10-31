@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
+import Link from 'next/link';
 import { Calculator, DollarSign, Home, FileText, AlertTriangle, CheckCircle, KeyRound, ListChecks, CalendarClock } from 'lucide-react';
 import { BenefitsScreener, EvictionTimeline, MoveInCostTool } from '@/components/tools/ExtraTools';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { cn, formatCurrency, calculateRentBurden, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
+import { cn, calculateRentBurden, calculateAMIPercentage, getAMIBand } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { useIncomeLimits } from '@/hooks/useIncomeLimits';
+
+const housingLinkClass = 'inline-flex w-full items-center justify-center rounded-lg bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-primary)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -20,20 +22,38 @@ const pageVariants: Variants = {
 export default function ToolsPage() {
   const { t, format } = useI18n();
   const [activeTab, setActiveTab] = useState<'rent' | 'ami' | 'movein' | 'benefits' | 'eviction' | 'documents'>('rent');
+
+  // A shareable deep link must open the AMI tool, not the default rent tab.
+  useEffect(() => {
+    const openLinkedTool = () => {
+      if (window.location.hash === '#ami') setActiveTab('ami');
+    };
+    const timer = window.setTimeout(openLinkedTool, 0);
+    window.addEventListener('hashchange', openLinkedTool);
+    return () => { window.clearTimeout(timer); window.removeEventListener('hashchange', openLinkedTool); };
+  }, []);
   
   // Rent burden calculator state
-  const [monthlyIncome, setMonthlyIncome] = useState(4500);
-  const [monthlyRent, setMonthlyRent] = useState(2000);
+  const [monthlyIncome, setMonthlyIncome] = useState('4500');
+  const [monthlyRent, setMonthlyRent] = useState('2000');
   
   // AMI calculator state
   const [householdSize, setHouseholdSize] = useState(2);
-  const [annualIncome, setAnnualIncome] = useState(50000);
+  const [annualIncome, setAnnualIncome] = useState('50000');
   const { data: incomeLimits, loading: amiLoading, error: amiError } = useIncomeLimits();
 
   const amiTable = incomeLimits?.table ?? {};
-  const rentBurden = calculateRentBurden(monthlyIncome, monthlyRent);
-  const amiPercentage = calculateAMIPercentage(householdSize, annualIncome, amiTable);
-  const amiBand = getAMIBand(amiPercentage);
+  const monthlyIncomeNumber = monthlyIncome.trim() ? Number(monthlyIncome) : NaN;
+  const monthlyRentNumber = monthlyRent.trim() ? Number(monthlyRent) : NaN;
+  const rentBurden = calculateRentBurden(monthlyIncomeNumber, monthlyRentNumber);
+  const annualIncomeNumber = annualIncome.trim() ? Number(annualIncome) : NaN;
+  const hasValidAnnualIncome = Number.isFinite(annualIncomeNumber) && annualIncomeNumber >= 0;
+  const hasIncomeLimit = Number.isFinite(amiTable[householdSize]) && amiTable[householdSize] > 0;
+  const amiPercentage = hasIncomeLimit && hasValidAnnualIncome ? calculateAMIPercentage(householdSize, annualIncomeNumber, amiTable) : 0;
+  const amiBand = amiPercentage > 100
+    ? t('housing.marketRate')
+    : t('badge.ami', { percent: format.number(parseInt(getAMIBand(amiPercentage), 10)) });
+  const hasValidRentInputs = Number.isFinite(monthlyIncomeNumber) && monthlyIncomeNumber > 0 && Number.isFinite(monthlyRentNumber) && monthlyRentNumber >= 0;
 
   return (
     <MainLayout>
@@ -55,7 +75,7 @@ export default function ToolsPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div role="tablist" aria-label={t('tools.tabAria')} className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
+        <div role="group" aria-label={t('tools.tabAria')} className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
           {[
             { id: 'rent', label: t('tools.tabRent'), icon: DollarSign },
             { id: 'ami', label: t('tools.tabAmi'), icon: Home },
@@ -66,6 +86,8 @@ export default function ToolsPage() {
           ].map(tab => (
             <button
               key={tab.id}
+              type="button"
+              aria-pressed={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={cn(
                 'flex shrink-0 items-center gap-2 px-3 py-3 font-heading font-medium text-sm whitespace-nowrap',
@@ -90,15 +112,18 @@ export default function ToolsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="block text-sm font-heading font-medium mb-2">
+                  <label htmlFor="tools-monthly-income" className="block text-sm font-heading font-medium mb-2">
                     {t('tools.monthlyGross')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
                     <input
+                    id="tools-monthly-income"
                       type="number"
                       value={monthlyIncome}
-                      onChange={(e) => setMonthlyIncome(Number(e.target.value))}
+                      onChange={(e) => setMonthlyIncome(e.target.value)}
+                      min="0"
+                      aria-invalid={!Number.isFinite(monthlyIncomeNumber) || monthlyIncomeNumber <= 0}
                       className={cn(
                         'w-full pl-8 pr-3 py-2.5 rounded-lg font-mono',
                         'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
@@ -109,15 +134,18 @@ export default function ToolsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-heading font-medium mb-2">
+                  <label htmlFor="tools-monthly-rent" className="block text-sm font-heading font-medium mb-2">
                     {t('tool.moveIn.rent')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
                     <input
+                    id="tools-monthly-rent"
                       type="number"
                       value={monthlyRent}
-                      onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                      onChange={(e) => setMonthlyRent(e.target.value)}
+                      min="0"
+                      aria-invalid={!Number.isFinite(monthlyRentNumber) || monthlyRentNumber < 0}
                       className={cn(
                         'w-full pl-8 pr-3 py-2.5 rounded-lg font-mono',
                         'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
@@ -130,14 +158,18 @@ export default function ToolsPage() {
             </Card>
 
             <Card className={cn(
-              rentBurden.status === 'affordable' && 'bg-[var(--color-accent-green)]/5',
-              rentBurden.status === 'cost-burdened' && 'bg-[var(--color-accent-amber)]/5',
-              rentBurden.status === 'severely-burdened' && 'bg-[var(--color-accent-secondary)]/5',
+              hasValidRentInputs && rentBurden.status === 'affordable' && 'bg-[var(--color-accent-green)]/5',
+              hasValidRentInputs && rentBurden.status === 'cost-burdened' && 'bg-[var(--color-accent-amber)]/5',
+              hasValidRentInputs && rentBurden.status === 'severely-burdened' && 'bg-[var(--color-accent-secondary)]/5',
             )}>
               <CardHeader>
                 <CardTitle>{t('tools.results')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {!hasValidRentInputs ? (
+                  <p role="status">{t('tools.enterValidRent')}</p>
+                ) : (
+                  <>
                 <div className="text-center py-4">
                   <div className={cn(
                     'text-5xl font-mono font-bold',
@@ -145,7 +177,7 @@ export default function ToolsPage() {
                     rentBurden.status === 'cost-burdened' && 'text-[var(--color-accent-amber)]',
                     rentBurden.status === 'severely-burdened' && 'text-[var(--color-accent-secondary)]',
                   )}>
-                    {rentBurden.percentage}%
+                    {format.percent(rentBurden.percentage / 100)}
                   </div>
                   <div className="text-lg font-heading font-medium mt-2">
                     {t('tools.incomeToRent')}
@@ -168,7 +200,7 @@ export default function ToolsPage() {
                     )} />
                   )}
                   <div>
-                    <p className="font-heading font-semibold">{rentBurden.label}</p>
+                    <p className="font-heading font-semibold">{t(rentBurden.status === 'affordable' ? 'tools.status.affordable' : rentBurden.status === 'cost-burdened' ? 'tools.status.burdened' : 'tools.status.severe')}</p>
                     <p className="text-sm text-[var(--color-text-muted)]">
                       {rentBurden.status === 'affordable'
                         ? t('tools.burdenOk')
@@ -181,13 +213,11 @@ export default function ToolsPage() {
                 </div>
 
                 {rentBurden.status !== 'affordable' && (
-                  <Button 
-                    variant="primary" 
-                    className="w-full"
-                    onClick={() => window.location.href = '/affordable-housing'}
-                  >
+                  <Link href="/affordable-housing" className={housingLinkClass}>
                     {t('tools.explore')}
-                  </Button>
+                  </Link>
+                )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -203,10 +233,11 @@ export default function ToolsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="block text-sm font-heading font-medium mb-2">
+                  <label htmlFor="tools-household-size" className="block text-sm font-heading font-medium mb-2">
                     {t('tools.householdSize')}
                   </label>
                   <select
+                    id="tools-household-size"
                     value={householdSize}
                     onChange={(e) => setHouseholdSize(Number(e.target.value))}
                     className={cn(
@@ -217,22 +248,25 @@ export default function ToolsPage() {
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((size) => (
                       <option key={size} value={size}>
-                        {size} person{size > 1 ? 's' : ''}
+                        {t('housing.people', { count: size })}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-heading font-medium mb-2">
+                  <label htmlFor="tools-annual-income" className="block text-sm font-heading font-medium mb-2">
                     {t('tools.annualIncome')}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
                     <input
+                    id="tools-annual-income"
                       type="number"
                       value={annualIncome}
-                      onChange={(e) => setAnnualIncome(Number(e.target.value))}
+                      onChange={(e) => setAnnualIncome(e.target.value)}
+                      min="0"
+                      aria-invalid={!hasValidAnnualIncome}
                       className={cn(
                         'w-full pl-8 pr-3 py-2.5 rounded-lg font-mono',
                         'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
@@ -245,17 +279,18 @@ export default function ToolsPage() {
                 <div className="text-sm text-[var(--color-text-muted)]">
                   {amiLoading && <p>{t('tools.loadingLimits')}</p>}
                   {amiError && <p>{t('tools.limitsUnavailable')}</p>}
-                  {!amiLoading && !amiError && (
+                  {!amiLoading && !amiError && hasIncomeLimit && (
                     <>
                       <p>
-                        {t('tools.fyLine', { fy: incomeLimits?.fiscalYear ?? '', date: incomeLimits?.effectiveDate ?? '', size: householdSize ?? 0 })}
+                        {t('tools.fyLine', { fy: incomeLimits?.fiscalYear ? format.year(incomeLimits.fiscalYear) : '', date: incomeLimits?.effectiveDate ? format.date(incomeLimits.effectiveDate, 'long') : '—', size: householdSize })}
                       </p>
                       <p className="font-mono font-medium text-[var(--color-text-primary)]">
-                        {format.currency(amiTable[householdSize] ?? amiTable[String(householdSize)] ?? 0, { cents: true })}
+                        {format.currency(amiTable[householdSize])}
                       </p>
+                      <p className="mt-1 text-xs">{t('market.amiExplanation')}</p>
                       {incomeLimits?.snapshot && (
                         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          {t('tools.cachedNote', { fy: incomeLimits.fiscalYear ?? '' })}
+                          {t('tools.cachedNote', { fy: incomeLimits.fiscalYear ? format.year(incomeLimits.fiscalYear) : '' })}
                         </p>
                       )}
                     </>
@@ -269,9 +304,17 @@ export default function ToolsPage() {
                 <CardTitle>{t('tools.amiLevel')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {!hasIncomeLimit ? (
+                  <p role="status" className="text-sm text-[var(--color-text-secondary)]">
+                    {amiLoading ? t('tools.loadingLimits') : t('tools.limitsUnavailable')}
+                  </p>
+                ) : !hasValidAnnualIncome ? (
+                  <p role="status" className="text-sm text-[var(--color-text-secondary)]">{t('tools.enterValidAnnual')}</p>
+                ) : (
+                  <>
                 <div className="text-center py-4">
                   <div className="text-5xl font-mono font-bold text-[var(--color-accent-primary)]">
-                    {amiPercentage}%
+                    {format.percent(amiPercentage / 100)}
                   </div>
                   <div className="text-lg font-heading font-medium mt-2">
                     {t('tools.ofAmi')}
@@ -286,16 +329,14 @@ export default function ToolsPage() {
                 </div>
 
                 <p className="text-sm text-[var(--color-text-secondary)]">
-                  {t('tools.canApply', { band: amiBand })}
+                  {t('tools.canApply')}
                 </p>
 
-                <Button 
-                  variant="primary" 
-                  className="w-full"
-                  onClick={() => window.location.href = '/affordable-housing'}
-                >
+                <Link href="/affordable-housing" className={housingLinkClass}>
                   {t('tools.findHousing')}
-                </Button>
+                </Link>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -330,12 +371,11 @@ export default function ToolsPage() {
                     <h3 className="font-heading font-semibold mb-3">{t(section.category as 'tools.docsIdentity')}</h3>
                     <ul className="space-y-2">
                       {section.items.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            className="mt-1 w-4 h-4 rounded border-[var(--color-border)]"
-                          />
-                          <span className="text-sm">{t(item as 'tools.doc.id1')}</span>
+                        <li key={i}>
+                          <label className="flex items-start gap-3">
+                            <input type="checkbox" className="mt-1 w-4 h-4 rounded border-[var(--color-border)]" />
+                            <span className="text-sm">{t(item as 'tools.doc.id1')}</span>
+                          </label>
                         </li>
                       ))}
                     </ul>

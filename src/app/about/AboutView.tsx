@@ -9,6 +9,7 @@ import { ReportProblem } from '@/components/a11y/ReportProblem';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
+import { useHydratedNow } from '@/hooks/useNow';
 import { useAppStore } from '@/stores/appStore';
 import { LANGUAGES, languageMeta } from '@/i18n/config';
 import { TOTAL_KEYS, localeCoverage } from '@/i18n';
@@ -16,10 +17,11 @@ import type { PhotoCredit } from './page';
 import { CACHE_TTL } from '@/lib/cache';
 import { APP_VERSION, CONTACT_EMAIL, REPO_URL, SITE_URL, hasEmailContact } from '@/lib/site';
 import { NEWS_FEEDS, TRANSIT_FEEDS } from '@/data/feeds';
-import { RESOURCES, lastReviewedOn, reviewBacklog, verificationLevel } from '@/data/resources';
+import { RESOURCES, lastReviewedOn, reviewBacklog } from '@/data/resources';
 import { TRANSIT_DATA_AS_OF } from '@/data/transit';
 import { SourceMark } from '@/components/sources/SourceMark';
-import { FEED_SOURCE, SOURCES, type SourceId } from '@/data/sources';
+import { PhotoCredit as CommonsPhotoCredit } from '@/components/sources/PhotoCredit';
+import { FEED_SOURCE, SOURCE_CADENCE_KEYS, SOURCE_LICENCE_KEYS, SOURCES, type SourceId } from '@/data/sources';
 import { Compass, GitFork as Github, Heart, Target } from 'lucide-react';
 import type { TranslationKey } from '@/i18n/en';
 
@@ -53,6 +55,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
   // connection restored, Settings → Refresh now), so the live-source statuses
   // on this page never sit on a stale reading.
   const dataEpoch = useAppStore((s) => s.dataEpoch);
+  const now = useHydratedNow(60_000);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,8 +71,8 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
     };
   }, [dataEpoch]);
 
-  const backlog = reviewBacklog();
-  const freshCount = RESOURCES.filter((resource) => verificationLevel(resource) === 'fresh').length;
+  const backlog = now === null ? null : reviewBacklog(new Date(now));
+  const freshCount = backlog ? RESOURCES.length - backlog.needsReview : null;
   const minutes = (ms: number) => Math.round(ms / 60_000);
 
   return (
@@ -79,7 +82,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
           <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <Image
               src="/img/dorchester-bay-sunset.jpg"
-              alt="Dorchester Bay at sunset, seen from the bridge at the mouth of the Neponset River"
+              alt={t('about.photo.bay')}
               width={1600}
               height={900}
               priority
@@ -88,7 +91,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-2.5">
               <p className="font-heading text-[11px] text-white/85">
-                {t('about.photoCredits')}: {credits.find((credit) => credit.file.includes('dorchester-bay-sunset'))?.note ?? 'Dorchester Bay at sunset'}
+                {t('about.photo.bay')} · <CommonsPhotoCredit className="text-white/90" commonsFile="Dorchester_Bay_Boston_Harbor_sunset.jpg" author="Sswonk" license="3.0" />
               </p>
             </div>
           </div>
@@ -112,29 +115,29 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
           <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <Image
               src="/img/hoods/fields-corner.jpg"
-              alt="An inbound Red Line train arriving at Fields Corner station, July 2021"
+              alt={t('about.photo.train')}
               width={1200}
               height={800}
               className="h-40 w-full object-cover"
               sizes="(min-width: 640px) 50vw, 100vw"
             />
             <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              {credits.find((credit) => credit.file.includes('fields-corner'))?.note ??
-                'Fields Corner station — photo by Hutima, CC BY-SA 4.0.'}
+              <p>{t('about.photo.train')}</p>
+              <CommonsPhotoCredit commonsFile="Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg" author="Hutima" license="4.0" />
             </figcaption>
           </figure>
           <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <Image
-              src="/img/hoods/codman-square.jpg"
-              alt="Edward Everett Square in Dorchester, at the Columbia Road end of the Codman Square–Uphams Corner corridor"
-              width={500}
-              height={375}
+              src="/img/hoods/codman-square-church-2019.jpg"
+              alt={t('about.photo.square')}
+              width={1200}
+              height={800}
               className="h-40 w-full object-cover"
               sizes="(min-width: 640px) 50vw, 100vw"
             />
             <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              {credits.find((credit) => credit.file.includes('codman-square'))?.note ??
-                'Edward Everett Square, Dorchester — photo by John Phelan, CC BY-SA 3.0.'}
+              <p>{t('about.photo.square')}</p>
+              <CommonsPhotoCredit commonsFile="Second_Church_in_Dorchester.jpg" author="Staruski1" license="4.0" />
             </figcaption>
           </figure>
         </div>
@@ -143,56 +146,51 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
         <section aria-labelledby="mission" className="dor101-glass rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-5">
           <h2 id="mission" className="flex items-center gap-2 font-heading text-lg font-bold">
             <Compass className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" />
-            What DOR101 is
+            {t('about.mission.title')}
           </h2>
           <div className="mt-3 grid gap-5 md:grid-cols-3">
             <div>
               <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
-                <Target className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> The goal
+                <Target className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> {t('about.mission.goal')}
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                One place where a Dorchester resident can find housing help, food, transit and legal rights <em>tonight</em>, in their own language, without an account, an ad, or a
-                phone tree. The measure of success is whether someone who opens this on a library computer at 4:45 PM finds a pantry that is still open and a bus that gets them there.
+                {t('about.mission.goalBody')}
               </p>
             </div>
             <div>
               <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
-                <Heart className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> Who made it
+                <Heart className="h-4 w-4 text-[var(--color-accent-secondary)]" aria-hidden="true" /> {t('about.mission.maker')}
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                I&apos;m <strong>Yeisbel</strong>. I wrote the code, I check every listing against the organisation that publishes it, and I run the site. It is not a city
-                service, a non-profit&apos;s product or a startup, and no organisation stands behind it. There is no team, no board and no outside contributors: the public commit history and
-                the issue tracker are the whole record of my work.
+                {t('about.mission.makerBody')}
               </p>
             </div>
             <div>
               <h3 className="flex items-center gap-1.5 font-heading text-sm font-bold">
-                <Github className="h-4 w-4" aria-hidden="true" /> How it is run
+                <Github className="h-4 w-4" aria-hidden="true" /> {t('about.mission.run')}
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                Open source under the MIT licence. The code, the listing data and every correction are public. There is no analytics, no tracking, no third-party script; fonts and icons ship from
-                this server. It also runs as a Windows desktop app for machines with no reliable internet. I keep it going, and AI tools helped me build it — both are stated plainly
-                below.
+                {t('about.mission.runBody')}
               </p>
             </div>
           </div>
           <div className="mt-4 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-bg-primary)]/70 p-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            <p className="font-heading font-bold text-[var(--color-text-primary)]">Three promises, and what they mean in practice</p>
+            <p className="font-heading font-bold text-[var(--color-text-primary)]">{t('about.mission.promises')}</p>
             <ol className="mt-1.5 list-decimal space-y-1 ps-5">
-              <li><strong>Nothing invented.</strong> A number that cannot be traced to a public dataset or a named organisation is not shown. Where data is missing the page says “unavailable”.</li>
-              <li><strong>Nothing hidden.</strong> Every listing prints the date it was last checked. Every feed and API is named on this page with how often it is read.</li>
-              <li><strong>Nothing sold.</strong> No organisation pays to appear, nothing is ranked by payment, and no visitor data leaves this browser.</li>
+              <li>{t('about.mission.accuracy')}</li>
+              <li>{t('about.mission.transparency')}</li>
+              <li>{t('about.mission.funding')}</li>
             </ol>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <a href={REPO_URL} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-3.5 py-2 font-heading text-xs font-bold text-white">
-              <Github className="h-3.5 w-3.5" aria-hidden="true" /> Source code on GitHub
+              <Github className="h-3.5 w-3.5" aria-hidden="true" /> {t('about.sourceCode')}
             </a>
             <a href={`${REPO_URL}/issues`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3.5 py-2 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]">
-              Report an issue
+              {t('about.reportIssue')}
             </a>
             <a href={`${REPO_URL}/blob/main/README.md`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3.5 py-2 font-heading text-xs font-bold transition-colors hover:border-[var(--color-accent-primary)]">
-              How to contribute
+              {t('about.contribute')}
             </a>
           </div>
 
@@ -221,6 +219,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
           <h2 className="font-heading text-base font-bold">{t('about.maintained')}</h2>
           <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.maintainedBody')}</p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.freshnessNote')}</p>
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
@@ -232,13 +231,17 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
           </ol>
           <dl className="mt-3 grid gap-2 sm:grid-cols-3">
             <Stat label={t('dashboard.footer.verified')} value={format.date(lastReviewedOn(), 'medium')} icon={<BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />} />
-            <Stat label={t('resources.count', { count: String(RESOURCES.length) })} value={`${format.number(freshCount)} / ${format.number(RESOURCES.length)}`} icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />} />
-            <Stat
-              label={t('notifications.reviewBacklog', { count: String(backlog.needsReview) })}
-              value={backlog.needsReview > 0 ? t('directory.staleWarning') : t('map.alertsNone')}
-              icon={<CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />}
-              warn={backlog.needsReview > 0}
-            />
+            <Stat label={t('resources.count', { count: format.number(RESOURCES.length) })} value={freshCount === null ? t('common.loading') : `${format.number(freshCount)} / ${format.number(RESOURCES.length)}`} icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />} />
+            {backlog ? (
+              <Stat
+                label={t('notifications.reviewBacklog', { count: format.number(backlog.needsReview) })}
+                value={backlog.needsReview > 0 ? t('directory.staleWarning') : t('map.alertsNone')}
+                icon={<CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />}
+                warn={backlog.needsReview > 0}
+              />
+            ) : (
+              <Stat label={t('directory.needsReview')} value={t('common.loading')} icon={<CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />} />
+            )}
           </dl>
         </section>
 
@@ -315,9 +318,9 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-4">
-          <h2 className="font-heading text-base font-bold">Every publisher this site cites</h2>
+          <h2 className="font-heading text-base font-bold">{t('about.publisherTitle')}</h2>
           <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Each badge is a link. The monograms are drawn by this project in the publisher&apos;s public colour; their real logos are trademarks and are not redistributed in an open-source repository.
+            {t('about.publisherBody')}
           </p>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {(Object.keys(SOURCES) as SourceId[]).map((id) => (
@@ -325,8 +328,8 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                 <SourceMark id={id} size="md" />
                 <div className="min-w-0 text-xs leading-snug">
                   <p className="font-heading font-bold">{SOURCES[id].name}</p>
-                  <p className="mt-0.5 text-[var(--color-text-secondary)]">{SOURCES[id].provides}</p>
-                  <p className="mt-0.5 text-[var(--color-text-muted)]">{SOURCES[id].cadence}{SOURCES[id].licence ? ` · ${SOURCES[id].licence}` : ''}</p>
+                  <p className="mt-0.5 text-[var(--color-text-secondary)]">{t(`sources.info.${id}`)}</p>
+                  <p className="mt-0.5 text-[var(--color-text-muted)]">{SOURCE_CADENCE_KEYS[id] ? t(SOURCE_CADENCE_KEYS[id]!) : SOURCES[id].cadence}{SOURCES[id].licence ? ` · ${SOURCE_LICENCE_KEYS[id] ? t(SOURCE_LICENCE_KEYS[id]!) : SOURCES[id].licence}` : ''}</p>
                 </div>
               </li>
             ))}
@@ -349,13 +352,12 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                         obvious way back, so this hands over to the control that
                         owns the change and states its own destination. */}
                     <Link href="/settings#language" className="font-heading text-xs font-bold hover:underline" title={t('lang.change')}>
-                      {language.nativeName}
+                      <span lang={language.contentLocale} dir={language.dir}>{language.nativeName}</span>
                     </Link>
                     <span className="ms-1.5 text-[10px] uppercase text-[var(--color-text-muted)]">{language.code2}</span>
                   </span>
                   <span className="shrink-0 font-heading text-xs font-bold tabular-nums">
-                    {format.percent(coverage.percent / 100)}
-                    <span className="ms-1 font-normal text-[var(--color-text-muted)]">{t('lang.coverageValue', { percent: String(coverage.translated), total: String(TOTAL_KEYS) })}</span>
+                    <span className="font-normal text-[var(--color-text-muted)]">{t('lang.coverageValue', { percent: coverage.percent, total: TOTAL_KEYS })}</span>
                   </span>
                 </li>
               );
@@ -400,7 +402,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
                     rel="noreferrer noopener"
                     className="mt-0.5 block text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2"
                   >
-                    Commons file page
+                    {t('about.commonsPage')}
                   </a>
                 )}
               </li>
@@ -413,7 +415,7 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
             </Link>
           </p>
           <p className="mt-2 text-[11px] leading-snug text-[var(--color-text-muted)]" dir="auto">
-            {t('common.updated')}: {format.date(new Date(), 'long')} · {SITE_URL.replace(/^https?:\/\//, '')} · {languageMeta(lang).intlLocale}
+            {SITE_URL.replace(/^https?:\/\//, '')} · {languageMeta(lang).contentLocale}
           </p>
         </section>
       </div>

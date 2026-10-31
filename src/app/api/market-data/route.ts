@@ -126,11 +126,11 @@ export async function GET() {
   // card reports the gap honestly instead of using a remembered number.
   const monthlyAtWage =
     wage.rateCents != null
-      ? Math.floor(((wage.rateCents / 100) * 40 * 52) / 12 / 100) * 100
+      ? ((wage.rateCents / 100) * 40 * 52) / 12
       : null;
   const affordable = monthlyAtWage != null ? Math.round(monthlyAtWage * 0.3) : null;
   const gap =
-    metrics.medianGrossRent != null && affordable != null
+    metrics.medianGrossRent != null && metrics.medianGrossRent > 0 && affordable != null
       ? Math.round(((metrics.medianGrossRent - affordable) / metrics.medianGrossRent) * 1000) / 10
       : null;
 
@@ -180,7 +180,7 @@ export async function GET() {
       affordableRentAtWage: affordable != null && wage.rateCents != null ? { wageCents: wage.rateCents, monthly: affordable } : null,
       gapPercent: gap,
       method:
-        'Affordable rent = 30% of monthly earnings at the Massachusetts minimum wage as published by the Commonwealth (40 hours/week). Gap is the share of the median gross rent that a minimum-wage household cannot cover.',
+        'Affordable rent = 30% of gross monthly earnings at the Massachusetts minimum wage (40 hours/week, 52 weeks/year). Gap is the portion of median gross rent above that guideline; a negative gap means the guideline amount exceeds rent. This is illustrative, not a determination of personal affordability.',
     },
     listings: {
       status: 'none',

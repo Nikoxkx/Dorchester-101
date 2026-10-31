@@ -16,7 +16,7 @@ export const metadata = {
   alternates: { canonical: '/resources' },
   ...socialMetadata({
     title: 'Dorchester resource directory',
-    description: 'Every listing carries its own verification date. Nothing is presented as checked when it is not.',
+    description: 'Listing review dates are shown; contact providers to confirm current details.',
     url: `${SITE_URL}/resources`,
   }),
 };

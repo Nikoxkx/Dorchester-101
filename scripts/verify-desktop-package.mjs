@@ -356,6 +356,7 @@ function checkStructure() {
   add('electron/main.js', isRealFile(at('electron', 'main.js')), 'the exe has no entry point without it');
   add('electron/preload.js', isRealFile(at('electron', 'preload.js')), 'the IPC bridge is referenced by main.js');
   add('package.json', isRealFile(at('package.json')));
+  add('src/lib/social-image.json (imported by next.config.ts)', isRealFile(at('src', 'lib', 'social-image.json')));
   add('.next/BUILD_ID', isRealFile(at('.next', 'BUILD_ID')));
   add('.next/required-server-files.json', isRealFile(at('.next', 'required-server-files.json')));
   add('node_modules/next (server runtime)', isRealFile(at('node_modules', 'next', 'package.json')));
@@ -365,6 +366,7 @@ function checkStructure() {
 
   // The build cache is 100 MB of nothing at runtime.
   add('.next/cache excluded', !fs.existsSync(at('.next', 'cache')), '', false);
+  add('.next/dev excluded', !fs.existsSync(at('.next', 'dev')), 'development artifacts must not ship');
 
   // No devDependencies should have travelled along.
   for (const devOnly of ['typescript', 'electron', 'electron-builder', 'vitest', 'playwright']) {

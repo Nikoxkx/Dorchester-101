@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Bell, Check, Clock, ExternalLink, House, RefreshCw, UtensilsCrossed } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n/hook';
+import { matchesContentLanguage } from '@/i18n/contentLanguage';
+import { formatClockMinutesForLocale } from '@/lib/hours';
 import { useAppStore } from '@/stores/appStore';
 import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { useLivePolling } from '@/hooks/useLivePolling';
@@ -32,6 +34,8 @@ interface DerivedNotification {
   occurredAt: string;
   expiresAt?: string;
   sourceLabel: string;
+  contentLanguage?: string;
+  sourceKey?: string;
   sourceUrl?: string;
 }
 
@@ -39,7 +43,7 @@ interface Payload {
   notifications: DerivedNotification[];
   total: number;
   status: 'ok' | 'quiet' | 'degraded';
-  alertsSource: 'mbta' | 'unavailable';
+  alertsSource: 'mbta' | 'partial' | 'unavailable' | 'disabled';
   generatedAt: string;
   localTime: string;
 }
@@ -72,7 +76,7 @@ const PRIORITY_STYLE = {
 } as const;
 
 export function NotificationPanel() {
-  const { t, format } = useI18n();
+  const { t, format, lang, meta } = useI18n();
   const announce = useAnnounce();
   const followed = useAppStore((s) => s.enabledTransitFeeds);
   const [open, setOpen] = useState(false);
@@ -82,19 +86,35 @@ export function NotificationPanel() {
   const [error, setError] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const requestSequence = useRef(0);
   // System notifications are raised once per id per visit, and only while the
   // tab is in the background — a notification over the open panel would be noise.
   const sysNotified = useRef<Set<string>>(new Set());
 
+  const localizedParams = useCallback((item: DerivedNotification) => ({
+    ...item.params,
+    ...(typeof item.params.closesAtMinutes === 'number' ? { closesAt: formatClockMinutesForLocale(item.params.closesAtMinutes, meta.intlLocale) } : {}),
+    ...(typeof item.params.minutes === 'number' ? { minutes: format.number(item.params.minutes) } : {}),
+  }), [format, meta.intlLocale]);
+  const sourceFor = useCallback((item: DerivedNotification) => item.sourceKey
+    ? t(item.sourceKey as TranslationKey) : item.sourceLabel, [t]);
+
   const load = useCallback(
     async (options: { silent?: boolean } = {}) => {
+      const requestId = ++requestSequence.current;
       if (!options.silent) setLoading(true);
       try {
-        const res = await fetch(`/api/notifications?lines=${encodeURIComponent(followed.join(','))}&categories=food,housing`, {
+        // Settings stores feed ids, not MBTA route ids. All alerts covers the
+        // Dorchester feed; CR-only narrows it to the Fairmount Line.
+        const allAlerts = followed.includes('mbta-alerts');
+        const commuterRail = followed.includes('mbta-cr');
+        const lines = !allAlerts && commuterRail ? 'CR-Fairmount' : '';
+        const res = await fetch(`/api/notifications?lines=${encodeURIComponent(lines)}&transit=${allAlerts || commuterRail ? '1' : '0'}&categories=food,housing&lang=${encodeURIComponent(lang)}`, {
           cache: 'no-store',
         });
         if (!res.ok) throw new Error(String(res.status));
         const json = (await res.json()) as Payload;
+        if (requestId !== requestSequence.current) return;
         setData(json);
         setError(false);
         const fresh = json.notifications.filter((n) => !read.has(n.id));
@@ -107,27 +127,27 @@ export function NotificationPanel() {
             .find((n) => !sysNotified.current.has(n.id));
           if (urgent) {
             sysNotified.current.add(urgent.id);
-            notifyIfAllowed(t(urgent.titleKey as TranslationKey, urgent.params), {
-              body: `${urgent.sourceLabel} · DOR101`,
+            notifyIfAllowed(t(urgent.titleKey as TranslationKey, localizedParams(urgent)), {
+              body: `${sourceFor(urgent)} · DOR101`,
               tag: urgent.id,
             });
           }
         }
       } catch {
-        setError(true);
+        if (requestId === requestSequence.current) setError(true);
       } finally {
-        setLoading(false);
+        if (requestId === requestSequence.current) setLoading(false);
       }
     },
     // `read` intentionally excluded: it changes on every click and must not re-trigger a fetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [announce, followed, t]
+    [announce, followed, lang, t, localizedParams, sourceFor]
   );
 
   // Identity-stable wrapper (see the note in useLivePolling): an inline arrow
   // here would re-trigger the fetch effect on every render and loop forever.
   const loadSilent = useCallback(() => void load({ silent: true }), [load]);
-  useLivePolling(loadSilent, { minMs: POLL_MS });
+  useLivePolling(loadSilent, { minMs: POLL_MS, requestKey: `${lang}:${followed.join(',')}` });
 
   useEffect(() => {
     if (!open) return;
@@ -243,13 +263,16 @@ export function NotificationPanel() {
             </header>
 
             <div className="max-h-[60vh] overflow-y-auto">
+              {(data?.alertsSource === 'unavailable' || data?.alertsSource === 'partial') && <p className="px-4 pt-3 text-xs text-[var(--color-accent-amber)]">{t('notifications.alertsUnavailable')}</p>}
               {error && !data ? (
                 <p className="p-4 text-sm text-[var(--color-accent-secondary)]">{t('settings.refreshFailed')}</p>
+              ) : !data ? (
+                <p className="p-4 text-sm text-[var(--color-text-muted)]" role="status">{t('common.loading')}</p>
               ) : items.length === 0 ? (
                 <div className="p-4 text-center">
                   <p className="text-sm font-heading text-[var(--color-text-secondary)]">{t('notifications.empty')}</p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                    {data?.status === 'degraded' ? t('map.predictionsFailed') : t('map.alertsNone')}
+                    {data.alertsSource === 'mbta' ? t('notifications.emptyTransit') : null}
                   </p>
                 </div>
               ) : (
@@ -263,10 +286,13 @@ export function NotificationPanel() {
                           <Icon className="mt-0.5 w-4 h-4 shrink-0 text-[var(--color-accent-primary)]" aria-hidden="true" />
                           <div className="min-w-0 flex-1">
                             <p className={cn('text-sm leading-snug', isUnread ? 'font-heading font-semibold' : 'text-[var(--color-text-secondary)]')}>
-                              {t(item.titleKey as TranslationKey, item.params)}
+                              {item.kind === 'transit'
+                                ? <span lang={item.contentLanguage ?? 'en'} dir="auto">{t(item.titleKey as TranslationKey, localizedParams(item))}</span>
+                                : t(item.titleKey as TranslationKey, localizedParams(item))}
                             </p>
+                            {item.kind === 'transit' && !matchesContentLanguage(item.contentLanguage ?? 'en', lang) && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('notifications.transitOriginal')}</p>}
                             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[var(--color-text-muted)]">
-                              <span>{item.sourceLabel}</span>
+                              <span>{sourceFor(item)}</span>
                               <span aria-hidden="true">·</span>
                               <time dateTime={item.occurredAt}>{format.relative(item.occurredAt)}</time>
                               <span className="rounded-[var(--radius-pill)] bg-[var(--color-bg-tertiary)] px-1.5 py-0.5 font-heading">
@@ -317,7 +343,11 @@ export function NotificationPanel() {
 
             <footer className="flex items-center justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-[11px] text-[var(--color-text-muted)]">
               <span>{t('notifications.footer')}</span>
-              {data?.localTime && <span className="font-mono">{data.localTime.split(', ')[1] ?? data.localTime}</span>}
+              {data?.generatedAt && !Number.isNaN(Date.parse(data.generatedAt)) && (
+                <time dateTime={data.generatedAt} className="font-mono">
+                  {new Intl.DateTimeFormat(meta.intlLocale, { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }).format(new Date(data.generatedAt))}
+                </time>
+              )}
             </footer>
           </motion.div>
         )}

@@ -5,8 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight, Home } from 'lucide-react';
 import { useI18n } from '@/i18n/hook';
 import { SITE_URL } from '@/lib/site';
-import { NAV_LABEL_KEY } from '@/lib/searchIndex';
-import type { TranslationKey } from '@/i18n/en';
+import { NAV_LABEL_KEY } from '@/i18n/pageTitles';
 import { cn } from '@/lib/utils';
 
 /**
@@ -26,7 +25,7 @@ export function Breadcrumbs({ compact = false }: { compact?: boolean }) {
     { href: '/', label: t('nav.dashboard') },
     ...segments.map((segment, index) => {
       const href = `/${segments.slice(0, index + 1).join('/')}`;
-      const key = NAV_LABEL_KEY[href] as TranslationKey | undefined;
+      const key = NAV_LABEL_KEY[href];
       return {
         href,
         label: key ? t(key) : decodeURIComponent(segment).replace(/-/g, ' '),

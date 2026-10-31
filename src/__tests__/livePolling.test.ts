@@ -84,6 +84,20 @@ describe("useLivePolling", () => {
     });
   });
 
+  it("runs the latest language or filter after an in-flight request without overlapping", async () => {
+    const first = deferred();
+    const second = deferred();
+    const calls = vi.fn().mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise);
+    const { rerender } = renderHook(({ key }) => useLivePolling(() => calls(key), { requestKey: key }), { initialProps: { key: 'en' } });
+    rerender({ key: 'es' });
+    rerender({ key: 'ar' });
+    expect(calls).toHaveBeenCalledTimes(1);
+    await act(async () => { first.resolve(); await vi.advanceTimersByTimeAsync(0); });
+    expect(calls).toHaveBeenCalledTimes(2);
+    expect(calls).toHaveBeenLastCalledWith('ar');
+    await act(async () => { second.resolve(); await vi.advanceTimersByTimeAsync(0); });
+  });
+
   it("reports the interval actually in force, never below the panel minimum", () => {
     useAppStore.getState().setRefreshIntervalMinutes(1);
     const { result } = renderHook(() => useLivePolling(() => Promise.resolve(), { minMs: 300_000 }));

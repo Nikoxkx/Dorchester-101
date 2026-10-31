@@ -29,7 +29,7 @@ export function HousingStartHere({ onLearnMore }: { onLearnMore: () => void }) {
         <button type="button" onClick={onLearnMore} className="rounded-full bg-[var(--color-accent-primary)] px-3.5 py-1.5 font-heading font-bold text-white">
           {t('primer.stepByStep')}
         </button>
-        <Link href="/tools" className="rounded-full border border-[var(--color-border)] px-3.5 py-1.5 font-heading font-bold no-underline hover:border-[var(--color-accent-primary)]">
+        <Link href="/tools#ami" className="rounded-full border border-[var(--color-border)] px-3.5 py-1.5 font-heading font-bold no-underline hover:border-[var(--color-accent-primary)]">
           {t('primer.findBand')}
         </Link>
         <span className="ms-auto inline-flex items-center gap-1.5 text-[var(--color-text-muted)]">
@@ -105,11 +105,11 @@ export function HowToApply() {
             <p className="mt-1.5 text-[var(--color-text-secondary)]">{t('primer.metrolistCard')}</p>
           </a>
           <a href="https://housingnavigatorma.org" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-[var(--color-border)] p-3 no-underline hover:border-[var(--color-accent-primary)]">
-            <SourceMark id="massgov" size="sm" withName asSpan />
+            <span className="font-heading font-semibold">{t('housing.operator.navigator')}</span>
             <p className="mt-1.5 text-[var(--color-text-secondary)]">{t('primer.navigatorCard')}</p>
           </a>
         </div>
-        <Cite id="bostongov" note={t('primer.citeNote')} href="https://www.boston.gov/departments/housing/income-restricted-housing" className="mt-3" />
+        <Cite id="bostongov" note={t('primer.citeNote')} href="https://www.boston.gov/income-restricted-housing-guide" className="mt-3" />
       </CardContent>
     </Card>
   );

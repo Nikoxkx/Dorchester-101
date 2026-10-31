@@ -1,6 +1,6 @@
 # Vercel Free-Tier Operations — What’s on, what it costs (nothing), and how to not hit caps
 
-Project: `dorchester-101` (team `team-tung-tung-yaya`, Hobby plan = $0).
+This is a historical operations guide. Check current Vercel plan limits, pricing and deployed configuration; the estimates below are not guarantees.
 
 ## Caps you’ll actually encounter
 
@@ -19,7 +19,7 @@ Project: `dorchester-101` (team `team-tung-tung-yaya`, Hobby plan = $0).
 | WAF Custom rules | 3 | 3 configured | 0 |
 | Cron executions | 100 crons, 1/day each | 2 crons × 30/mo = 60 invocations | — |
 
-You will not hit any Hobby cap with normal community use. The one that could trip is **Fast Origin Transfer** if you accidentally mark API responses `no-store` forever — we fixed those to 60–3600 s `s-maxage` so they cache.
+Usage and limits can change; monitor the actual project rather than assuming these estimates will remain under plan limits. The one that could trip is **Fast Origin Transfer** if you accidentally mark API responses `no-store` forever — we fixed those to 60–3600 s `s-maxage` so they cache.
 
 ## What’s automatic on Vercel (cost: $0, you don’t touch it)
 
@@ -37,7 +37,7 @@ You will not hit any Hobby cap with normal community use. The one that could tri
 - `headers` → HSTS, DNS prefetch, CDN cache times for `_next/static`, `img/`, `sw.js`, `api/health`
 - `redirects` → `/home`→`/`, `/index.html`→`/`, normalised trailing slashes
 - `rewrites` → `/.well-known/security.txt` → `/security.txt` (RFC 9116 path)
-- `crons` → `/api/cron/refresh` daily 09:00 UTC, `/api/health` hourly (Hobby throttles hourly to daily — harmless)
+- `crons` → `/api/cron/refresh` daily 09:00 UTC, `/api/health` daily 12:00 UTC
 - `github.silent: true` → fewer bot comments on PRs
 
 ### middleware.ts (Edge)
@@ -72,7 +72,7 @@ No secret is committed to git.
    - Block empty UA: `http.user_agent == ""` → Block
    - Rate-limit API: `http.request.uri.path contains "/api/"` → Enforce rate limit 100 req / 60 s → Challenge
    - Block bad probes: `http.request.uri.path contains "/.env"` → Block
-2. **Web Analytics & Speed Insights** are already wired in code (`<Analytics/>` + `<SpeedInsights/>`). Just visit the prod URL a few times → data appears in **Analytics** and **Observability → Speed Insights** within minutes.
+2. **Web Analytics & Speed Insights** require the host to enable the services and the visitor to opt in. Verify actual deployed behaviour and consent withdrawal; do not assume a visit automatically produces events.
 3. **Custom domain** (optional) → see `docs/DOMAIN-SETUP.md`.
 
 ## What we deliberately did NOT add

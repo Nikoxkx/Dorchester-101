@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 /**
  * The map as a card preview: real tiles, no symbols, no controls.
  *
- * Deliberately just imagery. Route lines and markers are SVG overlays in a
+ * A street-map preview. Route lines and markers are SVG overlays in a
  * Leaflet pane that ignores the card's overflow clipping while the page scrolls,
  * so on the dashboard they used to bleed over neighbouring content; the full,
  * interactive map is one tap away and draws them properly. Dragging, zooming and
@@ -18,16 +18,12 @@ import 'leaflet/dist/leaflet.css';
  */
 const PREVIEW_PROVIDERS = [
   {
-    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-  },
-  {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-  },
-  {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap contributors',
+  },
+  {
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Street map &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
   },
 ];
 

@@ -8,7 +8,7 @@
  * argument is a fraction — and these tests hold it there.
  */
 import { describe, expect, it } from 'vitest';
-import { formatCurrency, formatNumber, formatPercent } from '@/i18n/formatters';
+import { formatCurrency, formatDate, formatNumber, formatPercent, formatYear } from '@/i18n/formatters';
 import { localeCoverage } from '@/i18n';
 
 describe('formatPercent', () => {
@@ -44,6 +44,18 @@ describe('the other formatters', () => {
     expect(formatCurrency(15, 'en', { cents: true })).toBe('$15.00');
   });
 
+  it('keeps date-only records on their calendar day in western time zones', () => {
+    const original = process.env.TZ;
+    try {
+      process.env.TZ = 'America/New_York';
+      expect(formatDate('2026-10-18', 'en')).toBe('October 18, 2026');
+      expect(formatDate('2026-10-18', 'es')).toBe('18 de octubre de 2026');
+    } finally {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    }
+  });
+
   it('groups thousands in the active locale', () => {
     expect(formatNumber(327167, 'en')).toBe('327,167');
   });
@@ -56,5 +68,15 @@ describe('locale coverage', () => {
     expect(coverage.translated).toBe(coverage.total);
     // The About page passes `coverage.percent / 100` to the formatter.
     expect(formatPercent(coverage.percent / 100, 'en', 0)).toBe('100%');
+  });
+});
+
+
+describe('formatYear', () => {
+  it('keeps locale digits without inserting a thousands separator', () => {
+    expect(formatYear(2026, 'en')).toBe('2026');
+    expect(formatYear(2026, 'pt')).toBe('2026');
+    expect(formatYear(2026, 'ar')).toBe(new Intl.NumberFormat('ar', { useGrouping: false }).format(2026));
+    expect(formatNumber(2026, 'en')).toBe('2,026');
   });
 });

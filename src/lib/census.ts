@@ -2,7 +2,7 @@
  * US Census Bureau American Community Survey reader.
  *
  * Dorchester does not have its own tab in ACS, so the honest unit of analysis
- * is Suffolk County, which is coterminous with the City of Boston. The library
+ * is Suffolk County (Boston, Chelsea, Revere, and Winthrop). The library
  * requests a fixed variable set, tolerates a missing vintage, and never fills a
  * gap with a plausible-looking number: an absent estimate stays absent and the
  * caller must show that.
@@ -43,7 +43,7 @@ const SNAPSHOT_DEADLINE_MS = 20_000;
 const SERIES_DEADLINE_MS = 18_000;
 
 /**
- * Suffolk County, Massachusetts == the City of Boston.
+ * Suffolk County, Massachusetts includes Boston, Chelsea, Revere, and Winthrop.
  * FIPS 25025 (state 25, county 025). `county:017` would be Middlesex County,
  * which is not Boston — a wrong-geography bug is worse than no data, so this is
  * asserted in a unit test alongside the API URL.
@@ -432,7 +432,7 @@ export async function fetchBostonAcs(): Promise<AcsResponse> {
   // is labelled as a capture; a blank dashboard helps no one make a decision.
   const fallback: AcsResponse = {
     vintage: vintageLabel(ACS_SNAPSHOT.vintage),
-    geography: `${ACS_SNAPSHOT.geography} (City of Boston)`,
+    geography: ACS_SNAPSHOT.geography,
     retrievedAt: ACS_SNAPSHOT.capturedAt,
     source: 'census-snapshot',
     snapshot: true,
@@ -453,10 +453,10 @@ export interface DerivedMetrics {
   medianOwnerCosts: number | null;
   medianHomeValue: number | null;
   renterShare: number | null;
-  /** Share of renter households whose gross rent exceeds 30% / 40% of income. */
+  /** Share in ACS categories at or above 30% / 40% of household income. */
   burden30: number | null;
   burden40: number | null;
-  /** Months of income needed for a deposit-plus-first-month move-in. */
+  /** Illustrative months of income for twice median gross rent, including utilities. */
   moveInCost: number | null;
   /** Median gross rent as a share of income, straight from B25071. */
   medianRentBurden: number | null;
@@ -484,7 +484,8 @@ export function deriveMetrics(estimates: Record<string, AcsEstimate>): DerivedMe
 
   const grossRent = v('medianGrossRent');
   const income = v('medianHouseholdIncome');
-  const moveInCost = grossRent && income ? Math.round(((grossRent * 1 + grossRent) / (income / 12)) * 10) / 10 : null;
+  // Gross rent includes utilities; twice this is only a rough illustration, not an actual deposit.
+  const moveInCost = grossRent && income ? Math.round(((grossRent * 2) / (income / 12)) * 10) / 10 : null;
 
   const bins: Array<[string, keyof typeof ACS_VARIABLES]> = [
     ['< 10%', 'rentBurdenUnder10'],

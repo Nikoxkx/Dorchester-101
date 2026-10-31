@@ -22,7 +22,9 @@ export function AddToCalendar({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.ics`;
+    // Keep letters from every supported writing system in the downloaded file name.
+    const filename = event.title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
+    a.download = `${filename || 'dor101-reminder'}.ics`;
     document.body.appendChild(a);
     a.click();
     a.remove();

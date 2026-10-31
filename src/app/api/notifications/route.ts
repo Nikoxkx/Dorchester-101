@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { fetchAlerts } from '@/lib/mbta';
 import { RESOURCES, verificationLevel, type ResourceCategory } from '@/data/resources';
-import { zonedParts, BOSTON_TZ } from '@/lib/hours';
+import { statusFor, BOSTON_TZ } from '@/lib/hours';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,10 @@ export interface DerivedNotification {
   occurredAt: string;
   expiresAt?: string;
   sourceLabel: string;
+  /** Language of live transit text, as declared by its publisher. */
+  contentLanguage?: string;
+  /** Optional dictionary key for localizing a category source label. */
+  sourceKey?: string;
   sourceUrl?: string;
 }
 
@@ -43,20 +48,11 @@ const CATEGORY_TITLES: Record<ResourceCategory, string> = {
   school: 'Classes and school',
 };
 
-function todayWindows(now: Date) {
-  const { weekday } = zonedParts(now, BOSTON_TZ);
-  return RESOURCES.map((record) => ({
-    record,
-    windows: (record.hours?.[weekday] ?? []).map((w) => {
-      const minutes = now.getHours() * 60 + now.getMinutes();
-      return { ...w, openNow: minutes >= w.startsAt && minutes < w.endsAt };
-    }),
-  }));
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const now = new Date();
+  const language = z.enum(['en', 'es', 'ht', 'pt', 'vi', 'zh', 'ar', 'so', 'kea']).catch('en').parse(url.searchParams.get('lang'));
 
   const followed = (url.searchParams.get('lines') ?? '')
     .split(',')
@@ -71,13 +67,16 @@ export async function GET(request: Request) {
 
   const items: DerivedNotification[] = [];
 
-  // 1. Real service disruptions on the lines this resident follows.
-  let alertsFailed = false;
+  // 1. Real service disruptions on the lines this resident follows. A disabled
+  // feed is not an outage, and an empty successful feed is not an outage either.
+  const transitEnabled = url.searchParams.get('transit') !== '0';
+  let alertsSource: 'mbta' | 'partial' | 'unavailable' | 'disabled' = transitEnabled ? 'mbta' : 'disabled';
   try {
-    const { alerts, fetchedAt } = await fetchAlerts();
-    const relevant = alerts.filter((alert) => {
-      if (!followed.length) return alert.severity === 'major';
-      return alert.routeIds.some((r) => followed.includes(r));
+    const result = transitEnabled ? await fetchAlerts(language) : null;
+    if (result && result.status !== 'ok') alertsSource = result.status;
+    const relevant = (result?.alerts ?? []).filter((alert) => {
+      if (!followed.length) return true;
+      return alert.routeIds.length === 0 || alert.routeIds.some((r) => followed.includes(r));
     });
     for (const alert of relevant.slice(0, 6)) {
       items.push({
@@ -87,36 +86,40 @@ export async function GET(request: Request) {
         params: { header: alert.header, effect: alert.effect },
         href: '/map',
         priority: alert.severity === 'major' ? 'urgent' : alert.severity === 'minor' ? 'medium' : 'low',
-        occurredAt: alert.lastModified ?? fetchedAt,
+        occurredAt: alert.lastModified ?? result!.fetchedAt,
         expiresAt: alert.validUntil ?? undefined,
         sourceLabel: 'MBTA',
+        contentLanguage: alert.headerLanguage ?? 'en',
         sourceUrl: alert.url ?? 'https://www.mbta.com/alerts',
       });
     }
   } catch {
-    alertsFailed = true;
+    alertsSource = 'unavailable';
   }
 
   // 2. Places in a followed category that are open right now or closing soon.
-  const scored = todayWindows(now)
-    .filter(({ record }) => categories.length === 0 || categories.includes(record.category))
-    .filter(({ windows }) => windows.length > 0);
+  const scored = RESOURCES.filter((record) =>
+    (categories.length === 0 || categories.includes(record.category)) && record.hours,
+  );
 
-  for (const { record, windows } of scored) {
-    const open = windows.find((w) => w.openNow);
-    if (!open) continue;
-    const minutesLeft = open.endsAt - (now.getHours() * 60 + now.getMinutes());
+  for (const record of scored) {
+    const status = statusFor(record.hours!, now, BOSTON_TZ);
+    if (status.state === 'closed' || status.state === 'always-open') continue;
+    const minutesLeft = status.minutesUntilClose;
     if (minutesLeft > 60 && record.category !== 'food') continue;
     items.push({
       id: `open-${record.id}`,
       kind: minutesLeft <= 60 ? 'closing-soon' : 'open-now',
       titleKey: minutesLeft <= 60 ? 'notifications.closingSoon' : 'notifications.openNow',
-      params: { name: record.name, minutes: Math.max(0, minutesLeft), closesAt: formatClock(open.endsAt) },
+      // Keep the legacy text for API clients; the panel formats the numeric
+      // wall-clock minute and count in the reader's selected language.
+      params: { name: record.name, minutes: Math.max(0, minutesLeft), closesAt: formatClock(status.closesAt), closesAtMinutes: status.closesAt },
       href: record.detailHref ?? `/directory#${record.id}`,
       priority: minutesLeft <= 30 ? 'high' : 'medium',
       occurredAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + Math.max(1, minutesLeft) * 60_000).toISOString(),
       sourceLabel: CATEGORY_TITLES[record.category],
+      sourceKey: `map.${record.category}`,
     });
   }
 
@@ -132,7 +135,7 @@ export async function GET(request: Request) {
       href: '/about',
       priority: 'low',
       occurredAt: now.toISOString(),
-      sourceLabel: 'DOR101 data team',
+      sourceLabel: 'DOR101',
     });
   }
 
@@ -145,8 +148,8 @@ export async function GET(request: Request) {
       total: items.length,
       generatedAt: now.toISOString(),
       // Explicit about why the bell may be empty, so the UI never has to guess.
-      status: items.length ? 'ok' : alertsFailed ? 'degraded' : 'quiet',
-      alertsSource: alertsFailed ? 'unavailable' : 'mbta',
+      status: items.length ? 'ok' : alertsSource === 'partial' || alertsSource === 'unavailable' ? 'degraded' : 'quiet',
+      alertsSource,
       followedLines: followed,
       followedCategories: categories,
       timezone: BOSTON_TZ,
@@ -166,7 +169,7 @@ export async function GET(request: Request) {
 }
 
 function formatClock(minutes: number): string {
-  const h24 = Math.floor(minutes / 60);
+  const h24 = Math.floor(minutes / 60) % 24;
   const m = minutes % 60;
   const suffix = h24 >= 12 ? 'PM' : 'AM';
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;

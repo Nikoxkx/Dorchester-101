@@ -56,12 +56,17 @@ describe('winter clothing dataset', () => {
     expect(inSeason(antons, new Date('2026-10-18'))).toBe(true);
     expect(inSeason(antons, new Date('2026-09-01'))).toBe(false);
     expect(inSeason(antons, new Date('2027-02-01'))).toBe(false);
+    // The dates are Boston-local calendar days, inclusive at both boundaries.
+    expect(inSeason(antons, new Date('2026-10-05T03:59:59Z'))).toBe(false);
+    expect(inSeason(antons, new Date('2026-10-05T04:00:00Z'))).toBe(true);
+    expect(inSeason(antons, new Date('2027-01-10T04:59:59Z'))).toBe(true);
+    expect(inSeason(antons, new Date('2027-01-10T05:00:00Z'))).toBe(false);
     const abcd = WINTER_CLOTHING.find((p) => p.id === 'abcd-dorchester-nsc')!;
-    expect(inSeason(abcd, new Date('2026-10-18'))).toBeNull(); // year-round
+    expect(inSeason(abcd, new Date('2026-10-18'))).toBeNull(); // no published dates
   });
 
   it('check age and staleness levels compute from the stamp', () => {
-    const place = WINTER_CLOTHING[0];
+    const place = WINTER_CLOTHING.find((item) => item.id === 'antons-coats-for-kids')!;
     expect(clothingCheckedAge(place, new Date('2026-10-28'))).toBe(10);
     expect(clothingCheckLevel(place, new Date('2026-10-28'))).toBe('fresh');
     expect(clothingCheckLevel(place, new Date('2027-06-01'))).toBe('stale');

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Heart, Keyboard, Mail } from 'lucide-react';
 import { useI18n } from '@/i18n/hook';
 import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
+import { useHydratedNow } from '@/hooks/useNow';
 import { ReportProblem } from '@/components/a11y';
 import { RESOURCES, lastReviewedOn, reviewBacklog } from '@/data/resources';
 import { APP_VERSION, REPO_URL } from '@/lib/site';
@@ -22,7 +23,8 @@ export function SiteFooter() {
   const { t, format } = useI18n();
   const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const reviewed = lastReviewedOn();
-  const backlog = reviewBacklog();
+  const now = useHydratedNow(60_000);
+  const backlog = now === null ? null : reviewBacklog(new Date(now));
 
   return (
     <footer className="mt-12 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/70 backdrop-blur-sm">
@@ -37,9 +39,9 @@ export function SiteFooter() {
               <dt className="font-heading font-semibold text-[var(--color-text-secondary)]">{t('dashboard.footer.verified')}</dt>
               <dd>
                 <time dateTime={reviewed}>{format.date(reviewed, 'medium')}</time>
-                {backlog.needsReview > 0 && (
+                {backlog && backlog.needsReview > 0 && (
                   <span className="ms-2 rounded-[var(--radius-pill)] border border-[var(--color-accent-amber)]/40 px-1.5 py-0.5 text-[10px] text-[var(--color-accent-amber)]">
-                    {t('directory.needsReview')} · {backlog.needsReview}/{backlog.total}
+                    {t('directory.needsReview')} · {format.number(backlog.needsReview)}/{format.number(backlog.total)}
                   </span>
                 )}
               </dd>

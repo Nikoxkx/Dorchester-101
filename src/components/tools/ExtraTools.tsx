@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, CheckCircle2, CircleAlert, Info, KeyRound, Scale, ShieldCheck } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Info, KeyRound, Scale, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Cite } from '@/components/sources/SourceMark';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -18,9 +18,8 @@ import type { TranslationKey } from '@/i18n/en';
  *  - Benefits screener: the thresholds are published each year by DTA,
  *    MassHealth, LIHEAP and the MBTA. A "you may qualify" is a nudge to apply,
  *    never a determination.
- *  - Eviction timeline: the summary-process steps and their statutory minimum
- *    notice periods, so a tenant with a notice in hand knows what happens next
- *    and when to call a lawyer.
+ *  - Eviction guide: general stages and links to legal help, without guessing
+ *    deadlines that depend on the court and the individual case.
  * Nothing typed here leaves the browser.
  */
 
@@ -31,12 +30,19 @@ const field =
 
 export function MoveInCostTool() {
   const { t, format } = useI18n();
-  const [rent, setRent] = useState(2200);
+  const [rentInput, setRent] = useState('2200');
   const [lastMonth, setLastMonth] = useState(true);
   const [deposit, setDeposit] = useState(true);
-  const [lockFee, setLockFee] = useState(0);
-  const [brokerFee, setBrokerFee] = useState(0);
-  const [monthlyIncome, setMonthlyIncome] = useState(4500);
+  const [lockInput, setLockFee] = useState('0');
+  const [brokerInput, setBrokerFee] = useState('0');
+  const [incomeInput, setMonthlyIncome] = useState('4500');
+  const amount = (value: string) => value.trim() ? Number(value) : NaN;
+  const rent = amount(rentInput);
+  const lockFee = amount(lockInput);
+  const brokerFee = amount(brokerInput);
+  const monthlyIncome = amount(incomeInput);
+  const validAmount = (value: number) => Number.isFinite(value) && value >= 0;
+  const hasValidInputs = [rent, lockFee, brokerFee, monthlyIncome].every(validAmount);
 
   const legalMax = rent * (1 + (lastMonth ? 1 : 0) + (deposit ? 1 : 0)) + lockFee;
   const total = legalMax + brokerFee;
@@ -54,13 +60,13 @@ export function MoveInCostTool() {
           <p className="text-sm text-[var(--color-text-secondary)]">
             {t('tool.moveIn.intro')}
           </p>
-          <label className="block text-sm font-heading font-medium">
-            {t('tool.moveIn.rent')}
+          <div>
+            <label htmlFor="move-rent" className="block text-sm font-heading font-medium">{t('tool.moveIn.rent')}</label>
             <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
-              <input type="number" min={0} value={rent} onChange={(e) => setRent(Number(e.target.value))} className={cn(field, 'pl-8')} />
+              <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+              <input id="move-rent" type="number" min={0} step="0.01" value={rentInput} onChange={(e) => setRent(e.target.value)} aria-invalid={!validAmount(rent)} className={cn(field, 'pl-8')} />
             </div>
-          </label>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] p-2.5 text-sm">
               <input type="checkbox" checked={lastMonth} onChange={(e) => setLastMonth(e.target.checked)} className="h-4 w-4 accent-[var(--color-accent-primary)]" />
@@ -72,28 +78,28 @@ export function MoveInCostTool() {
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-heading font-medium">
-              {t('tool.moveIn.lock')}
+            <div>
+              <label htmlFor="move-lock" className="block text-sm font-heading font-medium">{t('tool.moveIn.lock')}</label>
               <div className="relative mt-1.5">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
-                <input type="number" min={0} value={lockFee} onChange={(e) => setLockFee(Number(e.target.value))} className={cn(field, 'pl-8')} />
+                <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+                <input id="move-lock" type="number" min={0} step="0.01" value={lockInput} onChange={(e) => setLockFee(e.target.value)} aria-invalid={!validAmount(lockFee)} className={cn(field, 'pl-8')} />
               </div>
-            </label>
-            <label className="block text-sm font-heading font-medium">
-              {t('tool.moveIn.broker')}
-              <div className="relative mt-1.5">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
-                <input type="number" min={0} value={brokerFee} onChange={(e) => setBrokerFee(Number(e.target.value))} className={cn(field, 'pl-8')} />
-              </div>
-            </label>
-          </div>
-          <label className="block text-sm font-heading font-medium">
-            {t('tool.moveIn.income')}
-            <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
-              <input type="number" min={0} value={monthlyIncome} onChange={(e) => setMonthlyIncome(Number(e.target.value))} className={cn(field, 'pl-8')} />
             </div>
-          </label>
+            <div>
+              <label htmlFor="move-broker" className="block text-sm font-heading font-medium">{t('tool.moveIn.broker')}</label>
+              <div className="relative mt-1.5">
+                <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+                <input id="move-broker" type="number" min={0} step="0.01" value={brokerInput} onChange={(e) => setBrokerFee(e.target.value)} aria-invalid={!validAmount(brokerFee)} className={cn(field, 'pl-8')} />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="move-income" className="block text-sm font-heading font-medium">{t('tool.moveIn.income')}</label>
+            <div className="relative mt-1.5">
+              <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+              <input id="move-income" type="number" min={0} step="0.01" value={incomeInput} onChange={(e) => setMonthlyIncome(e.target.value)} aria-invalid={!validAmount(monthlyIncome)} className={cn(field, 'pl-8')} />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -102,20 +108,23 @@ export function MoveInCostTool() {
           <CardTitle>{t('tool.moveIn.expected')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-xl bg-[var(--color-bg-tertiary)] p-4 text-center">
-            <p className="text-sm text-[var(--color-text-muted)]">{t('tool.moveIn.total')}</p>
-            <p className="font-mono text-3xl font-bold">{format.currency(total, { cents: true })}</p>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {monthlyIncome > 0 ? t('tool.moveIn.monthsOfIncome', { months: monthsOfIncome.toFixed(1) }) : t('tool.moveIn.enterIncome')}
-            </p>
-          </div>
-          <ul className="space-y-1.5 text-sm">
-            <Row label={t('tool.moveIn.rowFirst')} value={rent} />
-            {lastMonth && <Row label={t('tool.moveIn.rowLast')} value={rent} note={t('tool.moveIn.rowLastNote')} />}
-            {deposit && <Row label={t('tool.moveIn.rowDeposit')} value={rent} note={t('tool.moveIn.rowDepositNote')} />}
-            {lockFee > 0 && <Row label={t('tool.moveIn.rowLock')} value={lockFee} />}
-            {brokerFee > 0 && <Row label={t('tool.moveIn.rowBroker')} value={brokerFee} note={t('tool.moveIn.rowBrokerNote')} />}
-          </ul>
+          {!hasValidInputs && <p role="status" className="text-sm text-[var(--color-text-secondary)]">{t('tool.moveIn.invalidInput')}</p>}
+          {hasValidInputs && <>
+            <div className="rounded-xl bg-[var(--color-bg-tertiary)] p-4 text-center">
+              <p className="text-sm text-[var(--color-text-muted)]">{t('tool.moveIn.total')}</p>
+              <p className="font-mono text-3xl font-bold">{format.currency(total, { cents: true })}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                {monthlyIncome > 0 ? t('tool.moveIn.monthsOfIncome', { months: format.decimal(monthsOfIncome, 1) }) : t('tool.moveIn.enterIncome')}
+              </p>
+            </div>
+            <ul className="space-y-1.5 text-sm">
+              <Row label={t('tool.moveIn.rowFirst')} value={rent} />
+              {lastMonth && <Row label={t('tool.moveIn.rowLast')} value={rent} note={t('tool.moveIn.rowLastNote')} />}
+              {deposit && <Row label={t('tool.moveIn.rowDeposit')} value={rent} note={t('tool.moveIn.rowDepositNote')} />}
+              {lockFee > 0 && <Row label={t('tool.moveIn.rowLock')} value={lockFee} />}
+              {brokerFee > 0 && <Row label={t('tool.moveIn.rowBroker')} value={brokerFee} note={t('tool.moveIn.rowBrokerNote')} />}
+            </ul>
+          </>}
           <div className="rounded-lg border border-[var(--color-accent-green)]/40 bg-[var(--color-accent-green)]/10 p-3 text-sm">
             <p className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent-green)]" aria-hidden="true" />
@@ -165,11 +174,9 @@ function Row({ label, value, note }: { label: string; value: number; note?: stri
 const FPL_2026 = (size: number) => 15960 + 5680 * (Math.max(1, size) - 1);
 const LIHEAP_2027: Record<number, number> = { 1: 53585, 2: 70073, 3: 86561, 4: 103049, 5: 119536, 6: 136024, 7: 139116, 8: 142207 };
 /**
- * HUD FY2026 low-income (80%) limits for the Boston-Cambridge-Quincy HMFA,
- * 1–8 persons, as published in the FY2026 Section 8 workbook — 1.6 × the
- * 50% limits, rounded to $50. (MassHousing's Workforce Housing sheet prints a
- * slightly higher uncapped 80% series for sizes 7–8; the city's Boston-only
- * income-restricted lotteries use these HUD figures.)
+ * Published HUD FY2026 low-income (80%) limits for the Boston-Cambridge-Quincy
+ * HMFA, 1–8 persons. Other agencies and individual listings may use different
+ * limits. Source: https://www.huduser.gov/datasets/il/il2026/summary?reporttype=county&year=2026&counties=2501745560&states=25
  */
 const HUD_BOSTON_80 = [96000, 109700, 123400, 137100, 148100, 159050, 170050, 181000];
 
@@ -184,8 +191,11 @@ const PROGRAM_KEY: Record<string, { name: TranslationKey; rule: TranslationKey; 
 
 export function BenefitsScreener() {
   const { t, format } = useI18n();
-  const [size, setSize] = useState(3);
-  const [annual, setAnnual] = useState(42000);
+  const [sizeInput, setSizeInput] = useState('3');
+  const [annualInput, setAnnualInput] = useState('42000');
+  const size = sizeInput.trim() ? Number(sizeInput) : NaN;
+  const annual = annualInput.trim() ? Number(annualInput) : NaN;
+  const hasValidInputs = Number.isInteger(size) && size >= 1 && size <= 8 && Number.isFinite(annual) && annual >= 0;
   const [adultsUnder65, setAdultsUnder65] = useState(true);
 
   const fpl = FPL_2026(size);
@@ -193,7 +203,7 @@ export function BenefitsScreener() {
   const liheapCap = LIHEAP_2027[Math.min(8, Math.max(1, size))];
 
   const rows = useMemo(
-    () => [
+    () => hasValidInputs ? [
       {
         key: 'snap',
         ok: ratio <= 2.0,
@@ -212,7 +222,7 @@ export function BenefitsScreener() {
         key: 'liheap',
         ok: annual <= liheapCap,
         cap: liheapCap,
-        href: 'https://www.mass.gov/how-to/apply-for-home-heating-assistance',
+        href: 'https://www.mass.gov/how-to/apply-for-home-energy-assistance-heap',
         source: 'massgov' as const,
       },
       {
@@ -229,8 +239,8 @@ export function BenefitsScreener() {
         href: 'https://www.boston.gov/metrolist',
         source: 'hud' as const,
       },
-    ],
-    [ratio, fpl, annual, liheapCap, adultsUnder65, size]
+    ] : [],
+    [hasValidInputs, ratio, fpl, annual, liheapCap, adultsUnder65, size]
   );
 
   return (
@@ -247,24 +257,24 @@ export function BenefitsScreener() {
           </p>
           <label className="block text-sm font-heading font-medium">
             {t('tool.benefits.size')}
-            <input type="number" min={1} max={8} value={size} onChange={(e) => setSize(Math.max(1, Math.min(8, Number(e.target.value))))} className={cn(field, 'mt-1.5')} />
+            <input type="number" min={1} max={8} value={sizeInput} onChange={(e) => setSizeInput(e.target.value)} aria-invalid={!Number.isInteger(size) || size < 1 || size > 8} className={cn(field, 'mt-1.5')} />
           </label>
-          <label className="block text-sm font-heading font-medium">
-            {t('tool.benefits.income')}
+          <div>
+            <label htmlFor="benefits-annual-income" className="block text-sm font-heading font-medium">{t('tool.benefits.income')}</label>
             <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
-              <input type="number" min={0} value={annual} onChange={(e) => setAnnual(Number(e.target.value))} className={cn(field, 'pl-8')} />
+              <span aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+              <input id="benefits-annual-income" type="number" min={0} step="0.01" value={annualInput} onChange={(e) => setAnnualInput(e.target.value)} aria-invalid={!Number.isFinite(annual) || annual < 0} className={cn(field, 'pl-8')} />
             </div>
-          </label>
+          </div>
           <label className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] p-2.5 text-sm">
             <input type="checkbox" checked={adultsUnder65} onChange={(e) => setAdultsUnder65(e.target.checked)} className="h-4 w-4 accent-[var(--color-accent-primary)]" />
             {t('tool.benefits.adult')}
           </label>
-          <div className="rounded-lg bg-[var(--color-bg-tertiary)] p-3 text-sm">
+          {hasValidInputs && <div className="rounded-lg bg-[var(--color-bg-tertiary)] p-3 text-sm">
             <p>
-              {t('tool.benefits.yourIncome', { percent: `${Math.round(ratio * 100)}%`, count: size, amount: format.currency(fpl, { cents: true }) })}
+              {t('tool.benefits.yourIncome', { percent: format.percent(ratio), count: size, amount: format.currency(fpl, { cents: true }) })}
             </p>
-          </div>
+          </div>}
           <Cite id="massgov" note={t('tool.benefits.cite')} href="https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines" />
         </CardContent>
       </Card>
@@ -274,6 +284,7 @@ export function BenefitsScreener() {
           <CardTitle>{t('tool.benefits.programs')}</CardTitle>
         </CardHeader>
         <CardContent>
+          {!hasValidInputs && <p role="status" className="mb-3 text-sm text-[var(--color-text-secondary)]">{t('tool.benefits.invalidInput')}</p>}
           <ul className="space-y-2">
             {rows.map((row) => (
               <li key={row.key} className={cn('rounded-xl border p-3', row.ok ? 'border-[var(--color-accent-green)]/40 bg-[var(--color-accent-green)]/8' : 'border-[var(--color-border)]')}>
@@ -288,7 +299,7 @@ export function BenefitsScreener() {
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="text-[var(--color-text-muted)]">
-                    {t('tool.benefits.limitFor', { size, amount: format.currency(row.cap, { cents: true }) })}
+                    {t('tool.benefits.limitFor', { size: format.number(size), amount: format.currency(row.cap, { cents: true }) })}
                   </span>
                   <a href={row.href} target="_blank" rel="noopener noreferrer" className="font-heading font-semibold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2">
                     {t(PROGRAM_KEY[row.key].apply)}
@@ -309,8 +320,15 @@ export function BenefitsScreener() {
 
 /* ───────────────────────────── Eviction timeline ─────────────────────── */
 
-/** Steps are numbered so the copy can live in the dictionary, one key per field. */
-const STEPS = ['1', '2', '3', '4', '5', '6'] as const;
+/** General stages only; the actual procedure and deadlines depend on the court. */
+const EVICTION_STAGES: Array<{ title: TranslationKey; detail: TranslationKey }> = [
+  { title: 'tool.eviction.step1.title', detail: 'neighborhood.noticeBody' },
+  { title: 'tool.eviction.step2.title', detail: 'tool.eviction.papers' },
+  { title: 'tool.eviction.step3.title', detail: 'tool.eviction.answerGeneral' },
+  { title: 'tool.eviction.eventTitle', detail: 'tool.eviction.eventGeneral' },
+  { title: 'tool.eviction.step5.title', detail: 'tool.eviction.trialGeneral' },
+  { title: 'tool.eviction.step6.title', detail: 'tool.eviction.judgmentGeneral' },
+];
 
 export function EvictionTimeline() {
   const { t } = useI18n();
@@ -328,37 +346,15 @@ export function EvictionTimeline() {
             {t('tool.eviction.intro')}
           </p>
           <ol className="relative space-y-2 border-s-2 border-[var(--color-border)] ps-5">
-            {STEPS.map((step, i) => (
-              <li key={step} className="relative">
-                <span
-                  className={cn(
-                    'absolute -start-[27px] top-3 grid h-5 w-5 place-items-center rounded-full border-2 bg-[var(--color-bg-secondary)] font-mono text-[10px] font-bold',
-                    open === i ? 'border-[var(--color-accent-secondary)] text-[var(--color-accent-secondary)]' : 'border-[var(--color-border-strong)] text-[var(--color-text-muted)]'
-                  )}
-                  aria-hidden="true"
-                >
-                  {i + 1}
-                </span>
-                <button
-                  type="button"
-                  aria-expanded={open === i}
-                  onClick={() => setOpen(i)}
-                  className={cn('w-full rounded-xl border p-3 text-left transition-colors', open === i ? 'border-[var(--color-accent-secondary)]/50 bg-[var(--color-accent-secondary)]/8' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]')}
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-heading font-semibold">{t(`tool.eviction.step${step}.title` as 'tool.eviction.step1.title')}</span>
-                    <span className="shrink-0 font-mono text-xs text-[var(--color-text-muted)]">{t(`tool.eviction.step${step}.when` as 'tool.eviction.step1.when')}</span>
-                  </div>
-                  {open === i && (
-                    <div className="mt-2 space-y-2 text-sm">
-                      <p className="text-[var(--color-text-secondary)]">{t(`tool.eviction.step${step}.detail` as 'tool.eviction.step1.detail')}</p>
-                      <p className="flex items-start gap-2 rounded-lg bg-[var(--color-bg-tertiary)] p-2.5">
-                        <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent-secondary)]" aria-hidden="true" />
-                        <span><strong>{t('tool.eviction.doThis')}</strong> {t(`tool.eviction.step${step}.action` as 'tool.eviction.step1.action')}</span>
-                      </p>
-                    </div>
-                  )}
-                </button>
+            {EVICTION_STAGES.map((step, i) => (
+              <li key={step.title} className="relative">
+                <span className={cn('absolute -start-[27px] top-3 grid h-5 w-5 place-items-center rounded-full border-2 bg-[var(--color-bg-secondary)] font-mono text-[10px] font-bold', open === i ? 'border-[var(--color-accent-secondary)] text-[var(--color-accent-secondary)]' : 'border-[var(--color-border-strong)] text-[var(--color-text-muted)]')} aria-hidden="true">{i + 1}</span>
+                <div className={cn('rounded-xl border', open === i ? 'border-[var(--color-accent-secondary)]/50 bg-[var(--color-accent-secondary)]/8' : 'border-[var(--color-border)]')}>
+                  <button type="button" aria-expanded={open === i} onClick={() => setOpen(i)} className="w-full p-3 text-start font-heading font-semibold hover:bg-[var(--color-bg-tertiary)]">
+                    {t(step.title)}
+                  </button>
+                  {open === i && <p className="px-3 pb-3 text-sm text-[var(--color-text-secondary)]">{t(step.detail)}</p>}
+                </div>
               </li>
             ))}
           </ol>
@@ -369,30 +365,22 @@ export function EvictionTimeline() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" /> {t('tool.legal.title')}
+            <Scale className="h-5 w-5 text-[var(--color-accent-primary)]" aria-hidden="true" /> {t('neighborhood.helpHeading')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <ul className="space-y-2">
             <li className="rounded-lg border border-[var(--color-border)] p-3">
               <p className="font-heading font-semibold">{t('tool.legal.gbls')}</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">{t('tool.legal.gblsBody')}</p>
-              <a href="tel:+16173718234" className="font-mono text-[var(--color-accent-primary)]">(617) 371-1234</a>
-            </li>
-            <li className="rounded-lg border border-[var(--color-border)] p-3">
-              <p className="font-heading font-semibold">{t('tool.legal.court')}</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">{t('tool.legal.courtBody')}</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">{t('neighborhood.gblsBody')}</p>
+              <a href="tel:+16176031807" dir="ltr" className="font-mono text-[var(--color-accent-primary)]">(617) 603-1807</a>
             </li>
             <li className="rounded-lg border border-[var(--color-border)] p-3">
               <p className="font-heading font-semibold">{t('tool.legal.stability')}</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">{t('tool.legal.stabilityBody')}</p>
               <a href="tel:+16176354200" className="font-mono text-[var(--color-accent-primary)]">(617) 635-4200</a>
             </li>
             <li className="rounded-lg border border-[var(--color-border)] p-3">
-              <p className="font-heading font-semibold">{t('tool.legal.counsel')}</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">
-                {t('tool.legal.counselBody')}
-              </p>
+              <Link href="/faq" className="font-heading font-semibold text-[var(--color-accent-primary)] underline">{t('faq.q.eviction')}</Link>
             </li>
           </ul>
           <p className="text-xs text-[var(--color-text-muted)]">

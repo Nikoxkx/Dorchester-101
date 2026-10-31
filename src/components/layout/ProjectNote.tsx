@@ -34,8 +34,8 @@ export function ProjectNote({
         className
       )}
     >
-      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-        <div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="min-w-0">
           <h2 className="flex items-center gap-2 font-heading text-sm font-bold text-[var(--color-text-primary)]">
             <ShieldCheck className="h-4 w-4 text-[var(--color-accent-green)]" aria-hidden="true" />
             {t('project.whereFrom')}
@@ -44,7 +44,7 @@ export function ProjectNote({
           {sources && sources.length > 0 && (
             <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-2">
               {sources.map((id) => (
-                <li key={id}>
+                <li key={id} className="max-w-full">
                   <SourceMark id={id} size="sm" withName />
                 </li>
               ))}

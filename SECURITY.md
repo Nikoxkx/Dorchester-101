@@ -1,47 +1,24 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 4.0.x   | :white_check_mark: |
-| 3.x     | :x:                |
-| 2.x     | :x:                |
-| 1.0.x   | :x:                |
+**Do not put sensitive vulnerability details or private information in a public GitHub issue.** The project owner should enable GitHub's private vulnerability reporting in the repository settings and provide a verified private contact. Private reporting is not currently enabled on the repository, and this project has no confirmed security mailbox in its configuration. Do not assume an unverified address is monitored.
 
-## Reporting a Vulnerability
+Once the owner enables private reporting, use the repository's **Security → Report a vulnerability** flow. Public issues are suitable only for non-sensitive bugs and corrections. There is currently no guaranteed response time or bounty program.
 
-If you discover a security vulnerability in DOR101, please report it responsibly.
+## Dependency monitoring and known tooling risk
 
-**Do NOT open a public GitHub issue for security vulnerabilities.**
+`npm audit --omit=dev` currently reports no known production advisories (checked 2026-10-31). The full development install still reports moderate minimatch advisories inherited through ESLint and electron-builder: upstream packages use incompatible legacy and current APIs and fixed, compatible releases are not yet available for all of them. These are development/build tools, not dependencies used by the deployed web server. Run linting and desktop builds only on trusted repository code and trusted glob patterns; do not accept untrusted patterns or archives into build jobs. Dependabot checks for updates weekly, and CI fails on any moderate-or-higher production finding or high-or-higher finding in the full install. Re-run `npm audit` when updating: advisory status can change at any time. Do not force an incompatible minimatch major version merely to make the audit appear clean.
 
-Instead, use one of:
+The remaining minimatch work is tracked in [issue #27](https://github.com/Nikoxkx/Dorchester-101/issues/27). The desktop toolchain was updated across major versions and requires a real Windows installer and application smoke test before a new desktop release. The website test suite cannot certify the packaged executable.
 
-- **GitHub Security Advisory** (preferred): open a private advisory under
-  **Security → Report a vulnerability** on the repository.
-- **Email**: **security@dor101.org** (PGP not currently published).
+## Current boundaries
 
-We will acknowledge your report within 48 hours and provide a detailed response within 5 business days. Please include the affected version, the URL or route involved, and a minimal reproduction if possible. We do not pay bounties, but we will credit you in the release notes (unless you prefer not to be named).
+- No account is required. Preferences and some drafts are stored on the device, but hosting providers and third-party services can still process requests and network information.
+- Vercel Analytics and Speed Insights are optional and gated by a visitor's choice; verify actual behaviour in the deployed environment. Maps may fetch tiles from third parties, directions open external services, and a weather fallback can contact NWS or Open-Meteo from the browser.
+- Optional translation of public news excerpts is disabled by default; an operator who enables it must configure credentials and review its privacy, pricing and security implications.
+- Server-side API keys must not be placed in client-exposed variables or committed to the repository. The scheduled refresh requires a server-only `CRON_SECRET` and fails closed if it is not configured.
+- A service worker can cache application pages and site assets. The current worker bypasses API and query-string requests and removes old live caches; visitors may still need browser site-data controls to clear all stored data.
+- Security headers and browser permissions reduce some risks but do not prove the application is secure, private, or compliant with any particular law. Dependencies and provider integrations need regular review and updates.
 
-## Security Design Principles
-
-DOR101 is designed with the following security principles:
-
-1. **No PII Collection**: The application never collects, stores, or transmits personally identifiable information.
-2. **No Authentication Required**: No user accounts, no passwords, no session tokens.
-3. **Local Storage Only**: User preferences (language, theme, font size) are stored in browser localStorage only.
-4. **No External Telemetry**: No analytics, tracking pixels, or third-party scripts that could fingerprint users.
-5. **Public Data Only**: Server-side fetches go to public government and publisher feeds (MBTA GTFS-realtime, HUD workbooks, Census/FRED, publisher RSS). No private or commercial API data is used.
-6. **Keys Stay Server-Side**: Optional API keys (`MBTA_API_KEY`, `CENSUS_API_KEY`, `HUD_API_KEY`) are read from environment variables on the server; the browser never receives them, and no key is required for the site to function.
-7. **URL Parametrisation**: RSS added in Settings is restricted to `http(s)` URLs, and upstream HTML is stripped server-side before any excerpt is rendered.
-8. **Content Security Policy**: `script-src 'self'`, `img-src 'self'` plus the explicit tile hosts, `connect-src 'self'`, no third-party frames (`frame-ancestors 'self'` in production builds).
-9. **Input Validation**: All API query parameters are validated with Zod schemas before use.
-10. **HTTPS Only**: All external API calls use HTTPS exclusively.
-11. **Dependency Auditing**: `npm audit` is run in CI and on release; dependencies are pinned and lockfile-hash verified.
-12. **Trusted Sources Only**: A news feed or data source is only enabled after a live fetch returns real content; broken or empty feeds are removed rather than left configured.
-
-## Threats the app is *not* designed to resist
-
-- It is a static, read-only community resource: it holds no accounts and no personal data, so it is not a target for credential theft.
-- Browser-side calculators (rent burden, AMI) run entirely client-side and are convenience tools, not legal determinations.
-- The service worker caches the app shell for offline use; it never caches form input or location.
+The site provides informational content, not a professional, legal or medical service. Consult the draft privacy notice for more details and verify important information with the underlying provider.

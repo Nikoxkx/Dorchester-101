@@ -8,6 +8,8 @@ import { RESOURCES, type ResourceCategory } from '@/data/resources';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
+import { resourceDetails } from '@/i18n/resourceDetails';
+import { useHydratedNow } from '@/hooks/useNow';
 import type { TranslationKey } from '@/i18n/en';
 import { cn } from '@/lib/utils';
 
@@ -32,14 +34,15 @@ const CATEGORY_KEYS: Record<ResourceCategory, TranslationKey> = {
 
 function EmbedDirectoryInner() {
   const searchParams = useSearchParams();
-  const { t, pickContent } = useI18n();
+  const { t, lang, meta, pickContent } = useI18n();
   const initialCat = (searchParams.get('category') as ResourceCategory | null) ?? 'all';
   const neighborhoodFilter = searchParams.get('neighborhood')?.toLowerCase() ?? '';
   const [category, setCategory] = useState<ResourceCategory | 'all'>(
     CATEGORIES.includes(initialCat) ? initialCat : 'all',
   );
   const [query, setQuery] = useState('');
-  const [now] = useState(() => new Date());
+  const nowMs = useHydratedNow(60_000);
+  const now = useMemo(() => nowMs === null ? null : new Date(nowMs), [nowMs]);
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,12 +52,12 @@ function EmbedDirectoryInner() {
       )
       .filter((r) =>
         q
-          ? `${r.name} ${r.address} ${r.neighborhood} ${r.summary.en}`
+          ? `${r.name} ${r.address} ${r.neighborhood} ${r.summary.en} ${pickContent(r.summary).value}`
               .toLowerCase()
               .includes(q)
           : true,
       );
-  }, [category, neighborhoodFilter, query]);
+  }, [category, neighborhoodFilter, query, pickContent]);
 
   return (
     <main className="min-h-screen bg-[var(--color-bg-primary)] p-4 text-[var(--color-text-primary)]">
@@ -79,7 +82,7 @@ function EmbedDirectoryInner() {
         </header>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[180px]">
+          <div className="relative min-w-0 flex-1 basis-full sm:basis-auto">
             <Search
               className="pointer-events-none absolute inset-y-0 start-2.5 my-auto h-3.5 w-3.5 text-[var(--color-text-muted)]"
               aria-hidden="true"
@@ -111,14 +114,15 @@ function EmbedDirectoryInner() {
           </div>
         </div>
 
-        <ul className="grid gap-2.5 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {items.map((r) => {
-            const open = r.hours ? isOpenNow(r.hours, now, BOSTON_TZ) : null;
-            const summary = pickContent(r.summary).value;
+            const open = r.hours && now ? isOpenNow(r.hours, now, BOSTON_TZ) : null;
+            const summary = pickContent(r.summary);
+            const details = resourceDetails(r, lang);
             return (
               <li
                 key={r.id}
-                className="flex flex-col justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 p-3 text-xs"
+                className="flex min-w-0 flex-col justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 p-3 text-xs"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
@@ -129,13 +133,15 @@ function EmbedDirectoryInner() {
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-[var(--color-text-secondary)]">{summary}</p>
+                  <p className="mt-1 line-clamp-2 text-[var(--color-text-secondary)]" lang={summary.used} dir="auto">{summary.value}</p>
+                  {summary.fellBack && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('lang.untranslated', { language: meta.nativeName })}</p>}
                 </div>
                 <div className="mt-2.5 space-y-1 border-t border-[var(--color-border)] pt-2 text-[11px] text-[var(--color-text-muted)]">
                   <p className="flex items-center gap-1">
                     <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{r.address}</span>
+                    <span className="min-w-0 truncate" lang={details.address.used} dir="auto">{details.address.value}</span>
                   </p>
+                  {details.address.fellBack && <p>{t('lang.detailsEnglish')}</p>}
                   {r.phone && (
                     <p className="flex items-center gap-1">
                       <Phone className="h-3 w-3 shrink-0" aria-hidden="true" />

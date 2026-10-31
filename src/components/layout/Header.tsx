@@ -6,6 +6,7 @@ import { Check, CloudOff, Globe2, Languages, Menu, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
+import { spokenLanguage } from '@/i18n/spokenLanguages';
 import { LANGUAGES, languageMeta } from '@/i18n/config';
 import { localeCoverage, TOTAL_KEYS } from '@/i18n';
 import { SearchDialog } from '@/components/search/SearchDialog';
@@ -145,8 +146,6 @@ export function Header() {
                             role="menuitemradio"
                             aria-checked={active}
                             onClick={() => choose(option.code)}
-                            lang={option.intlLocale}
-                            dir={option.dir}
                             className={cn(
                               'flex w-full items-center gap-3 px-3 py-2 text-start transition-colors',
                               active ? 'bg-[var(--color-accent-primary)]/12 text-[var(--color-accent-primary)]' : 'hover:bg-[var(--color-bg-tertiary)]',
@@ -154,9 +153,9 @@ export function Header() {
                             )}
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="block font-heading text-sm font-medium leading-tight">{option.nativeName}</span>
+                              <span lang={option.contentLocale} dir={option.dir} className="block font-heading text-sm font-medium leading-tight">{option.nativeName}</span>
                               <span className="block text-[11px] text-[var(--color-text-muted)]">
-                                {option.name}
+                                {spokenLanguage(option.name, t)}
                                 {optionCoverage.percent < 100 && (
                                   <span className="ms-1.5 font-mono">
                                     {t('lang.coverageValue', { percent: optionCoverage.percent, total: TOTAL_KEYS })}

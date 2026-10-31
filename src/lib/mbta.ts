@@ -4,14 +4,15 @@
  * The authority's JSON:API is public. A key is optional: without one the
  * shared anonymous pool is rate limited hard, so requests are cached and every
  * call carries a timeout. When the feed cannot be read we return `source:
- * 'timetable'` derived from the published headways instead of inventing arrival
- * minutes, and the caller labels it as an estimate.
+ * 'timetable'` for compatibility, with illustrative times calculated from
+ * reference headways. They are estimates, not published departure times.
  */
 
 import { globalCache, CACHE_TTL } from './cache';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, TRANSIT_DATA_AS_OF, type TransitLine } from '@/data/transit';
 import { BOSTON_TZ } from '@/lib/hours';
-import * as GtfsRealtimeBindings from 'gtfs-realtime-bindings';
+import * as GtfsRealtimeBindings from '@golemio/ovapi-gtfs-realtime-bindings';
+import type { LanguageCode } from '@/i18n/config';
 
 const BASE = 'https://api-v3.mbta.com';
 /**
@@ -27,6 +28,8 @@ const RtSeverityLevel = GtfsRealtimeBindings.transit_realtime.Alert.SeverityLeve
 const RtEffect = GtfsRealtimeBindings.transit_realtime.Alert.Effect;
 const REQUEST_TIMEOUT_MS = 6_000;
 
+// Historical wire values: `timetable` contains headway estimates, not an
+// actual timetable; `offline-cache` is currently partial live V3 predictions.
 export type DataSource = 'mbta-live' | 'timetable' | 'offline-cache';
 
 export interface Arrival {
@@ -75,7 +78,10 @@ export interface LiveVehicle {
 export interface ServiceAlert {
   id: string;
   header: string;
+  /** Language of each field from the official feed; `und` means unspecified. */
+  headerLanguage?: string;
   description: string;
+  descriptionLanguage?: string;
   effect: string;
   severity: 'info' | 'minor' | 'major';
   routeIds: string[];
@@ -258,14 +264,23 @@ const STOP_NAME_BY_ID: Map<string, string> = new Map(
   TRANSIT_LINES.flatMap((line) => line.dorchesterStops.map((stop) => [stop.id, stop.name] as const))
 );
 
-/** First English (or any) translation of a GTFS-RT translated string. */
+/** Prefer an actual publisher translation. Never label an unknown-language
+ * entry as English or as a translation into the requested language. */
 function translated(
   raw: { translation?: Array<{ text?: string | null; language?: string | null }> | null } | null | undefined,
-  fallback = ''
-): string {
-  const entries = raw?.translation ?? [];
-  const en = entries.find((t) => (t.language ?? '').toLowerCase().startsWith('en'));
-  return (en?.text ?? entries[0]?.text ?? fallback).trim();
+  preferred: LanguageCode = 'en',
+): { text: string; language: string } {
+  const entries = (raw?.translation ?? []).filter((entry) => entry.text?.trim());
+  const matches = (tag: string | null | undefined, code: string) => {
+    const normalized = (tag ?? '').trim().toLowerCase();
+    return normalized === code || normalized.startsWith(`${code}-`);
+  };
+  const entry = entries.find((item) => matches(item.language, preferred))
+    ?? entries.find((item) => matches(item.language, 'en'))
+    ?? entries.find((item) => !item.language?.trim())
+    ?? entries[0];
+  const tag = entry?.language?.trim() ?? '';
+  return { text: entry?.text?.trim() ?? '', language: /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(tag) ? tag : 'und' };
 }
 
 function epochSeconds(value: unknown): number | null {
@@ -493,9 +508,9 @@ function delayFrom(rel: string, lastUpdated: string | undefined, arrivalIso: str
 }
 
 /**
- * Fallback departures. Deterministic arithmetic on the published headway, not a
- * random number, so two reloads agree and the wording can honestly say
- * "estimated from the timetable".
+ * Fallback departures. Deterministic arithmetic on rough reference headways,
+ * not a published timetable or live prediction. The UI must label these as
+ * estimates; they cannot confirm that a vehicle is due at a particular time.
  */
 export function estimateArrivals(stopIds: string[], perStop = 4): Arrival[] {
   const now = new Date();
@@ -635,15 +650,27 @@ export async function fetchVehicles(
     vehicles.sort((a, b) => a.routeId.localeCompare(b.routeId) || a.id.localeCompare(b.id));
     return { vehicles: vehicles.slice(0, 300), source: 'mbta-live', fetchedAt };
   } catch {
-    // No feed, no vehicles — the map says timetable and draws no dots
+    // No feed, no vehicles — the map labels reference estimates and draws no dots
     // rather than animating invented ones along the line.
     return { vehicles: [], source: 'timetable', fetchedAt };
   }
 }
 
-export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }> {
-  const cacheKey = 'mbta:alerts:dorchester';
-  const cached = globalCache.get<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }>(cacheKey);
+export type AlertFeedStatus = 'ok' | 'partial' | 'unavailable';
+export interface AlertFeedResult {
+  alerts: ServiceAlert[];
+  source: DataSource;
+  fetchedAt: string;
+  attemptedRoutes: number;
+  /** Empty success is different from a failed or partially failed feed. */
+  status: AlertFeedStatus;
+}
+
+export async function fetchAlerts(language: LanguageCode = 'en'): Promise<AlertFeedResult> {
+  // The upstream GTFS translated strings can differ by language. Do not share
+  // a selected-language response with a reader of another language.
+  const cacheKey = `mbta:alerts:dorchester:${language}`;
+  const cached = globalCache.get<AlertFeedResult>(cacheKey);
   if (cached) return cached;
 
   // Registered key: v3 JSON (its own rate limit, richer translated fields).
@@ -656,6 +683,7 @@ export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: D
   const alerts: ServiceAlert[] = [];
   const seen = new Set<string>();
   let attemptedRoutes = 0;
+  let feedOk = false;
 
   try {
     const feed = await fetchRtFeed('Alerts');
@@ -695,36 +723,42 @@ export async function fetchAlerts(): Promise<{ alerts: ServiceAlert[]; source: D
           : alert.severityLevel === RtSeverityLevel.WARNING
             ? 'minor'
             : 'info';
-      const header = translated(alert.headerText);
+      const header = translated(alert.headerText, language);
+      const description = translated(alert.descriptionText, language);
+      const url = translated(alert.url, language).text;
       alerts.push({
         id: entity.id,
-        header: header || 'Service notice',
-        description: translated(alert.descriptionText),
+        header: header.text || 'Service notice',
+        headerLanguage: header.text ? header.language : 'en',
+        description: description.text,
+        descriptionLanguage: description.language,
         effect: alert.effect != null ? (RtEffect[alert.effect] ?? 'UNKNOWN_EFFECT') : 'UNKNOWN_EFFECT',
         severity,
         routeIds,
         validFrom: active[0]?.start != null ? new Date(Number(active[0].start) * 1000).toISOString() : null,
         validUntil: active[0]?.end != null ? new Date(Number(active[0].end) * 1000).toISOString() : null,
         lastModified: feed.header?.timestamp != null ? new Date(Number(feed.header.timestamp) * 1000).toISOString() : null,
-        url: translated(alert.url) || null,
+        url: /^https?:\/\//i.test(url) ? url : null,
       });
     }
+    feedOk = true;
   } catch {
-    // Fall through to the timetable answer below; the caller sees the source.
+    // The caller sees an unavailable feed, not an invented quiet period.
   }
 
   const payload = {
     alerts: alerts.sort((a, b) => severityRank(b.severity) - severityRank(a.severity)),
-    source: (alerts.length ? 'mbta-live' : 'timetable') as DataSource,
+    source: (feedOk ? 'mbta-live' : 'timetable') as DataSource,
     fetchedAt: new Date().toISOString(),
     attemptedRoutes,
+    status: (feedOk ? 'ok' : 'unavailable') as AlertFeedStatus,
   };
   globalCache.set(cacheKey, payload, 5 * 60_000);
   return payload;
 }
 
 /** v3 /alerts, used only when MBTA_API_KEY is configured. */
-async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSource; fetchedAt: string; attemptedRoutes: number }> {
+async function fetchAlertsV3(): Promise<AlertFeedResult> {
   interface AlertAttrs {
     header?: string;
     description?: string;
@@ -740,6 +774,7 @@ async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSo
   const alerts: ServiceAlert[] = [];
   const seen = new Set<string>();
   let attempted = 0;
+  let succeeded = 0;
 
   for (const routeId of ROUTE_IDS_FOR_ALERTS) {
     attempted++;
@@ -750,14 +785,20 @@ async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSo
         'page[limit]': 10,
       });
       for (const a of list(doc)) {
-        if (seen.has(a.id)) continue;
+        if (seen.has(a.id)) {
+          const existing = alerts.find((item) => item.id === a.id);
+          if (existing && !existing.routeIds.includes(routeId)) existing.routeIds.push(routeId);
+          continue;
+        }
         seen.add(a.id);
         const attr = a.attributes ?? {};
         const severity = normalizeSeverity(attr.priority, attr.severity);
         alerts.push({
           id: a.id,
           header: attr.header ?? 'Service notice',
+          headerLanguage: 'en',
           description: attr.description ?? '',
+          descriptionLanguage: 'en',
           effect: attr.effect ?? 'UNKNOWN_EFFECT',
           severity,
           routeIds: [routeId],
@@ -767,6 +808,7 @@ async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSo
           url: attr.url ?? null,
         });
       }
+      succeeded++;
     } catch {
       // One route failing must not blank the whole panel.
       continue;
@@ -775,9 +817,10 @@ async function fetchAlertsV3(): Promise<{ alerts: ServiceAlert[]; source: DataSo
 
   return {
     alerts: alerts.sort((a, b) => severityRank(b.severity) - severityRank(a.severity)),
-    source: (alerts.length ? 'mbta-live' : 'timetable') as DataSource,
+    source: (succeeded > 0 ? 'mbta-live' : 'timetable') as DataSource,
     fetchedAt: new Date().toISOString(),
     attemptedRoutes: attempted,
+    status: succeeded === attempted ? 'ok' : succeeded > 0 ? 'partial' : 'unavailable',
   };
 }
 
@@ -890,7 +933,8 @@ export async function fetchStopsForRoute(routeId: string): Promise<{
       'page[limit]': 200,
     });
     const stops = list(doc)
-      .filter((s) => typeof s.attributes.latitude === 'number')
+      .filter((s) => typeof s.attributes.latitude === 'number' && Number.isFinite(s.attributes.latitude)
+        && typeof s.attributes.longitude === 'number' && Number.isFinite(s.attributes.longitude))
       .map((s) => ({
         id: s.id,
         name: s.attributes.name ?? s.id,

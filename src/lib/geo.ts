@@ -21,10 +21,11 @@ export function walkMinutes(meters: number): number {
   return Math.max(1, Math.round((meters * 1.3) / 80));
 }
 
-export function formatDistance(meters: number, locale = 'en-US'): string {
+/** Unit and value are separate so the UI can translate and pluralize them. */
+export function imperialDistance(meters: number): { value: number; unit: 'feet' | 'miles' } {
   const miles = meters / 1609.344;
-  if (miles < 0.1) return `${Math.round(meters * 3.28084 / 10) * 10} ft`;
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(miles)} mi`;
+  if (miles < 0.1) return { value: Math.round(meters * 3.28084 / 10) * 10, unit: 'feet' };
+  return { value: Math.round(miles * 10) / 10, unit: 'miles' };
 }
 
 /**

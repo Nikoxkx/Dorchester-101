@@ -8,6 +8,7 @@ import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { useWinterClothing } from '@/hooks/useWinterClothing';
 import { useWeather } from '@/hooks/useWeather';
 import { useI18n } from '@/i18n/hook';
+import { clothingContent } from '@/i18n/clothingContent';
 import { coldSignal } from '@/lib/weather';
 import type { ClothingAudience } from '@/data/winterClothing';
 import type { TranslationKey } from '@/i18n/en';
@@ -15,11 +16,9 @@ import type { TranslationKey } from '@/i18n/en';
 /**
  * Free coats and winter clothing around Dorchester and Boston.
  *
- * The ordering is the advice: places that are open now and in season come
- * first, and when the live weather says a warm coat matters today the page
- * says so and puts the warming-center route at the top. The finder band at
- * the bottom is the backstop that can never go stale — Mass 2-1-1 and the
- * other locators maintain their own listings daily.
+ * Site/phone schedules influence ordering, but they do not guarantee coat
+ * availability. Donation-collection dates are never used to rank assistance.
+ * External finders maintain their own listings, which may also be outdated.
  */
 
 const AUDIENCES: Array<{ id: 'all' | ClothingAudience; key: TranslationKey }> = [
@@ -32,7 +31,7 @@ const AUDIENCES: Array<{ id: 'all' | ClothingAudience; key: TranslationKey }> = 
 ];
 
 export default function WinterClothingView() {
-  const { t, format } = useI18n();
+  const { t, lang, format } = useI18n();
   const { places } = useWinterClothing();
   const { data: weather } = useWeather();
   const cold = weather ? coldSignal(weather) : false;
@@ -43,20 +42,27 @@ export default function WinterClothingView() {
   const [query, setQuery] = useState('');
 
   const { listed, locators } = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const matches = (p: (typeof places)[number]) =>
-      (audience === 'all' || p.audiences.includes(audience)) &&
-      (!walkInOnly || p.kind === 'walkIn') &&
-      (!openOnly || p.computed?.openNow === true) &&
-      (!q || `${p.name} ${p.neighborhood}`.toLowerCase().includes(q));
+    const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').trim();
+    const q = normalize(query);
+    const phoneQuery = /^[+\d\s().-]+$/.test(query) ? query.replace(/\D/g, '') : '';
+    const matches = (p: (typeof places)[number]) => {
+      const content = clothingContent(p, lang);
+      const haystack = [p.name, p.neighborhood, p.address, p.summary.en, p.howToGet, p.eligibility, p.hoursNote, p.transit,
+        content.name, content.neighborhood, content.address, content.summary, content.howToGet, content.eligibility, content.hoursNote, content.transit].join(' ');
+      return (audience === 'all' || p.audiences.includes(audience)) &&
+        (!walkInOnly || p.kind === 'walkIn') &&
+        (!openOnly || p.computed?.openNow === true) &&
+        (!q || normalize(haystack).includes(q) || (phoneQuery.length >= 7 &&
+          (haystack.match(/\+?\(?\d{3}\)?[\s.-]*\d{3}[\s.-]*\d{4}/g) ?? []).some((phone) => phone.replace(/\D/g, '').includes(phoneQuery))));
+    };
     const rank = (p: (typeof places)[number]) =>
       (p.computed?.openNow === true ? 0 : p.computed?.openNow === null || p.computed?.openNow === undefined ? 1 : 2) +
-      (p.computed?.inSeason === false ? 3 : 0);
+      (p.computed?.inSeason === false && p.season?.purpose !== 'collection' ? 3 : 0);
     return {
       listed: places.filter((p) => p.kind !== 'locator' && matches(p)).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)),
       locators: places.filter((p) => p.kind === 'locator' && matches(p)),
     };
-  }, [places, audience, walkInOnly, openOnly, query]);
+  }, [places, audience, walkInOnly, openOnly, query, lang]);
 
   const chip = (active: boolean) =>
     `rounded-full border px-3 py-1.5 font-heading text-sm font-bold transition-colors ${
@@ -77,6 +83,7 @@ export default function WinterClothingView() {
           </h1>
           <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('clothing.subtitle')}</p>
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('clothing.intro')}</p>
+          {lang !== 'en' && <p className="mt-2 max-w-prose text-xs text-[var(--color-text-muted)]">{t('clothing.translationDraft')}</p>}
           <p className="mt-2 text-xs font-semibold text-[var(--color-text-muted)]">
             {t('clothing.count', { count: format.number(listed.length + locators.length) })} · {t('clothing.callFirst')}
           </p>
@@ -120,7 +127,7 @@ export default function WinterClothingView() {
               {t('clothing.filterWalkIn')}
             </button>
             <button type="button" aria-pressed={openOnly} onClick={() => setOpenOnly((v) => !v)} className={chip(openOnly)}>
-              {t('clothing.openNow')}
+              {t('clothing.siteOpenNow')}
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { CircleAlert, ExternalLink, Newspaper, RefreshCw, Rss, SlidersHorizontal } from 'lucide-react';
@@ -16,6 +16,7 @@ import { useLivePolling } from '@/hooks/useLivePolling';
 import { NEWS_FEEDS, type NewsCategorySlug } from '@/data/feeds';
 import { cn } from '@/lib/utils';
 import type { TranslationKey } from '@/i18n/en';
+import { newsLanguageName } from '@/i18n/newsContent';
 
 /**
  * Local news, read at the publisher.
@@ -38,12 +39,7 @@ const CATEGORY_KEYS: Record<NewsCategorySlug, TranslationKey> = {
   other: 'news.category.other',
 };
 
-const WINDOWS = [
-  { hours: 24, key: 'news.last24h' as TranslationKey },
-  { hours: 72, key: 'time.daysAgo' as TranslationKey, label: '3 d' },
-  { hours: 168, key: 'time.daysAgo' as TranslationKey, label: '7 d' },
-  { hours: 336, key: 'time.daysAgo' as TranslationKey, label: '14 d' },
-];
+const WINDOWS = [24, 72, 168, 336];
 
 interface Article {
   id: string;
@@ -57,6 +53,7 @@ interface Article {
   ageHours: number;
   category: NewsCategorySlug;
   language: string;
+  translation?: { originalTitle: string; originalSummary: string; originalLanguage: string };
 }
 
 interface FeedResult {
@@ -94,6 +91,9 @@ export function NewsPageView() {
   const [sinceHours, setSinceHours] = useState(168);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [refreshing, setRefreshing] = useState(false);
+  const requestKey = JSON.stringify([lang, sinceHours, enabledSources, customFeeds]);
+  const latestRequestKey = useRef(requestKey);
+  useEffect(() => { latestRequestKey.current = requestKey; }, [requestKey]);
   // Read inside `load` without changing the callback's identity — a new identity
   // would make useLivePolling treat a data arrival as a reason to fetch again.
   const hasPayloadRef = useRef(false);
@@ -110,25 +110,25 @@ export function NewsPageView() {
         const params = new URLSearchParams({
           limit: '60',
           sinceHours: String(sinceHours),
+          lang,
         });
         if (enabledSources.length > 0) params.set('feeds', enabledSources.join(','));
-        if (customFeeds.length > 0) params.set('custom', customFeeds.map((feed) => feed.url).join(','));
-        const response = await fetch(`/api/news?${params.toString()}`, {
-          headers: { 'accept-language': lang },
-        });
+        if (customFeeds.length > 0) params.set('custom', customFeeds.map((feed) => feed.url).join('|'));
+        const response = await fetch(`/api/news?${params.toString()}`);
         if (!response.ok) throw new Error(String(response.status));
         const json = (await response.json()) as NewsPayload;
+        if (latestRequestKey.current !== requestKey) return;
         hasPayloadRef.current = true;
         setPayload(json);
         setState('ready');
         if (silent) announce(t('news.autoRefreshed'), 'polite');
       } catch {
-        setState((prev) => (prev === 'ready' ? prev : 'error'));
+        if (latestRequestKey.current === requestKey) setState((prev) => (prev === 'ready' ? prev : 'error'));
       } finally {
-        setRefreshing(false);
+        if (latestRequestKey.current === requestKey) setRefreshing(false);
       }
     },
-    [announce, customFeeds, enabledSources, lang, sinceHours, t]
+    [announce, customFeeds, enabledSources, lang, sinceHours, t, requestKey]
   );
 
   // The server holds each feed mix for 15 minutes, so polling faster than that
@@ -140,7 +140,7 @@ export function NewsPageView() {
   // function on every render — fetch, re-render, fetch again, forever. That
   // loop was the page's old "constantly refreshing" behaviour.
   const loadSilent = useCallback(async () => load(true), [load]);
-  const { intervalMs, enabled: polling } = useLivePolling(loadSilent, { minMs: 300_000 });
+  useLivePolling(loadSilent, { minMs: 300_000, requestKey });
 
   const articles = useMemo(() => payload?.articles ?? [], [payload]);
   const counts = useMemo(() => {
@@ -171,7 +171,7 @@ export function NewsPageView() {
             {payload?.snapshot && (
               <p role="status" className="mt-2 inline-flex max-w-prose items-start gap-1.5 rounded-lg border border-[var(--color-accent-amber)]/40 bg-[var(--color-accent-amber)]/10 px-2.5 py-1.5 text-xs text-[var(--color-text-secondary)]">
                 <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-accent-amber)]" aria-hidden="true" />
-                {payload.snapshot.note}
+                {t('news.snapshotNotice', { date: format.date(payload.snapshot.asOf, 'medium') })}
               </p>
             )}
           </div>
@@ -179,7 +179,6 @@ export function NewsPageView() {
             <DataRefreshIndicator
               lastUpdated={payload?.lastUpdated ?? null}
               isRefreshing={refreshing}
-              nextUpdate={polling ? new Date(Date.now() + intervalMs).toISOString() : null}
             />
             <button
               type="button"
@@ -317,20 +316,20 @@ export function NewsPageView() {
                 {t('common.filters')}
               </h2>
               <div className="mt-2 flex flex-wrap gap-1">
-                {WINDOWS.map((window) => (
+                {WINDOWS.map((hours) => (
                   <button
-                    key={window.hours}
+                    key={hours}
                     type="button"
-                    aria-pressed={sinceHours === window.hours}
-                    onClick={() => setSinceHours(window.hours)}
+                    aria-pressed={sinceHours === hours}
+                    onClick={() => setSinceHours(hours)}
                     className={cn(
                       'rounded-full border px-2.5 py-1 font-heading text-[11px] font-bold tabular-nums transition-colors',
-                      sinceHours === window.hours
+                      sinceHours === hours
                         ? 'border-transparent bg-[var(--color-accent-primary)] text-white'
                         : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-primary)]'
                     )}
                   >
-                    {window.label ?? t('news.last24h')}
+                    {hours === 24 ? t('news.last24h') : t('news.lastDays', { count: format.number(hours / 24) })}
                   </button>
                 ))}
               </div>
@@ -379,13 +378,18 @@ export function NewsPageView() {
             </span>
             <span className="text-[11px] tabular-nums text-[var(--color-text-muted)]">{format.relative(article.publishedAt)}</span>
             <Badge variant="default">{t(CATEGORY_KEYS[article.category])}</Badge>
-            {article.language !== lang && article.language !== 'en' && (
-              <span className="rounded-full border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] uppercase text-[var(--color-text-muted)]">
-                {article.language}
-              </span>
-            )}
+
           </div>
-          <h3 className="mt-1.5 font-heading text-base font-bold leading-snug">
+          {article.translation ? (
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{t('news.machineNotice')}</p>
+          ) : article.language !== lang ? (
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+              {newsLanguageName(article.language, t)
+                ? t('news.originalLanguage', { language: newsLanguageName(article.language, t)! })
+                : t('news.originalUnknown')}
+            </p>
+          ) : null}
+          <h3 lang={article.language} dir="auto" className="mt-1.5 font-heading text-base font-bold leading-snug">
             <a
               href={article.link}
               target="_blank"
@@ -396,9 +400,18 @@ export function NewsPageView() {
             </a>
           </h3>
           {article.summary && (
-            <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-[var(--color-text-secondary)]" dir="auto">
+            <p lang={article.language} className="mt-1 line-clamp-3 text-sm leading-relaxed text-[var(--color-text-secondary)]" dir="auto">
               {article.summary}
             </p>
+          )}
+          {article.translation && (
+            <details className="mt-2 text-xs text-[var(--color-text-secondary)]">
+              <summary className="cursor-pointer font-semibold">{t('news.showOriginal')}</summary>
+              <div lang={article.translation.originalLanguage} dir="auto" className="mt-1 space-y-1">
+                <p className="font-semibold">{article.translation.originalTitle}</p>
+                {article.translation.originalSummary && <p>{article.translation.originalSummary}</p>}
+              </div>
+            </details>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
             <a

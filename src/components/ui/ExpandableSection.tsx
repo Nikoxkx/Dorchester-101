@@ -29,7 +29,7 @@ export function ExpandableSection({
   sourceUrl,
   sourceName,
 }: ExpandableSectionProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const contentId = useId();
 
@@ -47,7 +47,7 @@ export function ExpandableSection({
         aria-controls={contentId}
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          'w-full flex items-center gap-3 p-4 text-left',
+          'w-full flex items-center gap-3 p-4 text-start',
           'hover:bg-[var(--color-bg-tertiary)] transition-colors',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]'
         )}
@@ -96,6 +96,8 @@ export function ExpandableSection({
                     href={sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    lang={lang}
+                    dir={lang === 'ar' ? 'rtl' : 'ltr'}
                     className="inline-flex items-center gap-1 text-xs text-[var(--color-accent-primary)] hover:underline"
                   >
                     {t('ui.sourceNamed', { name: sourceName })}
@@ -114,6 +116,8 @@ export function ExpandableSection({
 interface ExpandableCardProps {
   title: string;
   subtitle?: string;
+  /** Language of the subtitle when it differs from the surrounding page. */
+  subtitleLanguage?: string;
   icon?: React.ReactNode;
   stats?: { label: string; value: string }[];
   children: React.ReactNode;
@@ -134,6 +138,7 @@ interface ExpandableCardProps {
 export function ExpandableCard({
   title,
   subtitle,
+  subtitleLanguage,
   icon,
   stats,
   children,
@@ -164,7 +169,7 @@ export function ExpandableCard({
         aria-expanded={isExpanded}
         aria-controls={contentId}
         onClick={toggle}
-        className="w-full rounded-xl p-4 text-left hover:bg-[var(--color-bg-tertiary)]/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+        className="w-full rounded-xl p-4 text-start hover:bg-[var(--color-bg-tertiary)]/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
       >
         <div className="flex items-start gap-3">
           {icon && (
@@ -174,7 +179,7 @@ export function ExpandableCard({
           )}
           <div className="flex-1 min-w-0">
             <h3 className="font-heading font-semibold">{title}</h3>
-            {subtitle && <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+            {subtitle && <p lang={subtitleLanguage} dir={subtitleLanguage === 'en' ? 'ltr' : undefined} className="text-sm text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
           </div>
           <motion.span animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0">
             <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden="true" />

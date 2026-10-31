@@ -182,7 +182,7 @@ export function tipText(t: Translate, tip: StyleTip, unit: TempUnit, format: For
   if (v.highF !== undefined) tokens.high = tempText(v.highF, unit, format.number);
   if (v.lowF !== undefined) tokens.low = tempText(v.lowF, unit, format.number);
   if (v.chance !== undefined) tokens.chance = format.percent(v.chance / 100, 0);
-  if (v.gustMph !== undefined) tokens.speed = `${format.number(Math.round(v.gustMph))} mph`;
+  if (v.gustMph !== undefined) tokens.speed = t('weather.windMph', { speed: format.number(Math.round(v.gustMph)) });
   if (v.timeIso) tokens.time = format.time(v.timeIso);
   return t(`weather.tip.${tip.kind}` as TranslationKey, tokens);
 }

@@ -242,7 +242,7 @@ KEY_LINE = re.compile(r"^  '([^']+)':")
 
 
 def quote(text: str) -> str:
-    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+    return "'" + text.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n").replace("\r", "\\r") + "'"
 
 
 def en_block(entry: tuple[str, dict[str, str]]) -> str:

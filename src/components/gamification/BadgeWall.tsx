@@ -87,9 +87,9 @@ export function BadgeWall() {
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-heading text-xs font-bold leading-snug">{badge.title}</p>
+                  <p className="font-heading text-xs font-bold leading-snug">{t(badge.titleKey)}</p>
                   <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-                    {badge.description}
+                    {t(badge.descriptionKey)}
                   </p>
                 </div>
               </li>

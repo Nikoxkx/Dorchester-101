@@ -28,7 +28,7 @@ function formatMb(bytes: number | null): string | null {
 }
 
 export function DownloadAppCard({ variant = 'full', className }: { variant?: 'hero' | 'full'; className?: string }) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const [info, setInfo] = useState<DownloadInfo | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   // Inside the desktop app there is nothing to download — the resident already
@@ -162,7 +162,7 @@ export function DownloadAppCard({ variant = 'full', className }: { variant?: 'he
           </div>
           <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-text-muted)]">
             <span>
-              {info.name} · {new Date(info.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              {info.name} · {format.date(info.publishedAt, 'medium')}
             </span>
             <span aria-hidden="true">·</span>
             <span>{t('download.app.note')}</span>

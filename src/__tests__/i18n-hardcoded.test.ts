@@ -10,6 +10,7 @@
  *   - JSX text nodes with real words in them (`<h2>How to apply</h2>`)
  *   - the attributes a screen reader or a browser surfaces as words
  *     (`aria-label`, `title`, `placeholder`, `alt`, `label`, `note`, …)
+ *   - embedded FAQ and project data (but not arbitrary data modules)
  *
  * Strings that are legitimately not language: map attribution required by the
  * tile licence, `rel="noopener noreferrer"`, physical key names ("Escape"),
@@ -28,14 +29,8 @@ const SRC = path.resolve(__dirname, '..');
 
 /** Files still carrying English copy. Shrink this list; never grow it. */
 const PENDING = new Set([
-  'app/about/AboutView.tsx',
-  'app/affordable-housing/page.tsx',
   'app/faq/page.tsx',
-  'app/market-trends/page.tsx',
   'app/neighborhood/page.tsx',
-  'app/privacy/page.tsx',
-  'app/projects/page.tsx',
-  'app/terms/page.tsx',
 ]);
 
 /** Attributes whose value a person reads or hears. */
@@ -58,7 +53,7 @@ const VISIBLE_ATTRS = new Set([
 
 /** Values that are markup, code, or a proper noun rather than copy. */
 const ALLOWED_VALUE =
-  /^(?:|https?:\/\/\S+|[a-z0-9-]+|rel noopener noreferrer|noopener noreferrer|Escape|Enter|Tab|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Home|End|Space|MBTA|DOR|DOR101|DORCHESTER|Commons|AbortError|TTY|RTL|inHg|Dorchester, Boston|Dorchester 101|: Sswonk · CC BY-SA 3\.0)$/;
+  /^(?:|https?:\/\/\S+|[a-z0-9-]+|rel noopener noreferrer|noopener noreferrer|Escape|Enter|Tab|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Home|End|Space|MBTA|DOR|DOR101|DORCHESTER|Commons|Wikimedia Commons|CC BY-SA|Census · ACS · B25064|AbortError|TTY|RTL|inHg|Dorchester, Boston|Dorchester 101|IMAGE-CREDITS\.md|: Sswonk · CC BY-SA 3\.0)$/;
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -113,15 +108,51 @@ function literalsIn(file: string): Array<{ line: number; text: string; kind: str
           kind: 'jsx text',
         });
       }
+    } else if (
+      file.endsWith(`${path.sep}app${path.sep}faq${path.sep}page.tsx`) &&
+      ts.isPropertyAssignment(node) &&
+      ['q', 'a'].includes(node.name.getText(sf)) &&
+      (ts.isStringLiteral(node.initializer) || ts.isNoSubstitutionTemplateLiteral(node.initializer)) &&
+      looksLikeCopy(node.initializer.text)
+    ) {
+      // FAQ answers currently live in component data rather than JSX. Keep
+      // this page in PENDING until those answers are localized too.
+      found.push({
+        line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+        text: node.initializer.text,
+        kind: 'FAQ data',
+      });
+    } else if (
+      file.endsWith(`${path.sep}app${path.sep}projects${path.sep}page.tsx`) &&
+      ts.isPropertyAssignment(node) &&
+      ['description', 'parcelNote', 'unitMix', 'communityBenefits', 'howToApply'].includes(node.name.getText(sf)) &&
+      ts.isStringLiteral(node.initializer) && looksLikeCopy(node.initializer.text)
+    ) {
+      // The original project descriptions still serve locales without translations.
+      found.push({
+        line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+        text: node.initializer.text,
+        kind: 'project data',
+      });
     } else if (ts.isJsxAttribute(node)) {
       const name = node.name.getText(sf);
       const init = node.initializer;
-      if (VISIBLE_ATTRS.has(name) && init && ts.isStringLiteral(init) && looksLikeCopy(init.text)) {
-        found.push({
-          line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
-          text: init.text,
-          kind: name,
-        });
+      if (VISIBLE_ATTRS.has(name) && init) {
+        let text = '';
+        if (ts.isStringLiteral(init)) text = init.text;
+        if (ts.isJsxExpression(init) && init.expression) {
+          if (ts.isStringLiteral(init.expression)) text = init.expression.text;
+          if (ts.isTemplateExpression(init.expression)) {
+            text = [init.expression.head.text, ...init.expression.templateSpans.map((span) => span.literal.text)].join(' ');
+          }
+        }
+        if (looksLikeCopy(text)) {
+          found.push({
+            line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+            text,
+            kind: name,
+          });
+        }
       }
     } else if (
       ts.isStringLiteral(node) &&

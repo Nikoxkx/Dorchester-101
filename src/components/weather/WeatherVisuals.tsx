@@ -3,6 +3,8 @@
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { moonPhase } from '@/lib/moon';
 import { useReduceMotion } from '@/stores/appStore';
+import { useI18n } from '@/i18n/hook';
+import { ForecastText } from './ForecastText';
 import type { ConditionKind, HourlyPeriod } from '@/lib/weather';
 
 /**
@@ -244,6 +246,7 @@ export function TempCurve({
   labelFor: (tempF: number) => string;
   timeFor?: (iso: string) => string;
 }) {
+  const { format } = useI18n();
   const gid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [boxRef, width] = useElementWidth(540);
   // Apple-Weather scrubbing: hover/pen glides a crosshair along the curve,
@@ -295,11 +298,9 @@ export function TempCurve({
 
   const activeHour = active != null ? hours[active] : null;
   const activeCoord = active != null ? coords[active] : null;
-  const readout = activeHour && timeFor
-    ? `${timeFor(activeHour.start)} · ${labelFor(activeHour.tempF)}${activeHour.precipChance != null ? ` · ${activeHour.precipChance}%` : ''} · ${activeHour.shortForecast}`
-    : activeHour
-      ? `${labelFor(activeHour.tempF)} · ${activeHour.shortForecast}`
-      : '';
+  const readout = activeHour
+    ? `${timeFor ? `${timeFor(activeHour.start)} · ` : ''}${labelFor(activeHour.tempF)}${activeHour.precipChance != null ? ` · ${format.percent(activeHour.precipChance / 100, 0)}` : ''}`
+    : '';
 
   return (
     <div className="relative">
@@ -312,6 +313,7 @@ export function TempCurve({
         aria-valuemax={n - 1}
         aria-valuenow={active ?? 0}
         aria-valuetext={readout}
+        aria-describedby={`${gid}-description`}
         className="cursor-crosshair overflow-x-auto pb-1 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] rounded-lg"
         onScroll={(e) => { setScrollLeft(e.currentTarget.scrollLeft); setViewWidth(e.currentTarget.clientWidth); }}
         onPointerMove={(e) => {
@@ -390,18 +392,24 @@ export function TempCurve({
             {timeFor ? timeFor(activeHour.start) : ''} · {labelFor(activeHour.tempF)}
           </span>
           <span className="block max-w-[11rem] truncate text-[10px] font-medium opacity-85">
-            {activeHour.shortForecast}
-            {activeHour.precipChance != null && activeHour.precipChance > 0 ? ` · ${activeHour.precipChance}%` : ''}
+            <ForecastText text={activeHour.shortForecast} />
+            {activeHour.precipChance != null && activeHour.precipChance > 0 ? ` · ${format.percent(activeHour.precipChance / 100, 0)}` : ''}
           </span>
         </div>
       )}
-      <span className="sr-only" role="status">{readout}</span>
+      <span id={`${gid}-description`} className="sr-only" role="status">
+        {activeHour && <>
+          {timeFor ? `${timeFor(activeHour.start)} · ` : ''}{labelFor(activeHour.tempF)}
+          {activeHour.precipChance != null ? ` · ${format.percent(activeHour.precipChance / 100, 0)}` : ''} · <ForecastText text={activeHour.shortForecast} />
+        </>}
+      </span>
     </div>
   );
 }
 
 /** Precipitation probability, hour by hour, as Apple-style bars. */
 export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]; timeFor: (iso: string) => string; labelFor?: (tempF: number) => string }) {
+  const { t, format } = useI18n();
   const [active, setActive] = useState<number | null>(null);
   const reduceMotion = useReduceMotion();
   const [grown, setGrown] = useState(false);
@@ -415,21 +423,22 @@ export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]
   return (
     <div>
       <p role="status" className="mb-1 h-5 font-heading text-xs font-bold text-[var(--color-accent-primary)]">
-        {activeHour
-          ? `${timeFor(activeHour.start)} · ${activeHour.precipChance ?? 0}%${labelFor ? ` · ${labelFor(activeHour.tempF)}` : ''} · ${activeHour.shortForecast}`
-          : ''}
+        {activeHour && <>
+          {timeFor(activeHour.start)} · {activeHour.precipChance == null ? t('market.unavailable') : format.percent(activeHour.precipChance / 100, 0)}{labelFor ? ` · ${labelFor(activeHour.tempF)}` : ''} · <ForecastText text={activeHour.shortForecast} />
+        </>}
       </p>
       <div className="overflow-x-auto pb-1 [scrollbar-width:thin]" onPointerLeave={() => setActive(null)}>
         <div className="min-w-[540px]">
           <div className="flex h-24 items-end gap-[3px]">
             {hours.map((h, i) => {
-              const pct = Math.max(0, Math.min(100, h.precipChance ?? 0));
+              const pct = h.precipChance == null ? null : Math.max(0, Math.min(100, h.precipChance));
+              const chance = pct == null ? t('market.unavailable') : format.percent(pct / 100, 0);
               const isActive = i === active;
               return (
                 <button
                   key={h.start}
                   type="button"
-                  aria-label={`${timeFor(h.start)}: ${pct}%`}
+                  aria-label={`${timeFor(h.start)} · ${t('weather.precipChance')}: ${chance}`}
                   aria-pressed={isActive}
                   onPointerEnter={(e) => {
                     if (e.pointerType !== 'touch') setActive(i);
@@ -438,12 +447,12 @@ export function PrecipBars({ hours, timeFor, labelFor }: { hours: HourlyPeriod[]
                   onFocus={() => setActive(i)}
                   className={`flex h-full flex-1 flex-col items-center justify-end gap-1 rounded-t-md px-px transition-colors ${isActive ? 'bg-[var(--color-accent-primary)]/12' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
                 >
-                  <span className={`text-[9px] font-semibold leading-none ${isActive ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-accent-primary)]'}`}>{pct >= 20 || isActive ? `${pct}%` : ''}</span>
+                  <span className={`text-[9px] font-semibold leading-none ${isActive ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-accent-primary)]'}`}>{pct == null ? '—' : pct >= 20 || isActive ? chance : ''}</span>
                   <span
                     className="w-full rounded-t bg-[var(--color-accent-primary)] transition-[height,opacity] duration-500 ease-out"
                     style={{
-                      height: `${grown || reduceMotion ? Math.max(3, (pct / 100) * 64) + (isActive ? 4 : 0) : 2}px`,
-                      opacity: isActive ? 1 : 0.35 + pct / 154,
+                      height: `${pct == null ? 0 : grown || reduceMotion ? Math.max(3, (pct / 100) * 64) + (isActive ? 4 : 0) : 2}px`,
+                      opacity: pct == null ? 0 : isActive ? 1 : 0.35 + pct / 154,
                       transitionDelay: `${Math.min(i * 18, 420)}ms`,
                     }}
                   />
@@ -530,6 +539,7 @@ export function sunArcPoint(frac: number): { xPct: number; yPct: number } {
  * the caller (SunMoonCycle) puts the moon on the same path at night.
  */
 export function SunArc({ sunrise, sunset, nowMs }: { sunrise: string; sunset: string; nowMs: number }) {
+  const { t, format } = useI18n();
   const gid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const rise = new Date(sunrise).getTime();
@@ -549,7 +559,7 @@ export function SunArc({ sunrise, sunset, nowMs }: { sunrise: string; sunset: st
   const travelled = up ? `M ${cx - r} ${cy} A ${r} ${r} 0 ${frac > 0.5 ? 1 : 0} 1 ${sunX.toFixed(1)} ${sunY.toFixed(1)}` : null;
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={`${Math.floor(daylightMin / 60)}h ${daylightMin % 60}m`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label={`${t('weather.daylight')} ${t('map.arrivalHours', { hours: format.number(Math.floor(daylightMin / 60)), minutes: format.number(daylightMin % 60) })}`}>
         <defs>
           <linearGradient id={`sunarc-${gid}`} x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#FF9A56" />
@@ -611,27 +621,29 @@ const COMPASS_DEG: Record<string, number> = {
 };
 
 /** Wind direction dial; the arrow points where the wind is going. */
-export function WindCompass({ dir, speedText }: { dir: string | null; speedText: string }) {
+export function WindCompass({ dir }: { dir: string | null }) {
+  const { t } = useI18n();
   const from = dir ? COMPASS_DEG[dir.toUpperCase()] : undefined;
   // Meteorological direction is "from"; the air moves toward the opposite side.
   const towards = from !== undefined ? (from + 180) % 360 : 0;
   return (
-    <svg viewBox="0 0 96 96" className="h-24 w-24" role="img" aria-label={speedText}>
+    <svg viewBox="0 0 96 96" className="h-20 w-20 shrink-0" aria-hidden="true">
       <circle cx="48" cy="48" r="42" fill="none" stroke="var(--color-border)" strokeWidth="2" />
-      {['N', 'E', 'S', 'W'].map((label, i) => {
+      {(['N', 'E', 'S', 'W'] as const).map((direction, i) => {
+        const label = t(`weather.direction.${direction}`);
         const a = (i * Math.PI) / 2;
         const x = 48 + 33 * Math.sin(a);
         const y = 48 - 33 * Math.cos(a) + 4;
         return (
-          <text key={label} x={x} y={y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--color-text-muted)">
+          <text key={direction} x={x} y={y} textAnchor="middle" fontSize={label.length > 5 ? 6 : 8} fontWeight="700" fill="var(--color-text-muted)">
             {label}
           </text>
         );
       })}
-      <g transform={`rotate(${towards} 48 48)`}>
+      {from !== undefined && <g transform={`rotate(${towards} 48 48)`}>
         <path d="M48 16 L54 44 L48 39 L42 44 Z" fill="var(--color-accent-primary)" />
         <line x1="48" y1="44" x2="48" y2="76" stroke="var(--color-accent-primary)" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
-      </g>
+      </g>}
       <circle cx="48" cy="48" r="4" fill="var(--color-text-muted)" />
     </svg>
   );

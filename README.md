@@ -10,11 +10,11 @@
   <a href="https://github.com/Nikoxkx/Dorchester-101/releases/latest"><img alt="Version 4.0.0" src="https://img.shields.io/badge/version-4.0.0-14304F?style=for-the-badge&labelColor=0F1720"></a>
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-C8102E?style=for-the-badge&labelColor=0F1720"></a>
   <img alt="9 languages" src="https://img.shields.io/badge/languages-9-E3B23C?style=for-the-badge&labelColor=0F1720">
-  <img alt="No tracking" src="https://img.shields.io/badge/tracking-none-2F7A4C?style=for-the-badge&labelColor=0F1720">
+  <img alt="Analytics optional" src="https://img.shields.io/badge/analytics-optional-2F7A4C?style=for-the-badge&labelColor=0F1720">
   <img alt="Lint: 0 warnings" src="https://img.shields.io/badge/eslint-0_warnings-2F7A4C?style=for-the-badge&labelColor=0F1720">
 </p>
 
-DOR101 is a free, open-source guide to help in **Dorchester, Boston**: housing you can afford, food when money runs short, the bus or train that gets you there, and the legal rights that protect you as a tenant. Every number on the site is traced to the public authority that published it, every listing shows the date a resident last checked it, and the whole thing works in nine languages with **no account, no ads and no data collection**.
+DOR101 is a free, open-source guide to help in **Dorchester, Boston**: housing you can afford, food when money runs short, the bus or train that gets you there, and the legal rights that protect you as a tenant. Listings show review dates, but some details remain unverified or may have changed. The interface supports nine languages without an account or ads. Translation coverage is still incomplete; some content remains in English. The draft privacy notice requires owner and legal review against the deployed app.
 
 It ships as a website (installable as a PWA and usable offline) and as a Windows desktop application.
 
@@ -46,12 +46,12 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 
 | Area | Change |
 |------|--------|
-| **Every user-visible string now goes through the dictionary** | The last screens that still shipped English in their JSX — the tools page (rent/AMI calculators, document checklist), the housing primer, the extra calculators, the field notes, source marks, QR poster, badge wall, weather shared pieces, the per-page source notes — were converted to keys, then a new guard (`src/__tests__/i18n-hardcoded.test.ts`) was added: it parses `src/app` and `src/components` with the TypeScript compiler API and fails the build when JSX text, a visible attribute (`title`, `alt`, `aria-label`, `placeholder`, …) or a conditional-expression literal still holds English prose. A second test keeps a `PENDING` list honest, so the remaining backlog can only shrink. 234 new keys × 9 languages; map attribution and brand strings stay verbatim by design. |
+| **Translation progress, not completion** | Housing, privacy, terms, search labels, badges and source descriptions have been converted to dictionary keys. Directory records and other page/data copy still contain English. All twelve FAQ answers, all four project records, nine neighborhood summaries and photo captions, the neighborhood tenant-rights, healthcare and transit-guide sections, all thirteen winter-clothing records (summaries, instructions and available eligibility, hours and transit details), and all 28 resource summaries and authored listing details have first-pass translations in every language. Bundled transit line names, bus route wording and station photo captions also have drafts. Exact compass-style direction words are translated; unrecognized MBTA headsigns remain in English and are disclosed. Some source names, market and live transit details remain in English, labelled where implemented. Unsourced sub-neighborhood figures and other unverified details have been removed pending verification; the overview cites the 2020 tract-based population. Project application guidance cites current sources rather than assuming a lottery or closed waitlist. Common forecast periods, 16-point wind directions, simple mph ranges and current measurement units are localized; unfamiliar wind wording and live forecast or alert prose remain in English and are labeled. `src/__tests__/i18n-hardcoded.test.ts` is a partial JSX/attribute ratchet with a tracked remainder; dictionary parity and this guard do not prove that all visible content is translated. First-pass translations need native-speaker review, particularly for legal and eligibility information. Browser read-aloud requests actual Haitian Creole and Kriolu language tags rather than substituting French or Portuguese; a compatible voice may not be installed. |
 | **Apple-style weather + what-to-wear pop-up** | The weather surfaces were redrawn the way a phone weather app draws them, entirely from the live NWS payload (`src/components/weather/WeatherVisuals.tsx`): a sky-gradient hero chosen by the live condition, glass hour cards, a smooth 24-hour temperature curve, precipitation bars, 7-day temperature-range bars with a "you are here" dot, a sun-path arc and a wind compass. A small **What to wear today** card now lives in the corner of every page (`WearTodayToast`): it re-derives its tip from the live forecast every minute, dismissing it remembers *that advice* (Boston date + tip + 5 °F band) so tomorrow's weather — or a real temperature swing — brings it back, and whenever the tip implies warm gear it links straight to the free-coats list. |
 | **Screenshot-led link previews** | One lightweight 1200×630 JPEG frames an actual browser screenshot of the homepage. Public pages share the same card with matching, section-specific Open Graph and X/Twitter copy. A content-hashed static URL avoids image-generation cold starts and conflicting file-based metadata. Regenerate with `npm run refresh:social`; see [Social previews](docs/SOCIAL-PREVIEWS.md) for capture, deployment and cache refresh instructions. Platform display and cropping vary. |
 | **Map: menu overlap + vanishing satellite fixed** | Leaflet's panes carry z-indexes up to ~1000 and, without a stacking context of their own, painted over the fixed sidebar — opening the menu on the map page put the map *over* the site. The map container is now `isolation: isolate` (rail 1200 / scrim 1150), so every Leaflet layer stays inside the map box. The satellite basemap could also disappear permanently: the resilient tile layer remembered falling back to a later provider across style switches. It is keyed by style now, so Satellite always starts again from real Esri imagery. |
 | **Live buses & trains on the map** | The map now draws the actual vehicles from the MBTA's public `VehiclePositions.pb` feed (`/api/mbta?type=vehicles`, 15 s heartbeat, stale GPS reports dropped): route-coloured pills with direction-of-travel arrows, for buses and trains alike. Tapping one opens its panel — fleet number, next stop and whether it is stopped there, speed, on-board crowding when reported, and the report's age — beside a clickable stops list for the focused route with the vehicle's next stop lit. |
-| **Map & transit audit, help band reskinned, NowBar retired (4.9)** | Every map component was audited end to end. The place/stop sheet — photo, hours, get-there directions (Google/Apple Maps with a real origin), live departures, fares — carried hardcoded English; it is now fully translated like the rest of the site (36 new keys × 9 languages). Map markers carry real accessible names (Leaflet `title`, since `alt` alone names nothing on a div-icon), the sheets return focus to whatever opened them, close targets grew to 36 px, the place-layer selector reports its state truthfully, alert expiry reads "Until …" instead of "Last …", first/last-train labels no longer borrow a parameterized string, and the dock gained a **Places on the map** list so every pin is reachable by keyboard, not only by tapping the canvas. The "Need food or housing help today?" band dropped its one-off accent slab and is now an ordinary site card with transparent-background icon and call buttons like the rest of the site (4.9.1 removed its last gradient fills and the now-unused aurora-wash CSS). The "Dorchester right now" strip was removed — component, homepage slot and Settings row deleted, with a settings migration (v5) stripping the retired slot from stored layouts. |
+| **Map & transit audit, help band reskinned, NowBar retired (4.9)** | Every map component was audited end to end. The place/stop sheet — photo, hours, get-there directions (Google/Apple Maps with a real origin), live departures, fares — carried hardcoded English; its labels were converted to dictionary keys (36 new keys × 9 languages; other content still needs translation). Map markers carry real accessible names (Leaflet `title`, since `alt` alone names nothing on a div-icon), the sheets return focus to whatever opened them, close targets grew to 36 px, the place-layer selector reports its state truthfully, alert expiry reads "Until …" instead of "Last …", first/last-train labels no longer borrow a parameterized string, and the dock gained a **Places on the map** list so every pin is reachable by keyboard, not only by tapping the canvas. The "Need food or housing help today?" band dropped its one-off accent slab and is now an ordinary site card with transparent-background icon and call buttons like the rest of the site (4.9.1 removed its last gradient fills and the now-unused aurora-wash CSS). The "Dorchester right now" strip was removed — component, homepage slot and Settings row deleted, with a settings migration (v5) stripping the retired slot from stored layouts. |
 | **Weather is opt-in, sections are yours (4.8)** | Weather now starts **off** and is turned on in **Settings → Weather**: one master switch gates the homepage weather panel, the `/weather` page and every menu/search link to it, the what-to-wear pop-up and the status-bar weather chip — while National Weather Service **storm warnings always show**, switch or no switch. Existing visitors who had arranged their homepage keep weather on (one-time migration, unit-tested in `weatherSettings.test.ts`); everyone else gets the new default. The `/settings` deep link `/settings#weather` and the weather page itself both offer the switch, so nobody is stranded. Section management also grew: beside the homepage's show/hide + move up/down list (Settings → Homepage, all 10 sections), the `/weather` page's own blocks — current conditions & sun/moon, what-to-wear spotlight, full tips list, hour-by-hour, 7-day, method note — are show/hideable and reorderable in Settings → Weather, with active alerts pinned first because safety is not furniture. |
 | **Zero-touch updates (4.7)** | Deploying a new version no longer asks anything of residents. The web/installed app checks hourly, on foreground and on reconnect; a found update asks while the page is on screen (Reload is the resident's tap — nothing ever reloads under a half-filled form), and **applies itself silently the moment the app is backgrounded**, so even an app that is never swiped closed ends up current and a dismissed prompt defers instead of stranding the update. The policy is one pure, tested function (`src/lib/updatePolicy.ts`); registration and the whole update lifecycle now have a single owner (`ServiceWorkerRegistration` — a duplicate registration in the install prompt was removed). The Windows app does the same via `electron-updater` (background download, install on quit, checks 20 s after launch and every 6 h) — it activates as soon as the first GitHub Release publishes `latest.yml` (see *Owner checklist*). The homepage weather panel also regained its full 4.4 composition (curve, precipitation, 7-day and the what-to-wear spotlight as glass modules) and the NowBar its diagonal sheen — all still in the site's palette/aurora skin. |
 | **Weather in the site's own skin (4.6)** | The NowBar and the weather surfaces stopped carrying private color stories. The NowBar (retired in 4.9) became an ordinary site card — a labelled `section` (it was a `div`, which the homepage glass/aurora card recipes silently skipped) with the standard card tokens, the `dor101-glass` surface blur, and the site's **shared aurora wash** (`.dor101-aurora-wash`: the backdrop's own two-radial accent glow recipe, drifting only while the aurora surface is active) — so palette, surface and homepage card style dress it exactly like every other section. The weather sky derives from the resident's palette too: `.wx-sky-host` captures the active accents, a soft-light aurora wash (`.wx-sky-aurora`) tints the condition gradient with them, the glass modules wear the homepage aurora-card recipe, the in-sky accent is the site accent lightened for sky contrast, and every button on the sky (full-forecast, back-to-now, free-coats CTA, strip arrows, refresh, unit toggle) is the site's primary gradient or token glass. Pick Violet + aurora and the whole weather section — sky included — turns violet aurora with the rest of the page. |
@@ -60,7 +60,7 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 | **A homepage you arrange (4.3)** | Settings → Homepage lists every homepage section with show/hide switches and move up/down controls, plus a card style (Match site surface, Solid, Glass, Tinted, Aurora) scoped to the homepage alone — the five surface recipes as CSS variables under `.dor101-home[data-cards]`. The storm-warning banner is deliberately not removable; it always rides just ahead of the weather. The live strip at the top of the homepage takes the interface's own accent colors, so recoloring the site recolors the strip in the same instant. The what-to-wear spotlight gained a rotating **"Did you know?"** strip: facts computed from the same live payload (tonight's sunset, the week's warmest afternoon and coldest night, the wettest hour, today's temperature swing, the wind right now) crossfading with two pieces of Dorchester history. |
 | **Weather graphs you can scrub (4.3)** | The 24-hour temperature curve is now interactive the way a phone weather app is: hovering or gliding a pen sweeps a dashed crosshair with a floating readout (hour, temperature, condition, rain chance), a tap/click pins it, arrow keys walk it hour by hour (`role="slider"` with `aria-valuetext`), and touch keeps its horizontal scroll instead of fighting the scrub. Precipitation bars highlight on hover/tap/focus with a readout line (time · % · temperature · condition). |
 | **Updates that install themselves (4.3)** | Nobody re-downloads anything. On the web/installed PWA the service worker now re-checks for a newer build hourly, on foreground, and on reconnect (previously only on navigation) and still asks before reloading; Settings → Data has a manual **Check for updates**. The Windows app uses `electron-updater` against GitHub Releases: checks after launch and every six hours, downloads in the background, and offers "Restart now / Later" (Later applies on quit) — portable builds and offline starts are untouched. The release workflow now publishes `latest.yml` + blockmaps beside the exes, which is the feed the updater reads. |
-| **Privacy asked plainly (4.3)** | A one-time notice (not a cookie wall — the site sets no tracking cookies and runs no ads) explains in one paragraph that settings live in on-device local storage, that nothing is sold or shared, and that location/notifications are only ever requested behind their own labelled buttons, with links to Settings → Permissions and the Privacy page. The PWA install banner now speaks iPhone/iPad too (Share → Add to Home Screen steps, since iOS has no install prompt event) and is localized in all nine languages. |
+| **Privacy asked plainly (4.3)** | A one-time notice (not a cookie wall — the site sets no tracking cookies and runs no ads) describes local settings and permissions with links to Settings → Permissions and the Privacy page. Its no-tracking claims need review against the Vercel analytics components now present in the layout. The PWA install banner now speaks iPhone/iPad too (Share → Add to Home Screen steps, since iOS has no install prompt event) and is localized in all nine languages. |
 | **Map: the clicked bus always draws its line (4.3)** | If the shapes feed has no geometry for a tapped vehicle's route (bus geometry goes missing most), the map threads a line through the route's own stops in order — labelled timetable geometry — so "tap a bus, see its whole route and stops" holds even on a bad feed day; stop markers also rise above the dimmed routes while a vehicle is emphasized. |
 | **What to wear, one moment at a time (4.2)** | The homepage section used to stack four tips (Today… Tonight… Tonight…). It is now a single sky-gradient **spotlight**: `dayPhase()` picks the reader's part of the day from real Boston sunrise/sunset (wall-clock fallback) and `pickSpotlightTip()` shows exactly one tip for that moment at the current feels-like temperature — storm and freezing-rain safety always override. A morning/afternoon/evening/night rail shows where the advice sits in the day, arrows peek at the day's other moments one by one, and the corner pop-up, the hero line and the spotlight all speak from the same picker. The full list still lives on `/weather`. |
 | **Weather visuals are never squished (4.2)** | The 24-hour temperature curve was a 720-wide SVG stretched into any box (`preserveAspectRatio="none"`), which visibly compressed the line and its labels on phones. Charts now paint 1:1 at their measured container width with a 540 px floor — on narrow screens they side-scroll instead of squeezing, with hour labels added. The hero's hour-by-hour ribbon gained snap scrolling, edge fades, mouse-drag, arrow paging and a "back to now" pill, and hourly condition text wraps instead of truncating: compact, but nothing is ever compressed or cut off. |
@@ -92,19 +92,18 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 | **Percentages were 100× too small** | `formatPercent` divided its argument by 100 and so did six of its seven callers, so the market page printed a 63.5% renter share as **0.6%** and a 31% median rent burden as **0.3%**. The formatter now takes a fraction the way `Intl.NumberFormat` does; the one caller holding percentage points (language coverage on the About page) converts, and a test pins the contract. |
 | **Aerial views fill their frame** | The housing-projects site imagery was stitched from a 3×2 grid of 256 px tiles scaled by a container query, so a tile that failed to load left a hole, sub-pixel rounding showed hairlines, and browsers without container-query units drew nothing. It now asks Esri for **one** export at the frame's exact size and aspect and lays it over the box with `object-cover`; the tile grid survives only as a fallback, with its tiles overlapping by a pixel. |
 | **Wrong-geography fix** | The Census fetcher was requesting **county 017 (Middlesex)** while the page label and the HUD fetcher said Suffolk County/Boston. It now requests **county 025** for both, with a unit test pinning the FIPS pair. |
-| **Dependency hygiene** | Replaced the deprecated `xlsx` package (unmaintained, advisory-flagged) with `read-excel-file`, upgraded Next.js to 16.3.4 and pruned a stale axios dependency. `npm audit --omit=dev` (the shipped web app) reports **0 vulnerabilities**; `serverExternalPackages` keeps the workbook reader out of the server bundle so the market route compiles. The remaining advisories are all in the dev-only Electron packaging toolchain. |
+| **Dependency hygiene** | Replaced unmaintained `xlsx` with `read-excel-file` and updated Next.js to 16.4.3 and other compatible packages. On October 31, 2026, `npm audit --omit=dev` reported zero findings and the full audit reported 30 moderate development-tool findings, with no high or critical findings. The remaining minimatch findings are tracked in `SECURITY.md`; audit results change over time. Major Electron upgrades still require a real Windows installer smoke test. |
 | **Map preview never collapses** | The dashboard's `ssr:false` map loader now owns its height, so the pre-hydration skeleton can no longer render a zero-height blank box. |
-| **Every listing re-checked (4 Oct 2026)** | Every listing, fare, income limit and project record was re-verified against the publishing agency in one pass: MBTA routes, stops and street-stop memberships from the v3 API; subway and Commuter Rail fares from mbta.com; the M7 and income-eligible reduced-fare descriptions (the $10 pass is a 7-day LinkPass; monthly is $30); HUD's FY2026 income limits and $164,600 median family income; the LIHEAP PY2027 60%-SMI ladder; and Dot Block's 488 homes with 117 income-restricted. The offline news snapshot was refreshed to the same date, because the old capture had aged past the fourteen-day window the API asks for, and the retired GBH feed was removed from the About page's source list so it no longer claims a publisher the site does not read. |
+| **October 2026 data refresh** | An earlier refresh reviewed listings, fares, income limits and project records against published sources, but later checks found discrepancies. Entries still need ongoing provider review. That refresh included: MBTA routes, stops and street-stop memberships from the v3 API; subway and Commuter Rail fares from mbta.com; the M7 and income-eligible reduced-fare descriptions (the $10 pass is a 7-day LinkPass; monthly is $30); HUD's FY2026 income limits and $164,600 median family income; the LIHEAP PY2027 60%-SMI ladder; and Dot Block's 488 homes with 117 income-restricted. The offline news snapshot was refreshed to the same date, because the old capture had aged past the fourteen-day window the API asks for, and the retired GBH feed was removed from the About page's source list so it no longer claims a publisher the site does not read. |
 
 | **Live Boston weather, warnings and what to wear** | A `/weather` section and a homepage weather panel — **opt-in since 4.8** (off until a resident turns weather on in Settings; storm warnings always show) — read the **National Weather Service** (Dorchester grid point) at every load: current conditions from the nearest station, the next 48 hours hour by hour, the 7-day day/night forecast, and feels-like computed with the NWS wind-chill and heat-index formulas. Active storm watches, warnings and advisories appear in a banner on **every** page, with the NWS's own instructions verbatim. If the NWS cannot be reached, Open-Meteo is shown *labelled as a backup* and the alert area says warnings could not be checked — it never claims there are none. What-to-wear tips are computed from the live hourly forecast at read time (coat ladder on feels-like, rain/wind/footwear, cold-snap and heat-wave *week* patterns across all seven days, morning-chill and after-dark rules), not written once in the summer. |
-| **Free coats and winter clothing** | A `/winter-clothing` section lists verified places in Dorchester and Boston where winter coats and warm clothing are free — ABCD Dorchester NSC, Cradles to Crayons (through its named Dorchester partners), St. Francis House Fresh Threads, women's programs, Coats4Vets, the seasonal Coats for Kids & Families drive — plus Mass 2-1-1 and other finders that maintain their own listings daily. Every record carries who it is for, what is given away, the exact next step, honest hours (structured where the organisation publishes them, "call first" where it does not) and its check date; `/api/winter-clothing` re-computes open-now and in-season in Boston time and live-tests each official page on every load, reporting a dead link as "could not be checked" rather than hiding it. When the live forecast says a warm coat matters today, the weather tips and the homepage link straight here. |
+| **Free coats and winter clothing** | `/winter-clothing` lists coat programs, referrals and finders around Boston. Some details need further review, and one finder can include reduced-cost help. Call the provider before travelling. Opening badges reflect published site or phone schedules, not clothing stock; Anton’s dates refer to donation collection, not coat availability. The site checks whether provider pages respond (cached up to six hours), separately from manual review dates. The thirteen records have AI-assisted drafts in all supported languages, including instructions and available eligibility, hours and transit details; expert and native-speaker review remains necessary. |
 | **Five more palettes, five surfaces** | Palettes grew from seven to twelve (Lagoon, Rose, Sunset, Cobalt, Orchid), each WCAG-contrast-checked in light and dark. The old glass on/off switch became five **surface styles** — Solid, Transparent, Frosted, Tinted, Aurora — that change how the *same* palette reflects on the page: translucency over the bay photograph, frost blur and sheen, accent-tinted panels, or an accent-glow aurora. Surfaces derive from the active palette's own colours with `color-mix` (never a second hard-coded scheme), high contrast and reduced-transparency systems always get Solid, and Settings previews each style over the real backdrop photo before you pick. |
 
 ### 4.0 launch
 
 | Area | Change |
 |------|--------|
-| **Every user-visible string now goes through the dictionary** | The last screens that still shipped English in their JSX — the tools page (rent/AMI calculators, document checklist), the housing primer, the extra calculators, the field notes, source marks, QR poster, badge wall, weather shared pieces, the per-page source notes — were converted to keys, then a new guard (`src/__tests__/i18n-hardcoded.test.ts`) was added: it parses `src/app` and `src/components` with the TypeScript compiler API and fails the build when JSX text, a visible attribute (`title`, `alt`, `aria-label`, `placeholder`, …) or a conditional-expression literal still holds English prose. A second test keeps a `PENDING` list honest, so the remaining backlog can only shrink. 234 new keys × 9 languages; map attribution and brand strings stay verbatim by design. |
 | **Twelve colour palettes** | Harbor (default), **Black & white**, Forest, Brick, Slate, Sand, Violet, Lagoon, Rose, Sunset, Cobalt and Orchid. Each has a light and a dark version, keeps the same contrast ratios (WCAG-checked in `palettes.test.ts`), and is applied to the whole site — cards, buttons, charts, map controls — not just the header. Settings → Appearance. |
 | **Door-to-door transit directions** | Every place on the map has a **Bus / train route** button. It asks the browser for your location once and opens Google Maps with the full route from where you stand, using live MBTA times. Apple Maps and walking routes are one tap away. |
 | **Photographic brand** | The logo, favicon, PWA icons and the link-preview card are built from a real photograph of the Boston skyline seen across Dorchester Bay (Wikimedia Commons, CC BY-SA 3.0), not a generated illustration. |
@@ -119,7 +118,7 @@ It ships as a website (installable as a PWA and usable offline) and as a Windows
 
 ### Web / PWA
 
-Open the deployed site, then use your browser's **Install** / **Add to Home Screen** option. DOR101 registers a service worker that pre-caches the app shell, the directory data, source badges and icons, so the directory, map places, FAQ and hotlines keep working with no signal. Live MBTA predictions and news naturally need a connection.
+Open the deployed site, then use your browser's **Install** / **Add to Home Screen** option. DOR101 caches selected pages, previously requested site assets and map tiles. Some content may remain available offline when the needed files were cached, but offline access is not guaranteed. API responses, including live predictions, warnings and news, require a connection and are not stored by the service worker.
 
 On **iPhone/iPad** (Safari) the install banner walks you through *Share → Add to Home Screen*; the installed app runs standalone with safe-area-aware layout, maskable icons, home-screen shortcuts (Map, Weather, Food open now, Housing, Free coats) and self-updates in the background. The site is built to every installability criterion the platforms check — manifest (`name`/`short_name`, `id`, `scope`, standalone display, PNG icon set incl. maskable, shortcuts, screenshots), HTTPS, a service worker with offline shell, and responsive layouts verified from small phones to iPad widths.
 
@@ -172,8 +171,10 @@ installing, running and troubleshooting the desktop app are in
 * **Resource directory** — organisations by category, each with a *last verified* date, a source badge and a "report a problem" button that pre-fills a GitHub issue.
 * **Emergency hotlines** pinned to the dashboard: 911, 311, 211, the BHA emergency line, Mass 2-1-1 shelter, Safelink and the 988 crisis line.
 * **News** — live feed from the Dorchester Reporter, City of Boston news, WBUR and the Globe's Dorchester coverage, filterable by topic.
-* **Weather** — live National Weather Service forecast for Dorchester with storm warnings site-wide and what-to-wear tips computed from the forecast at read time.
-* **Free winter clothing** — checked list of free coat and warm-clothing programs in Dorchester and Boston, with open-now/in-season computed live and each official page re-tested on load.
+* **Weather** — live National Weather Service forecast for Dorchester with storm warnings site-wide and what-to-wear tips computed from the forecast at read time. If the site API fails, the browser may contact NWS or Open-Meteo directly; Open-Meteo supplies no warnings. Common period names and a limited set of exact short descriptions are localized as drafts; detailed forecasts, unfamiliar wording and official alert prose remain English and are marked.
+* **Free winter clothing** — coat programs and referral finders around Boston, with scheduled site/phone hours, labelled collection dates and review dates. Call providers to confirm availability and eligibility.
+* **Food and resource API** — food records distinguish pantries, paid markets, and referral services. Conflicting Codman market and Fair Foods details, the Codman health center’s department-specific hours, and unconfirmed HCFA hotline hours are flagged for review, and scheduled status is withheld where holiday or conflicting hours make it unreliable. The Grove Hall Library map position follows BPL’s branch page, and its printing description notes that fees may apply; its regular schedule is shown as a note, without a computed open badge because holiday and early closures can differ. Metro Housing’s Resource Line, lobby and appointment hours are distinguished, with no single computed open badge. Somali Development Center, VietAID and CPCS hours and accessibility need confirmation; their map pins have been corrected to their street addresses. CPCS guidance directs eligibility and fee-waiver questions to the court. VietAID services are distinguished from those of other organizations in its building. Phone services and non-walk-in warehouses are excluded from map destinations. API opening status uses Boston-time schedules and is cached briefly; unknown ID/EBT and accessibility values and non-destination coordinates are `null`. The `status.state` value `always-open` represents a continuous 24-hour schedule without inventing a midnight closing time. These nullable fields and the new status may require updates in API clients. Confirm details with providers.
+* **Live alerts and language tags** — MBTA GTFS alerts use an official translation when the feed supplies the selected language, and otherwise show the original with a language notice; unavailable or partially failed MBTA checks are disclosed even if other notifications exist, while a successful empty feed is treated as quiet. Notification filters use route IDs rather than Settings feed IDs. Partial live predictions are labelled incomplete; fallback times are headway-based estimates, not a published timetable. Haitian Creole and Kriolu content uses its actual HTML language tag, with first-pass weekday, month and relative-time wording instead of French or Portuguese. These drafts still need native-speaker review.
 * **FAQ** — questions residents actually asked, answered with citations.
 
 <p align="center"><img src="docs/media/banner-uphams-corner.jpg" width="100%" alt="S. B. Pierce Building at Uphams Corner" /></p>
@@ -207,7 +208,7 @@ Profiles of Fields Corner, Savin Hill, Uphams Corner, Ashmont, Codman Square, Gr
 | 🇸🇴 | Somali | `so` | |
 | 🇨🇻 | Cape Verdean Creole | `kea` | |
 
-The nine languages are the languages Boston Public Schools reports as most spoken in Dorchester homes. A Vitest suite fails the build if any locale is missing a key that English has, so a feature cannot ship half-translated.
+The nine languages are the languages Boston Public Schools reports as most spoken in Dorchester homes. A Vitest suite checks dictionary-key parity; it does not detect all untranslated page content or data. Some pages, directory fields and external feeds still use English. Non-English text is an AI-assisted first pass and needs native-speaker review.
 
 Accessibility: WCAG 2.2 AA contrast in every palette, full keyboard navigation, skip links, a polite live region for status changes, `prefers-reduced-motion` and `prefers-contrast` honoured, focus-visible rings throughout, semantic landmarks on every page, and a print stylesheet for the directory and hotlines.
 
@@ -232,7 +233,7 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
 | **Greater Boston Food Bank** | Pantry network and hours |
 | **National Weather Service (api.weather.gov)** | Forecast, hour-by-hour conditions, station observations and active storm watches/warnings/advisories for the Dorchester grid point — no API key; read at every load, cached five minutes server-side |
 | **Open-Meteo** | Labelled backup forecast, only when the NWS cannot be reached; never a source for warnings |
-| **The clothing programs themselves** | Free coat/clothing records checked against each organisation's own page, with the page live-re-tested on every `/winter-clothing` load |
+| **The clothing programs themselves** | Listing details are based on provider pages but may need review; website reachability is checked separately and cached for up to six hours. A response does not verify services or stock. |
 | **MassLegalHelp / Greater Boston Legal Services** | Tenant rights, eviction process, right-to-counsel |
 | **OpenStreetMap contributors** | Street tiles and geocoding |
 | **Esri World Imagery** | Satellite tiles |
@@ -249,7 +250,7 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
   <a href="https://www.typescriptlang.org"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" width="56" height="56" alt="TypeScript" title="TypeScript 5 (strict)" /></a>&nbsp;&nbsp;&nbsp;
   <a href="https://tailwindcss.com"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" width="56" height="56" alt="Tailwind CSS" title="Tailwind CSS 4" /></a>&nbsp;&nbsp;&nbsp;
   <a href="https://www.electronjs.org"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/electron/electron-original.svg" width="56" height="56" alt="Electron" title="Electron 33" /></a>&nbsp;&nbsp;&nbsp;
-  <a href="https://nodejs.org"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" width="56" height="56" alt="Node.js" title="Node.js 20+" /></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://nodejs.org"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" width="56" height="56" alt="Node.js" title="Node.js 22+" /></a>&nbsp;&nbsp;&nbsp;
   <a href="https://vitest.dev"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vitest/vitest-original.svg" width="56" height="56" alt="Vitest" title="Vitest" /></a>&nbsp;&nbsp;&nbsp;
   <a href="https://playwright.dev"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/playwright/playwright-original.svg" width="56" height="56" alt="Playwright" title="Playwright" /></a>&nbsp;&nbsp;&nbsp;
   <a href="https://eslint.org"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/eslint/eslint-original.svg" width="56" height="56" alt="ESLint" title="ESLint 9 (flat config)" /></a>&nbsp;&nbsp;&nbsp;
@@ -278,7 +279,7 @@ Every figure carries a badge naming its source; hover or tap the badge to see wh
 | Charts | **Recharts** | Market and demographic charts that inherit the palette. |
 | Icons | **Lucide** | Consistent stroke icons; source badges are hand-drawn SVGs in `public/sources/`. |
 | i18n | Hand-rolled typed dictionaries | 9 locales, `TranslationKey` union, parity test, `scripts/i18n-add.py` helper. |
-| Offline | Service worker (`public/sw.js`) | Versioned cache of shell, data, badges and icons; stale-while-revalidate for the rest. |
+| Offline | Service worker (`public/sw.js`) | Versioned page, asset and map-tile caches; API responses and query-string URLs are not cached. |
 | Desktop | **Electron 33** + electron-builder | NSIS installer and portable exe. |
 | Images | **sharp** | Generates the logo set, PWA icons and Open Graph card from the source photograph. |
 | Database | **PostgreSQL** + **Drizzle ORM** (optional) | Only for deployments that want to edit listings through an admin UI; the default build is fully static JSON. |
@@ -323,11 +324,11 @@ Dorchester-101/
     └── db/                     Drizzle schema (optional)
 ```
 
-**Rendering model.** Pages are server components that import typed JSON datasets; only interactive islands (map, search, settings, charts) are client components. The MBTA and news feeds are fetched by route handlers on the server so the browser never talks to a third party directly and API keys stay server-side.
+**Rendering model.** Pages are server components that import typed JSON datasets; only interactive islands (map, search, settings, charts) are client components. MBTA and news feeds are fetched through server routes. Other features, such as map tiles and external links, can contact third parties directly; API keys used by server routes remain server-side.
 
 **Theming model.** `DorchesterProviders` writes `data-theme`, `data-palette`, `data-surface`, `data-font-size` and `dir` onto `<html>` from the store. `globals.css` defines the tokens (`--color-bg-*`, `--color-text-*`, `--color-accent-*`, `--color-border`, `--color-on-accent`) once per palette × light/dark. Components reference tokens only, which is what makes a whole-site palette a 40-line CSS block instead of a refactor.
 
-**Offline model.** `sw.js` has a `VERSION` constant; bumping it invalidates every cache on the next visit. Shell and data are cache-first, API routes are network-only with a friendly offline message, everything else is stale-while-revalidate.
+**Offline model.** `sw.js` has a `VERSION` constant; bumping it removes older DOR101 caches when the new worker activates. Navigations are network-first with a cached-page or offline-page fallback; visited static assets and map tiles are cache-first. URLs with query strings and all API responses bypass the worker cache, so stale predictions cannot be presented as live. Offline behavior depends on previously cached files and is not guaranteed for every page.
 
 ---
 
@@ -335,10 +336,14 @@ Dorchester-101/
 
 ### Requirements
 
-* Node.js 20 or later (22 recommended)
+* Node.js 22.12+ on the 22 release line, or Node 24 / 26+ (required by the desktop and test toolchain)
 * npm 10+
 * Python 3 (only for `scripts/i18n-add.py`)
 * PostgreSQL 15+ (optional, only if you enable the database)
+
+### Launch review
+
+See [the operator launch checklist](docs/LAUNCH-CHECKLIST.md) for remaining policy, contact, deployment, consent-traffic, data and desktop-release checks.
 
 ### Quick start
 
@@ -363,7 +368,7 @@ npm run dev          # http://localhost:3000
 | `npm run electron:dev` | Run the desktop shell against the dev server |
 | `npm run build:exe` | Windows installer + portable exe (`dist-electron/`) — see [BUILD.md](BUILD.md) |
 | `npm run build:portable` | Portable exe only |
-| `npm run verify:desktop` | Boot the packaged app and check the routes it needs |
+| `npm run verify:desktop` | Stage the app files and check its server routes (not a Windows/Electron installer test) |
 
 ### Adding a translated string
 
@@ -385,7 +390,7 @@ The logo set and Open Graph card are generated from `public/img/dorchester-bay-s
 
 ## Configuration
 
-All variables are optional; the site runs with none of them.
+The site runs without these variables; the scheduled refresh fails closed unless `CRON_SECRET` is configured.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
@@ -395,6 +400,57 @@ All variables are optional; the site runs with none of them.
 | `NEXT_PUBLIC_APP_VERSION` | `4.0.0` | Shown in About and the footer. |
 | `MBTA_API_KEY` | — | Raises the MBTA rate limit from 20 to 1000 req/min. Server-side only. |
 | `DATABASE_URL` | — | Enables the Drizzle/PostgreSQL admin path. |
+| `CRON_SECRET` | — | Required server-side bearer secret for the Vercel scheduled refresh. Set a strong secret in the deployment environment, never in a `NEXT_PUBLIC_` variable or the repository. |
+
+### Optional translation of live news
+
+News translation is **disabled by default**. An operator may enable Lara for the
+headlines and short excerpts of the site's built-in public RSS feeds by setting
+`NEWS_TRANSLATION_PROVIDER=lara`, `LARA_ACCESS_KEY_ID`, `LARA_ACCESS_KEY_SECRET`
+and a positive `NEWS_TRANSLATION_DAILY_CHARS` (at most 250,000 per instance).
+Never put credentials in client code or `NEXT_PUBLIC_` variables. Review the
+provider's terms, publisher rights, privacy, pricing and language quality first.
+Set a provider-side spending cap: the in-memory budget and 24-hour translation
+cache are **per server instance**, reset on restart, and cannot bound costs across
+serverless instances. No arbitrary visitor text, search, feedback or custom-feed
+content is sent. Each request translates at most 60 built-in articles and an
+outage, unsupported/unknown source, oversized input, changed numeric details or exhausted budget leaves
+original text with an explicit language/fallback notice. Readers can compare the
+original; machine translations require review. NWS weather alerts and other live
+feeds are not translated by this feature. The integration has mock tests but has
+not been verified against a live account in this environment.
+
+### Custom RSS network protection
+
+Custom feeds are fetched server-side only over standard HTTP/HTTPS ports. Each
+host and redirect must resolve exclusively to public IP addresses, and the
+connection is pinned to a validated address with TLS verification enabled.
+Requests have a deadline, redirect limit and response size limit. Private,
+loopback, link-local and reserved addresses are rejected. Some feeds using
+nonstandard ports or compressed responses may not work. These safeguards do not
+replace deployment network controls, rate limiting or a security review.
+
+### Freshness and scheduled checks
+
+- Weather, news, MBTA and market APIs retrieve live publisher data with short
+  caches and disclose fallback or unavailable data. The daily Vercel job in
+  `vercel.json` makes a best-effort request to those endpoints; it does not
+  guarantee a shared serverless cache is warmed or verify static information.
+  Configure a strong server-only `CRON_SECRET` in Vercel so the platform can
+  send its bearer token. An absent or wrong secret fails closed; the public
+  `x-vercel-cron` header alone is not trusted. HTTP failures and identified
+  degraded/snapshot results make the job return 503; monitor deployment logs.
+- `.github/workflows/freshness.yml` runs weekly **after it is merged into the
+  default branch**, or manually through Actions. It flags overdue or explicitly
+  unreviewed directory/clothing records, project dates, the transit reference,
+  and potentially broken provider links. It saves an artifact and creates or
+  updates one GitHub issue, provided Actions has permission to write issues and
+  issues are enabled. Schedules can be delayed or disabled by the hosting service.
+- This is a review queue, **not a fact check or automatic rewrite**. HTTP success
+  does not establish current hours, eligibility, accessibility, stock or legal
+  rules. A maintainer must check original sources, update records and translations,
+  record the real review date and run tests. To preview without network calls, run
+  `npx tsx scripts/audit-freshness.ts --offline`.
 
 ### Being found: your own domain, search, and sharing
 
@@ -404,7 +460,7 @@ The site is findable today at `dorchester-101.vercel.app`. To make it *yours* �
 2. **Attach it in Vercel**: Project → Settings → Domains → add the domain and follow the DNS records Vercel shows. HTTPS is issued automatically.
 3. **Point the site at itself**: set `NEXT_PUBLIC_SITE_URL=https://<your-domain>` in Vercel → Settings → Environment Variables and redeploy. Every canonical URL, the sitemap, `robots.txt`, JSON-LD and the domain printed on the share card follow automatically — they all read `src/lib/site.ts`.
 4. **Tell the search engines**: add the domain in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters), verify with the tokens above, and submit `/sitemap.xml`. Search results lead with "Dorchester 101 (DOR101)" and the structured data names every spelling people type.
-5. **Free Vercel tools already wired in**: Web Analytics and Speed Insights render on every page (enable them once in the Vercel dashboard — Analytics → Enable, Speed Insights → Enable; both have free tiers), daily Cron Jobs keep the live caches warm (`vercel.json`), and edge caching headers are set per route. The installable PWA + offline shell ship from `public/manifest.json` + `public/sw.js`.
+5. **Optional Vercel tools**: Web Analytics and Speed Insights load only after a visitor opts in, and also require the host to enable the services. Configure `CRON_SECRET` for the daily best-effort refresh (`vercel.json`); see Freshness and scheduled checks below. The installable PWA + offline shell ship from `public/manifest.json` + `public/sw.js`.
 6. **More free Vercel mileage in 4.3**: search engines get FAQ rich-result data, sitelink candidates, sitemap images and `/opensearch.xml` (browsers offer "search Dorchester 101" from the address bar after one visit); the footer links every main section for crawlers and deep-landing visitors alike. Still on the free tier and worth flipping on in the dashboard: **Deployment Protection** off (public site), **Fluid compute** defaults are fine, and **Observability → Logs** for spotting a failing publisher feed before a resident does. Nothing here needs Edge Config or KV — every personalization lives on the resident's device.
 
 ---
@@ -415,16 +471,16 @@ The site is findable today at `dorchester-101.vercel.app`. To make it *yours* �
 * **Lint** — ESLint 9 with `next/core-web-vitals` and `react-hooks` (including the React 19 `set-state-in-effect` rule). Zero warnings.
 * **Unit** — Vitest (`src/__tests__/`): API route validation, app store, opening-hours logic, transit data integrity, i18n parity across all nine locales.
 * **E2E** — Playwright (`e2e/app.spec.ts`) smoke-tests the main routes.
-* **Data review** — every resource carries a *last verified* date shown in the UI; `lastReviewedOn()` feeds the sitemap so crawlers see real change dates.
+* **Data review** — resources carry a recorded source-review date and status, not a guarantee of current or verified facts. `lastReviewedOn()` is the most recent review of any one record, not a review of the whole dataset.
 
 ---
 
 ## Privacy & security
 
-* No accounts, cookies, analytics, fingerprinting, or third-party scripts.
+* No account is required. Vercel Analytics and Speed Insights mount only after an explicit opt-in, and can be withdrawn in Settings. Essential local preferences, maps, feeds, hosting logs and links have separate privacy implications. The draft notice and consent text require owner and legal review against the running deployment.
 * Preferences live in `localStorage` on the device and can be wiped from Settings → Reset.
-* The **Bus / train route** button asks for your location only when you tap it, uses it once to build a Google or Apple Maps link, and never stores or transmits it.
-* Third-party data (MBTA, news) is fetched by the server, so those providers never see the visitor's IP or browser.
+* Map features can request location after a user action. A directions link can pass a chosen origin to Google Maps or Apple Maps.
+* MBTA and news feeds are fetched by the server; map tiles and links can contact external providers directly. Optional live news translation sends public built-in feed excerpts to Lara only when explicitly enabled; see Configuration.
 * Content Security Policy, `Referrer-Policy: strict-origin-when-cross-origin` and `Permissions-Policy` headers are set in `next.config.ts`.
 * The Electron build disables `nodeIntegration`, enables `contextIsolation` and loads only the bundled app.
 
@@ -462,7 +518,7 @@ Code is released under the **MIT licence** — see [LICENSE](LICENSE). Third-par
 | Fonts (Public Sans, Fraunces, Atkinson Hyperlegible, IBM Plex Mono, Noto Sans Arabic) | SIL Open Font License 1.1 (fontsource packages) |
 | **OpenStreetMap** | Tiles © OpenStreetMap contributors, ODbL; attribution is shown on every map |
 | **Esri World Imagery / World Street Map** | Esri terms of use; attribution is shown on every map |
-| Wikimedia Commons photographs | CC BY-SA 3.0 / CC BY 2.0 as credited in `public/IMAGE-CREDITS.md` |
+| Wikimedia Commons photographs | CC BY-SA 2.0, 3.0 and 4.0 / CC BY 2.0 as credited in `public/IMAGE-CREDITS.md` |
 
 Map and chart attribution is rendered in-app, not only in this file, so the licences travel with the data.
 
@@ -482,9 +538,9 @@ AI tools helped build DOR101, and it says so in the app as well as here — the 
 | English copy — page text, error messages, FAQ answers | Drafted with AI | Every factual claim tied to a named statute, agency page or dataset |
 | Eight non-English locales | Machine-translated first drafts | A parity test fails the build when a key is missing; thin-reference locales (Haitian Creole, Kabuverdianu, Somali) are best efforts, not professional translation |
 | Documentation (this README, `BUILD.md`, `SECURITY.md`) and release notes | Drafted with AI | Commands are run before they are written down |
-| Build and asset scripts (icons, source badges, desktop packager) | Written with AI assistance | Run locally; the desktop package is verified by `npm run verify:desktop` |
+| Build and asset scripts (icons, source badges, desktop packager) | Written with AI assistance | The staged desktop server is checked by `npm run verify:desktop`; a Windows installer and Electron launch still need testing |
 
-**No AI runs in the app.** There is no language model, chat, recommendation engine or automated decision anywhere in the product, and nothing a visitor types is sent to a model or anywhere else. **No image is AI-generated**; every photograph is a credited Commons photograph of a real place, and two photographs of unconfirmed provenance were removed rather than published with a guess for a credit line.
+**Optional news translation:** an operator can enable an external machine-translation service for public news excerpts; it is off by default. Search terms, feedback and custom feeds are not sent to that service. Translations are labelled and may contain errors. There is no chat or automated decision about a visitor. **No image is AI-generated**; every photograph is a credited Commons photograph of a real place, and two photographs of unconfirmed provenance were removed rather than published with a guess for a credit line.
 
 The complete account — including the limits of this disclosure — is in [`docs/AI-USAGE.md`](docs/AI-USAGE.md).
 

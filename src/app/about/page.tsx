@@ -78,7 +78,7 @@ export default function AboutPage() {
     codeRepository: REPO_URL,
     founder: { '@type': 'Person', name: AUTHOR_NAME, url: AUTHOR_URL },
     softwareVersion: APP_VERSION,
-    inLanguage: LANGUAGES.map((language) => language.intlLocale),
+    inLanguage: LANGUAGES.map((language) => language.contentLocale),
   };
 
   return (

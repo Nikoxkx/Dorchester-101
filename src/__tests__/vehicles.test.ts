@@ -6,7 +6,7 @@
  * so what is asserted is the wire format, not a hand-shaped stub.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as GtfsRealtimeBindings from 'gtfs-realtime-bindings';
+import * as GtfsRealtimeBindings from '@golemio/ovapi-gtfs-realtime-bindings';
 import { fetchVehicles } from '@/lib/mbta';
 import { globalCache } from '@/lib/cache';
 

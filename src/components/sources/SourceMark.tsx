@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
-import { SOURCES, type SourceId } from '@/data/sources';
+import { SOURCE_LICENCE_KEYS, SOURCES, type SourceId } from '@/data/sources';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
+import type { TranslationKey } from '@/i18n/en';
 
 /**
  * Publisher badge.
@@ -32,6 +33,9 @@ export function SourceMark({
   href?: string;
 }) {
   const source = SOURCES[id];
+  const displayName = id === 'dor101' ? 'DOR101' : source.name;
+  const { t } = useTranslation();
+  const infoKey: TranslationKey = `sources.info.${id}`;
   const [logoFailed, setLogoFailed] = useState(false);
   const px = { xs: 18, sm: 24, md: 32, lg: 44 }[size];
   const fontPx = Math.max(8, Math.round(px * (source.short.length > 3 ? 0.28 : source.short.length > 2 ? 0.36 : 0.46)));
@@ -62,17 +66,17 @@ export function SourceMark({
       {badge}
       {withName && (
         <span className="inline-flex min-w-0 items-center gap-1 font-heading text-xs font-semibold text-[var(--color-text-secondary)]">
-          <span className="truncate">{source.name}</span>
+          <span className="truncate">{displayName}</span>
           {external && !asSpan && <ExternalLink className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />}
         </span>
       )}
-      <span className="sr-only">{source.name}</span>
+      <span className="sr-only">{displayName}</span>
     </>
   );
-  const cls = cn('inline-flex items-center gap-2 rounded-lg align-middle no-underline hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]', className);
+  const cls = cn('inline-flex max-w-full min-w-0 items-center gap-2 rounded-lg align-middle no-underline hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]', className);
   if (asSpan) {
     return (
-      <span title={`${source.name} — ${source.provides}`} className={cls}>
+      <span title={`${displayName} — ${t(infoKey)}`} className={cls}>
         {inner}
       </span>
     );
@@ -82,7 +86,7 @@ export function SourceMark({
       href={href ?? source.url}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
-      title={`${source.name} — ${source.provides}`}
+      title={`${displayName} — ${t(infoKey)}`}
       className={cls}
     >
       {inner}
@@ -109,13 +113,14 @@ export function Cite({
 }) {
   const { t } = useTranslation();
   const source = SOURCES[id];
+  const licenceKey = SOURCE_LICENCE_KEYS[id];
   return (
     <p className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-snug text-[var(--color-text-muted)]', className)}>
       <span className="font-heading font-semibold">{t('common.source')}</span>
       <SourceMark id={id} size="xs" withName href={href} />
       {asOf && <span>· {t('source.asOf', { date: asOf })}</span>}
       {note && <span>· {note}</span>}
-      {source.licence && <span className="opacity-80">· {source.licence}</span>}
+      {source.licence && <span className="opacity-80">· {licenceKey ? t(licenceKey) : source.licence}</span>}
     </p>
   );
 }

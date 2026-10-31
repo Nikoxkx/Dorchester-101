@@ -55,7 +55,7 @@ export interface HudFmrResult {
  * Verified point-in-time capture of the FY27 HUD FMR county workbook
  * (https://www.huduser.gov/portal/datasets/fmr/fmr2027/FY27_FMRs.xlsx),
  * Boston-Cambridge-Quincy, MA-NH HUD Metro FMR Area — the area that contains
- * Suffolk County (the City of Boston). Same values appear on every row of that
+ * Suffolk County, which includes Boston, Chelsea, Revere, and Winthrop. Same values appear on every row of that
  * metro area in the workbook. Used only when the live workbook is unreachable,
  * and marked `snapshot` so callers can say so.
  */

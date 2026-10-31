@@ -11,11 +11,11 @@ import { SITE_URL } from '@/lib/site';
 export const metadata = {
   title: 'Free coats and winter clothing in Dorchester and Boston',
   description:
-    'Verified places in Dorchester and Boston where winter coats and warm clothing are free: walk-in clothing programs, kids coat partners, veterans coats, seasonal drives and the 24/7 Mass 2-1-1 finder. Every listing carries its check date and is re-tested when the page loads.',
+    'Coat programs and referral finders around Boston. Availability, eligibility and costs may vary; contact providers before travelling. A website response does not verify stock or listing details.',
   alternates: { canonical: '/winter-clothing' },
   ...socialMetadata({
     title: 'Free coats and winter clothing near Dorchester',
-    description: 'Checked listings, honest hours, and what to bring — nothing guessed.',
+    description: 'Coat programs and referral finders; contact providers to confirm availability.',
     url: `${SITE_URL}/winter-clothing`,
   }),
 };

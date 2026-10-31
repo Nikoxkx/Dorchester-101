@@ -41,7 +41,7 @@ interface AMIBadgeProps {
 }
 
 export function AMIBadge({ percentage, className }: AMIBadgeProps) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   let bgColor = 'bg-gray-400';
   let textColor = 'text-gray-900';
   
@@ -69,7 +69,7 @@ export function AMIBadge({ percentage, className }: AMIBadgeProps) {
         className
       )}
     >
-      {t('badge.ami', { percent: percentage })}
+      {t('badge.ami', { percent: format.number(percentage) })}
     </span>
   );
 }

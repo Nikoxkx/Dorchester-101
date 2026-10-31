@@ -23,10 +23,13 @@ import { QRPoster } from "@/components/resources/QRPoster";
 import { VerifyButton } from "@/components/resources/VerifyButton";
 import { FieldNotes } from "@/components/pwa/FieldNotes";
 import { useI18n } from "@/i18n/hook";
+import { spokenLanguage } from "@/i18n/spokenLanguages";
+import { resourceDetails } from "@/i18n/resourceDetails";
 import { useAppStore } from "@/stores/appStore";
 import { useBadgeStore } from "@/stores/badgeStore";
 import {
   RESOURCES,
+  isResourceMappable,
   VERIFICATION_STALE_DAYS,
   verificationAge,
   verificationLevel,
@@ -34,11 +37,14 @@ import {
 } from "@/data/resources";
 import {
   BOSTON_TZ,
-  formatClockMinutes,
-  formatWindow,
+  formatClockMinutesForLocale,
+  formatWindowForLocale,
+  formatWeekdayIndex,
+  zonedParts,
   isOpenNow,
   statusFor,
 } from "@/lib/hours";
+import { useHydratedNow } from "@/hooks/useNow";
 import { cn } from "@/lib/utils";
 import type { TranslationKey } from "@/i18n/en";
 
@@ -73,7 +79,8 @@ export function ResourcesView() {
   const [category, setCategory] = useState<ResourceCategory | "all">("all");
   const [stepFreeOnly, setStepFreeOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [now] = useState(() => new Date());
+  const nowMs = useHydratedNow(60_000);
+  const now = useMemo(() => nowMs === null ? null : new Date(nowMs), [nowMs]);
 
   // /resources?place=foodsolving or a search term from the header's palette lands
   // the reader on the record they asked for instead of the top of an unfiltered list.
@@ -97,34 +104,44 @@ export function ResourcesView() {
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return RESOURCES.map((resource) => {
-      const status = resource.hours
+      const status = resource.hours && now
         ? statusFor(resource.hours, now, BOSTON_TZ)
         : null;
       return {
         resource,
         status,
-        open: resource.hours ? isOpenNow(resource.hours, now, BOSTON_TZ) : null,
-        age: verificationAge(resource, now),
-        level: verificationLevel(resource, now),
+        open: resource.hours && now ? isOpenNow(resource.hours, now, BOSTON_TZ) : null,
+        age: now ? verificationAge(resource, now) : 0,
+        level: now ? verificationLevel(resource, now) : resource.verification.status === 'needs-review' ? 'stale' : null,
         summary: pickContent(resource.summary),
+        details: resourceDetails(resource, lang),
       };
     })
       .filter((row) =>
         category === "all" ? true : row.resource.category === category,
       )
       .filter((row) =>
-        stepFreeOnly ? row.resource.accessibility?.stepFree === true : true,
+        stepFreeOnly ? isResourceMappable(row.resource) && row.resource.accessibility?.stepFree === true : true,
       )
       .filter((row) => {
         if (!needle) return true;
         return [
           row.resource.name,
           row.resource.operator ?? "",
+          row.details.operator.value ?? "",
           row.resource.address,
+          row.details.address.value,
           row.resource.neighborhood,
           row.resource.summary.en,
+          row.summary.value,
           row.resource.services.join(" "),
+          row.details.services.value.join(" "),
+          row.details.neighborhood.value,
+          row.details.eligibility.value ?? "",
+          row.details.hoursNote.value ?? "",
+          row.details.transit.value ?? "",
           row.resource.languages?.join(" ") ?? "",
+          row.resource.languages?.map((name) => spokenLanguage(name, t)).join(" ") ?? "",
         ]
           .join(" ")
           .toLowerCase()
@@ -133,25 +150,21 @@ export function ResourcesView() {
       .sort((a, b) => {
         // Open now first, then the nearest transit, then the name: the order a
         // person standing on a sidewalk actually needs.
-        if (a.open !== b.open) return a.open === true ? -1 : 1;
-        if (a.level !== b.level) return a.level === "fresh" ? -1 : 1;
+        const openRank = (open: boolean | null) => open === true ? 0 : open === false ? 1 : 2;
+        if (a.open !== b.open) return openRank(a.open) - openRank(b.open);
+        const rank = (level: typeof a.level) => level === 'fresh' ? 0 : level === null ? 1 : 2;
+        if (rank(a.level) !== rank(b.level)) return rank(a.level) - rank(b.level);
         return a.resource.name.localeCompare(b.resource.name, lang);
       });
-  }, [category, stepFreeOnly, query, now, lang, pickContent]);
+  }, [category, stepFreeOnly, query, now, lang, pickContent, t]);
 
   const toggle = useCallback(
     (id: string) => toggleFavorite(id),
     [toggleFavorite],
   );
-  const dayNames = useMemo(() => {
-    const base = new Date(now.getTime());
-    return Array.from({ length: 7 }, (_, index) =>
-      format.weekday(new Date(base.getTime() + index * 86_400_000), "short"),
-    );
-  }, [format, now]);
-  const dayOrder = [(now.getDay() + 6) % 7];
-  for (let i = 1; i < 7; i += 1)
-    dayOrder.push((((now.getDay() + 6) % 7) + i) % 7);
+  const bostonDay = now ? zonedParts(now, BOSTON_TZ).weekday : 0;
+  const dayOrder = Array.from({ length: 7 }, (_, index) => (bostonDay + index) % 7);
+  const dayNames = dayOrder.map((day) => formatWeekdayIndex(day, meta.intlLocale, 'short'));
 
   return (
     <MainLayout>
@@ -172,6 +185,7 @@ export function ResourcesView() {
             {t("directory.title")}
           </Link>
         </header>
+        {lang !== 'en' && <p className="max-w-prose text-xs text-[var(--color-text-muted)]">{t('clothing.translationDraft')}</p>}
 
         <section className="rounded-2xl border border-[var(--color-accent-primary)]/30 bg-[var(--color-accent-primary)]/8 p-4">
           <h2 className="font-heading text-base font-bold">
@@ -274,7 +288,7 @@ export function ResourcesView() {
           </div>
         ) : (
           <ul className="grid gap-3 xl:grid-cols-2">
-            {rows.map(({ resource, status, open, age, level, summary }) => {
+            {rows.map(({ resource, status, open, age, level, summary, details }) => {
               const id = resource.id;
               const isExpanded = expanded === id;
               const saved = favorites.includes(id);
@@ -287,7 +301,7 @@ export function ResourcesView() {
                     transition={{ duration: 0.22 }}
                     className={cn(
                       "flex h-full flex-col rounded-2xl border bg-[var(--color-bg-primary)]/95 p-4",
-                      level === "fresh"
+                      !level || level === "fresh"
                         ? "border-[var(--color-border)]"
                         : "border-[var(--color-accent-amber)]/45",
                     )}
@@ -299,7 +313,7 @@ export function ResourcesView() {
                         </h2>
                         <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
                           {t(CATEGORY_KEYS[resource.category])}
-                          {resource.operator ? ` · ${resource.operator}` : ""}
+                          {resource.operator && <> · <span lang={details.operator.used} dir="auto">{details.operator.value}</span></>}
                         </p>
                       </div>
                       <button
@@ -329,12 +343,13 @@ export function ResourcesView() {
                     <p
                       className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"
                       dir="auto"
+                      lang={summary.used}
                     >
                       {summary.value}
                     </p>
                     {summary.fellBack && (
                       <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                        {t("lang.untranslated", { language: meta.name })}
+                        {t("lang.untranslated", { language: meta.nativeName })}
                       </p>
                     )}
 
@@ -342,14 +357,14 @@ export function ResourcesView() {
                       {status && (
                         <Badge
                           variant={
-                            status.state === "open"
+                            (status.state === "open" || status.state === "always-open")
                               ? "green"
                               : status.state === "closing-soon"
                                 ? "amber"
                                 : "default"
                           }
                         >
-                          {status.state === "open"
+                          {(status.state === "open" || status.state === "always-open")
                             ? t("common.open")
                             : status.state === "closing-soon"
                               ? t("common.closingSoon")
@@ -359,31 +374,35 @@ export function ResourcesView() {
                       {resource.acceptsEbt && (
                         <Badge variant="blue">{t("food.ebt")}</Badge>
                       )}
-                      {resource.requiresId ? (
+                      {resource.requiresId === true && (
                         <Badge variant="amber">{t("food.idRequired")}</Badge>
-                      ) : (
-                        <Badge variant="default">{t("food.noDocs")}</Badge>
                       )}
-                      {resource.accessibility?.stepFree ? (
+                      {resource.requiresId === false && (
+                        <Badge variant="default">{t("clothing.noId")}</Badge>
+                      )}
+                      {isResourceMappable(resource) && (resource.accessibility?.stepFree ? (
                         <Badge variant="green">{t("map.wheelchair")}</Badge>
                       ) : (
                         <Badge variant="default">
                           {t("map.wheelchairUnknown")}
                         </Badge>
-                      )}
-                      {level !== "fresh" && (
+                      ))}
+                      {level && level !== "fresh" && (
                         <Badge variant="amber">
-                          {t("directory.needsReview")} · {format.number(age)}d
+                          {t("directory.needsReview")}{age > 0 ? ` · ${t("time.daysAgo", { count: format.number(age) })}` : ''}
                         </Badge>
                       )}
                     </div>
 
+                    {(details.address.fellBack || details.operator.fellBack || details.transit.fellBack || details.eligibility.fellBack || details.source.fellBack || (isExpanded && details.hoursNote.fellBack)) && (
+                      <p className="mt-2 text-[10px] text-[var(--color-text-muted)]">{t("lang.detailsEnglish")}</p>
+                    )}
                     <dl className="mt-3 grid gap-1.5 text-xs">
                       <Row
                         icon={
                           <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                         }
-                        label={resource.address}
+                        label={<span lang={details.address.used} dir="auto">{details.address.value}</span>}
                       />
                       {resource.phone && (
                         <Row
@@ -409,9 +428,11 @@ export function ResourcesView() {
                         }
                         label={
                           resource.hours
-                            ? resource.hours[dayOrder[0]].length
-                              ? `${t("directory.openToday")}: ${resource.hours[dayOrder[0]].map((window) => formatWindow(window)).join(", ")}`
-                              : t("directory.closedToday")
+                            ? !now
+                              ? t("common.loading")
+                              : resource.hours[dayOrder[0]].length
+                                ? `${t("directory.openToday")}: ${resource.hours[dayOrder[0]].map((window) => formatWindowForLocale(window, meta.intlLocale)).join(", ")}`
+                                : t("directory.closedToday")
                             : t("food.hoursUnknown")
                         }
                       />
@@ -420,7 +441,7 @@ export function ResourcesView() {
                           icon={
                             <Globe className="h-3.5 w-3.5" aria-hidden="true" />
                           }
-                          label={`${t("resources.languages")}: ${resource.languages.join(", ")}`}
+                          label={`${t("resources.languages")}: ${resource.languages.map((name) => spokenLanguage(name, t)).join(", ")}`}
                         />
                       )}
                       {resource.transit && (
@@ -431,7 +452,7 @@ export function ResourcesView() {
                               aria-hidden="true"
                             />
                           }
-                          label={`${t("food.transitAccess")}: ${resource.transit}`}
+                          label={<>{t("food.transitAccess")}: <span lang={details.transit.used} dir="auto">{details.transit.value}</span></>}
                         />
                       )}
                     </dl>
@@ -441,16 +462,16 @@ export function ResourcesView() {
                         <span className="font-heading font-bold">
                           {t("common.eligibility")}:{" "}
                         </span>
-                        {resource.eligibility}
+                        <span lang={details.eligibility.used} dir="auto">{details.eligibility.value}</span>
                       </p>
                     )}
 
                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      <ListenButton text={`${resource.name}. ${summary.value}. ${resource.address}.`} />
+                      <ListenButton text={`${resource.name}. ${summary.value}. ${details.address.value}.`} />
                       <QRPoster
                         id={id}
                         name={resource.name}
-                        address={resource.address}
+                        address={details.address.value}
                         phone={resource.phone}
                         summary={summary.value}
                       />
@@ -466,9 +487,7 @@ export function ResourcesView() {
                             "medium",
                           ),
                         })}
-                        {resource.verification.source
-                          ? ` · ${t("common.source")}: ${resource.verification.source}`
-                          : ""}
+                        {resource.verification.source && <> · {t("common.source")}: <span lang={details.source.used} dir="auto">{details.source.value}</span></>}
                       </span>
                       <button
                         type="button"
@@ -479,12 +498,14 @@ export function ResourcesView() {
                       >
                         {t("directory.allHours")}
                       </button>
+{isResourceMappable(resource) && (
                       <Link
                         href={`/map?place=${id}`}
                         className="font-heading font-bold text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2"
                       >
                         {t("directory.openMap")}
                       </Link>
+                      )}
                       {resource.website && (
                         <a
                           href={resource.website}
@@ -524,7 +545,7 @@ export function ResourcesView() {
                                     {resource.hours![dayIndex].length
                                       ? resource
                                           .hours![dayIndex].map((window) =>
-                                            formatWindow(window),
+                                            formatWindowForLocale(window, meta.intlLocale),
                                           )
                                           .join(", ")
                                       : t("common.closed")}
@@ -541,8 +562,8 @@ export function ResourcesView() {
                           </tbody>
                         </table>
                         {resource.hoursNote && (
-                          <p className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-                            {resource.hoursNote}
+                          <p lang={details.hoursNote.used} dir="auto" className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
+                            {details.hoursNote.value}
                           </p>
                         )}
                         {age > VERIFICATION_STALE_DAYS && (
@@ -556,22 +577,15 @@ export function ResourcesView() {
                             <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
                               {status.opensOnDayOffset === 0
                                 ? t("time.opensAt", {
-                                    time: formatClockMinutes(status.opensAt),
+                                    time: formatClockMinutesForLocale(status.opensAt, meta.intlLocale),
                                   })
                                 : status.opensOnDayOffset === 1
                                   ? t("food.opensTomorrow", {
-                                      time: formatClockMinutes(status.opensAt),
+                                      time: formatClockMinutesForLocale(status.opensAt, meta.intlLocale),
                                     })
                                   : t("time.opensOn", {
-                                      day: format.weekday(
-                                        new Date(
-                                          now.getTime() +
-                                            status.opensOnDayOffset *
-                                              86_400_000,
-                                        ),
-                                        "long",
-                                      ),
-                                      time: formatClockMinutes(status.opensAt),
+                                      day: formatWeekdayIndex(bostonDay + status.opensOnDayOffset, meta.intlLocale),
+                                      time: formatClockMinutesForLocale(status.opensAt, meta.intlLocale),
                                     })}
                             </p>
                           )}

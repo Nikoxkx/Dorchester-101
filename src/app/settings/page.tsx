@@ -34,8 +34,11 @@ import { Button } from '@/components/ui/Button';
 import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
+import { usePrivacyStore } from '@/stores/privacyStore';
 import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId, type WeatherBlockId } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
+import { speechVoiceMatches, useSpeechSupported } from '@/hooks/useSpeechSupported';
+import { spokenLanguage } from '@/i18n/spokenLanguages';
 import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { detectLanguage, LANGUAGES, languageMeta, type LanguageCode } from '@/i18n/config';
 import { TOTAL_KEYS, localeCoverage } from '@/i18n';
@@ -192,6 +195,7 @@ function UpdateChecker() {
 }
 
 export default function SettingsPage() {
+  const analyticsChoice = usePrivacyStore((s) => s.choice);
   const { t, lang, format } = useI18n();
   const prefs = useResolvedPrefs();
   const announce = useAnnounce();
@@ -307,8 +311,6 @@ export default function SettingsPage() {
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  lang={option.intlLocale}
-                  dir={option.dir}
                   onClick={() => {
                     store.setLanguage(option.code as LanguageCode);
                     flash(t('lang.changedTo', { name: option.nativeName }));
@@ -331,8 +333,8 @@ export default function SettingsPage() {
                     {active && <span className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-heading text-base font-semibold leading-tight">{option.nativeName}</span>
-                    <span className="block text-xs text-[var(--color-text-muted)]">{option.name}</span>
+                    <span lang={option.contentLocale} dir={option.dir} className="block font-heading text-base font-semibold leading-tight">{option.nativeName}</span>
+                    <span className="block text-xs text-[var(--color-text-muted)]">{spokenLanguage(option.name, t)}</span>
                     <span className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-[var(--color-text-muted)]">
                       <span className="rounded-[var(--radius-pill)] border border-[var(--color-border)] px-1.5 font-mono">{option.code2}</span>
                       <span className="font-mono">{t('lang.coverageValue', { percent: optionCoverage.percent, total: TOTAL_KEYS })}</span>
@@ -979,13 +981,22 @@ export default function SettingsPage() {
         <Section id="privacy" title={t('settings.section.privacy')} icon={<ShieldCheck className="w-4 h-4" aria-hidden="true" />} ref={(node) => { sectionRefs.current.privacy = node; }}>
           <h3 className="font-heading text-sm font-semibold">{t('settings.privacyTitle')}</h3>
           <ul className="mt-2 space-y-1.5 text-sm text-[var(--color-text-secondary)]">
-            {(['settings.noDataCollected', 'settings.localOnly', 'settings.noTracking', 'settings.noAccount'] as TranslationKey[]).map((key) => (
+            {(['settings.searchRequests', 'settings.localOnly', 'settings.analyticsPossible', 'settings.noAccount'] as TranslationKey[]).map((key) => (
               <li key={key} className="flex items-start gap-2">
                 <Check className="mt-0.5 w-4 h-4 shrink-0 text-[var(--color-accent-green)]" aria-hidden="true" />
                 {t(key)}
               </li>
             ))}
           </ul>
+
+          <div className="mt-4">
+            <Toggle
+              label={t('consent.settingsLabel')}
+              description={t('consent.settingsBody')}
+              checked={analyticsChoice === 'allow'}
+              onChange={(allow) => usePrivacyStore.getState().choose(allow ? 'allow' : 'decline')}
+            />
+          </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <Link
@@ -1000,6 +1011,7 @@ export default function SettingsPage() {
               confirmLabel={t('settings.clearConfirm')}
               onConfirm={() => {
                 store.resetAll();
+                usePrivacyStore.getState().choose('unset');
                 flash(t('settings.cleared'));
               }}
             />
@@ -1107,7 +1119,7 @@ function SpeechControls() {
               ))}
             </select>
             <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-              {speech.voices.length === 0 ? t('settings.detectedNone') : format.number(speech.voices.length) + ' ' + t('a11y.speechVoice')}
+              {speech.voices.length === 0 ? t('a11y.noMatchingVoice') : format.number(speech.voices.length) + ' ' + t('a11y.speechVoice')}
             </p>
           </div>
         </div>
@@ -1119,15 +1131,15 @@ function SpeechControls() {
 function useSpeechAvailability() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const lang = useAppStore((s) => s.language);
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const supported = useSpeechSupported();
 
   useEffect(() => {
     if (!supported) return;
     const read = () => {
-      const prefix = lang === 'kea' ? 'pt' : lang === 'ht' ? 'fr' : lang;
+      const prefix = lang.toLowerCase();
       const all = window.speechSynthesis.getVoices();
-      const matching = all.filter((voice) => voice.lang.toLowerCase().replace('_', '-').startsWith(prefix));
-      setVoices(matching.length ? matching : all.slice(0, 12));
+      const matching = all.filter((voice) => speechVoiceMatches(prefix, voice.lang));
+      setVoices(matching);
     };
     read();
     window.speechSynthesis.addEventListener('voiceschanged', read);

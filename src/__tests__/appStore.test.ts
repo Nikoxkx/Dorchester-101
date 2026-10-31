@@ -28,10 +28,19 @@ describe("appStore defaults", () => {
     expect(state.language).toBe("en");
     expect(state.theme).toBe("system");
     expect(state.fontSize).toBe("medium");
-    expect(state.mapStyle).toBe("satellite");
+    expect(state.mapStyle).toBe("street");
     expect(state.refreshIntervalMinutes).toBeGreaterThan(0);
     expect(state.autoRefresh).toBe(true);
     expect(state.favorites).toEqual([]);
+  });
+
+  it('moves the former aerial default to streets for existing saved settings', async () => {
+    window.localStorage.setItem('dor101-settings', JSON.stringify({ state: { mapStyle: 'satellite' }, version: 5 }));
+    await useAppStore.persist.rehydrate();
+    expect(useAppStore.getState().mapStyle).toBe('street');
+    window.localStorage.setItem('dor101-settings', JSON.stringify({ state: { mapStyle: 'satellite' }, version: 6 }));
+    await useAppStore.persist.rehydrate();
+    expect(useAppStore.getState().mapStyle).toBe('satellite');
   });
 
   it('leaves reduce-motion and high-contrast on "follow the system" until the user decides', () => {

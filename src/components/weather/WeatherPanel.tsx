@@ -32,7 +32,7 @@ import { WearSpotlight } from './WearSpotlight';
  * the publisher is named, and total failure shows a retry box, not numbers.
  */
 export function WeatherPanel() {
-  const { t, format } = useI18n();
+  const { t, lang, format } = useI18n();
   const { data, loading, unavailable, fromCacheAt, refresh } = useWeather();
   const [unit, setUnit] = useTempUnit();
   const now = useNow(60_000);
@@ -81,7 +81,10 @@ export function WeatherPanel() {
             <div className="px-4 pt-3 sm:px-5 md:px-6">
               <Link href="/weather#alerts" className="flex items-start gap-2 rounded-2xl bg-red-500/30 px-3 py-2.5 text-sm font-semibold text-white ring-1 ring-white/35 backdrop-blur-md transition-colors hover:bg-red-500/40">
                 <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-white" aria-hidden="true" />
-                <span>{t('weather.alertsTitle')}: {data.alerts.map((a) => a.event).join(' · ')}</span>
+                <span>
+                  {t('weather.alertsTitle')}: <span lang="en" dir="auto">{data.alerts.map((a) => a.event).join(' · ')}</span>
+                  {lang !== 'en' && <span className="block text-xs font-normal">{t('weather.alertEnglish')}</span>}
+                </span>
               </Link>
             </div>
           ) : data.alertsStatus === 'unavailable' ? (
@@ -136,6 +139,9 @@ export function WeatherPanel() {
             </motion.div>
           </div>
 
+          {lang !== 'en' && data.hourly.some((hour) => hour.shortForecast) && (
+            <p className="px-5 pt-3 text-xs text-white/75 md:px-6">{t('weather.forecastTextNote')}</p>
+          )}
           <div className="flex items-center justify-between gap-2 px-5 pb-5 pt-3 md:px-6">
             <p className="text-xs text-white/75">{updatedLine}</p>
             <div className="flex items-center gap-2">
@@ -226,7 +232,7 @@ function HourlyStrip({ hours, unit }: { hours: HourlyPeriod[]; unit: TempUnit })
             <ConditionIcon kind={h.kind} isDay={h.isDay} className="h-5 w-5" />
             <span className="font-heading text-sm font-bold">{tempText(h.tempF, unit, format.number)}</span>
             <span className={`text-[10px] font-semibold ${(h.precipChance ?? 0) >= 10 ? 'text-sky-100' : 'text-transparent'}`}>
-              {(h.precipChance ?? 0) >= 10 ? format.percent((h.precipChance ?? 0) / 100, 0) : '0%'}
+              {h.precipChance != null && h.precipChance >= 10 ? format.percent(h.precipChance / 100, 0) : ''}
             </span>
           </div>
         ))}
@@ -297,7 +303,7 @@ function SkyHero({ payload, unit, now }: { payload: WeatherPayload; unit: TempUn
             {feels !== undefined && <p className="text-sm text-white/90">{t('weather.feelsLike', { temp: tempText(feels, unit, format.number) })}</p>}
             {today && today.highF != null && today.lowF != null && (
               <p className="text-sm font-semibold text-white/95">
-                H: {tempText(today.highF, unit, format.number)}&nbsp;&nbsp;L: {tempText(today.lowF, unit, format.number)}
+                {t('weather.highLow', { high: tempText(today.highF, unit, format.number), low: tempText(today.lowF, unit, format.number) })}
               </p>
             )}
           </div>

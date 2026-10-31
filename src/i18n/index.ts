@@ -21,8 +21,8 @@ export const TOTAL_KEYS = translationKeys.length;
 
 /**
  * Real coverage check used by the Settings screen and by the test suite.
- * A locale is "100%" when it defines every key with a non-empty value that is
- * not an unchanged copy of English for a key that is normally translated.
+ * A locale is "100%" when every dictionary key has a non-empty value. This
+ * measures dictionary completeness, not translated page data or feed content.
  */
 export function localeCoverage(code: LanguageCode): { translated: number; total: number; percent: number } {
   const dict = dictionaries[code] ?? en;

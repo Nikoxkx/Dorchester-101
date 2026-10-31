@@ -22,9 +22,12 @@ import { CategoryPin } from './CategoryPin';
 import { PlaceSheet } from './PlaceSheet';
 import { VehicleSheet } from './VehicleSheet';
 import { useI18n } from '@/i18n/hook';
+import { matchesContentLanguage } from '@/i18n/contentLanguage';
+import { arrivalHeading, referenceBusName, referenceLineName } from '@/i18n/transitReference';
+import { resourceDetails } from '@/i18n/resourceDetails';
 import { useAppStore, useReduceMotion } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
-import { RESOURCES, type ResourceCategory } from '@/data/resources';
+import { RESOURCES, isResourceMappable, type ResourceCategory } from '@/data/resources';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, type TransitMode } from '@/data/transit';
 import { BOSTON_TZ, formatWindow, statusFor, type OpenStatus } from '@/lib/hours';
 import type { Arrival, DataSource, LiveVehicle, ServiceAlert } from '@/lib/mbta';
@@ -40,8 +43,8 @@ import { cn } from '@/lib/utils';
  * sheet below the map rather than a second overlay.
  *
  * Transit data comes from `/api/mbta`, which prefers the live MBTA feed and falls
- * back to the published timetable. The UI never hides which of the two it is
- * showing: the badge names the source and an estimate is labelled as one.
+ * back to headway-based reference estimates. Partial predictions and fallback
+ * estimates are labelled separately; neither is a published timetable.
  */
 
 const RAIL_ROUTE_IDS = Array.from(new Set(TRANSIT_LINES.map((line) => line.routeId)));
@@ -56,6 +59,7 @@ const SHIELD_MODE: Record<TransitMode, 'subway' | 'bus' | 'rail' | 'trolley'> = 
 
 const STATUS_KEYS: Record<OpenStatus['state'], 'common.open' | 'common.closingSoon' | 'common.closed'> = {
   open: 'common.open',
+  'always-open': 'common.open',
   'closing-soon': 'common.closingSoon',
   closed: 'common.closed',
 };
@@ -91,14 +95,15 @@ export function DorchesterMap() {
   const [shapes, setShapes] = useState<ShapeData[]>([]);
   const [shapeSource, setShapeSource] = useState<DataSource>('timetable');
   const [liveStops, setLiveStops] = useState<MapStop[]>([]);
+  const [resolvedStopsRoute, setResolvedStopsRoute] = useState<string | null>(null);
   const [liveArrivals, setLiveArrivals] = useState<Arrival[]>([]);
   const [vehicles, setVehicles] = useState<LiveVehicle[]>([]);
   const [showVehicles, setShowVehicles] = useState(true);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [vehiclesLive, setVehiclesLive] = useState(false);
   const [arrivalSource, setArrivalSource] = useState<DataSource>('timetable');
-  const [arrivalReason, setArrivalReason] = useState<string | undefined>();
   const [alerts, setAlerts] = useState<ServiceAlert[]>([]);
+  const [alertsStatus, setAlertsStatus] = useState<'ok' | 'partial' | 'unavailable' | null>(null);
   const [routeLive, setRouteLive] = useState(false);
   const [live, setLive] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -184,11 +189,13 @@ export function DorchesterMap() {
           }))
         );
         setRouteLive(payload.source === 'mbta-live');
+        setResolvedStopsRoute(focus.routeId);
       })
       .catch(() => {
         if (!cancelled) {
           setLiveStops([]);
           setRouteLive(false);
+          setResolvedStopsRoute(focus.routeId);
         }
       });
     return () => {
@@ -197,8 +204,11 @@ export function DorchesterMap() {
   }, [focus.routeId, dataEpoch]);
 
   const stops = useMemo<MapStop[]>(() => {
-    if (liveStops.length > 0) return liveStops;
+    // Do not display the previous route's live stops while the next request
+    // is in flight; use the bundled rail reference until it resolves.
+    if (resolvedStopsRoute === focus.routeId && liveStops.length > 0) return liveStops;
     if (focus.kind === 'bus') return [];
+    const seen = new Set<string>();
     return TRANSIT_LINES.filter((line) => line.routeId === focus.routeId).flatMap((line) =>
       line.dorchesterStops.map((stop) => ({
         id: stop.id,
@@ -211,13 +221,17 @@ export function DorchesterMap() {
         interchange: Boolean(stop.connects && stop.connects.length > 0),
         accessible: stop.accessible,
       }))
-    );
-  }, [liveStops, focus]);
+    ).filter((stop) => {
+      if (seen.has(stop.id)) return false;
+      seen.add(stop.id);
+      return true;
+    });
+  }, [liveStops, resolvedStopsRoute, focus]);
 
   /* ── places ──────────────────────────────────────────────────── */
   const pins = useMemo<MapPin[]>(() => {
     const stamp = new Date(now);
-    return RESOURCES.filter((resource) => categories.includes(resource.category))
+    return RESOURCES.filter((resource) => isResourceMappable(resource) && categories.includes(resource.category))
       .map((resource) => {
         const openState = resource.hours ? statusFor(resource.hours, stamp, BOSTON_TZ) : null;
         return {
@@ -226,7 +240,8 @@ export function DorchesterMap() {
           lat: resource.lat,
           lng: resource.lng,
           category: resource.category,
-          openNow: openState?.state === 'open',
+          // Missing hours mean unknown, not closed.
+          openNow: openState ? openState.state !== 'closed' : undefined,
           subtitle: `${resource.neighborhood} · ${openState ? t(STATUS_KEYS[openState.state]) : t('map.nearby')}`,
         };
       })
@@ -246,24 +261,41 @@ export function DorchesterMap() {
     try {
       const [arrivalsPayload, alertsPayload] = await Promise.all([
         fetch(`/api/mbta?type=arrivals&stops=${encodeURIComponent(stopParam)}&perStop=4`).then((r) => (r.ok ? r.json() : null)),
-        fetch(`/api/mbta?type=alerts&route=${encodeURIComponent(focus.routeId)}`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`/api/mbta?type=alerts&route=${encodeURIComponent(focus.routeId)}&lang=${encodeURIComponent(lang)}`).then((r) => (r.ok ? r.json() : null)),
       ]);
       if (arrivalsPayload) {
         setLiveArrivals(arrivalsPayload.arrivals ?? []);
         setArrivalSource(arrivalsPayload.source ?? 'timetable');
-        setArrivalReason(arrivalsPayload.degradedReason);
-        setUpdatedAt(Date.now());
-        setLive(true);
+        const fetchedAt = typeof arrivalsPayload.fetchedAt === 'string' ? Date.parse(arrivalsPayload.fetchedAt) : NaN;
+        setUpdatedAt(Number.isFinite(fetchedAt) ? fetchedAt : null);
+        setLive(arrivalsPayload.source === 'mbta-live');
+      } else {
+        // A failed refresh must not leave old predictions labelled live.
+        setLiveArrivals([]);
+        setArrivalSource('timetable');
+        setUpdatedAt(null);
+        setLive(false);
       }
-      if (alertsPayload) setAlerts(alertsPayload.alerts ?? []);
+      if (alertsPayload) {
+        setAlerts(alertsPayload.alerts ?? []);
+        setAlertsStatus(alertsPayload.status ?? (alertsPayload.source === 'mbta-live' ? 'ok' : 'unavailable'));
+      } else {
+        setAlerts([]);
+        setAlertsStatus('unavailable');
+      }
       setStatus((prev) => (prev === 'error' ? prev : 'ready'));
     } catch {
+      setLiveArrivals([]);
       setArrivalSource('timetable');
+      setUpdatedAt(null);
+      setLive(false);
+      setAlerts([]);
+      setAlertsStatus('unavailable');
       setStatus('error');
     }
-  }, [stopParam, focus.routeId]);
+  }, [stopParam, focus.routeId, lang]);
 
-  const { intervalMs, enabled: polling } = useLivePolling(refreshLive, { minMs: 30000 });
+  const { intervalMs, enabled: polling } = useLivePolling(refreshLive, { minMs: 30000, requestKey: `${stopParam}:${focus.routeId}:${lang}` });
 
   // The first read is issued by useLivePolling; this only resets the badge so a
   // panel never shows yesterday's "live" dot while its new request is in flight.
@@ -283,13 +315,21 @@ export function DorchesterMap() {
     const read = async () => {
       try {
         const res = await fetch(`/api/mbta?type=vehicles&route=${encodeURIComponent(vehicleRoutes.join(','))}`);
-        if (!res.ok || cancelled) return;
+        if (cancelled) return;
+        if (!res.ok) {
+          setVehicles([]);
+          setVehiclesLive(false);
+          return;
+        }
         const payload = (await res.json()) as { vehicles?: LiveVehicle[]; source?: DataSource };
         if (cancelled) return;
         setVehicles(payload.vehicles ?? []);
         setVehiclesLive(payload.source === 'mbta-live');
       } catch {
-        if (!cancelled) setVehiclesLive(false);
+        if (!cancelled) {
+          setVehicles([]);
+          setVehiclesLive(false);
+        }
       }
     };
     void read();
@@ -366,23 +406,24 @@ export function DorchesterMap() {
   }, [selectedVehicle, displayShapes]);
 
   const selectVehicle = useCallback((id: string) => {
+    const found = vehicles.find((vehicle) => vehicle.id === id);
+    if (!found) return;
     setSelectedVehicleId(id);
     setSelectedPinId(null);
-    setVehicles((current) => {
-      const found = current.find((v) => v.id === id);
-      if (found) {
-        setCamera({ lat: found.lat, lng: found.lng, token: Date.now() });
-        const bus = DORCHESTER_BUS_ROUTES.find((b) => b.id === found.routeId);
-        if (bus) setFocus({ kind: 'bus', routeId: found.routeId });
-        else if (RAIL_ROUTE_IDS.includes(found.routeId)) setFocus({ kind: 'rail', routeId: found.routeId });
-        // The full route takes over the map (emphasis + fit below) and the
-        // VehicleSheet opens; the stop sheet stays out of the way until the
-        // rider taps a stop in the sheet's "more options" list.
-        setSelectedStopId(null);
-      }
-      return current;
-    });
-  }, []);
+    setSelectedStopId(null);
+    setCamera({ lat: found.lat, lng: found.lng, token: Date.now() });
+    const bus = DORCHESTER_BUS_ROUTES.find((route) => route.id === found.routeId);
+    if (bus) setFocus({ kind: 'bus', routeId: found.routeId });
+    else if (RAIL_ROUTE_IDS.includes(found.routeId)) setFocus({ kind: 'rail', routeId: found.routeId });
+    // The selected vehicle is ephemeral; do not leave an unrelated place or
+    // stop in a copied URL. Preserve a shareable route when it is known.
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('place');
+    params.delete('stop');
+    if (bus || RAIL_ROUTE_IDS.includes(found.routeId)) params.set('route', found.routeId);
+    const query = params.toString();
+    router.replace(query ? `/map?${query}` : '/map', { scroll: false });
+  }, [vehicles, router, searchParams]);
 
   /* ── selection ───────────────────────────────────────────────── */
   const selectStop = useCallback(
@@ -392,6 +433,11 @@ export function DorchesterMap() {
         const bus = DORCHESTER_BUS_ROUTES.find((b) => b.id === routeId);
         if (bus) setFocus({ kind: 'bus', routeId });
         else if (RAIL_ROUTE_IDS.includes(routeId)) setFocus({ kind: 'rail', routeId });
+        else return;
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('route', routeId);
+        params.delete('stop');
+        router.replace(`/map?${params.toString()}`, { scroll: false });
         return;
       }
       setSelectedStopId(id);
@@ -400,7 +446,10 @@ export function DorchesterMap() {
       const stop = stops.find((s) => s.id === id);
       if (stop) setCamera({ lat: stop.lat, lng: stop.lng, token: Date.now() });
       const params = new URLSearchParams(searchParams.toString());
+      params.delete('place');
       params.set('stop', id);
+      const owner = TRANSIT_LINES.find((line) => line.dorchesterStops.some((stop) => stop.id === id));
+      if (owner) params.set('route', owner.routeId);
       router.replace(`/map?${params.toString()}`, { scroll: false });
     },
     [router, searchParams, stops]
@@ -409,11 +458,13 @@ export function DorchesterMap() {
   const selectPin = useCallback(
     (id: string) => {
       const resource = RESOURCES.find((r) => r.id === id);
-      if (!resource) return;
+      if (!resource || !isResourceMappable(resource)) return;
       setSelectedPinId(id);
       setSelectedStopId(null);
+      setSelectedVehicleId(null);
       setCamera({ lat: resource.lat, lng: resource.lng, zoom: 16, token: Date.now() });
       const params = new URLSearchParams(searchParams.toString());
+      params.delete('stop');
       params.set('place', id);
       router.replace(`/map?${params.toString()}`, { scroll: false });
     },
@@ -431,35 +482,42 @@ export function DorchesterMap() {
     router.replace(query ? `/map?${query}` : '/map', { scroll: false });
   }, [router, searchParams]);
 
-  // A link like /map?stop=place-fldcr should open on that platform.
-  const appliedParams = useRef(false);
+  // Keep same-page links and browser navigation in sync, not just the first
+  // render. Deferring the update also survives React Strict Mode's effect
+  // cleanup/replay without marking a cancelled timer as already applied.
+  const mapQuery = searchParams.toString();
   useEffect(() => {
-    if (appliedParams.current) return;
-    appliedParams.current = true;
-    const id = window.setTimeout(() => applyUrlParams(), 0);
-    return () => window.clearTimeout(id);
-    function applyUrlParams() {
-    const stopParamFromUrl = searchParams.get('stop');
-    const placeParam = searchParams.get('place');
-    const routeParam = searchParams.get('route');
-    if (routeParam) {
-      if (DORCHESTER_BUS_ROUTES.some((b) => b.id === routeParam)) setFocus({ kind: 'bus', routeId: routeParam });
-      else if (RAIL_ROUTE_IDS.includes(routeParam)) setFocus({ kind: 'rail', routeId: routeParam });
-    }
-    if (stopParamFromUrl) {
-      const known = TRANSIT_LINES.flatMap((line) => line.dorchesterStops).find((stop) => stop.id === stopParamFromUrl);
-      if (known) {
-        if (routeParam === undefined) {
-          const owner = TRANSIT_LINES.find((line) => line.dorchesterStops.some((s) => s.id === stopParamFromUrl));
-          if (owner) setFocus({ kind: 'rail', routeId: owner.routeId });
-        }
-        setSelectedStopId(known.id);
-        setCamera({ lat: known.lat, lng: known.lng, token: Date.now() });
+    const id = window.setTimeout(() => {
+      const params = new URLSearchParams(mapQuery);
+      const stopParam = params.get('stop');
+      const placeParam = params.get('place');
+      const routeParam = params.get('route');
+      if (routeParam) {
+        if (DORCHESTER_BUS_ROUTES.some((bus) => bus.id === routeParam)) setFocus({ kind: 'bus', routeId: routeParam });
+        else if (RAIL_ROUTE_IDS.includes(routeParam)) setFocus({ kind: 'rail', routeId: routeParam });
       }
-    }
-    if (placeParam && RESOURCES.some((r) => r.id === placeParam)) selectPin(placeParam);
-    }
-  }, [searchParams, selectPin]);
+
+      const place = placeParam ? RESOURCES.find((resource) => resource.id === placeParam && isResourceMappable(resource)) : undefined;
+      if (place) {
+        setSelectedPinId(place.id);
+        setSelectedStopId(null);
+        setSelectedVehicleId(null);
+        setCamera({ lat: place.lat, lng: place.lng, zoom: 16, token: Date.now() });
+      } else if (stopParam) {
+        const owner = TRANSIT_LINES.find((line) => line.dorchesterStops.some((stop) => stop.id === stopParam));
+        const stop = owner?.dorchesterStops.find((item) => item.id === stopParam);
+        if (!routeParam && owner) setFocus({ kind: 'rail', routeId: owner.routeId });
+        setSelectedPinId(null);
+        setSelectedStopId(stopParam);
+        setSelectedVehicleId(null);
+        if (stop) setCamera({ lat: stop.lat, lng: stop.lng, token: Date.now() });
+      } else {
+        setSelectedPinId(null);
+        setSelectedStopId(null);
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [mapQuery]);
 
   /* ── map affordances ─────────────────────────────────────────── */
   const locate = useCallback(() => {
@@ -535,8 +593,19 @@ export function DorchesterMap() {
   /* ── derived panels ──────────────────────────────────────────── */
   const selectedStop = selectedStopId ? stops.find((s) => s.id === selectedStopId) ?? null : null;
   const selectedResource = selectedPinId ? RESOURCES.find((r) => r.id === selectedPinId) ?? null : null;
+  const selectedDetails = selectedResource ? resourceDetails(selectedResource, lang) : null;
   const focusedLine = TRANSIT_LINES.find((line) => line.routeId === focus.routeId);
   const focusedBus = DORCHESTER_BUS_ROUTES.find((bus) => bus.id === focus.routeId) ?? null;
+  const focusedLineName = focusedLine ? referenceLineName(focusedLine, lang) : null;
+  const focusedBusName = focusedBus ? referenceBusName(focusedBus, lang) : null;
+
+  // A linked live bus stop may arrive after the URL is applied. Center it
+  // once its route's inventory resolves instead of leaving the map elsewhere.
+  useEffect(() => {
+    if (!selectedStop || TRANSIT_LINES.some((line) => line.dorchesterStops.some((stop) => stop.id === selectedStop.id))) return;
+    const id = window.setTimeout(() => setCamera({ lat: selectedStop.lat, lng: selectedStop.lng, token: Date.now() }), 0);
+    return () => window.clearTimeout(id);
+  }, [selectedStop]);
 
   const departures = useMemo(() => {
     const scoped = selectedStopId ? liveArrivals.filter((a) => a.stopId === selectedStopId) : liveArrivals;
@@ -547,8 +616,9 @@ export function DorchesterMap() {
         ...arrival,
         minutes: Math.max(0, Math.round((new Date(arrival.arrivalAt).getTime() - now) / 60000)),
         clock: format.time(arrival.arrivalAt),
+        heading: arrivalHeading(arrival, lang),
       }));
-  }, [liveArrivals, selectedStopId, format, now]);
+  }, [liveArrivals, selectedStopId, format, now, lang]);
 
   const lineAlerts = useMemo(
     () =>
@@ -562,8 +632,8 @@ export function DorchesterMap() {
     <div ref={shellRef} className="dor101-map-shell flex flex-col gap-2.5">
       {/* ── toolbar ─────────────────────────────────────────────── */}
       <div className="dor101-map-toolbar flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/95 px-2.5 py-2 shadow-sm backdrop-blur">
-        <label className="flex items-center gap-1.5">
-          <span className="font-heading text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
+        <label className="flex min-w-0 max-w-full items-center gap-1.5">
+          <span className="shrink-0 font-heading text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">
             {t('map.route')}
           </span>
           <select
@@ -576,14 +646,22 @@ export function DorchesterMap() {
                   : { kind: 'rail', routeId: value }
               );
               setSelectedStopId(null);
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('route', value);
+              params.delete('stop');
+              router.replace(`/map?${params.toString()}`, { scroll: false });
             }}
-            className="h-9 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2.5 font-heading text-sm font-semibold transition-colors hover:border-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+            className="h-9 min-w-0 max-w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2.5 font-heading text-sm font-semibold transition-colors hover:border-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
           >
-            {TRANSIT_LINES.map((line) => (
-              <option key={line.id} value={line.routeId}>
-                {line.name}
-              </option>
-            ))}
+            {TRANSIT_LINES.filter((line, index, lines) => lines.findIndex((item) => item.routeId === line.routeId) === index).map((line) => {
+              // Both Red Line branches share one MBTA route ID; offering two
+              // identical values falsely suggests a branch filter exists.
+              if (line.routeId === 'Red') return <option key={line.id} value={line.routeId}>{t('neighborhoodTransit.redTitle')}</option>;
+              const name = referenceLineName(line, lang);
+              return <option key={line.id} value={line.routeId} lang={name.used}>
+                {name.value}{name.fellBack ? ` — ${t('lang.someEnglish')}` : ''}
+              </option>;
+            })}
             {DORCHESTER_BUS_ROUTES.map((bus) => (
               <option key={bus.id} value={bus.id}>
                 {t('map.line.bus')} {bus.name}
@@ -664,8 +742,8 @@ export function DorchesterMap() {
       </div>
 
       {/* ── map + details ───────────────────────────────────────── */}
-      <div className="grid items-stretch gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="dor101-map-canvas-box relative min-h-[20rem] overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
+      <div className="grid grid-cols-1 items-stretch gap-2.5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="dor101-map-canvas-box relative min-h-[20rem] min-w-0 overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-md)]">
           <div className={cn('relative w-full', fullscreen ? 'h-[calc(100vh-7rem)]' : 'h-[54vh] lg:h-[38rem]')} data-sheet-open={selectedPinId || selectedStopId || selectedVehicleId ? 'true' : undefined}>
             {!mounted ? (
               <div className="flex h-full items-end bg-[var(--color-bg-tertiary)] p-4">
@@ -698,6 +776,9 @@ export function DorchesterMap() {
               target={selectedVehicleId ? null : selectedPinId ? { kind: 'place', id: selectedPinId } : selectedStopId ? { kind: 'stop', id: selectedStopId } : null}
               arrivals={liveArrivals}
               arrivalsLive={transitSource === 'mbta-live'}
+              arrivalsPartial={transitSource === 'offline-cache'}
+              stopDetails={selectedStop}
+              stopLoading={resolvedStopsRoute !== focus.routeId}
               userPosition={userPosition}
               onClose={clearSelection}
               onSelectStop={selectStop}
@@ -724,6 +805,7 @@ export function DorchesterMap() {
                   key={routeId}
                   type="button"
                   aria-pressed={!hidden}
+                  aria-label={routeId === 'Red' ? t('neighborhoodTransit.redTitle') : referenceLineName(line, lang).value}
                   onClick={() => setHiddenRails((prev) => (hidden ? prev.filter((r) => r !== routeId) : [...prev, routeId]))}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-heading text-[11px] font-bold transition-all duration-150',
@@ -788,7 +870,7 @@ export function DorchesterMap() {
         </div>
 
         <aside
-          className="dor101-dock flex flex-col gap-2.5 lg:max-h-[calc(38rem+2.5rem)] lg:overflow-y-auto lg:pr-1"
+          className="dor101-dock flex min-w-0 flex-col gap-2.5 lg:max-h-[calc(38rem+2.5rem)] lg:overflow-y-auto lg:pr-1"
           aria-label={t('map.details')}
         >
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/95 px-3 py-2">
@@ -800,7 +882,7 @@ export function DorchesterMap() {
                 )}
                 aria-hidden="true"
               />
-              {transitSource === 'mbta-live' ? t('map.live') : transitSource === 'offline-cache' ? t('map.offline') : t('map.schedule')}
+              {transitSource === 'mbta-live' ? t('map.live') : transitSource === 'offline-cache' ? t('map.partial') : t('map.schedule')}
             </span>
             <span className="text-[11px] text-[var(--color-text-muted)]">
               {polling
@@ -838,6 +920,8 @@ export function DorchesterMap() {
                 {liveArrivals.length === 0 && status === 'loading' ? t('map.predictionsLoading') : t('map.noDepartures')}
               </p>
             ) : (
+              <>
+              {departures.some((departure) => departure.heading.fellBack) && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('map.heading.english')}</p>}
               <ul className="mt-2 space-y-1">
                 {departures.map((departure) => (
                   <li
@@ -850,8 +934,8 @@ export function DorchesterMap() {
                       color={departure.routeColor ? `#${departure.routeColor.replace('#', '')}` : undefined}
                       ink={departure.routeColor ? undefined : '#000000'}
                     />
-                    <span className="min-w-0 flex-1 truncate text-xs" dir="auto" title={departure.headsign || departure.direction}>
-                      {departure.headsign || departure.direction || t('map.departures')}
+                    <span className="min-w-0 flex-1 truncate text-xs" lang={departure.heading.used} dir="auto" title={departure.heading.value}>
+                      {departure.heading.value}
                     </span>
                     {departure.track ? (
                       <span className="shrink-0 font-heading text-[10px] font-bold uppercase text-[var(--color-text-muted)]">
@@ -870,12 +954,13 @@ export function DorchesterMap() {
                   </li>
                 ))}
               </ul>
+              </>
             )}
 
             {transitSource !== 'mbta-live' && (
               <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-[var(--color-text-muted)]">
                 <TriangleAlert className="mt-0.5 h-3 w-3 shrink-0 text-[var(--color-accent-amber)]" aria-hidden="true" />
-                <span>{arrivalReason ?? t('map.scheduleData')}</span>
+                <span>{transitSource === 'offline-cache' ? t('map.partialDetails') : t('map.scheduleData')}</span>
               </p>
             )}
             {focus.kind === 'bus' && (
@@ -958,7 +1043,8 @@ export function DorchesterMap() {
                   <CategoryPin category={selectedResource.category} size={22} />
                   <div className="min-w-0 flex-1">
                     <h2 className="font-heading text-sm font-bold leading-tight">{selectedResource.name}</h2>
-                    <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">{selectedResource.neighborhood} · {t(`map.${selectedResource.category}` as 'map.food')}</p>
+                    <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]"><span lang={selectedDetails?.neighborhood.used} dir="auto">{selectedDetails?.neighborhood.value}</span> · {t(`map.${selectedResource.category}` as 'map.food')}</p>
+                    {selectedDetails?.neighborhood.fellBack && <p className="text-[10px] text-[var(--color-text-muted)]">{t('lang.someEnglish')}</p>}
                   </div>
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-[var(--color-text-secondary)]">
@@ -976,12 +1062,14 @@ export function DorchesterMap() {
                 aria-label={t('map.transitRoutes')}
               >
                 <h2 className="font-heading text-sm font-bold leading-tight">
-                  {focusedLine?.name ?? `${t('map.line.bus')} ${focusedBus?.name}`}
+                  {focusedLineName ? <span lang={focusedLineName.used} dir="auto">{focusedLineName.value}</span> : `${t('map.line.bus')} ${focusedBus?.name}`}
                 </h2>
-                {focusedBus && focus.kind === 'bus' && (
-                  <p className="mt-1 text-xs leading-snug text-[var(--color-text-secondary)]" dir="auto">
-                    {focusedBus.longName}
-                  </p>
+                {focusedLineName?.fellBack && <p className="text-[10px] text-[var(--color-text-muted)]">{t('lang.someEnglish')}</p>}
+                {focusedBusName && focus.kind === 'bus' && (
+                  <>
+                    <p className="mt-1 text-xs leading-snug text-[var(--color-text-secondary)]" lang={focusedBusName.used} dir="auto">{focusedBusName.value}</p>
+                    {focusedBusName.fellBack && <p className="text-[10px] text-[var(--color-text-muted)]">{t('lang.someEnglish')}</p>}
+                  </>
                 )}
                 <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
                   <div>
@@ -995,7 +1083,7 @@ export function DorchesterMap() {
                   <div>
                     <dt className="text-[11px] text-[var(--color-text-muted)]">{t('map.stopCount', { count: String(stops.length) })}</dt>
                     <dd className="font-heading font-bold">
-                      {stops.length > 0 ? t('map.live') : t('map.schedule')}
+                      {resolvedStopsRoute === focus.routeId && routeLive ? t('map.live') : t('map.schedule')}
                     </dd>
                   </div>
                   {focusedLine && (
@@ -1032,6 +1120,9 @@ export function DorchesterMap() {
             )}
           </AnimatePresence>
 
+          {(alertsStatus === 'unavailable' || alertsStatus === 'partial') && (
+            <p role="status" className="px-1 text-xs text-[var(--color-text-muted)]">{t('notifications.alertsUnavailable')}</p>
+          )}
           {lineAlerts.length > 0 && (
             <section className="space-y-2" aria-label={t('map.alerts')}>
               {lineAlerts.slice(0, 3).map((alert) => (
@@ -1040,13 +1131,16 @@ export function DorchesterMap() {
                   className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 p-3"
                   style={{ borderLeft: '4px solid var(--mbta-delay)' }}
                 >
-                  <p className="font-heading text-xs font-bold leading-snug" dir="auto">
+                  <p className="font-heading text-xs font-bold leading-snug" lang={alert.headerLanguage ?? 'en'} dir="auto">
                     {alert.header}
                   </p>
                   {alert.description && (
-                    <p className="mt-1 line-clamp-3 text-xs leading-snug text-[var(--color-text-secondary)]" dir="auto">
+                    <p className="mt-1 line-clamp-3 text-xs leading-snug text-[var(--color-text-secondary)]" lang={alert.descriptionLanguage ?? 'en'} dir="auto">
                       {alert.description}
                     </p>
+                  )}
+                  {(!matchesContentLanguage(alert.headerLanguage ?? 'en', lang) || (alert.description && !matchesContentLanguage(alert.descriptionLanguage ?? 'en', lang))) && (
+                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{t('notifications.transitOriginal')}</p>
                   )}
                   {alert.validUntil && (
                     <p className="mt-1.5 text-[11px] text-[var(--color-text-muted)]">
@@ -1145,7 +1239,7 @@ function MapLegend({
   hiddenRails: string[];
   onToggleRail: (routeId: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <div className="grid gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/95 p-4 sm:grid-cols-2 lg:grid-cols-4">
       <div>
@@ -1153,8 +1247,9 @@ function MapLegend({
           {t('map.transitRoutes')}
         </h3>
         <ul className="mt-2 space-y-1.5">
-          {TRANSIT_LINES.map((line) => (
-            <li key={line.id}>
+          {TRANSIT_LINES.map((line) => {
+            const name = referenceLineName(line, lang);
+            return <li key={line.id}>
               <button
                 type="button"
                 onClick={() => onToggleRail(line.routeId)}
@@ -1168,11 +1263,11 @@ function MapLegend({
                   ink={`#${line.textColor.replace('#', '')}`}
                 />
                 <span className={cn('truncate', hiddenRails.includes(line.routeId) && 'text-[var(--color-text-muted)] line-through')}>
-                  {line.name}
+                  <span lang={name.used} dir="auto">{name.value}</span>{name.fellBack && <span className="sr-only"> {t('lang.someEnglish')}</span>}
                 </span>
               </button>
-            </li>
-          ))}
+            </li>;
+          })}
           <li className="flex items-center gap-2 text-xs">
             <span className="h-1 w-6 rounded-full bg-[var(--mbta-delay)]" aria-hidden="true" />
             {t('map.line.bus')}
@@ -1224,7 +1319,7 @@ function MapLegend({
           {t('about.sources')}
         </h3>
         <p className="mt-2 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-          {source === 'mbta-live' ? t('map.liveData') : t('map.scheduleData')}
+          {source === 'mbta-live' ? t('map.liveData') : source === 'offline-cache' ? t('map.partialDetails') : t('map.scheduleData')}
         </p>
         <p className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-muted)]">{t('map.dataCredits')}</p>
       </div>
@@ -1233,7 +1328,7 @@ function MapLegend({
 }
 
 /** Bundled geometry is only used for rail; a bus line without a feed has none. */
-function mergeShapes(incoming: ShapeData[], routeIds: string[]): ShapeData[] {
+export function mergeShapes(incoming: ShapeData[], routeIds: string[]): ShapeData[] {
   const byRoute = new Map(incoming.map((shape) => [shape.routeId, shape]));
   const out: ShapeData[] = [];
   for (const routeId of routeIds) {
@@ -1242,11 +1337,11 @@ function mergeShapes(incoming: ShapeData[], routeIds: string[]): ShapeData[] {
       out.push(liveShape);
       continue;
     }
-    for (const line of TRANSIT_LINES.filter((l) => l.routeId === routeId)) {
-      if (line.fallbackPath?.length) {
-        out.push({ routeId, paths: [line.fallbackPath], source: 'timetable' });
-      }
-    }
+    // Both Red Line branches share a route ID. Keep their fallback paths in
+    // one shape so each rendered path has a unique route-and-index key.
+    const paths = TRANSIT_LINES.filter((line) => line.routeId === routeId)
+      .flatMap((line) => line.fallbackPath?.length ? [line.fallbackPath] : []);
+    if (paths.length) out.push({ routeId, paths, source: 'timetable' });
   }
   return out;
 }
