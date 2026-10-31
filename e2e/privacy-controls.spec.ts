@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const scripts = 'script[src*="vercel-scripts.com"],script[src*="/_vercel/insights"],script[src*="/_vercel/speed-insights"]';
 
-test('the privacy pop-up fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
+test('the corner pop-up fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.addInitScript(() => {
@@ -43,22 +43,23 @@ test('the privacy pop-up fits a small Arabic screen and a decline persists', asy
   await expect(page.locator(scripts)).toHaveCount(0);
 });
 
-test('the pop-up is dismissible without recording an analytics choice', async ({ page }, testInfo) => {
+test('the pop-up leaves the page usable and does not force an analytics choice', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/weather', { waitUntil: 'domcontentloaded' });
   const notice = page.getByRole('dialog', { name: 'Your privacy choices' });
   await expect(notice).toBeVisible({ timeout: 20_000 });
 
-  // Escape hides it for this visit only: no choice is written, telemetry stays off.
-  await page.keyboard.press('Escape');
-  await expect(notice).toHaveCount(0);
+  // No scrim: a control at the top of the page still receives the click.
+  await page.getByRole('button', { name: 'Open menu' }).click();
+  await expect(page.locator('.dor101-shell')).toHaveAttribute('data-mobile-open', 'true');
+  await page.locator('.dor101-scrim').click({ position: { x: 8, y: 8 } });
+  await expect(page.locator('.dor101-shell')).toHaveAttribute('data-mobile-open', 'false');
+
+  // Reading the page without answering writes nothing and mounts no SDK.
+  await expect(notice).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dor101-privacy-choice') ?? '{"state":{}}').state.choice ?? 'unset')).toBe('unset');
   await expect(page.locator(scripts)).toHaveCount(0);
-
-  // The page is usable once the pop-up is gone.
-  await page.getByRole('button', { name: 'Turn on weather' }).click();
-  await expect(page.getByRole('heading', { name: 'Weather is turned off' })).toHaveCount(0);
 });
 
 test('an explicit analytics choice can be withdrawn in another tab', async ({ page, context }) => {
