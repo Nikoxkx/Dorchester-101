@@ -48,6 +48,45 @@ export function formatClockMinutes(minutes: number, twelveHour = true): string {
     : `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
+// Directory schedules are wall-clock minutes in Boston, not instants. Format
+// those wall-clock values in the reader's locale without applying a time-zone
+// conversion, which would change the advertised opening hours.
+const clockFormatters = new Map<string, Intl.DateTimeFormat>();
+export function formatClockMinutesForLocale(minutes: number, locale: string): string {
+  const total = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  const date = new Date(2000, 0, 1, Math.floor(total / 60), total % 60);
+  let formatter = clockFormatters.get(locale);
+  if (!formatter) {
+    try {
+      formatter = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' });
+    } catch {
+      formatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+    clockFormatters.set(locale, formatter);
+  }
+  return formatter.format(date);
+}
+
+export function formatWindowForLocale(window: HourWindow, locale: string): string {
+  return `${formatClockMinutesForLocale(window.startsAt, locale)}–${formatClockMinutesForLocale(window.endsAt, locale)}`;
+}
+
+/** Format a Monday-first weekday without depending on the viewer's clock or
+ * DST. The fixed UTC anchor is a Monday; only the localized weekday is read. */
+export function formatWeekdayIndex(day: number, locale: string, style: 'short' | 'long' = 'long'): string {
+  const normalized = ((day % 7) + 7) % 7;
+  // Intl uses French and Portuguese as formatting fallbacks for these two
+  // languages; their weekday names need explicit, language-specific labels.
+  if (locale.toLowerCase() === 'fr-ht') return ['Lendi', 'Madi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi', 'Dimanch'][normalized];
+  if (locale.toLowerCase() === 'pt-cv') return ['Sigunda', 'Tersa', 'Kuarta', 'Kinta', 'Sesta', 'Sábadu', 'Domingu'][normalized];
+  const anchor = new Date(Date.UTC(2000, 0, 3 + normalized, 12));
+  try {
+    return new Intl.DateTimeFormat(locale, { weekday: style, timeZone: 'UTC' }).format(anchor);
+  } catch {
+    return new Intl.DateTimeFormat('en-US', { weekday: style, timeZone: 'UTC' }).format(anchor);
+  }
+}
+
 export function formatWindow(window: HourWindow, twelveHour = true): string {
   if (!twelveHour)
     return `${pad(Math.floor(window.startsAt / 60))}:${pad(window.startsAt % 60)}-${pad(Math.floor(window.endsAt / 60))}:${pad(window.endsAt % 60)}`;
@@ -83,6 +122,7 @@ export function buildWeek(spec: Record<number, string[]>): WeeklyHours {
 }
 
 export type OpenStatus =
+  | { state: "always-open" }
   | { state: "open"; closesAt: number; minutesUntilClose: number }
   | { state: "closing-soon"; closesAt: number; minutesUntilClose: number }
   | {
@@ -173,11 +213,17 @@ export function statusFor(
       ? (() => {
           const local = new Date(now.getTime() + zone * 60_000);
           return {
-            weekday: mondayIndex(local),
+            weekday: (local.getUTCDay() + 6) % 7,
             minutes: local.getUTCHours() * 60 + local.getUTCMinutes(),
           };
         })()
       : zonedParts(now, zone);
+
+  // A continuous 24-hour schedule has no closing time. Without this check,
+  // 00:00–24:00 on adjacent days would be labelled "closing soon" at 11 PM.
+  if (week.length === 7 && week.every((windows) => windows.some((w) => !w.overnight && w.startsAt === 0 && w.endsAt === 1440))) {
+    return { state: "always-open" };
+  }
 
   for (const window of week[day]) {
     if (window.overnight) {
@@ -195,20 +241,8 @@ export function statusFor(
               minutesUntilClose: remaining,
             };
       }
-      if (minutes < window.endsAt) {
-        const remaining = window.endsAt - minutes;
-        return remaining <= CLOSING_SOON_MINUTES
-          ? {
-              state: "closing-soon",
-              closesAt: window.endsAt,
-              minutesUntilClose: remaining,
-            }
-          : {
-              state: "open",
-              closesAt: window.endsAt,
-              minutesUntilClose: remaining,
-            };
-      }
+      // Before this evening's start, only yesterday's overnight window can
+      // keep the place open. That is checked separately below.
       continue;
     }
     if (minutes >= window.startsAt && minutes < window.endsAt) {
@@ -285,7 +319,7 @@ export function isOpenNow(
   zone: string | number = BOSTON_TZ,
 ): boolean {
   const s = statusFor(week, now ?? new Date(), zone);
-  return s.state === "open" || s.state === "closing-soon";
+  return s.state !== "closed";
 }
 
 /** Windows open at a given weekday index, used by "today" listings. */

@@ -4,67 +4,71 @@ import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
-import { useAppStore, useReduceMotion } from '@/stores/appStore';
+import { useReduceMotion } from '@/stores/appStore';
+import { usePrivacyStore } from '@/stores/privacyStore';
 import { useI18n } from '@/i18n/hook';
 
 const subscribeNoop = () => () => {};
 
-/**
- * The plain-language privacy notice, shown once on first visit.
- *
- * What it must not do is pretend to be a cookie wall: this site sets no
- * tracking cookies, runs no ads and has no accounts, so there is nothing
- * to "accept" in the legal sense — settings persist in on-device local
- * storage because a resident's language and colors should survive a
- * refresh. The notice says exactly that, once, and points at the two
- * places with real controls (Settings → Permissions, and the Privacy
- * page). Browser permissions themselves are never requested here; they
- * stay behind their own labelled buttons.
- */
+/** A real opt-in for optional analytics, not an acknowledgement treated as consent. */
 export function ConsentNotice() {
   const { t } = useI18n();
   const reduceMotion = useReduceMotion();
-  const hydrated = useAppStore((s) => s.hydrated);
-  const consentSeen = useAppStore((s) => s.consentSeen);
-  const setConsentSeen = useAppStore((s) => s.setConsentSeen);
+  const choice = usePrivacyStore((s) => s.choice);
+  const hydrated = usePrivacyStore((s) => s.hydrated);
+  const deferred = usePrivacyStore((s) => s.deferred);
+  const choose = usePrivacyStore((s) => s.choose);
+  const defer = usePrivacyStore((s) => s.defer);
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
-
-  const visible = mounted && hydrated && !consentSeen;
+  const visible = mounted && hydrated && choice === 'unset' && !deferred;
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.aside
           role="region"
-          aria-label={t('consent.title')}
-          initial={{ opacity: 0, y: reduceMotion ? 0 : 24 }}
+          aria-labelledby="privacy-choice-title"
+          initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
+          exit={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-          className="dor101-safe-bottom fixed inset-x-3 bottom-3 z-[1180] mx-auto max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-4 shadow-[var(--shadow-lg)] print:hidden sm:inset-x-6 sm:bottom-5"
+          className="mx-4 mt-4 max-w-3xl rounded-2xl border border-[var(--color-border-strong)] bg-[var(--bg-raised-solid)] p-4 shadow-[var(--shadow-sm)] print:hidden sm:mx-6 sm:p-5 lg:mx-8"
         >
-          <h2 className="flex items-center gap-2 font-heading text-sm font-extrabold">
-            <ShieldCheck className="h-4.5 w-4.5 text-[var(--color-accent-green)]" aria-hidden="true" />
-            {t('consent.title')}
-          </h2>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--color-text-secondary)]">{t('consent.body')}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex items-start gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-accent-primary)]" aria-hidden="true">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id="privacy-choice-title" className="font-heading text-base font-bold text-[var(--color-text-primary)]">{t('consent.title')}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('consent.body')}</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setConsentSeen(true)}
-              className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white transition-transform active:scale-[0.97]"
+              onClick={() => choose('decline')}
+              className="min-h-11 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-primary)] px-4 py-2.5 text-center font-heading text-sm font-bold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+            >
+              {t('consent.decline')}
+            </button>
+            <button
+              type="button"
+              onClick={() => choose('allow')}
+              className="min-h-11 rounded-xl border border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)] px-4 py-2.5 text-center font-heading text-sm font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2"
             >
               {t('consent.accept')}
             </button>
-            <Link
-              href="/settings#permissions"
-              onClick={() => setConsentSeen(true)}
-              className="rounded-full border border-[var(--color-border-strong)] px-3.5 py-2 font-heading text-xs font-bold text-[var(--color-accent-primary)]"
-            >
-              {t('consent.permissions')}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('consent.manage')}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm font-heading font-semibold">
+            <Link href="/privacy" onClick={defer} className="inline-flex min-h-10 items-center text-[var(--color-accent-primary)] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]">
+              {t('consent.policy')}
             </Link>
-            <Link href="/privacy" onClick={() => setConsentSeen(true)} className="px-1.5 font-heading text-xs font-bold text-[var(--color-text-secondary)] underline decoration-dotted underline-offset-2">
-              {t('dashboard.footer.privacy')}
+            <Link href="/settings#privacy" onClick={defer} className="inline-flex min-h-10 items-center text-[var(--color-accent-primary)] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]">
+              {t('consent.settingsLink')}
+            </Link>
+            <Link href="/settings#permissions" onClick={defer} className="inline-flex min-h-10 items-center text-[var(--color-accent-primary)] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]">
+              {t('consent.permissions')}
             </Link>
           </div>
         </motion.aside>

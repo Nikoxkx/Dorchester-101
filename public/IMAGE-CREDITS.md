@@ -44,15 +44,51 @@ photograph of a real place; the logos, source badges and icons are drawn here.
 ## `img/hoods/codman-square.jpg`
 
 - **Subject:** Edward Everett Square, Dorchester — the Columbia Road end of the
-  Codman Square–Uphams Corner corridor. It stands in for Codman Square because no
-  Commons photograph of Codman Square itself was available at import time; the caption
-  in the UI says so rather than passing the square off as somewhere else.
+  Codman Square–Uphams Corner corridor. This older file is retained but no longer
+  used as the Codman Square neighborhood image.
 - **Author:** *John Phelan* (Wikimedia Commons), 11 March 2012.
 - **Commons page:** https://commons.wikimedia.org/wiki/File:Edward_Everett_Square,_Dorchester_MA.jpg
 - **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0).
 - **Credit line used in the UI:** “Edward Everett Square, Dorchester — photo by John Phelan, CC BY-SA 3.0.”
 - **Modifications:** resized, progressive JPEG.
-- **Used in:** the About page and the Codman Square neighborhood card.
+- **Used in:** not currently displayed; replaced by the Second Church photograph below.
+
+## `img/hoods/codman-square-church-2019.jpg`
+
+- **Subject:** Second Church in Dorchester at Codman Square, July 2019.
+- **Author:** *Staruski1* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Second_Church_in_Dorchester.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0), https://creativecommons.org/licenses/by-sa/4.0/.
+- **Credit line used in the UI:** Second Church in Dorchester at Codman Square — Staruski1, CC BY-SA 4.0.
+- **Modifications:** resized, JPEG; cropped by the display.
+- **Used in:** About and the Codman Square neighborhood card.
+
+## `img/hoods/intervale-blue-hill-2021.jpg`
+
+- **Subject:** Intervale Street–Blue Hill Avenue Historic District, near Grove Hall, January 2021. It is not the Grove Hall intersection.
+- **Author:** *Magicpiano* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:BostonMA_IntervaleRoadBlueHillAveHD_2.jpg
+- **Licence:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0), https://creativecommons.org/licenses/by-sa/4.0/.
+- **Credit line used in the UI:** Intervale Street–Blue Hill Avenue Historic District, near Grove Hall — Magicpiano, CC BY-SA 4.0.
+- **Modifications:** resized, JPEG; cropped by the display.
+
+## `img/stations/savin-hill-platform-2012.jpg`
+
+- **Subject:** Savin Hill station platform, January 2012.
+- **Author:** *Pi.1415926535* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Savin_Hill_station.JPG
+- **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/.
+- **Credit line used in the UI:** Savin Hill station — Pi.1415926535, CC BY-SA 3.0.
+- **Modifications:** resized; cropped by the display.
+
+## `img/stations/shawmut-headhouse-2016.jpg`
+
+- **Subject:** Shawmut station entrance, August 2016. At 150 Centre Street this is labelled as nearby context, not the planned building.
+- **Author:** *Pi.1415926535* (Wikimedia Commons).
+- **Commons page:** https://commons.wikimedia.org/wiki/File:Shawmut_station_headhouse_from_the_south,_August_2016.JPG
+- **Licence:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/.
+- **Credit line used in the UI:** Shawmut station — Pi.1415926535, CC BY-SA 3.0.
+- **Modifications:** resized; cropped by the display.
 
 ## `img/hoods/savin-hill.jpg`
 
@@ -73,6 +109,7 @@ photograph of a real place; the logos, source badges and icons are drawn here.
 ## `img/hoods/grove-hall.jpg`
 
 - **Subject:** Blue Hill Avenue near American Legion Highway, circa 1960–1968.
+  Retained but no longer used as the Grove Hall neighborhood image.
 - **Author:** City of Boston Archives (Mayor John F. Collins records, collection #0244.001).
 - **Commons page:** https://commons.wikimedia.org/wiki/File:Blue_Hill_Avenue_near_American_Legion_Highway_in_Dorchester_(11071878605).jpg
 - **Licence:** Creative Commons Attribution 2.0 Generic (CC BY 2.0).
@@ -131,13 +168,12 @@ photograph of a real place; the logos, source badges and icons are drawn here.
 
 - **Icons:** Lucide, ISC licence.
 - **Transit data:** MBTA Developer V3 API (`api-v3.mbta.com`), GTFS-derived. Arrivals
-  and alerts are read live; when the feed is unreachable the site says “timetable”
-  and shows the published headway instead of pretending to be live.
+  and alerts are read live; when the feed is unreachable the site labels a
+  headway-based estimate rather than presenting it as a published timetable.
 - **Demographic figures:** US Census Bureau, American Community Survey 5-year
   estimates, read at build time through `src/lib/census.ts`.
-- **Housing market figures:** not installed unless `public/data/hud-fmr.json` is
-  present, in which case the market page reports it as installed. Nothing is
-  estimated when the file is missing.
+- **Housing market figures:** live Census and HUD data when available; labelled
+  captures or an unavailable state when publishers cannot be reached.
 
 ## `social/homepage.png` and `social/dorchester-101-*.jpg`
 

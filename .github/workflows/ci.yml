@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # Node 20 reached end of life in April 2026; Next 16 wants >=20.9.
+          # Use the latest Node 22 patch; the desktop/test toolchain needs 22.12+.
           node-version: '22'
           cache: 'npm'
 
@@ -27,6 +27,14 @@ jobs:
         run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - name: Audit production dependencies (moderate and above)
+        run: npm audit --omit=dev --audit-level=moderate
+
+      # Current moderate-only findings are documented in SECURITY.md. Fail if a
+      # high/critical finding is introduced anywhere in the installed toolchain.
+      - name: Audit development toolchain (high and above)
+        run: npm audit --audit-level=high
 
       - name: Run ESLint
         run: npm run lint
@@ -104,6 +112,10 @@ jobs:
           echo "::error::the production server never answered /api/health"
           exit 1
 
+      - name: Verify desktop staging and server routes
+        # This checks packaged files and Next startup, not a Windows installer.
+        run: npm run verify:desktop
+
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -148,7 +160,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test, build]
+    needs: [lint-and-typecheck, test, build, e2e]
     if: github.ref == 'refs/heads/main'
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'

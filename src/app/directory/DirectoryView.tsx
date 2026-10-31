@@ -7,8 +7,10 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Badge } from '@/components/ui/Badge';
 import { useI18n } from '@/i18n/hook';
-import { RESOURCES, verificationAge, verificationLevel, type ResourceCategory } from '@/data/resources';
-import { BOSTON_TZ, formatWindow, isOpenNow, statusFor } from '@/lib/hours';
+import { resourceDetails } from '@/i18n/resourceDetails';
+import { RESOURCES, isResourceMappable, verificationAge, verificationLevel, type ResourceCategory } from '@/data/resources';
+import { BOSTON_TZ, formatWeekdayIndex, formatWindowForLocale, isOpenNow, statusFor, zonedParts } from '@/lib/hours';
+import { useHydratedNow } from '@/hooks/useNow';
 import { cn } from '@/lib/utils';
 import type { TranslationKey } from '@/i18n/en';
 
@@ -41,20 +43,22 @@ export function DirectoryView() {
 
   // One timestamp per render pass. Every open/closed badge and every age on this
   // page is measured from it, so two rows cannot disagree about what "today" is.
-  const [now] = useState(() => new Date());
+  const nowMs = useHydratedNow(60_000);
+  const now = useMemo(() => nowMs === null ? null : new Date(nowMs), [nowMs]);
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const list = RESOURCES.map((resource) => {
-      const status = resource.hours ? statusFor(resource.hours, now, BOSTON_TZ) : null;
-      const today = resource.hours ? resource.hours[(now.getDay() + 6) % 7] : [];
+      const status = resource.hours && now ? statusFor(resource.hours, now, BOSTON_TZ) : null;
+      const today = resource.hours && now ? resource.hours[zonedParts(now, BOSTON_TZ).weekday] : [];
       return {
         resource,
         status,
-        openNow: resource.hours ? isOpenNow(resource.hours, now, BOSTON_TZ) : null,
+        openNow: resource.hours && now ? isOpenNow(resource.hours, now, BOSTON_TZ) : null,
         today,
-        age: verificationAge(resource, now),
-        level: verificationLevel(resource, now),
+        age: now ? verificationAge(resource, now) : 0,
+        level: now ? verificationLevel(resource, now) : resource.verification.status === 'needs-review' ? 'stale' : null,
+        details: resourceDetails(resource, lang),
       };
     })
       .filter((row) => (category === 'all' ? true : row.resource.category === category))
@@ -64,10 +68,18 @@ export function DirectoryView() {
         const haystack = [
           row.resource.name,
           row.resource.address,
+          row.details.address.value,
           row.resource.neighborhood,
           row.resource.summary.en,
+          pickContent(row.resource.summary).value,
           row.resource.services.join(' '),
+          row.details.services.value.join(' '),
+          row.details.neighborhood.value,
+          row.details.hoursNote.value ?? '',
+          row.details.eligibility.value ?? '',
+          row.details.transit.value ?? '',
           row.resource.operator ?? '',
+          row.details.operator.value ?? '',
         ]
           .join(' ')
           .toLowerCase();
@@ -77,7 +89,7 @@ export function DirectoryView() {
     // Sorted in the reader's own collation: a Spanish speaker scanning for
     // "Oficina" should not have accented names dumped at the end of the list.
     return list.sort((a, b) => (staleFirst ? b.age - a.age : a.resource.name.localeCompare(b.resource.name, lang)));
-  }, [query, category, openOnly, staleFirst, now, lang]);
+  }, [query, category, openOnly, staleFirst, now, lang, pickContent]);
 
   return (
     <MainLayout>
@@ -96,9 +108,10 @@ export function DirectoryView() {
             {t('directory.print')}
           </button>
         </header>
+        {lang !== 'en' && <p className="max-w-prose text-xs text-[var(--color-text-muted)]">{t('clothing.translationDraft')}</p>}
 
         <p className="print-only text-xs text-[var(--color-text-muted)]">
-          {t('directory.printHeading')} · {t('common.updated')} {format.date(now, 'medium')}
+          {t('directory.printHeading')}{now && <> · {t('common.updated')} {format.date(now, 'medium')}</>}
         </p>
 
         <div className="flex flex-col gap-2.5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/90 p-3">
@@ -137,7 +150,7 @@ export function DirectoryView() {
                   onChange={(event) => setOpenOnly(event.target.checked)}
                   className="h-3.5 w-3.5 accent-[var(--color-accent-primary)]"
                 />
-                {t('directory.openToday')}
+                {t('clothing.openNow')}
               </label>
               <label className="flex cursor-pointer items-center gap-1.5 font-heading text-xs font-semibold">
                 <input
@@ -152,7 +165,7 @@ export function DirectoryView() {
           </div>
           <p className="text-[11px] text-[var(--color-text-muted)]">
             {t('directory.showing', { shown: String(rows.length), total: String(RESOURCES.length) })} ·{' '}
-            {t('directory.langNote', { language: meta.name })}
+            {t('directory.langNote', { language: meta.nativeName })}
           </p>
         </div>
 
@@ -162,7 +175,7 @@ export function DirectoryView() {
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {rows.map(({ resource, status, today, level, age }) => {
+            {rows.map(({ resource, status, today, level, age, details }) => {
               const summary = pickContent(resource.summary);
               const open = expanded === resource.id;
               return (
@@ -170,40 +183,42 @@ export function DirectoryView() {
                   <article
                     className={cn(
                       'rounded-2xl border bg-[var(--color-bg-primary)]/95 p-3.5 transition-colors',
-                      level === 'fresh' ? 'border-[var(--color-border)]' : 'border-[var(--color-accent-amber)]/45'
+                      !level || level === 'fresh' ? 'border-[var(--color-border)]' : 'border-[var(--color-accent-amber)]/45'
                     )}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h2 className="font-heading text-sm font-bold leading-snug">{resource.name}</h2>
                         <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
-                          {t(CATEGORY_KEYS[resource.category])} · {resource.neighborhood}
+                          {t(CATEGORY_KEYS[resource.category])} · <span lang={details.neighborhood.used} dir="auto">{details.neighborhood.value}</span>
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
                         {status && (
-                          <Badge variant={status.state === 'open' ? 'green' : status.state === 'closing-soon' ? 'amber' : 'default'}>
-                            {status.state === 'open'
+                          <Badge variant={(status.state === 'open' || status.state === 'always-open') ? 'green' : status.state === 'closing-soon' ? 'amber' : 'default'}>
+                            {(status.state === 'open' || status.state === 'always-open')
                               ? t('common.open')
                               : status.state === 'closing-soon'
                                 ? t('common.closingSoon')
                                 : t('common.closed')}
                           </Badge>
                         )}
-                        {level !== 'fresh' && (
+                        {level && level !== 'fresh' && (
                           <Badge variant="amber">
-                            {t('directory.needsReview')} {age > 0 ? `· ${format.number(age)} d` : ''}
+                            {t('directory.needsReview')} {age > 0 ? `· ${t('time.daysAgo', { count: format.number(age) })}` : ''}
                           </Badge>
                         )}
                       </div>
                     </div>
 
-                    <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-text-secondary)]" dir="auto">
+                    <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-text-secondary)]" lang={summary.used} dir="auto">
                       {summary.value}
                     </p>
+                    {summary.fellBack && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('lang.untranslated', { language: meta.nativeName })}</p>}
+                    {(details.neighborhood.fellBack || details.address.fellBack) && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('lang.detailsEnglish')}</p>}
 
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[var(--color-text-secondary)]">
-                      <span>{resource.address}</span>
+                      <span lang={details.address.used} dir="auto">{details.address.value}</span>
                       {resource.phone && (
                         <a
                           href={`tel:${resource.phone.replace(/[^\d+]/g, '')}`}
@@ -224,22 +239,26 @@ export function DirectoryView() {
                         </a>
                       )}
                       <span className="inline-flex items-center gap-1 tabular-nums">
-                        {today.length > 0 ? (
+                        {resource.hours && !now ? (
+                          t('common.loading')
+                        ) : today.length > 0 ? (
                           <>
                             <span className="text-[var(--color-text-muted)]">{t('directory.openToday')}:</span>
-                            {today.map((window) => formatWindow(window)).join(', ')}
+                            {today.map((window) => formatWindowForLocale(window, meta.intlLocale)).join(', ')}
                           </>
                         ) : resource.hours ? (
                           t('directory.closedToday')
                         ) : (
-                          <span className="italic text-[var(--color-text-muted)]">{t('directory.noHours')}</span>
+                          <span className="italic text-[var(--color-text-muted)]">{t(resource.hoursNote ? 'food.hoursUnknown' : 'directory.noHours')}</span>
                         )}
                       </span>
                       <span className="ms-auto flex items-center gap-2">
+{isResourceMappable(resource) && (
                         <Link href={`/map?place=${resource.id}`} className="inline-flex items-center gap-1 font-heading font-bold hover:underline">
                           <MapPin className="h-3 w-3" aria-hidden="true" />
                           {t('directory.openMap')}
                         </Link>
+                      )}
                         <button
                           type="button"
                           onClick={() => setExpanded(open ? null : resource.id)}
@@ -261,10 +280,10 @@ export function DirectoryView() {
                               ? resource.hours.map((windows, index) => (
                                   <tr key={index}>
                                     <th scope="row" className="py-0.5 pe-2 text-start font-heading font-bold text-[var(--color-text-muted)]">
-                                      {format.weekday(new Date(now.getTime() + ((index - ((now.getDay() + 6) % 7)) * 86_400_000)), 'short')}
+                                      {formatWeekdayIndex(index, meta.intlLocale, 'short')}
                                     </th>
                                     <td className="py-0.5 tabular-nums">
-                                      {windows.length ? windows.map((window) => formatWindow(window)).join(', ') : t('common.closed')}
+                                      {windows.length ? windows.map((window) => formatWindowForLocale(window, meta.intlLocale)).join(', ') : t('common.closed')}
                                     </td>
                                   </tr>
                                 ))
@@ -272,16 +291,17 @@ export function DirectoryView() {
                           </tbody>
                         </table>
                         <div className="text-[11px] leading-snug">
-                          {resource.hoursNote && <p className="text-[var(--color-text-secondary)]">{resource.hoursNote}</p>}
+                          {(details.hoursNote.fellBack || details.source.fellBack) && <p className="text-[var(--color-text-muted)]">{t('lang.detailsEnglish')}</p>}
+                          {resource.hoursNote && <p lang={details.hoursNote.used} dir="auto" className="text-[var(--color-text-secondary)]">{details.hoursNote.value}</p>}
                           {resource.requiresId && <p className="mt-1">{t('food.idRequired')}</p>}
                           {resource.acceptsEbt && <p className="mt-1">{t('food.ebt')}</p>}
-                          {resource.accessibility?.stepFree && <p className="mt-1">{t('map.wheelchair')}</p>}
+                          {isResourceMappable(resource) && resource.accessibility?.stepFree && <p className="mt-1">{t('map.wheelchair')}</p>}
                           {resource.verification.source && (
                             <p className="mt-1.5 text-[var(--color-text-muted)]">
-                              {t('common.source')}: {resource.verification.source} · {format.date(resource.verification.checkedOn, 'medium')}
+                              {t('common.source')}: <span lang={details.source.used} dir="auto">{details.source.value}</span> · {format.date(resource.verification.checkedOn, 'medium')}
                             </p>
                           )}
-                          {level !== 'fresh' && <p className="mt-1 font-semibold text-[var(--color-accent-amber)]">{t('directory.staleWarning')}</p>}
+                          {level && level !== 'fresh' && <p className="mt-1 font-semibold text-[var(--color-accent-amber)]">{t('directory.staleWarning')}</p>}
                         </div>
                       </div>
                     )}
@@ -292,7 +312,7 @@ export function DirectoryView() {
           </ul>
         )}
         <ProjectNote sources={['dor101', 'bostongov', 'bha']}>
-          Every listing names the organisation, its phone number and the date the details were last confirmed with them. A listing older than six months is flagged rather than hidden, so you can still call, but you know to ask.
+          {t('note.directory')}
         </ProjectNote>
       </div>
     </MainLayout>

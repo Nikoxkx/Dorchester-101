@@ -18,11 +18,13 @@ export interface I18n {
   pickContent: <T>(record: Localized<T>) => PickResult<T>;
   format: {
     number: (v: number) => string;
+    year: (v: number) => string;
     decimal: (v: number, digits?: number) => string;
     currency: (v: number, opts?: { cents?: boolean }) => string;
     /** `v` is a fraction: `percent(0.635, 1)` → "63.5%". */
     percent: (v: number, digits?: number) => string;
     date: (v: string | number | Date, style?: 'short' | 'medium' | 'long') => string;
+    monthYear: (v: string | number | Date) => string;
     time: (v: string | number | Date) => string;
     clock: (d: Date) => string;
     weekday: (d: Date, style?: 'long' | 'short') => string;
@@ -46,10 +48,12 @@ export function useI18n(): I18n {
   const format = useMemo<I18n['format']>(
     () => ({
       number: (v) => fmt.formatNumber(v, lang),
+      year: (v) => fmt.formatYear(v, lang),
       decimal: (v, digits) => fmt.formatDecimal(v, lang, digits),
       currency: (v, opts) => fmt.formatCurrency(v, lang, opts),
       percent: (v, digits) => fmt.formatPercent(v, lang, digits),
       date: (v, style) => fmt.formatDate(v, lang, style),
+      monthYear: (v) => fmt.formatMonthYear(v, lang),
       time: (v) => fmt.formatTime(v, lang),
       clock: (d) => fmt.formatClock(d, lang),
       weekday: (d, style) => fmt.formatWeekday(d, lang, style),

@@ -8,7 +8,8 @@
  * This file is *reference* data only. Anything that moves (arrivals, alerts,
  * detours, elevator status) is fetched live by /api/mbta and this data is used
  * solely as the fallback when the feed is unreachable. When the fallback is on
- * screen the UI says "timetable", never "live".
+ * screen the UI identifies reference estimates, never a live or published
+ * departure timetable.
  */
 
 export type TransitMode = 'subway' | 'trolley' | 'rail' | 'bus';

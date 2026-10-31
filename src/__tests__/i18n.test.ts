@@ -18,6 +18,8 @@ import { makeTranslator, pick } from "@/i18n/runtime";
 import {
   formatCurrency,
   formatDate,
+  formatMonthYear,
+  formatRelativeTime,
   formatNumber,
   formatWeekday,
   weekdayIndex,
@@ -33,7 +35,7 @@ describe("i18n dictionaries", () => {
     expect(Object.keys(dictionaries).sort()).toEqual([...codes].sort());
   });
 
-  it("keeps every locale at full key parity, so no English leaks through", () => {
+  it("keeps every locale at full dictionary key parity", () => {
     for (const code of codes) {
       const missing = missingKeys(code);
       expect(
@@ -175,6 +177,29 @@ describe("formatters", () => {
     expect(weekdayIndex(monday)).toBe(0);
     expect(weekdayIndex(sunday)).toBe(6);
     expect(formatWeekday(monday, "en")).toBe("Monday");
+    expect(formatWeekday(monday, "ht")).toBe("Lendi");
+    expect(formatWeekday(monday, "kea")).toBe("Sigunda");
+  });
+
+  it("uses the actual language tag for Creole content instead of the Intl fallback language", () => {
+    expect(languageMeta('ht').contentLocale).toBe('ht');
+    expect(languageMeta('kea').contentLocale).toBe('kea');
+    expect(languageMeta('ht').intlLocale).toBe('fr-HT');
+    expect(languageMeta('kea').intlLocale).toBe('pt-CV');
+  });
+
+  it("uses Creole month names and relative-time phrases instead of French or Portuguese", () => {
+    expect(formatDate('2026-10-31', 'ht', 'long')).toBe('31 oktòb 2026');
+    expect(formatDate('2026-10-31', 'kea', 'long')).toBe('31 di otubru di 2026');
+    expect(formatMonthYear('2026-10-31', 'ht')).toBe('okt 2026');
+    expect(formatMonthYear('2026-10-31', 'kea')).toBe('otu 2026');
+    const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000);
+    const inTwoDays = new Date(Date.now() + 2 * 86_400_000);
+    expect(formatRelativeTime(twoDaysAgo, 'ht')).toBe('sa gen 2 jou');
+    expect(formatRelativeTime(inTwoDays, 'ht')).toBe('nan 2 jou');
+    expect(formatRelativeTime(twoDaysAgo, 'kea')).toBe('fazi 2 dia');
+    expect(formatRelativeTime(inTwoDays, 'kea')).toBe('da li 2 dia');
+    expect(formatRelativeTime('invalid', 'ht')).toBe('');
   });
 
   it("declares the placeholders a template uses so callers can satisfy them", () => {

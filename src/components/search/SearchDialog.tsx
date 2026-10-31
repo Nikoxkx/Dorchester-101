@@ -25,6 +25,9 @@ interface Hit {
   kind: 'page' | 'organization' | 'stop' | 'route';
   title: string;
   subtitle: string;
+  titleLanguage?: string;
+  subtitleLanguage?: string;
+  subtitleFellBack?: boolean;
   href: string;
   phone?: string;
   matchedOn?: string;
@@ -54,7 +57,7 @@ function readRecent(): string[] {
 }
 
 export function SearchDialog() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
   const announce = useAnnounce();
   const weatherEnabled = useAppStore((s) => s.weatherEnabled);
@@ -120,7 +123,7 @@ export function SearchDialog() {
       const ctrl = new AbortController();
       controller.current = ctrl;
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&limit=16`, { signal: ctrl.signal });
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&limit=16&lang=${encodeURIComponent(lang)}`, { signal: ctrl.signal });
         if (!res.ok) throw new Error(String(res.status));
         const json = (await res.json()) as Payload;
         // Weather off means off everywhere — a search result is a menu by
@@ -140,7 +143,7 @@ export function SearchDialog() {
     return () => {
       if (debounce.current) window.clearTimeout(debounce.current);
     };
-  }, [term, open, announce, t, weatherEnabled]);
+  }, [term, open, announce, t, lang, weatherEnabled]);
 
   function commit(query: string) {
     const next = [query, ...readRecent().filter((r) => r !== query)].slice(0, RECENT_MAX);
@@ -329,10 +332,11 @@ export function SearchDialog() {
                               >
                                 <Icon className="w-4 h-4 shrink-0 text-[var(--color-accent-primary)]" aria-hidden="true" />
                                 <span className="min-w-0 flex-1">
-                                  <span className="block truncate font-heading text-sm font-medium">{hit.title}</span>
-                                  <span className="block truncate text-xs text-[var(--color-text-muted)]">
+                                  <span className="block truncate font-heading text-sm font-medium" lang={hit.titleLanguage} dir="auto">{hit.title}</span>
+                                  <span className="block truncate text-xs text-[var(--color-text-muted)]" lang={hit.subtitleLanguage} dir="auto">
                                     {hit.phone ? `${hit.subtitle} · ${hit.phone}` : hit.subtitle}
                                   </span>
+                                  {hit.subtitleFellBack && <span className="block text-[10px] text-[var(--color-text-muted)]">{t('lang.detailsEnglish')}</span>}
                                 </span>
                               </button>
                             </li>

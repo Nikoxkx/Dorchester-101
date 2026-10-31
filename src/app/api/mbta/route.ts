@@ -27,6 +27,7 @@ export const dynamic = 'force-dynamic';
 const typeSchema = z.enum(['arrivals', 'predictions', 'alerts', 'shapes', 'stops', 'routes', 'meta', 'vehicles']);
 const querySchema = z.object({
   type: typeSchema.default('arrivals'),
+  lang: z.enum(['en', 'es', 'ht', 'pt', 'vi', 'zh', 'ar', 'so', 'kea']).default('en'),
   /** comma separated stop ids; defaults to every Dorchester station we track */
   stops: z.string().optional(),
   route: z.string().optional(),
@@ -81,9 +82,9 @@ export async function GET(request: Request) {
       }
 
       case 'alerts': {
-        const { alerts, source, fetchedAt } = await fetchAlerts();
+        const { alerts, source, fetchedAt, status } = await fetchAlerts(parsed.data.lang);
         return NextResponse.json(
-          { alerts, source, fetchedAt, serviceAlertsCount: alerts.length },
+          { alerts, source, fetchedAt, status, serviceAlertsCount: alerts.length },
           { headers: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=300' } }
         );
       }

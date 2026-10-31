@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/stores/appStore';
+import { speechVoiceMatches, useSpeechSupported } from './useSpeechSupported';
 
 /**
  * Read-aloud using the browser's own speech engine.
@@ -56,7 +57,7 @@ export function useReadAloud(): ReadAloudApi {
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
   const queueRef = useRef<string[]>([]);
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const supported = useSpeechSupported();
 
   useEffect(() => {
     if (!supported) return;
@@ -69,10 +70,12 @@ export function useReadAloud(): ReadAloudApi {
     };
   }, [supported]);
 
-  const langPrefix = language === 'kea' ? 'pt' : language === 'ht' ? 'fr' : language;
+  // Creole languages are not French or Portuguese. Request their actual
+  // language tags and let the device decide if it has a compatible voice.
+  const langPrefix = language;
 
   const matching = useMemo(
-    () => voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix.toLowerCase())),
+    () => voices.filter((v) => speechVoiceMatches(langPrefix, v.lang)),
     [voices, langPrefix]
   );
 
@@ -88,7 +91,7 @@ export function useReadAloud(): ReadAloudApi {
     }
     const utterance = new SpeechSynthesisUtterance(next);
     utterance.lang = matching[0]?.lang ?? langPrefix;
-    const chosen = (voiceURI && voices.find((v) => v.voiceURI === voiceURI)) || matching[0] || null;
+    const chosen = (voiceURI && matching.find((v) => v.voiceURI === voiceURI)) || matching[0] || null;
     if (chosen) {
       utterance.voice = chosen;
       utterance.lang = chosen.lang;
@@ -100,7 +103,7 @@ export function useReadAloud(): ReadAloudApi {
       setSpeaking(false);
     };
     synth.speak(utterance);
-  }, [langPrefix, matching, rate, supported, voiceURI, voices]);
+  }, [langPrefix, matching, rate, supported, voiceURI]);
   useEffect(() => {
     speakNextRef.current = speakNext;
   }, [speakNext]);

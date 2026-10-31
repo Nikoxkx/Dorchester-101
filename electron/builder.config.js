@@ -50,6 +50,9 @@ module.exports = {
     // of hashes that speed up the *next* build and are never read at runtime.
     '.next/**/*',
     '!.next/cache/**/*',
+    // Next 16 keeps development-server artifacts here; none are needed by
+    // `next start`, and they may contain stale code or gigabytes of cache.
+    '!.next/dev/**/*',
     '!.next/trace',
     '!.next/trace-build',
     // Static assets. `public/IMAGE-CREDITS.md` is read from disk by the About
@@ -62,6 +65,8 @@ module.exports = {
     // `next start` reads the config from its working directory. The build also
     // carries a resolved copy in .next/required-server-files.json.
     'next.config.ts',
+    // next.config.ts imports this manifest when `next start` loads its config.
+    'src/lib/social-image.json',
     'package.json',
     // Source maps are debugger-only and account for most of .next/server's size.
     '!**/*.map',

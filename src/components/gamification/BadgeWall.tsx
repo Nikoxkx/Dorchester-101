@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { BADGES } from '@/lib/badges';
 import { useBadgeStore } from '@/stores/badgeStore';
+import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 
@@ -31,17 +32,18 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function BadgeWall() {
+  const { t } = useTranslation();
   const earned = useBadgeStore((s) => s.earned);
   const earnedCount = Object.keys(earned).length;
 
-  const shareUrl = `/api/og?title=${encodeURIComponent(`Dorchester Explorer · ${earnedCount}/${BADGES.length} badges`)}`;
+  const shareUrl = `/api/og?title=${encodeURIComponent(t('badges.shareTitle', { earned: earnedCount, total: BADGES.length }))}`;
 
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Award className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
-          Dorchester Explorer Badges
+          {t('badges.title')}
           <span className="rounded-full bg-[var(--color-accent-primary)]/12 px-2 py-0.5 font-mono text-xs font-bold text-[var(--color-accent-primary)]">
             {earnedCount}/{BADGES.length}
           </span>
@@ -53,12 +55,12 @@ export function BadgeWall() {
           className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] px-2.5 py-1 font-heading text-[11px] font-bold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]"
         >
           <Share2 className="h-3 w-3" aria-hidden="true" />
-          Share card
+          {t('badges.share')}
         </a>
       </CardHeader>
       <CardContent>
         <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-          Stored privately on your device (no account or tracking). Explore resources, listen in your language, or verify open hours to unlock all {BADGES.length}.
+          {t('badges.intro', { count: BADGES.length })}
         </p>
         <ul className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {BADGES.map((badge) => {
@@ -85,9 +87,9 @@ export function BadgeWall() {
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-heading text-xs font-bold leading-snug">{badge.title}</p>
+                  <p className="font-heading text-xs font-bold leading-snug">{t(badge.titleKey)}</p>
                   <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-                    {badge.description}
+                    {t(badge.descriptionKey)}
                   </p>
                 </div>
               </li>

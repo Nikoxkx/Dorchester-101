@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * check — and a live reachability test of every record's official page.
  *
  * The reachability result is a signal, never a verdict: an organisation
- * whose site is having a bad afternoon still has coats. An HTTP answer is
+ * whose site is unavailable may or may not have coats. An HTTP answer is
  * reported as true/false with its status code; a network failure is
  * reported as `unchecked`, because this server failing to reach a page is
  * not evidence about the page. Checks are cached for six hours so a busy

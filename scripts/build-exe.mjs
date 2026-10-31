@@ -38,8 +38,11 @@ const version = pkg.version;
 const outputDir = path.join(root, 'dist-electron');
 const releaseDir = path.join(root, 'release', `v${version}`);
 
-const NODE_MIN_MAJOR = 20;
-const NODE_MIN_MINOR = 9;
+const NODE_MIN_MAJOR = 22;
+const NODE_MIN_MINOR = 12;
+// Keep this in sync with package.json: Vitest requires supported even releases.
+const nodeIsSupported = (major, minor) =>
+  (major === 22 && minor >= 12) || major === 24 || major >= 26;
 
 const args = process.argv.slice(2);
 const has = (flag) => args.includes(flag);
@@ -96,9 +99,9 @@ function preflight() {
   const started = step('1/6', 'Checking the build environment');
 
   const [major, minor] = process.versions.node.split('.').map(Number);
-  if (major < NODE_MIN_MAJOR || (major === NODE_MIN_MAJOR && minor < NODE_MIN_MINOR)) {
+  if (!nodeIsSupported(major, minor)) {
     throw new Error(
-      `Node.js ${NODE_MIN_MAJOR}.${NODE_MIN_MINOR}+ is required to build this app (found ${process.versions.node}). ` +
+      `Node.js 22.12+, 24, or 26+ is required to build this app (found ${process.versions.node}). ` +
         'Install it from https://nodejs.org and run the build again.',
     );
   }
@@ -572,7 +575,7 @@ Output
   release/v${version}/                            copies, for publishing
 
 Requirements
-  Node.js ${NODE_MIN_MAJOR}.${NODE_MIN_MINOR}+, ~3 GB free disk. Windows is not required to build:
+  Node.js ${NODE_MIN_MAJOR}.${NODE_MIN_MINOR}+ on 22, or Node 24 / 26+, ~3 GB free disk. Windows is not required to build:
   electron-builder cross-builds the Windows targets on macOS and Linux too.
   No API keys, database, or Docker. See BUILD.md.
 `);

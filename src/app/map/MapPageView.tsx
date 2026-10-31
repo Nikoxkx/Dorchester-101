@@ -8,12 +8,13 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { DorchesterMapLoader } from '@/components/map/DorchesterMapLoader';
 import { useI18n } from '@/i18n/hook';
+import { referenceBusName, referenceLineName } from '@/i18n/transitReference';
 import { useBadgeStore } from '@/stores/badgeStore';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES, TRANSIT_DATA_AS_OF } from '@/data/transit';
-import { RESOURCES } from '@/data/resources';
+import { RESOURCES, isResourceMappable } from '@/data/resources';
 
 export function MapPageView() {
-  const { t, format } = useI18n();
+  const { t, format, lang } = useI18n();
   const earnBadge = useBadgeStore((s) => s.earn);
   useEffect(() => {
     earnBadge('map-explorer');
@@ -26,7 +27,7 @@ export function MapPageView() {
       return true;
     });
   }, []);
-  const pins = RESOURCES.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
+  const pins = RESOURCES.filter(isResourceMappable);
 
   return (
     <MainLayout>
@@ -54,17 +55,18 @@ export function MapPageView() {
               {t('map.transitRoutes')}
             </h2>
             <ul className="mt-2 flex flex-col gap-1">
-              {TRANSIT_LINES.map((line) => (
-                <li key={line.id}>
+              {TRANSIT_LINES.map((line) => {
+                const name = referenceLineName(line, lang);
+                return <li key={line.id}>
                   <Link
                     href={`/map?route=${line.routeId}`}
                     className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-xs transition-colors hover:bg-[var(--color-bg-tertiary)]"
                   >
-                    <span className="truncate">{line.name}</span>
+                    <span className="truncate"><span lang={name.used} dir="auto">{name.value}</span>{name.fellBack && <span className="sr-only"> {t('lang.someEnglish')}</span>}</span>
                     <span className="shrink-0 tabular-nums text-[var(--color-text-muted)]">{t('map.headwayValue', { minutes: String(line.headwayMinutes) })}</span>
                   </Link>
-                </li>
-              ))}
+                </li>;
+              })}
             </ul>
           </article>
 
@@ -74,17 +76,19 @@ export function MapPageView() {
               {t('map.line.bus')}
             </h2>
             <ul className="mt-2 flex flex-wrap gap-1">
-              {DORCHESTER_BUS_ROUTES.map((bus) => (
-                <li key={bus.id}>
+              {DORCHESTER_BUS_ROUTES.map((bus) => {
+                const name = referenceBusName(bus, lang);
+                return <li key={bus.id}>
                   <Link
                     href={`/map?route=${bus.id}`}
-                    title={bus.longName}
+                    title={name.value}
+                    aria-label={`${t('map.line.bus')} ${bus.name}: ${name.value}${name.fellBack ? ` — ${t('lang.someEnglish')}` : ''}`}
                     className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-2 py-0.5 font-heading text-[11px] font-bold tabular-nums transition-colors hover:border-[var(--color-accent-primary)]"
                   >
                     {bus.name}
                   </Link>
-                </li>
-              ))}
+                </li>;
+              })}
             </ul>
           </article>
 
@@ -106,7 +110,7 @@ export function MapPageView() {
             </a>
           </article>
         <ProjectNote sources={['mbta', 'osm', 'esri', 'dor101']}>
-          Arrival times and alerts are live from the MBTA&apos;s public API when it answers, and fall back to the published timetable when it does not; the map says which. Basemap tiles are OpenStreetMap (streets) and Esri World Imagery (satellite). Pins are the same directory listings as the rest of the site.
+          {t('note.map')}
         </ProjectNote>
         </section>
       </motion.div>

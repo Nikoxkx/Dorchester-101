@@ -310,7 +310,7 @@ describe('deriveMetrics on the published Suffolk County figures', () => {
     expect(metrics.burdenDistribution?.reduce((sum, bin) => sum + bin.share, 0)).toBeCloseTo(100, 0);
   });
 
-  it('prices a move-in as first month plus deposit, in months of income', () => {
+  it('illustrates twice gross rent as months of income, not an actual deposit', () => {
     // 2 × $2,129 ÷ ($95,631 / 12) = 0.5 months
     expect(metrics.moveInCost).toBe(0.5);
   });

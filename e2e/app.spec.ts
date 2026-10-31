@@ -246,20 +246,8 @@ test.describe('Responsive layout', () => {
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   });
 
-  /**
-   * KNOWN BUG, deliberately parked rather than deleted or loosened.
-   *
-   * Measured on CI at a 375px viewport: `document.documentElement.scrollWidth`
-   * is 584 against a `clientWidth` of 375 — 209px of horizontal scroll on a
-   * phone. That is a real layout defect on the homepage, not a test artifact,
-   * and it reproduces on every run (three retries, same 209).
-   *
-   * `test.fixme` keeps the assertion and its measured number in the report as a
-   * skipped test instead of turning the whole workflow red over a CSS bug that
-   * is out of scope for a CI fix. Remove `.fixme` once the offending element is
-   * constrained and this passes.
-   */
-  test.fixme('the homepage does not scroll horizontally on a phone', async ({ page }) => {
+  // Guard against the previously observed 209px horizontal overflow on phones.
+  test('the homepage does not scroll horizontally on a phone', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
     await page.waitForTimeout(2000);

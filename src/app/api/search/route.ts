@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { search, type SearchKind } from '@/lib/searchIndex';
+import { LANGUAGES, type LanguageCode } from '@/i18n/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,9 @@ const KINDS: SearchKind[] = ['page', 'organization', 'stop', 'route'];
 
 const schema = z.object({
   q: z.string().min(1).max(120),
+  lang: z.string().optional().transform((value): LanguageCode =>
+    LANGUAGES.some((language) => language.code === value) ? value as LanguageCode : 'en'
+  ),
   kinds: z
     .string()
     .optional()
@@ -36,8 +40,8 @@ export async function GET(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'q must be 1-120 characters', results: [] }, { status: 400 });
   }
-  const { q, kinds, limit } = parsed.data;
-  const hits = search(q, { kinds, limit });
+  const { q, kinds, limit, lang } = parsed.data;
+  const hits = search(q, { kinds, limit, language: lang });
 
   return NextResponse.json(
     {

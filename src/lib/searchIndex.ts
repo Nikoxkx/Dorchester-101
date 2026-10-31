@@ -8,10 +8,22 @@
  * server may not exist at all.
  */
 
-import { RESOURCES, type ResourceRecord } from '@/data/resources';
+import { RESOURCES, isResourceMappable, type ResourceRecord } from '@/data/resources';
 import { WINTER_CLOTHING, type WinterClothingPlace } from '@/data/winterClothing';
+import { CLOTHING_SUMMARIES } from '@/data/winterClothing.summaries';
+import { CLOTHING_SPANISH } from '@/data/winterClothing.es';
+import { CLOTHING_LOCATOR_DETAILS } from '@/data/winterClothing.locators';
+import { CLOTHING_PLACE_DETAILS } from '@/data/winterClothing.places';
+import { clothingContent } from '@/i18n/clothingContent';
 import { TRANSIT_LINES, DORCHESTER_BUS_ROUTES } from '@/data/transit';
 import { PUBLIC_ROUTES } from './site';
+import { dictionaries } from '@/i18n';
+import type { LanguageCode } from '@/i18n/config';
+import type { TranslationKey } from '@/i18n/en';
+import { NAV_LABEL_KEY } from '@/i18n/pageTitles';
+import { resourceDetails, resourceDetailSearchTerms } from '@/i18n/resourceDetails';
+import { referenceBusName, referenceLineName } from '@/i18n/transitReference';
+export { NAV_LABEL_KEY } from '@/i18n/pageTitles';
 
 export type SearchKind = 'page' | 'organization' | 'stop' | 'route';
 
@@ -20,6 +32,11 @@ export interface SearchEntry {
   kind: SearchKind;
   title: string;
   subtitle: string;
+  titleLanguage?: LanguageCode;
+  subtitleLanguage?: LanguageCode;
+  subtitleFellBack?: boolean;
+  /** For localizing a stop's static line name without guessing from the stop id. */
+  referenceLineId?: string;
   href: string;
   /** Lower-citched haystack, built once at module load. */
   haystack: string;
@@ -58,25 +75,6 @@ export const PAGE_LABEL_KEYS: Record<string, string> = Object.keys(PAGE_TITLES).
 
 export const PAGES = Object.entries(PAGE_TITLES).map(([href, meta]) => ({ href, ...meta }));
 
-/** Page titles are translated at render time; the index keeps the English key list. */
-export const NAV_LABEL_KEY: Record<string, string> = {
-  '/': 'nav.dashboard',
-  '/projects': 'nav.projects',
-  '/affordable-housing': 'nav.affordable',
-  '/market-trends': 'nav.market',
-  '/map': 'nav.map',
-  '/food': 'nav.food',
-  '/weather': 'nav.weather',
-  '/winter-clothing': 'nav.clothing',
-  '/neighborhood': 'nav.neighborhood',
-  '/tools': 'nav.tools',
-  '/news': 'nav.news',
-  '/resources': 'nav.resources',
-  '/faq': 'nav.faq',
-  '/settings': 'nav.settings',
-  '/about': 'about.title',
-};
-
 function normalize(value: string): string {
   return value
     .toLowerCase()
@@ -95,7 +93,7 @@ function phoneDigits(value: string): string {
 function fromResource(record: ResourceRecord): SearchEntry {
   const services = record.services.join(' ');
   const haystack = normalize(
-    [record.name, record.neighborhood, record.address, record.category, services, record.operator ?? '', record.phone ?? '', phoneDigits(record.phone ?? '')].join(' ')
+    [record.name, record.neighborhood, record.address, record.category, services, ...Object.values(record.summary), record.operator ?? '', record.phone ?? '', phoneDigits(record.phone ?? ''), resourceDetailSearchTerms(record.id)].join(' ')
   );
   return {
     id: `org-${record.id}`,
@@ -105,27 +103,46 @@ function fromResource(record: ResourceRecord): SearchEntry {
     href: record.detailHref ?? `/resources#${record.id}`,
     haystack,
     category: record.category,
-    lat: record.lat,
-    lng: record.lng,
+    lat: isResourceMappable(record) ? record.lat : undefined,
+    lng: isResourceMappable(record) ? record.lng : undefined,
     phone: record.phone,
   };
 }
 
 /** Free-coat programs search like directory orgs: by name, phone and need. */
 function fromClothing(place: WinterClothingPlace): SearchEntry {
-  const haystack = normalize(
-    [
-      place.name,
-      place.neighborhood,
-      place.address ?? '',
-      'coat coats winter clothing free',
-      place.offers.join(' '),
-      place.audiences.join(' '),
-      place.operator ?? '',
-      place.phone ?? '',
-      phoneDigits(place.phone ?? ''),
-    ].join(' ')
-  );
+  const fields = [
+    place.name,
+    place.neighborhood,
+    place.address ?? '',
+    'coat coats winter clothing free',
+    place.summary.en,
+    place.howToGet,
+    place.eligibility ?? '',
+    CLOTHING_SPANISH[place.id]?.howToGet ?? '',
+    CLOTHING_SPANISH[place.id]?.eligibility ?? '',
+    CLOTHING_SPANISH[place.id]?.name ?? '',
+    CLOTHING_SPANISH[place.id]?.neighborhood ?? '',
+    CLOTHING_SPANISH[place.id]?.address ?? '',
+    CLOTHING_SPANISH[place.id]?.hoursNote ?? '',
+    CLOTHING_SPANISH[place.id]?.transit ?? '',
+    ...Object.values(CLOTHING_LOCATOR_DETAILS).flatMap((items) => items[place.id] ? [items[place.id].name, items[place.id].neighborhood, items[place.id].howToGet] : []),
+    ...Object.values(CLOTHING_PLACE_DETAILS).flatMap((items) => {
+      const draft = items[place.id];
+      return draft ? [draft.name, draft.neighborhood, draft.address, draft.howToGet, draft.eligibility, draft.hoursNote, draft.transit] : [];
+    }),
+    CLOTHING_SPANISH[place.id]?.summary ?? '',
+    ...Object.values(CLOTHING_SUMMARIES).map((summaries) => summaries[place.id] ?? ''),
+    place.offers.join(' '),
+    place.audiences.join(' '),
+    place.operator ?? '',
+    place.phone ?? '',
+    phoneDigits(place.phone ?? ''),
+    ];
+  // Secondary numbers embedded in instructions (e.g. an advocacy line)
+  // should also match when a resident types only digits.
+  const numbers = fields.join(' ').match(/\+?\(?\d{3}\)?[\s.-]*\d{3}[\s.-]*\d{4}/g) ?? [];
+  const haystack = normalize([...fields, ...numbers.map(phoneDigits)].join(' '));
   return {
     id: `clothing-${place.id}`,
     kind: 'organization',
@@ -164,6 +181,7 @@ function build(): SearchEntry[] {
         kind: 'stop',
         title: stop.name,
         subtitle: line.name,
+        referenceLineId: line.id,
         href: `/map?stop=${stop.id}`,
         haystack: normalize(`${stop.name} ${line.name} ${line.label} station stop subway ${stop.id}`),
         lat: stop.lat,
@@ -224,13 +242,60 @@ export function scoreEntry(entry: SearchEntry, terms: string[]): { score: number
   return { score, matchedOn };
 }
 
-export function search(raw: string, opts: { kinds?: SearchKind[]; limit?: number } = {}): SearchHit[] {
+/** Dictionary keys for both the displayed label and the searchable summary. */
+const PAGE_COPY: Record<string, { title: TranslationKey; subtitle: TranslationKey }> = {
+  '/': { title: 'nav.dashboard', subtitle: 'dashboard.tagline' },
+  '/affordable-housing': { title: 'housing.title', subtitle: 'housing.description' },
+  '/faq': { title: 'faq.title', subtitle: 'faq.description' },
+  '/food': { title: 'food.title', subtitle: 'food.description' },
+  '/weather': { title: 'weather.title', subtitle: 'weather.subtitle' },
+  '/winter-clothing': { title: 'clothing.title', subtitle: 'clothing.subtitle' },
+  '/map': { title: 'map.title', subtitle: 'map.subtitle' },
+  '/market-trends': { title: 'market.title', subtitle: 'market.description' },
+  '/neighborhood': { title: 'neighborhood.title', subtitle: 'neighborhood.description' },
+  '/news': { title: 'news.title', subtitle: 'news.description' },
+  '/projects': { title: 'projects.title', subtitle: 'projects.description' },
+  '/resources': { title: 'resources.title', subtitle: 'resources.description' },
+  '/tools': { title: 'tools.title', subtitle: 'tools.description' },
+  '/settings': { title: 'settings.title', subtitle: 'settings.description' },
+  '/privacy': { title: 'legal.privacyTitle', subtitle: 'search.privacySummary' },
+  '/terms': { title: 'legal.termsTitle', subtitle: 'search.termsSummary' },
+};
+
+function localizedEntry(entry: SearchEntry, lang: LanguageCode): SearchEntry {
+  if (lang === 'en') return { ...entry, titleLanguage: 'en', subtitleLanguage: 'en' };
+  const dict = dictionaries[lang];
+  const copy = entry.kind === 'page' ? PAGE_COPY[entry.href] : undefined;
+  const record = entry.id.startsWith('org-') ? RESOURCES.find((resource) => `org-${resource.id}` === entry.id) : undefined;
+  const clothing = entry.id.startsWith('clothing-') ? WINTER_CLOTHING.find((place) => `clothing-${place.id}` === entry.id) : undefined;
+  const clothingDraft = clothing ? clothingContent(clothing, lang) : undefined;
+  const details = record ? resourceDetails(record, lang) : undefined;
+  const line = entry.referenceLineId ? TRANSIT_LINES.find((item) => item.id === entry.referenceLineId) : undefined;
+  const route = entry.kind === 'route' ? DORCHESTER_BUS_ROUTES.find((item) => `route-${item.id}` === entry.id) : undefined;
+  const transit = line ? referenceLineName(line, lang) : route ? referenceBusName(route, lang) : undefined;
+  const title = copy ? dict[copy.title] : clothingDraft ? clothingDraft.name : entry.kind === 'route' ? entry.title.replace(/^Route /, `${dict['map.route']} `) : entry.title;
+  const subtitle = copy ? dict[copy.subtitle] : clothing && clothingDraft
+    ? `${clothingDraft.neighborhood} · ${clothing.address?.split(',')[0] ?? dict['clothing.title']}`
+    : record && details ? `${details.neighborhood.value} · ${details.address.value.split(',')[0]}` : transit?.value ?? entry.subtitle;
+  // Names and addresses may stay in their original language; keep English
+  // search terms and mark any untranslated neighborhood for screen readers.
+  return {
+    ...entry, title, subtitle,
+    titleLanguage: copy || entry.kind === 'route' ? lang : clothingDraft?.nameLanguage ?? 'en',
+    subtitleLanguage: copy ? lang : clothingDraft?.neighborhoodLanguage ?? details?.neighborhood.used ?? transit?.used ?? 'en',
+    subtitleFellBack: Boolean(details?.neighborhood.fellBack || details?.address.fellBack || transit?.fellBack || (clothingDraft && clothingDraft.neighborhoodLanguage === 'en')),
+    haystack: normalize(`${entry.haystack} ${title} ${subtitle}`),
+  };
+}
+
+export function search(raw: string, opts: { kinds?: SearchKind[]; limit?: number; language?: LanguageCode } = {}): SearchHit[] {
   const query = normalize(raw);
   const limit = opts.limit ?? 12;
   if (query.length < 2) return [];
   const terms = query.split(' ').filter(Boolean);
   const hits: SearchHit[] = [];
-  for (const entry of SEARCH_INDEX) {
+  for (const original of SEARCH_INDEX) {
+    const entry = localizedEntry(original, opts.language ?? 'en');
     if (opts.kinds && !opts.kinds.includes(entry.kind)) continue;
     const result = scoreEntry(entry, terms);
     if (!result) continue;

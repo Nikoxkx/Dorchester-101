@@ -60,7 +60,7 @@ node scripts/build-exe.mjs --help
 
 ## Requirements
 
-- **Node.js 20.9+** and npm.
+- **Node.js 22.12+ on the 22 release line, or Node 24 / 26+**, and npm.
 - **~3 GB free disk** for `node_modules`, `.next` and the packaged output.
 - **Internet access** on the first run: npm, the Electron binaries and
   electron-builder's NSIS tools all download from the npm registry and GitHub
@@ -133,8 +133,8 @@ reach users.
 
 | Symptom | Fix |
 |---------|-----|
-| `Node.js 20.9+ is required` | Install Node 20 or newer from nodejs.org |
-| `Could not run npm.cmd: spawnSync npm.cmd EINVAL` | Fixed in current `scripts/lib/npm-spawn.mjs`: the build runs npm as a Node script (`npm-cli.js`), and if it must use `npm.cmd` it always sets `shell: true`. Pull the latest tree and re-run `npm run build:exe`. Do not stay on Node 18. |
+| `Node.js 22.12+, 24, or 26+ is required` | Install a supported Node release from nodejs.org |
+| `Could not run npm.cmd: spawnSync npm.cmd EINVAL` | Fixed in current `scripts/lib/npm-spawn.mjs`: the build runs npm as a Node script (`npm-cli.js`), and if it must use `npm.cmd` it always sets `shell: true`. Pull the latest tree and re-run `npm run build:exe`. Do not stay on Node 18 or 20. |
 | Build fails downloading `electron-v…-win32-x64.zip` | GitHub releases are unreachable (corporate proxy, offline). Retry on a normal connection; the download is cached in `node_modules/.cache/electron-builder` after the first success |
 | Windows SmartScreen warns "Unknown publisher" | Expected: the build is unsigned. **More info → Run anyway** |
 | `electron-builder` complains about a signing certificate | Should not happen — the config sets `sign: null` and the script sets `CSC_IDENTITY_AUTO_DISCOVERY=false`; `signAndEditExecutable: true` only runs rcedit (icon/version stamping), it does not sign |

@@ -7,6 +7,7 @@ import { useResolvedPrefs } from '@/hooks/useResolvedPrefs';
 import { languageMeta } from '@/i18n/config';
 import { useI18n } from '@/i18n/hook';
 import { LiveRegionProvider } from './LiveRegion';
+import { DocumentTitle } from './DocumentTitle';
 import { SkipLink, ShortcutHelp } from '@/components/a11y';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
@@ -24,7 +25,7 @@ function DocumentSettings() {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.lang = meta.intlLocale;
+    root.lang = meta.contentLocale;
     root.dir = prefs.dir;
     root.classList.toggle('dark', prefs.dark);
     root.dataset.locale = prefs.language;
@@ -50,7 +51,7 @@ function DocumentSettings() {
     prefs.surface,
     prefs.palette,
     prefs.fontSizePx,
-    meta.intlLocale,
+    meta.contentLocale,
   ]);
 
   // Colour of the browser chrome follows the resolved theme, including when
@@ -126,6 +127,7 @@ export function DorchesterProviders({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
       <LiveRegionProvider>
         <DocumentSettings />
+        <DocumentTitle />
         <HydrationBridge />
         <DataRecovery />
         <SkipLink />

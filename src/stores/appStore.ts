@@ -336,6 +336,10 @@ export function migrateSettings(persisted: unknown, version: number): AppState {
     };
   }
 
+  // Earlier versions defaulted to aerial imagery. Start existing default users
+  // on a readable street map; satellite remains an explicit map option.
+  if (version < 6 && state.mapStyle === 'satellite') state.mapStyle = 'street';
+
   return state as AppState;
 }
 
@@ -348,7 +352,7 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       mobileNavOpen: false,
       lastUpdated: null,
-      mapStyle: 'satellite',
+      mapStyle: 'street',
       surface: 'solid',
       palette: 'harbor',
       homeLayout: DEFAULT_HOME_LAYOUT,
@@ -437,7 +441,7 @@ export const useAppStore = create<AppState>()(
           language: 'en',
           fontSize: 'medium',
           sidebarCollapsed: false,
-          mapStyle: 'satellite',
+          mapStyle: 'street',
           surface: 'solid',
           palette: 'harbor',
           homeLayout: DEFAULT_HOME_LAYOUT,
@@ -460,7 +464,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 5,
+      version: 6,
       migrate: migrateSettings,
       partialize: (s) => ({
         theme: s.theme,

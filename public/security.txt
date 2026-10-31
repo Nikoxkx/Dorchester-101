@@ -1,4 +1,4 @@
-Contact: https://github.com/Nikoxkx/Dorchester-101/issues/new
+Contact: https://github.com/Nikoxkx/Dorchester-101/security/policy
 Expires: 2027-10-18T00:00:00.000Z
 Acknowledgments: https://github.com/Nikoxkx/Dorchester-101/blob/main/SECURITY.md
 Preferred-Languages: en, es, ht, pt, vi, zh, ar, so, kea

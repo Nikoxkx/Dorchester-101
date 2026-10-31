@@ -1,34 +1,23 @@
 /**
- * Free coats and winter clothing in Dorchester and Boston.
+ * Free or reduced-cost winter-clothing help in and around Boston.
  *
- * This dataset follows the same rules as `src/data/resources.ts`: one record
- * per place, every field checked against the organisation's own page, and a
- * `checkedOn` stamp on each record so the page can show its age instead of
- * asserting it is current. On top of the hand check, `/api/winter-clothing`
- * re-tests each record's official page at request time and the page shows
- * the result — a dead link is labelled "could not be checked", never buried.
- *
- * The honesty rules matter more here than usual, because the reader may be
- * cold right now:
- *   · A program that gives coats only through partners is kind `referral`,
- *     with the Dorchester partners named — never shown as a walk-in.
- *   · A seasonal drive carries its real dates and computes in/out of
- *     season; when a program's coat hours are not published, `hours` is
- *     left empty and the card says to call, instead of borrowing the
- *     building's office hours and pretending they are the coat closet's.
- *   · The last group (`locator`) never goes stale by construction: Mass
- *     2-1-1 and the other finders maintain their own listings daily.
- *
- * Records hand-checked on 2026-10-18 against each organisation's page.
+ * Listings describe direct services, referrals and finders. Some details
+ * still need review; every record carries a source-review date and residents
+ * should contact providers before travelling. Website reachability is checked
+ * separately and cannot establish whether a service or stock is available.
+ * Published schedules can describe a site or phone line rather than clothing
+ * distribution; undated programs are not assumed to operate year-round.
+ * Collection dates describe donations, not a recipient's eligibility or the
+ * availability of coats. Partner-only programs are not shown as walk-ins.
  */
 
-import { buildWeek, type WeeklyHours } from '@/lib/hours';
+import { buildWeek, BOSTON_TZ, zonedParts, type WeeklyHours } from '@/lib/hours';
 import type { Localized } from '@/i18n/runtime';
 
 /** Matches the `clothing.kind.*` translation keys. */
 export type ClothingKind = 'walkIn' | 'phoneFirst' | 'referral' | 'seasonal' | 'locator' | 'appointment';
 /** Matches the `clothing.offer.*` translation keys. */
-export type ClothingOffer = 'adultCoats' | 'kidsCoats' | 'hatsGloves' | 'boots' | 'layers' | 'baby' | 'warmSpace';
+export type ClothingOffer = 'adultCoats' | 'kidsCoats' | 'hatsGloves' | 'boots' | 'layers' | 'baby' | 'warmSpace' | 'clothingReferral';
 export type ClothingAudience = 'kids' | 'adults' | 'women' | 'families' | 'veterans';
 
 export interface WinterClothingPlace {
@@ -38,11 +27,15 @@ export interface WinterClothingPlace {
   kind: ClothingKind;
   audiences: ClothingAudience[];
   offers: ClothingOffer[];
+  /** Some search tools can include reduced-cost as well as free programs. */
+  cost?: 'free' | 'mixed';
   summary: Localized<string>;
   /** The concrete next step: who to call, what to ask for, what to bring. */
   howToGet: string;
   eligibility?: string;
   address?: string;
+  /** Set false for a warehouse or administrative address that is not a visitor site. */
+  directionsAllowed?: boolean;
   neighborhood: string;
   lat?: number;
   lng?: number;
@@ -52,7 +45,7 @@ export interface WinterClothingPlace {
   hours?: WeeklyHours;
   hoursNote?: string;
   /** Dated programs; `from`/`to` are ISO dates when the org publishes them. */
-  season?: { label: string; from?: string; to?: string };
+  season?: { label: string; from?: string; to?: string; purpose?: 'collection' };
   requiresId?: boolean;
   transit?: string;
   languages?: string[];
@@ -69,38 +62,36 @@ export function clothingCheckedAge(place: WinterClothingPlace, now = new Date())
 }
 
 export function clothingCheckLevel(place: WinterClothingPlace, now = new Date()): 'fresh' | 'stale' | 'critical' {
-  if (place.verification.status === 'needs-review') return 'stale';
   const days = clothingCheckedAge(place, now);
   if (days > CLOTHING_CRITICAL_DAYS) return 'critical';
-  if (days > CLOTHING_STALE_DAYS) return 'stale';
+  if (days < 0 || place.verification.status === 'needs-review' || days > CLOTHING_STALE_DAYS) return 'stale';
   return 'fresh';
 }
 
-/** true/false when the program publishes dates; null when it runs year-round. */
+/** A published date window is evaluated on Boston's calendar. Null means no
+ * dated window is recorded; it does not imply year-round availability. */
 export function inSeason(place: WinterClothingPlace, now = new Date()): boolean | null {
   if (!place.season?.from && !place.season?.to) return null;
-  const t = now.getTime();
-  if (place.season.from && t < new Date(`${place.season.from}T00:00:00`).getTime()) return false;
-  if (place.season.to && t > new Date(`${place.season.to}T23:59:59`).getTime()) return false;
+  const today = zonedParts(now, BOSTON_TZ).iso;
+  if (place.season.from && today < place.season.from) return false;
+  if (place.season.to && today > place.season.to) return false;
   return true;
 }
-
-const WEEKDAYS = (w: string[]): Record<number, string[]> => ({ 0: w, 1: w, 2: w, 3: w, 4: w, 5: [], 6: [] });
 
 export const WINTER_CLOTHING: WinterClothingPlace[] = [
   {
     id: 'abcd-dorchester-nsc',
     name: 'ABCD Dorchester Neighborhood Service Center',
     operator: 'Action for Boston Community Development',
-    kind: 'walkIn',
+    kind: 'phoneFirst',
     audiences: ['families', 'kids', 'adults'],
     offers: ['adultCoats', 'kidsCoats', 'hatsGloves', 'layers'],
     summary: {
       en: 'The strongest Dorchester-local starting point: a clothing and essentials program at ABCD\'s Dorchester center, and a Cradles to Crayons partner that can order a free winter gear pack for children 12 and under.',
     },
     howToGet:
-      'Walk in or call (617) 288-2700 and ask about the clothing and essentials program. For a child 12 or younger, staff can also place a Cradles to Crayons order (coat, warm clothes and more, free). Call first in cold snaps — popular sizes go fast.',
-    eligibility: 'Open to Dorchester residents; some ABCD programs ask for proof of address and income. Cradles to Crayons packs are for children from birth to age 12 in families at or below 200% of the federal poverty level.',
+      'Call (617) 288-2700 and ask about clothing and essentials, enrollment, availability and when to visit. For a child 12 or younger, ask whether staff can order items through Cradles to Crayons.',
+    eligibility: 'Cradles to Crayons lists this partner for Boston, Malden, Medford and Everett residents at or below 200% of the federal poverty level. Its children’s items generally serve ages 0–12. Ask ABCD about enrollment and documents; rules for other programs may differ.',
     address: '110 Claybourne Street, Dorchester, MA 02124',
     neighborhood: 'Franklin, Dorchester',
     lat: 42.2959451,
@@ -109,9 +100,8 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     website: 'https://bostonabcd.org/location/dorchester-neighborhood-service-center/',
     hours: buildWeek({ 0: ['11:00-17:00'], 1: ['09:00-17:00'], 2: ['09:00-17:00'], 3: ['09:00-17:00'], 4: ['09:00-17:00'], 5: [], 6: [] }),
     hoursNote: 'Center hours; ask which days the clothing program runs when you call.',
-    requiresId: true,
-    transit: 'Red Line to Fields Corner, then a short walk; buses 15, 17 and 19 stop nearby.',
-    verification: { checkedOn: '2026-10-18', source: 'bostonabcd.org Dorchester NSC location page', status: 'verified' },
+    transit: 'Red Line to Fields Corner, then walk; check MBTA for current bus connections and walking directions.',
+    verification: { checkedOn: '2026-10-31', source: 'bostonabcd.org Dorchester NSC and Cradles to Crayons partner listing', status: 'needs-review' },
   },
   {
     id: 'cradles-to-crayons',
@@ -124,16 +114,17 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
       en: 'Free winter coats and full clothing packs for children from birth to age 12. Families cannot order directly — a local partner places the order, and many Dorchester organisations are partners.',
     },
     howToGet:
-      'Ask a Dorchester partner to place an order for your child: ABCD Dorchester NSC (110 Claybourne St, 617-288-2700), the Family Nurturing Center (200 Bowdoin St, 617-474-1143), DotHouse Health patients (1353 Dorchester Ave, 617-740-2332), upham\'s Corner Health Center patients (415 Columbia Rd), the Epiphany School (617-545-8200), Walnut Grove Head Start (617-648-6388), WORK Inc (617-691-1604), or your child\'s school (Lee K-8, UP Academy and YMCA King K-6 are partners).',
-    eligibility: 'Children from birth to age 12 whose families are at or below 200% of the federal poverty level, referred by a Service Partner.',
+      'If you already receive services from a Cradles to Crayons partner, ask your caseworker if they can order for your child. Otherwise use the partner finder or call ABCD Dorchester at 617-288-2700 to ask whether you qualify for its services. Families cannot order directly or pick up at the Giving Factory.',
+    eligibility: 'Children from birth to age 12 in families at or below 200% of the federal poverty level; families must be actively working with a Service Partner. Individual partners may have additional rules.',
     address: '281 Newtonville Ave, Newton, MA 02460 (the Giving Factory — not a family walk-in site)',
+    directionsAllowed: false,
     neighborhood: 'Via Dorchester partners',
     lat: 42.3527484,
     lng: -71.1983573,
     phone: '(617) 779-4700',
     website: 'https://www.cradlestocrayons.org/boston/family-assistance/',
-    hoursNote: 'No direct family orders or walk-ins; partner offices keep their own hours.',
-    verification: { checkedOn: '2026-10-18', source: 'cradlestocrayons.org family assistance page and partner list', status: 'verified' },
+    hoursNote: 'No direct family orders or assistance pickup at the Giving Factory; partner offices keep their own hours.',
+    verification: { checkedOn: '2026-10-31', source: 'cradlestocrayons.org family assistance and service partner resources', status: 'needs-review' },
   },
   {
     id: 'antons-coats-for-kids',
@@ -149,7 +140,7 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
       'Coats are handed out by the partner schools and nonprofits, not at the cleaners. Ask your child\'s school, shelter or community organisation whether they are distributing this season (Boston Uncornered at 222 Bowdoin St was a Dorchester collection point — confirm for this season). To donate a coat, drop it at any Anton\'s Cleaners during the drive.',
     neighborhood: 'Through local partners',
     website: 'https://antons.com/cfk/',
-    season: { label: 'October 5, 2026 – January 9, 2027', from: '2026-10-05', to: '2027-01-09' },
+    season: { label: 'October 5, 2026 – January 9, 2027', from: '2026-10-05', to: '2027-01-09', purpose: 'collection' },
     verification: { checkedOn: '2026-10-18', source: 'antons.com Coats for Kids & Families page', status: 'verified' },
   },
   {
@@ -160,10 +151,10 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     audiences: ['adults'],
     offers: ['adultCoats', 'hatsGloves', 'boots', 'layers', 'warmSpace'],
     summary: {
-      en: 'The largest free clothing distributor for adults in Boston, open 365 days a year downtown. Clothing appointments are first-come; emergency clothing is available in the lobby.',
+      en: 'A downtown day shelter with the Fresh Threads clothing program, meals and other services. Call to confirm clothing availability and how to access it.',
     },
     howToGet:
-      'Come early in the morning and ask for a Fresh Threads clothing appointment — slots fill daily. If you need something the same day, emergency clothing is handed out in the lobby. Calling (617) 542-4211 first is wise in a cold snap.',
+      'Call (617) 542-4211 or visit 39 Boylston Street and ask how to access Fresh Threads. The day shelter is open daily; clothing program hours and availability may differ.',
     address: '39 Boylston Street, Boston, MA 02116',
     neighborhood: 'Downtown (Chinatown)',
     lat: 42.3524207,
@@ -171,9 +162,9 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     phone: '(617) 542-4211',
     website: 'https://stfrancishouse.org/day-shelter/',
     hours: buildWeek({ 0: ['06:30-15:00'], 1: ['06:30-15:00'], 2: ['06:30-14:00'], 3: ['06:30-15:00'], 4: ['06:30-15:00'], 5: ['06:30-15:00'], 6: ['06:30-15:00'] }),
-    hoursNote: 'Day shelter hours, 365 days; clothing appointments are first-come, so morning arrival matters.',
+    hoursNote: 'Day shelter hours shown; call for clothing program hours and availability.',
     transit: 'Green Line to Boylston or Orange/Red to Downtown Crossing.',
-    verification: { checkedOn: '2026-10-18', source: 'stfrancishouse.org day shelter page', status: 'verified' },
+    verification: { checkedOn: '2026-10-31', source: 'stfrancishouse.org day shelter and find help pages', status: 'needs-review' },
   },
   {
     id: 'womens-lunch-place',
@@ -185,7 +176,7 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
       en: 'A women-only daytime shelter and advocacy center in Back Bay with free clothing — including winter coats when stocked — plus meals, showers and laundry. No questions at the door.',
     },
     howToGet: 'Walk in Monday to Saturday, 7 AM to 2 PM, and ask any staff member about clothing. Coats depend on donations, so ask early in the day.',
-    eligibility: 'Women (all who identify as women). No ID or referral needed.',
+    eligibility: 'Women, including people who identify as women. Ask staff about any documentation or referral requirements.',
     address: '67 Newbury Street, Boston, MA 02116',
     neighborhood: 'Back Bay',
     lat: 42.3521713,
@@ -194,30 +185,29 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     website: 'https://womenslunchplace.org/help',
     hours: buildWeek({ 0: ['07:00-14:00'], 1: ['07:00-14:00'], 2: ['07:00-14:00'], 3: ['07:00-14:00'], 4: ['07:00-14:00'], 5: ['07:00-14:00'], 6: [] }),
     transit: 'Green Line to Arlington or Copley.',
-    verification: { checkedOn: '2026-10-18', source: 'womenslunchplace.org help page', status: 'verified' },
+    verification: { checkedOn: '2026-10-31', source: 'womenslunchplace.org help page', status: 'needs-review' },
   },
   {
     id: 'rosies-place',
     name: 'Rosie\'s Place',
     kind: 'phoneFirst',
     audiences: ['women'],
-    offers: ['adultCoats', 'hatsGloves', 'layers', 'warmSpace'],
+    offers: ['clothingReferral', 'warmSpace'],
     summary: {
-      en: 'A sanctuary for women in the South End. Winter clothing is arranged through the advocates, alongside meals, showers, laundry and legal help.',
+      en: 'A sanctuary for women in the South End. Advocates offer clothing referrals alongside meals, showers, laundry and legal help; clothing on site is not confirmed.',
     },
     howToGet:
-      'Come during guest hours and ask an advocate about winter clothing, or call (617) 442-9322 first to ask what is available in your size. Women may bring their children.',
-    eligibility: 'Women (all who identify as women); children welcome with their mothers.',
+      'Ask an advocate for a clothing referral, or call (617) 318-0237. The fall 2026 guide lists advocacy walk-in and phone hours Monday–Friday, 8:30 AM–6 PM. Confirm current hours and availability before going.',
+    eligibility: 'Rosie’s Place serves women. Ask staff about service eligibility and whether children can accompany you for a clothing referral.',
     address: '889 Harrison Ave, Boston, MA 02118',
     neighborhood: 'South End',
     lat: 42.3340958,
     lng: -71.0769040,
     phone: '(617) 442-9322',
-    website: 'https://www.rosiesplace.org',
-    hours: buildWeek(WEEKDAYS(['08:30-17:30'])),
-    hoursNote: 'Guest hours; some services (including clothing) are arranged with advocates inside.',
+    website: 'https://www.rosiesplace.org/find-help',
+    hoursNote: 'Advocacy hours may differ from the day shelter; call to confirm the current referral hours.',
     transit: 'Silver Line to Melnea Cass Blvd; bus 1 along Massachusetts Ave.',
-    verification: { checkedOn: '2026-10-18', source: 'rosiesplace.org', status: 'verified' },
+    verification: { checkedOn: '2026-10-31', source: 'rosiesplace.org fall 2026 programs and services directory', status: 'needs-review' },
   },
   {
     id: 'yawkey-basic-needs',
@@ -227,20 +217,19 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     audiences: ['families', 'adults', 'kids'],
     offers: ['adultCoats', 'kidsCoats', 'layers'],
     summary: {
-      en: 'Catholic Charities\' Dorchester hub runs a Basic Needs and Emergency Living Assistance team alongside its food pantry; the team helps with essentials including warm clothing when available.',
+      en: 'Catholic Charities’ Dorchester center has a Basic Needs team and food pantry. Call to ask about clothing help or referrals; current coat availability is not confirmed.',
     },
     howToGet:
-      'Call (617) 506-6600 and ask the Basic Needs team what winter clothing is available before you travel — stock is donation-based and turns over quickly. The food pantry runs weekday mornings and early afternoons at the same address.',
+      'Call (617) 506-6600 and ask the Basic Needs team if clothing help or a referral is available before you travel. The food pantry operates at the same address; call to confirm its hours.',
     address: '185 Columbia Road, Dorchester, MA 02121',
     neighborhood: 'Uphams Corner / Four Corners',
-    lat: 42.30984,
-    lng: -71.07351,
+    lat: 42.306567,
+    lng: -71.077044,
     phone: '(617) 506-6600',
-    website: 'https://www.ccab.org',
-    hours: buildWeek(WEEKDAYS(['10:00-12:00', '13:00-14:00'])),
-    hoursNote: 'Pantry windows shown; call for Basic Needs hours and clothing availability.',
-    transit: 'Fairmount Line to Uphams Corner; buses 41, 45 and 17.',
-    verification: { checkedOn: '2026-10-18', source: 'ccab.org Yawkey Center pages', status: 'verified' },
+    website: 'https://www.ccab.org/about-us/locations/',
+    hoursNote: 'Call for Basic Needs hours and clothing help; this is not a confirmed coat distribution site.',
+    transit: 'MBTA bus 16 stops at 185 Columbia Road; check current directions before travel.',
+    verification: { checkedOn: '2026-10-31', source: 'ccab.org Yawkey Center and food pantry pages', status: 'needs-review' },
   },
   {
     id: 'kroc-center',
@@ -253,8 +242,8 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
       en: 'The Kroc Center\'s Social Services office in Uphams Corner provides emergency assistance for its Dorchester ZIP codes and runs seasonal distributions — ask what winter clothing and coat events are current.',
     },
     howToGet:
-      'Call Social Services at (617) 318-6940 and ask about seasonal coat distributions and emergency clothing help. Emergency assistance covers ZIP codes 02121, 02125 and 02127; outside those, call (617) 542-5420.',
-    eligibility: 'Emergency assistance is zoned: 02121, 02125, 02127 for this office.',
+      'Call Social Services at (617) 318-6940 to ask about current holiday coat assistance, registration and availability. Emergency assistance covers ZIP codes 02121, 02125 and 02127; outside those, call (617) 542-5420.',
+    eligibility: 'Emergency assistance is zoned to 02121, 02125 and 02127. The center says holiday assistance requires eligibility and pre-registration; ask about current deadlines and coat availability.',
     address: '650 Dudley Street, Boston, MA 02125',
     neighborhood: 'Uphams Corner',
     lat: 42.3193152,
@@ -263,27 +252,25 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     website: 'https://easternusa.salvationarmy.org/boston-kroc/help/',
     hoursNote: 'Social Services hours are not published for clothing — call first.',
     transit: 'Fairmount Line to Uphams Corner; buses 15, 17 and 41 stop close by.',
-    verification: { checkedOn: '2026-10-18', source: 'easternusa.salvationarmy.org Boston Kroc help page', status: 'verified' },
+    verification: { checkedOn: '2026-10-31', source: 'easternusa.salvationarmy.org Boston Kroc help page', status: 'needs-review' },
   },
   {
     id: 'coats4vets',
     name: 'Coats4Vets',
     operator: 'Massachusetts Military Support Foundation',
-    kind: 'appointment',
+    kind: 'phoneFirst',
     audiences: ['veterans'],
     offers: ['adultCoats'],
     summary: {
-      en: 'Free winter coats for veterans and active-duty service members, by registration. The closest standing center is in Sandwich on Cape Cod, so call about Boston-area distribution events before travelling.',
+      en: 'Coats4Vets describes free coats for veterans. Call to check current availability and Boston-area options; the foundation’s Sandwich center is on Cape Cod.',
     },
     howToGet:
-      'Register on the Coats4Vets site or call (617) 378-3974 / email coats4vets@mmsfi.org. Proof of service (DD-214, VA card or military ID) is required. Ask specifically about Boston-area distribution events — the standing pickup center is 117 Route 6A, Sandwich.',
-    eligibility: 'Veterans and active-duty service members with proof of service; registration required.',
-    neighborhood: 'By registration (events vary)',
+      'Call (617) 378-3974 and ask about current coat availability and Boston-area events before traveling. The Coats4Vets page describes a 2023 program; confirm current registration and locations. The foundation’s Sandwich Empowerment Center is at 117 Route 6A.',
+    eligibility: 'Ask about eligibility for current coat events. For Empowerment Center visits, the foundation says appointments and proof of service are required; rules for other events may differ.',
+    neighborhood: 'Events vary; Sandwich center on Cape Cod',
     phone: '(617) 378-3974',
-    email: 'coats4vets@mmsfi.org',
     website: 'https://mmsfi.org/coats4vets/',
-    requiresId: true,
-    verification: { checkedOn: '2026-10-18', source: 'mmsfi.org Coats4Vets page', status: 'verified' },
+    verification: { checkedOn: '2026-10-31', source: 'mmsfi.org Coats4Vets and Empowerment Centers pages', status: 'needs-review' },
   },
   {
     id: 'mass-211',
@@ -311,7 +298,7 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     audiences: ['kids', 'adults', 'families'],
     offers: ['adultCoats', 'kidsCoats'],
     summary: {
-      en: 'The national coat-drive network\'s map of local nonprofits that receive and hand out free coats. Search by ZIP code to see who near Dorchester is stocked.',
+      en: "A national map of local nonprofit partners that receive and distribute free coats. Search by ZIP code and call a partner to ask about availability; a listing does not guarantee stock.",
     },
     howToGet:
       'Open the locator, enter your ZIP code (02121, 02122, 02124, 02125), and call the partner listed before you go — One Warm Coat itself does not give coats to individuals, and partner stock changes daily.',
@@ -323,6 +310,7 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     id: 'findhelp-clothing',
     name: 'findhelp — Dorchester clothing search',
     kind: 'locator',
+    cost: 'mixed',
     audiences: ['kids', 'adults', 'families'],
     offers: ['adultCoats', 'kidsCoats', 'layers'],
     summary: {
@@ -341,17 +329,17 @@ export const WINTER_CLOTHING: WinterClothingPlace[] = [
     audiences: ['adults', 'families'],
     offers: ['warmSpace'],
     summary: {
-      en: 'When Boston declares a cold emergency (wind chill at or below -10°F; an advisory at 0°F), warming centers open at BCYF community centers and library branches during their normal hours. The city posts the current list on this page. If you see someone outside unsheltered in extreme cold, call 911.',
+      en: "When Boston declares a cold emergency (wind chill at or below -10°F for at least a day; an advisory at 0°F), warming centers open at BCYF community centers and library branches during their normal hours. The city posts the current list on this page. If you see someone outside unsheltered in extreme cold, call 911.",
     },
     howToGet:
-      'Open boston.gov/cold for today\'s warming center list and cold-safety rules, including the state heat code (68°F by day, 64°F at night, September 15 to June 15) if your apartment is cold and the landlord will not act.',
+      'Open boston.gov/cold for today\'s warming center list and cold-safety rules, including the state heat code (68°F by day, 64°F at night, September 15 to May 31 by default; local dates may vary) if your apartment is cold and the landlord will not act.',
     neighborhood: 'Citywide (BCYF and library branches)',
     website: 'https://www.boston.gov/cold',
     verification: { checkedOn: '2026-10-18', source: 'boston.gov cold weather resources', status: 'verified' },
   },
 ];
 
-/** The never-stale backstops, rendered as their own band on the page. */
+/** External help finders, rendered as their own band on the page. */
 export const CLOTHING_LOCATORS: WinterClothingPlace[] = WINTER_CLOTHING.filter((p) => p.kind === 'locator');
 /** Places (not finders), for the main list. */
 export const CLOTHING_PLACES: WinterClothingPlace[] = WINTER_CLOTHING.filter((p) => p.kind !== 'locator');

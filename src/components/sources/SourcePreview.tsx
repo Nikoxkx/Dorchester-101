@@ -4,6 +4,7 @@ import { ExternalLink, Globe } from 'lucide-react';
 import { SourceMark } from '@/components/sources/SourceMark';
 import { SOURCES, type SourceId } from '@/data/sources';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/hook';
 
 /**
  * A "link card" for the page a piece of information came from — publisher badge,
@@ -28,9 +29,12 @@ export function SourcePreview({
   sourceId: SourceId;
   description?: string;
   lastChecked?: string;
-  secondary?: { label: string; url: string; sourceId: SourceId };
+  secondary?: { label: string; url: string; sourceId?: SourceId };
   className?: string;
 }) {
+  const { t, format } = useI18n();
+  // Interpret date-only source dates at local noon so the day doesn't shift west of UTC.
+  const readDate = lastChecked ? format.date(/^\d{4}-\d{2}-\d{2}$/.test(lastChecked) ? `${lastChecked}T12:00:00` : lastChecked, 'medium') : '';
   const domain = safeDomain(url);
   const src = SOURCES[sourceId];
   return (
@@ -52,7 +56,7 @@ export function SourcePreview({
           {description && <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-text-secondary)]">{description}</p>}
           <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">
             {src.name}
-            {lastChecked && <> · last read by DOR101 on {lastChecked}</>}
+            {lastChecked && <> · {t('source.lastRead', { date: readDate })}</>}
           </p>
         </div>
         <div className="grid shrink-0 place-items-center px-3 text-[var(--color-text-muted)]">
@@ -66,7 +70,7 @@ export function SourcePreview({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 self-start rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs font-heading font-semibold text-[var(--color-text-secondary)] no-underline transition-colors hover:border-[var(--color-accent-primary)] hover:underline sm:self-stretch"
         >
-          <SourceMark id={secondary.sourceId} size="sm" asSpan /> {secondary.label}
+          {secondary.sourceId && <SourceMark id={secondary.sourceId} size="sm" asSpan />} {secondary.label}
         </a>
       )}
     </div>

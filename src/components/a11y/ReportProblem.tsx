@@ -54,12 +54,12 @@ export function ReportProblem({ triggerClass }: { triggerClass?: string }) {
   }, [open]);
 
   const body = [
-    `Page: ${typeof window !== 'undefined' ? window.location.pathname : ''}`,
-    `Place: ${place || '-'}`,
+    t('feedback.previewPage', { page: typeof window !== 'undefined' ? window.location.pathname : '' }),
+    t('feedback.previewPlace', { place: place || '-' }),
     '',
     detail,
     '',
-    `Sent from DOR101 v${process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'} on ${format.date(new Date(), 'medium')}`,
+    t('feedback.previewPrepared', { version: process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev', date: format.date(new Date(), 'medium') }),
   ].join('\n');
 
   const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('feedback.subject'))}&body=${encodeURIComponent(body)}`;
@@ -165,7 +165,7 @@ export function ReportProblem({ triggerClass }: { triggerClass?: string }) {
                     id={placeId}
                     value={place}
                     onChange={(e) => setPlace(e.target.value)}
-                    placeholder={t('food.search')}
+                    placeholder={t('feedback.placePlaceholder')}
                     className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
                   />
                 </div>
@@ -215,7 +215,6 @@ export function ReportProblem({ triggerClass }: { triggerClass?: string }) {
                 </Button>
               </div>
 
-              <p className="mt-3 text-[11px] text-[var(--color-text-muted)]">{t('settings.noDataCollected')}</p>
             </motion.div>
           </motion.div>
         )}

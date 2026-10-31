@@ -6,6 +6,7 @@ import { ExternalLink, Gauge, Navigation, Users, X } from 'lucide-react';
 import type { Arrival, LiveVehicle } from '@/lib/mbta';
 import { googleDirections } from '@/lib/geo';
 import { useI18n } from '@/i18n/hook';
+import { arrivalHeading } from '@/i18n/transitReference';
 import { useReduceMotion } from '@/stores/appStore';
 import { cn } from '@/lib/utils';
 import { Shield, type ShieldMode } from './Shield';
@@ -41,11 +42,12 @@ export function VehicleSheet({
   onClose: () => void;
   onSelectStop: (stopId: string) => void;
 }) {
-  const { t, format } = useI18n();
+  const { t, format, lang } = useI18n();
   const reduceMotion = useReduceMotion();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [departures, setDepartures] = useState<{ forStop: string; list: Arrival[]; live: boolean } | null>(null);
+  const [departures, setDepartures] = useState<{ forStop: string; list: Arrival[]; live: boolean; partial: boolean } | null>(null);
   const departuresLive = departures?.live ?? false;
+  const departuresPartial = departures?.partial ?? false;
 
   useEffect(() => {
     if (!vehicle) return;
@@ -68,7 +70,7 @@ export function VehicleSheet({
       const res = await fetch(`/api/mbta?type=arrivals&stops=${encodeURIComponent(stopId)}&perStop=8`);
       if (!res.ok) return;
       const payload = (await res.json()) as { arrivals?: Arrival[]; source?: string };
-      setDepartures({ forStop: stopId, list: payload.arrivals ?? [], live: payload.source === 'mbta-live' });
+      setDepartures({ forStop: stopId, list: payload.arrivals ?? [], live: payload.source === 'mbta-live', partial: payload.source === 'offline-cache' });
     } catch {
       /* keep the last good list; the vehicle panel stays useful */
     }
@@ -142,7 +144,7 @@ export function VehicleSheet({
               {vehicle.speedMph != null && (
                 <div className="rounded-xl bg-[var(--color-bg-secondary)] px-2.5 py-2">
                   <dt className="flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]"><Gauge className="h-3 w-3" aria-hidden="true" />{t('map.speed')}</dt>
-                  <dd className="mt-0.5 font-heading text-sm font-bold tabular-nums">{format.number(vehicle.speedMph)} mph</dd>
+                  <dd className="mt-0.5 font-heading text-sm font-bold tabular-nums">{t('weather.windMph', { speed: format.number(vehicle.speedMph) })}</dd>
                 </div>
               )}
               {vehicle.occupancy && (
@@ -190,8 +192,12 @@ export function VehicleSheet({
                 ) : departures.list.length === 0 ? (
                   <p className="mt-2 text-xs leading-snug text-[var(--color-text-secondary)]">{t('map.noDepartures')}</p>
                 ) : (
+                  <>
+                  {!departuresLive && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{departuresPartial ? t('map.partialDetails') : t('map.scheduleData')}</p>}
+                  {departures.list.slice(0, 6).some((arrival) => arrivalHeading(arrival, lang).fellBack) && <p className="mt-1 text-[10px] text-[var(--color-text-muted)]">{t('map.heading.english')}</p>}
                   <ul className="mt-2 space-y-1.5">
                     {departures.list.slice(0, 6).map((a, i) => {
+                      const heading = arrivalHeading(a, lang);
                       const mins = Math.max(0, Math.round((new Date(a.arrivalAt).getTime() - now) / 60_000));
                       const isThis = a.vehicleId != null && a.vehicleId === vehicle.id;
                       return (
@@ -206,9 +212,9 @@ export function VehicleSheet({
                           >
                             <Shield label={a.routeLabel} mode={SHIELD_MODE[a.mode]} color={a.routeColor} />
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate font-heading text-[13px] font-bold leading-tight" dir="auto">{a.headsign || a.direction}</span>
+                              <span className="block truncate font-heading text-[13px] font-bold leading-tight" lang={heading.used} dir="auto">{heading.value}</span>
                               <span className="block text-[11px] text-[var(--color-text-muted)]">
-                                {format.time(a.arrivalAt)}{departuresLive ? '' : ` · ${t('map.scheduleData')}`}
+                                {format.time(a.arrivalAt)}{departuresLive ? '' : ` · ${departuresPartial ? t('map.partial') : t('map.schedule')}`}
                                 {isThis && <span className="ms-1.5 rounded-full bg-[var(--color-accent-primary)] px-1.5 py-px font-heading text-[9px] font-extrabold uppercase text-white">{t('map.thisVehicle')}</span>}
                               </span>
                             </span>
@@ -220,6 +226,7 @@ export function VehicleSheet({
                       );
                     })}
                   </ul>
+                  </>
                 )}
               </section>
             )}

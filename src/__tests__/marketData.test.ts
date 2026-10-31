@@ -35,19 +35,24 @@ const TABLES: Record<string, [string[], (string | null)[]]> = {
   ],
 };
 
-function publishersAnswer(): void {
+function publishersAnswer(options: { wage?: string; rent?: string } = {}): void {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       const site = /data\.census\.gov\/api\/access\/data\/table\?id=ACSDT5Y(\d{4})\.(B\d+)/.exec(url);
       if (site && TABLES[site[2]]) {
-        return new Response(JSON.stringify({ response: { data: TABLES[site[2]], tableName: site[2] } }), {
+        const table = TABLES[site[2]].map((row) => [...row]);
+        if (site[2] === 'B25064' && options.rent !== undefined) table[1][table[0].indexOf('B25064_001E')] = options.rent;
+        return new Response(JSON.stringify({ response: { data: table, tableName: site[2] } }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         });
       }
-      // HUD, mass.gov, api.census.gov and the mirror: all unreachable.
+      if (url.includes('mass.gov/info-details/massachusetts-law-about-minimum-wage') && options.wage) {
+        return new Response(`<p>The minimum wage is $${options.wage}</p>`, { status: 200 });
+      }
+      // HUD, mass.gov, api.census.gov and the mirror: all unreachable by default.
       return new Response('', { status: 502 });
     })
   );
@@ -110,6 +115,8 @@ describe('/api/market-data', () => {
     const body = await payload();
 
     expect(body.series.status).toBe('live');
+    // Review the translated trend explanation if the server's method changes.
+    expect(body.series.note).toBe('Each point is a 5-year ACS estimate for Suffolk County. Consecutive vintages overlap by four years, so read the line as a trend, not as year-on-year change.');
     expect(body.series.points).toHaveLength(13);
     expect(body.series.points.map((point) => point.year)).toEqual([2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]);
     // Rent, income, value and burden all arrive, so the affordability and
@@ -153,6 +160,21 @@ describe('/api/market-data', () => {
       'MyMassHome (statewide affordable homeownership listings)',
       'Boston Housing Authority (public housing applications)',
     ]);
+  });
+
+  it('calculates the wage guideline without rounding earnings down to hundreds', async () => {
+    publishersAnswer({ wage: '15.50' });
+    const body = await payload();
+    // $15.50 × 40 hours × 52 weeks / 12 months × 30% = $806.
+    expect(body.derived.affordableRentAtWage).toEqual({ wageCents: 1550, monthly: 806 });
+    expect(body.derived.gapPercent).toBe(62.1);
+    expect(body.derived.method).toContain('not a determination of personal affordability');
+  });
+
+  it('does not divide by zero when gross rent is reported as zero', async () => {
+    publishersAnswer({ wage: '15.50', rent: '0' });
+    const body = await payload();
+    expect(body.derived.gapPercent).toBeNull();
   });
 
   it('does not invent an affordability figure when the wage page is unreachable', async () => {

@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Lightbulb, Moon, Shirt, Sun, Sun
 import { buildStyleTips, dayPhase, pickSpotlightTip, type DaySummary, type HourlyPeriod, type WeatherPayload } from '@/lib/weather';
 import { useNow } from '@/hooks/useNow';
 import { useI18n } from '@/i18n/hook';
+import { localizeWindDirection } from '@/i18n/weatherWind';
 import { useReduceMotion } from '@/stores/appStore';
 import { SCOPE_KEY, TIP_ICON, tempText, tipText, tipsNeedCoat, type TempUnit } from './shared';
 import { skyGradient } from './WeatherVisuals';
@@ -33,7 +34,7 @@ const PHASES = [
 const PHASE_KEY = { morning: 'weather.today', midday: 'weather.today', evening: 'weather.tonight', night: 'weather.tonight' } as const;
 
 export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: WeatherPayload; unit: TempUnit; variant?: 'sky' | 'glass' }) {
-  const { t, format } = useI18n();
+  const { t, format, lang } = useI18n();
   const reduceMotion = useReduceMotion();
   const now = useNow(60_000);
   const at = useMemo(() => new Date(now), [now]);
@@ -94,12 +95,16 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
       out.push(t('weather.fact.rainPeak', { time: format.time(wetHour.start), chance: format.percent((wetHour.precipChance ?? 0) / 100, 0) }));
     }
     if (windMphNow != null && windMphNow >= 8) {
-      out.push(t('weather.fact.windNow', { wind: `${windDirNow ?? ''} ${format.number(Math.round(windMphNow))} mph`.trim() }));
+      const direction = localizeWindDirection(windDirNow ?? null, lang, t);
+      // Omit an unrecognized direction from this compact fact rather than
+      // embedding untagged English inside a translated sentence.
+      const wind = [direction?.language === lang ? direction.text : null, t('weather.windMph', { speed: format.number(Math.round(windMphNow)) })].filter(Boolean).join(' · ');
+      out.push(t('weather.fact.windNow', { wind }));
     }
     if (astro?.sunrise) out.push(t('weather.fact.sunrise', { time: format.time(astro.sunrise) }));
     out.push(t('weather.fact.history'), t('weather.fact.redline'));
     return out;
-  }, [astro, factDays, factHours, windMphNow, windDirNow, t, format, unit]);
+  }, [astro, factDays, factHours, windMphNow, windDirNow, t, format, lang, unit]);
 
   const [factIndex, setFactIndex] = useState(0);
   useEffect(() => {
@@ -220,7 +225,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
                 {t('weather.wearNext')}: {t(SCOPE_KEY[nextTip.scope])}
               </span>
             )}
-            <button type="button" onClick={() => step(-1)} disabled={tips.length < 2} aria-label="Previous tip" className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
+            <button type="button" onClick={() => step(-1)} disabled={tips.length < 2} aria-label={t('weather.prevTip')} className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
               <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
             <span className="flex gap-1" aria-hidden="true">
@@ -228,7 +233,7 @@ export function WearSpotlight({ payload, unit, variant = 'sky' }: { payload: Wea
                 <span key={tp.kind} className={`h-1.5 rounded-full transition-all ${i === index ? 'w-4 bg-white' : 'w-1.5 bg-white/45'}`} />
               ))}
             </span>
-            <button type="button" onClick={() => step(1)} disabled={tips.length < 2} aria-label="Next tip" className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
+            <button type="button" onClick={() => step(1)} disabled={tips.length < 2} aria-label={t('weather.nextTip')} className="grid h-8 w-8 place-items-center rounded-full bg-white/16 ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/28 disabled:opacity-40">
               <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
           </div>

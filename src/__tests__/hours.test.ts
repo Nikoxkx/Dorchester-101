@@ -12,6 +12,7 @@ import {
   describeDay,
   formatClockMinutes,
   formatWindow,
+  formatWeekdayIndex,
   hhmm,
   isOpenNow,
   opensOn,
@@ -23,10 +24,10 @@ import {
 } from "@/lib/hours";
 
 /** Saturday 5 September 2026, 09:30 on the wall clock. */
-const SATURDAY_0930 = new Date(2026, 8, 5, 9, 30, 0);
-const SATURDAY_1100 = new Date(2026, 8, 5, 11, 0, 0);
-const SUNDAY_0930 = new Date(2026, 8, 6, 9, 30, 0);
-const MONDAY_0730 = new Date(2026, 8, 7, 7, 30, 0);
+const SATURDAY_0930 = new Date(Date.UTC(2026, 8, 5, 9, 30, 0));
+const SATURDAY_1100 = new Date(Date.UTC(2026, 8, 5, 11, 0, 0));
+const SUNDAY_0930 = new Date(Date.UTC(2026, 8, 6, 9, 30, 0));
+const MONDAY_0730 = new Date(Date.UTC(2026, 8, 7, 7, 30, 0));
 
 const weekdayEvening: WeeklyHours = buildWeek({
   0: ["09:00-17:00"],
@@ -50,10 +51,10 @@ const never: WeeklyHours = [
 
 describe("week indexing", () => {
   it("treats Monday as day 0 and Sunday as day 6", () => {
-    expect(zonedParts(MONDAY_0730, 0).weekday).toBe(0);
-    expect(zonedParts(SATURDAY_0930, 0).weekday).toBe(5);
-    expect(zonedParts(SUNDAY_0930, 0).weekday).toBe(6);
-    expect(zonedParts(SATURDAY_0930, 0).minutes).toBe(9 * 60 + 30);
+    expect(zonedParts(MONDAY_0730, 'UTC').weekday).toBe(0);
+    expect(zonedParts(SATURDAY_0930, 'UTC').weekday).toBe(5);
+    expect(zonedParts(SUNDAY_0930, 'UTC').weekday).toBe(6);
+    expect(zonedParts(SATURDAY_0930, 'UTC').minutes).toBe(9 * 60 + 30);
   });
 
   it("reads the wall clock in the named zone, so a hosted server cannot move a closing time", () => {
@@ -69,6 +70,16 @@ describe("hhmm", () => {
     expect(hhmm("9:00")).toBe(540);
     expect(hhmm("23:59")).toBe(1439);
     expect(hhmm(" 00:00 ")).toBe(0);
+  });
+
+  it("formats named weekdays independent of a visitor's clock", () => {
+    expect(formatWeekdayIndex(0, 'en-US')).toBe('Monday');
+    expect(formatWeekdayIndex(6, 'en-US')).toBe('Sunday');
+    expect(formatWeekdayIndex(7, 'en-US')).toBe('Monday');
+    expect(formatWeekdayIndex(-1, 'en-US')).toBe('Sunday');
+    expect(formatWeekdayIndex(0, 'es-ES').toLowerCase()).toContain('lunes');
+    expect(formatWeekdayIndex(0, 'fr-HT', 'short')).toBe('Lendi');
+    expect(formatWeekdayIndex(0, 'pt-CV', 'short')).toBe('Sigunda');
   });
 
   it("throws on anything that is not a clock time, so a typo cannot become midnight service", () => {
@@ -115,13 +126,21 @@ describe("statusFor", () => {
 
   it('is no longer open at the closing minute itself, so "open until 2pm" never overstates', () => {
     expect(
-      statusFor(weekdayEvening, new Date(2026, 8, 5, 14, 0), 0).state,
+      statusFor(weekdayEvening, new Date(Date.UTC(2026, 8, 5, 14, 0)), 0).state,
     ).toBe("closed");
+  });
+
+  it('keeps a continuous 24-hour week open at midnight without inventing a closing time', () => {
+    const continuous = buildWeek({ 0: ['00:00-24:00'], 1: ['00:00-24:00'], 2: ['00:00-24:00'], 3: ['00:00-24:00'], 4: ['00:00-24:00'], 5: ['00:00-24:00'], 6: ['00:00-24:00'] });
+    const late = new Date(Date.UTC(2026, 8, 5, 23, 45));
+    expect(statusFor(continuous, late, 0)).toEqual({ state: 'always-open' });
+    expect(isOpenNow(continuous, late, 0)).toBe(true);
+    expect(statusFor(continuous, new Date(Date.UTC(2026, 8, 6, 0, 0)), 0)).toEqual({ state: 'always-open' });
   });
 
   it("warns in the last hour of service", () => {
     expect(
-      statusFor(weekdayEvening, new Date(2026, 8, 5, 13, 20), 0).state,
+      statusFor(weekdayEvening, new Date(Date.UTC(2026, 8, 5, 13, 20)), 0).state,
     ).toBe("closing-soon");
   });
 
@@ -160,19 +179,27 @@ describe("statusFor", () => {
       [],
       [],
     ] as WeeklyHours;
-    expect(statusFor(lateNight, new Date(2026, 8, 7, 22, 0), 0)).toEqual({
+    // An evening shift does not make the preceding morning open.
+    expect(statusFor(lateNight, new Date('2026-09-07T00:30:00Z'), 0)).toMatchObject({ state: 'closed', opensAt: 1200, opensOnDayOffset: 0 });
+    expect(statusFor(lateNight, new Date(Date.UTC(2026, 8, 7, 22, 0)), 0)).toEqual({
       state: "open",
       closesAt: 60,
       minutesUntilClose: 180,
     });
-    expect(statusFor(lateNight, new Date(2026, 8, 8, 0, 30), 0)).toEqual({
+    expect(statusFor(lateNight, new Date(Date.UTC(2026, 8, 8, 0, 30)), 0)).toEqual({
       state: "closing-soon",
       closesAt: 60,
       minutesUntilClose: 30,
     });
-    expect(statusFor(lateNight, new Date(2026, 8, 8, 2, 0), 0).state).toBe(
+    expect(statusFor(lateNight, new Date(Date.UTC(2026, 8, 8, 2, 0)), 0).state).toBe(
       "closed",
     );
+  });
+
+  it('uses the shifted UTC weekday at a fixed-offset midnight', () => {
+    const fridayLateBoston = new Date('2026-09-05T01:00:00Z'); // Friday 21:00 at UTC-4
+    const fridayOnly = buildWeek({ 4: ['20:00-22:00'] });
+    expect(statusFor(fridayOnly, fridayLateBoston, -240)).toMatchObject({ state: 'closing-soon', closesAt: 1320 });
   });
 
   it("shifts with a numeric UTC offset in minutes, not the browser clock", () => {

@@ -8,8 +8,19 @@ import Link from 'next/link';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { Card, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
-import { useAppStore } from '@/stores/appStore';
-import { useTranslation } from '@/lib/i18n';
+import { useI18n } from '@/i18n/hook';
+import { SPANISH_FAQ_ANSWERS } from './answers.es';
+import { OTHER_FAQ_ANSWERS } from './answers.multilingual';
+import { FOOD_FAQ_ANSWERS } from './answers.food';
+import { SNAP_FAQ_ANSWERS } from './answers.snap';
+import { EVICTION_FAQ_ANSWERS } from './answers.eviction';
+import { WIC_FAQ_ANSWERS } from './answers.wic';
+import { RIGHTS_FAQ_ANSWERS } from './answers.rights';
+import { AMI_FAQ_ANSWERS } from './answers.ami';
+import { MASSHEALTH_FAQ_ANSWERS } from './answers.masshealth';
+import { TRAINING_FAQ_ANSWERS } from './answers.training';
+import { UNEMPLOYMENT_FAQ_ANSWERS } from './answers.unemployment';
+import { UTILITIES_FAQ_ANSWERS } from './answers.utilities';
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -17,8 +28,7 @@ const pageVariants: Variants = {
 };
 
 export default function FAQPage() {
-  const { language } = useAppStore();
-  const { t } = useTranslation(language);
+  const { t, lang, meta } = useI18n();
 
   const FAQ_CATEGORIES = [
   {
@@ -26,164 +36,130 @@ export default function FAQPage() {
     name: t('faq.topic.housing'),
     faqs: [
       {
-        q: 'How do I apply for affordable housing in Dorchester?',
-        a: `To apply for affordable housing in Dorchester:
+        key: 'applyHousing',
+        q: t('faq.q.applyHousing'),
+        a: `Find income-restricted housing through the sources below. Use the AMI tool as a starting estimate; rules and limits vary by listing.
 
-1. **Check your income eligibility** — Use our AMI calculator to see if you qualify. Most affordable units require income at or below 60-80% of Area Median Income (AMI).
+1. List household members and income sources. Programs count income and assets differently; ask the listing contact what applies. The AMI calculator is an estimate, not an eligibility decision. Ask the property or program manager.
 
-2. **Watch the two official listing sites** — Metrolist (boston.gov/metrolist) carries every City of Boston income-restricted lottery and waitlist; Housing Navigator Massachusetts (housingnavigatorma.org) carries income-restricted rentals statewide and has replaced the retired MassAccess registry. Both are free and need no account.
+2. **Metrolist** (boston.gov/metrolist): Income-restricted listings in Greater Boston, an AMI estimator and a weekly digest. It does not list public or subsidized housing.
 
-3. **Apply through the listing** — Each listing says how to apply. Applications go to the property manager named on it, never to the city or this site.
+**Housing Navigator Massachusetts** (housingnavigatorma.org): Free nonprofit search for income-restricted rentals statewide, with eligibility and accessibility filters. Confirm details with the property.
 
-4. **Boston Housing Authority** — Public housing and project-based vouchers are open; apply at bostonhousing.org or call (617) 988-4000. The Section 8 Housing Choice Voucher waiting list is closed until further notice.
+3. Listings direct applicants to property managers; each application and waitlist has its own rules.
 
-5. **Attend housing lotteries** — All Boston lotteries are advertised on Metrolist about 3–6 months before a building opens.
+4. BHA accepts public housing applications; its general Section 8 Housing Choice Voucher waitlist is closed. Project-based and Mod Rehab lists have restrictions and possible exceptions. Metrolist and Housing Navigator list different rental opportunities. Confirm current rules with each program. bostonhousing.org · (617) 988-4000.
 
-**Documents you'll need:**
-- Government-issued ID
-- Social Security cards for all household members
-- Proof of income (pay stubs, tax returns, benefits letters)
-- Bank statements
-- Proof of current address`,
+5. Some homes use a lottery, a waitlist or first-come applications. Requirements and preferences vary; check each listing and deadline.
+
+**Ask which documents are needed:** Programs may request proof of identity, income, assets or household details. Ask what to provide and how to get help if documents are difficult to obtain.`,
         sources: [
           { name: 'Metrolist (City of Boston)', url: 'https://www.boston.gov/metrolist' },
           { name: 'Housing Navigator Massachusetts', url: 'https://housingnavigatorma.org' },
-          { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org' },
+          { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org/en/FAQ.aspx' },
+          { name: 'BHA 2026 annual plan', url: 'https://www.bostonhousing.org/BHA/media/Documents/Annual%20Plan/Fed%20Annual%20Plan%202026/7-Plan-Supplement-2026-redline-edit-mode-011326-v12.pdf' },
         ],
       },
       {
-        q: 'What is the current Section 8 waitlist status in Boston?',
-        a: `Checked on **4 October 2026**, against the Boston Housing Authority's own waiting-list pages:
+        key: 'section8',
+        q: t('faq.q.section8'),
+        a: `Checked 31 October 2026. Rules and waiting lists can change.
 
-**Section 8 Housing Choice Voucher (tenant-based): CLOSED** until further notice. BHA says it gives at least two weeks' public notice before reopening, and it does not keep a "notify me" list — you have to watch bostonhousing.org.
+BHA public housing accepts applications; the general Section 8 voucher waitlist is closed. Ask about restrictions and exceptions: (617) 988-4000.
 
-**What is open:**
-- **Public housing** (federal and City-funded developments) — apply at bostonhousing.org or boston.myhousing.com; (617) 988-4000
-- **Project-based vouchers and Mod Rehab** — open for applicants who can document Priority One status
-- **State rental vouchers (MRVP)** — BHA's allocation is closed; the statewide list runs through CHAMP
+BHA's project-based voucher and Mod Rehab lists generally require Priority One; there are limited exceptions. Some categories may also qualify for exceptions to the closed tenant-based list. Ask BHA about your situation.
 
-**Good to know:**
-- Income limits follow HUD's AMI bands for the Boston metro area
-- Boston residency is not required for public housing, but residency and rent-burden preferences apply to many lotteries
-- A criminal record is not an automatic bar; BHA screens case by case
-- Wait times are long. BHA's own guidance says it can be over ten years from the date of application — apply to neighbouring housing authorities as well
+bostonhousing.org · (617) 988-4000.
 
-**Preference categories** (which speed a wait up): homelessness or imminent risk of it, displacement by government action, domestic violence, Boston residency, and elderly or disabled households.`,
+CHAMP accepts applications for state-aided public housing and Massachusetts rental vouchers (MRVP and AHVP); individual waiting lists have their own rules. Visit housingapplication.mass.gov or ask a local housing authority.
+
+Waitlists are separate. Follow each program's instructions for updating contact details and renewing interest; rules vary.`,
         sources: [
-          { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org' },
+          { name: 'Boston Housing Authority', url: 'https://www.bostonhousing.org/en/FAQ.aspx' },
+          { name: 'BHA 2026 annual plan', url: 'https://www.bostonhousing.org/BHA/media/Documents/Annual%20Plan/Fed%20Annual%20Plan%202026/7-Plan-Supplement-2026-redline-edit-mode-011326-v12.pdf' },
+          { name: 'CHAMP', url: 'https://housingapplication.mass.gov/help/' },
         ],
       },
       {
-        q: 'What are my rights as a tenant in Massachusetts?',
-        a: `Massachusetts tenant rights are among the strongest in the country. Key protections include:
+        key: 'rights',
+        q: t('faq.q.rights'),
+        a: `Massachusetts tenants have protections, but the rules depend on the tenancy and circumstances. For advice about your situation, contact legal aid.
 
-**Security Deposits:**
-- Maximum: First month, last month, one month security deposit, and lock change cost
-- Must be held in interest-bearing account
-- Must be returned within 30 days of move-out with itemized deductions
+**Security deposits:** A landlord may generally collect first and last month's rent, a security deposit of no more than one month's rent, and the actual cost of a new lock and key. The deposit must be held in a separate interest-bearing Massachusetts bank account. The landlord must return the deposit or balance within 30 days after the tenancy ends, with required documentation for deductions.
 
-**Eviction Protections:**
-- 14 days written notice for nonpayment of rent
-- 30 days notice for lease violations or no-fault evictions
-- Court process required for all evictions
-- "Self-help" evictions (changing locks, removing belongings) are illegal
+**Evictions:** Notice periods depend on the reason, tenancy and any federal rules. A notice to quit alone does not require you to leave; a landlord cannot forcibly evict you without a court order. Read and respond to court papers on time and seek legal help.
 
-**Habitability Requirements:**
-- Heat must be maintained at 68°F daytime, 64°F nighttime (Sept 15 - June 15)
-- Hot water must be at least 110°F
-- All systems must be in working order
-- Landlord must address lead paint hazards
+**Safe housing:** Under the state housing code, the default heating season is September 15 through May 31; local authorities may change the dates. During that season the minimum is 68°F from 7am to 11pm and 64°F from 11:01pm to 6:59am. Hot water must generally be at least 110°F. Report problems to your landlord and local inspectional services.
 
-**Rent Increases:**
-- No limit on rent increase amounts in Massachusetts
-- Must provide 30 days written notice (or one full rental period, whichever is longer)
-- Cannot increase rent during lease term without agreement
+**Rent increases:** Rules vary by agreement and program. For a tenancy at will, notice is generally 30 days or one rental period, whichever is longer. A fixed-term lease generally cannot be changed during its term without agreement; subsidized housing may have additional rules.
 
-**Retaliation Protection:**
-- Landlord cannot evict or raise rent in response to:
-  - Reporting code violations
-  - Organizing with other tenants
-  - Exercising legal rights`,
+**Retaliation:** A landlord cannot retaliate against tenants for protected activity such as reporting code violations, organizing with other tenants or exercising legal rights. Contact legal aid if you need help.`,
         sources: [
           { name: 'Mass Legal Help', url: 'https://www.masslegalhelp.org/housing' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/massachusetts-law-about-winter-heating' },
           { name: 'Greater Boston Legal Services', url: 'https://www.gbls.org' },
         ],
       },
       {
-        q: 'How can I get help with back rent or facing eviction?',
-        a: `If you're behind on rent or facing eviction, there are several resources available:
+        key: 'eviction',
+        q: t('faq.q.eviction'),
+        a: `If you are behind on rent or facing eviction, contact a housing or legal aid organization promptly. Programs have eligibility rules and funding may change.
 
-**Immediate Steps:**
+**Help with housing costs:**
+1. **RAFT (Residential Assistance for Families in Transition)** can provide up to $7,000 per 12-month period for eligible housing emergencies, including rent, utilities, moving costs or mortgage payments. The state lists income below 50% AMI, or below 60% for households at risk of domestic violence, among its criteria. Ask the administering agency to confirm your eligibility.
+- Apply online through the state's Housing Help Hub. For rental assistance, the landlord must also submit an application; the state says it must be submitted within 21 days or the application times out.
+- Metro Housing|Boston: (617) 425-6700. Call 2-1-1 for basic RAFT questions; 2-1-1 is not the application itself.
 
-1. **RAFT (Residential Assistance for Families in Transition)**
-   - Up to **$7,000** per 12-month period for rent arrears, overdue utilities, moving costs or mortgage payments
-   - Income must be at or below 50% AMI; for rent arrears a landlord application is also required
-   - Apply online through the state RAFT portal, by calling **2-1-1**, or through Metro Housing|Boston: **(617) 425-6700**
+2. **Greater Boston Legal Services** provides free civil legal help to eligible residents. Housing intake (except shelter matters): (617) 603-1807, Monday–Friday 9am–5pm. Main office: (617) 371-1234. Representation is not guaranteed.
 
-2. **Greater Boston Legal Services**
-   - Free eviction defense for low-income residents
-   - Intake line: **(617) 371-1234**, Monday-Friday 9:30am-12:30pm
-   - Walk-in clinic at Dorchester Courthouse (410 Washington St), 2nd and 4th Wednesday, 9am-12pm
+3. **City Life / Vida Urbana** offers tenant organizing and guidance. Call (617) 524-3541 for current meeting information.
 
-3. **City Life / Vida Urbana**
-   - Tenant organizing and free weekly legal clinic
-   - Call: (617) 524-3541; meeting Tuesdays at 6:15pm
-
-4. **Office of Housing Stability (City of Boston)**
-   - Help if you are at immediate risk of losing your home: (617) 635-4200, Monday-Friday 9am-5pm
+4. **Boston Office of Housing Stability** can help with housing crises: (617) 635-4200, Monday–Friday 9am–5pm.
 
 **If you receive an eviction notice:**
-- You have the right to a court hearing
-- Do NOT move out until ordered by a judge
-- Request a jury trial (you have this right)
-- Apply for emergency rental assistance immediately
-- Contact legal aid for free representation`,
+- A notice to quit does not by itself require you to leave; a landlord cannot forcibly remove you without a court order.
+- Read court papers, meet the response deadlines and attend court dates. Ask legal aid about your options, including a jury request.
+- Seek rental assistance and legal help promptly. This information is not individual legal advice.`,
         sources: [
           { name: 'RAFT Program', url: 'https://www.mass.gov/how-to/apply-for-raft-emergency-help-for-housing-costs' },
-          { name: 'Greater Boston Legal Services', url: 'https://www.gbls.org/get-legal-help/service-locations' },
+          { name: 'Greater Boston Legal Services', url: 'https://www.gbls.org/about-us/locations-and-directions' },
           { name: 'City Life / Vida Urbana', url: 'https://www.clvu.org' },
+          { name: 'Boston Office of Housing Stability', url: 'https://www.boston.gov/departments/housing/office-housing-stability' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/tenants-guide-to-eviction' },
         ],
       },
       {
-        q: 'What is AMI and how is it calculated?',
-        a: `**AMI (Area Median Income)** is the middle income for the Boston-Cambridge-Quincy metro area, calculated annually by HUD (U.S. Department of Housing and Urban Development).
+        key: 'ami',
+        q: t('faq.q.ami'),
+        a: `**AMI (Area Median Income)** is an area income benchmark used to set limits for many affordable-housing programs. HUD estimates median family income and publishes limits by area and household size; agencies and programs can calculate their limits differently.
 
-**The current figures** are fetched live from HUD on the Tools page and the housing page — no ladder is copied into this text, because HUD republishes the limits every spring and a table typed here would go stale. For scale, HUD's FY2026 figures for the Boston metro area are: median family income $164,600; the 50% ("very low income") limit $85,700 for a family of four, and the 80% ("low income") limit $137,100 for a family of four. The City of Boston's 2026 schedule sets 100% AMI at $171,400 for a family of four, which is exactly twice HUD's 50% figure — that is the ladder Boston's income-restricted lotteries quote. Check the Tools page's calculator for your own household size and band.
+**Example, not a guarantee of eligibility:** For FY2026, HUD lists median family income of $164,600 for the Boston-Cambridge-Quincy HUD metro area. Its four-person limits include $85,700 at 50% and $137,100 at 80%. Boston's 2026 schedule lists $171,400 at 100% for a four-person household. These are different published measures; they are not rents. Income limits change, and the listing's rules and household size matter.
 
-**What counts as income:**
-- Wages, salaries, tips
-- Social Security benefits
-- SSI/SSDI
-- Unemployment benefits
-- Child support received
-- Interest and dividends
-- Retirement/pension income
+Use the site's income tools as a starting point, then check the current official table and the specific listing. Only the program or property manager can determine eligibility.
 
-**What does NOT count:**
-- Food stamps (SNAP)
-- Housing subsidies
-- One-time lump sum payments
-- Student financial aid`,
+**Income:** Applications may ask about wages, salaries, tips, Social Security, SSI/SSDI, unemployment, child support, interest and retirement income. Rules for exclusions, assets and student assistance vary by program; ask the administering agency rather than assuming an item is excluded.`,
         sources: [
           { name: 'HUD User Income Limits', url: 'https://www.huduser.gov/portal/datasets/il.html' },
+          { name: 'City of Boston', url: 'https://www.boston.gov/income-restricted-housing-guide' },
         ],
       },
     ],
   },
   {
     id: 'food',
-    name: 'Food Assistance',
+    name: t('faq.topic.food'),
     faqs: [
       {
-        q: 'Where can I get free food in Dorchester?',
+        key: 'food',
+        q: t('faq.q.food'),
         a: `There are many free food resources in Dorchester. Here are the main options:
 
-**Food Pantries (ongoing):**
+**Food options (call to confirm):**
 
 1. **Codman Square Community Market** (the health centre's pantry)
    - 450 Washington St, Dorchester — half a mile up Washington Street from the health centre
-   - Tuesday 8am-1pm, Wednesday 2-7pm, Thursday 8am-1pm
-   - Choice-based shopping, once a month per household; no ID required
+   - The market page lists Tuesday 8am-1pm, Wednesday 2-7pm and Thursday 8am-1pm; another Codman page lists different hours.
+   - Choice-based shopping. Call to confirm current hours, visit frequency, and ID or address requirements.
    - (617) 825-9660
 
 2. **Salvation Army Kroc Center**
@@ -194,9 +170,10 @@ export default function FAQPage() {
 
 3. **Fair Foods $2 Bag at Lena Park**
    - 150 American Legion Hwy, Dorchester
-   - Tuesdays from 2pm while the produce lasts; $2 a bag, over 12 lb of fruit and vegetables
-   - No ID, no proof of address, no income test
+   - Codman's food-resource page lists Tuesdays 2-4:30pm, with a requested $2 per bag.
+   - Call to confirm the current schedule, availability, price and requirements.
    - (617) 533-8133
+
 
 **Mobile Food Markets:**
 - Greater Boston Food Bank partner pantries and pop-ups rotate through Dorchester
@@ -208,257 +185,174 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
 - Interpreters on the line (180+ languages)
 - Monday-Friday 8am-7pm, Saturday 10am-2pm`,
         sources: [
-          { name: 'Greater Boston Food Bank', url: 'https://www.gbfb.org' },
-          { name: 'Project Bread', url: 'https://www.projectbread.org' },
+          { name: 'Codman Square Community Market', url: 'https://www.codman.org/wellness-resource/food-pantry/' },
+          { name: 'Codman food resources', url: 'https://www.codman.org/patient-resource/food-resources/' },
+          { name: 'Salvation Army Kroc Center', url: 'https://easternusa.salvationarmy.org/boston-kroc/help/' },
+          { name: 'Greater Boston Food Bank', url: 'https://www.gbfb.org/need-food/' },
+          { name: 'Project Bread', url: 'https://projectbread.org/get-help' },
         ],
       },
       {
-        q: 'How do I apply for SNAP (food stamps)?',
+        key: 'snap',
+        q: t('faq.q.snap'),
         a: `**SNAP** (Supplemental Nutrition Assistance Program) provides monthly benefits to buy groceries.
 
 **How to apply:**
+1. Online: DTAConnect.com
+2. By phone: (877) 382-2363
+3. In person: visit a local DTA office
 
-1. **Online (fastest):** DTAConnect.com
-2. **By phone:** (877) 382-2363
-3. **In person:** Visit your local DTA office
+**Who may qualify:**
+- For many Massachusetts households, the gross income guideline is 200% of the federal poverty level. In 2026 that is about $5,500 a month for a household of 4.
+- Households with a member age 60 or older or with a disability may qualify under different rules. Many households have no asset test.
+- Eligibility also depends on household circumstances and other rules. Working households may qualify; DTA makes the decision.
 
-**Who qualifies:**
-- Income at or below 200% of the federal poverty level — Massachusetts uses the broadest option allowed (broad-based categorical eligibility)
-- For a family of 4: gross income under about $5,500/month (roughly $66,000/year)
-- No asset test for most households
+**Information and proof:**
+- DTA may request proof of identity, Massachusetts residence and income, plus other documents that apply to your situation.
+- People applying generally need a Social Security number or proof they have applied for one. DTA can help if you do not have the requested documents; a photo ID is not the only way to prove identity.
 
-**What you'll need:**
-- ID (license, passport, or other photo ID)
-- Proof of income (pay stubs, benefit letters)
-- Proof of address (utility bill, lease)
-- Social Security numbers for household members
+**Maximum monthly benefit** (USDA, 1 October 2026 – 30 September 2027, Massachusetts):
 
-**Maximum monthly benefit** (set by USDA for 1 October 2026 – 30 September 2027):
-
-| Household Size | Maximum Monthly Benefit |
-|---------------|------------------------|
+| Household size | Monthly maximum |
+|---------------|-----------------|
 | 1 | $306 |
 | 2 | $562 |
 | 3 | $808 |
 | 4 | $1,023 |
 | 5 | $1,217 |
 
-The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum for your household size minus 30% of your net income after deductions. Most households receive less than the top figure.
+The maximum is not a guaranteed payment. Benefits depend on household size, income, deductions and program rules. Ask DTA for your determination.
 
-**Processing time:** 
-- Standard: 30 days
-- Expedited (emergency): 7 days if extremely low income
+**Processing time:**
+- A decision is generally due within 30 days.
+- Some households qualify for expedited benefits within 7 days, based on income, resources and expenses.
 
-**Use SNAP to buy groceries at:**
-- Most supermarkets
-- Convenience stores
-- Farmers markets (many double your benefits!)
-- Amazon and Walmart online`,
+**Use SNAP for eligible groceries** at participating supermarkets, convenience stores, farmers markets, and online retailers including Amazon and Walmart. Some farmers markets have additional incentives; ask the market about its current program.`,
         sources: [
           { name: 'Massachusetts DTA', url: 'https://www.mass.gov/snap' },
           { name: 'DTAConnect', url: 'https://dtaconnect.eohhs.mass.gov' },
+          { name: 'USDA SNAP', url: 'https://www.fna.usda.gov/snap/allotment/cola' },
         ],
       },
       {
-        q: 'What is WIC and do I qualify?',
-        a: `**WIC** (Women, Infants, and Children) provides nutrition support for pregnant women, new mothers, and children under 5.
+        key: 'wic',
+        q: t('faq.q.wic'),
+        a: `**WIC** (Women, Infants, and Children) offers free nutrition support, food benefits, breastfeeding support and health referrals to eligible Massachusetts families.
 
-**Who qualifies:**
-- Pregnant women
-- Women who recently had a baby (up to 6 months postpartum, or 12 months if breastfeeding)
-- Infants and children under age 5
-- Income at or below 185% of the poverty level — about $61,000/year for a family of 4 under the guidelines in force since 1 June 2026 (you are automatically income-eligible if you receive SNAP, MassHealth or TAFDC)
-- Must be at "nutritional risk" (determined at appointment)
+**Who may qualify:**
+- Pregnant people; people up to 6 months postpartum, or up to 12 months if breastfeeding; infants and children under 5. A parent or guardian can apply for an eligible child.
+- You must live in Massachusetts and have a nutritional need, which WIC staff can help determine.
+- Income guidelines depend on household size. For 11 June 2026 – 30 June 2027, the guideline for a household of 4 is $61,050 per year. SNAP, TAFDC and certain MassHealth plans can establish income eligibility; other program conditions still apply. Ask WIC to check your situation.
 
-**What WIC provides:**
-- Monthly food benefits for:
-  - Milk, cheese, yogurt
-  - Eggs
-  - Whole grains (bread, cereal, rice)
-  - Fruits and vegetables
-  - Beans and peanut butter
-  - Baby food and formula
-- Breastfeeding support
-- Nutrition education
-- Healthcare referrals
+**What WIC can provide:**
+- Food benefits for eligible items such as milk, cheese, yogurt, eggs, whole grains, fruits, vegetables, beans, peanut butter, baby food and formula. The food package depends on the participant.
+- Breastfeeding support, nutrition education and referrals for health care and other services.
 
 **How to apply:**
-1. Find a WIC office: Call (800) 942-1007
-2. Schedule an appointment
-3. Bring: ID, proof of income, proof of address, child's immunization records
+1. Start at mass.gov/wic or call (800) 942-1007 to find a WIC office and make an appointment.
+2. Ask the office what proof of identity, Massachusetts residence and income to bring. If documents are difficult to obtain, ask the office for help.
 
-**Dorchester WIC locations:**
-- Codman Square Health Center: (617) 825-9660
-- DotHouse Health: (617) 288-3230`,
+**Dorchester WIC contacts:**
+- Codman Square WIC: (617) 825-3822
+- DotHouse Health WIC: (617) 825-0805`,
         sources: [
           { name: 'Massachusetts WIC', url: 'https://www.mass.gov/wic' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/check-eligibility-for-wic' },
         ],
       },
     ],
   },
   {
     id: 'healthcare',
-    name: 'Healthcare',
+    name: t('faq.topic.health'),
     faqs: [
       {
-        q: 'How do I sign up for MassHealth (Medicaid)?',
-        a: `**MassHealth** is Massachusetts' Medicaid program providing free or low-cost health insurance.
+        key: 'masshealth',
+        q: t('faq.q.masshealth'),
+        a: `**MassHealth** is the Massachusetts Medicaid program. It offers health coverage to eligible residents; benefits and costs depend on the coverage type.
 
-**Who qualifies:**
-- Adults under 65 with income up to 138% FPL (~$20,000/year for individual)
-- Pregnant women with higher income limits
-- Children with higher income limits
-- Disabled individuals at any age
-- No citizenship status requirement for emergency services
+**Who may qualify:**
+- Coverage types have different rules for adults, children, pregnant people, older adults and people with disabilities. Eligibility can depend on income, household size, residency, immigration status and other factors.
+- For example, CarePlus is for some adults ages 21–64 who meet its rules; its income standard uses modified adjusted gross income at or below 133% of the federal poverty level, with applicable adjustments. Other coverage may have different limits.
+- Coverage options for non-citizens differ. Ask an enrollment specialist about your situation rather than assuming you cannot get help.
 
 **How to apply:**
+1. Many individuals and families can start online at mahealthconnector.org. People age 65 or older and those needing long-term care may use a different application; ask MassHealth which form to use.
+2. Call MassHealth: (800) 841-2900; TTY: 711.
+3. Ask a community health center or enrollment counselor for help. Health Care For All's free multilingual HelpLine is (800) 272-4232.
 
-1. **Online:** mahealthconnector.org
-2. **By phone:** (800) 841-2900 (TTY: 800-497-4648)
-3. **In person:** At a community health center
+You may be asked for household and income information, Massachusetts residence, existing insurance, Social Security numbers for applicants if available, and citizenship or immigration information. MassHealth may request additional documents. Processing can take weeks; respond to requests by their deadlines.
 
-**What you'll need:**
-- Social Security number (if you have one)
-- Proof of income
-- Proof of Massachusetts residency
-- Immigration documents (if applicable)
-
-**Processing time:** Usually 7-10 business days
-
-**Enrollment help in Dorchester:**
-- Codman Square Health Center: (617) 825-9660 — walk-in insurance services, non-patients welcome
-- DotHouse Health: (617) 288-3230
-- Upham's Corner Health Center: (617) 287-8000
-- Statewide multilingual HelpLine from Health Care For All: **1-800-272-4232** — free help with an application or an appeal, no immigration status required`,
+**Local help:** Codman Square Health Center's insurance enrollment team: (617) 822-8162. Call ahead to ask about appointments and documents.`,
         sources: [
           { name: 'MA Health Connector', url: 'https://www.mahealthconnector.org' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/how-to/apply-for-masshealth-the-health-safety-net-or-the-childrens-medical-security-plan' },
+          { name: 'Health Care For All', url: 'https://hcfama.org/hcfas-helpline/' },
         ],
       },
     ],
   },
   {
     id: 'employment',
-    name: 'Jobs & Income',
+    name: t('faq.topic.jobs'),
     faqs: [
       {
-        q: 'Where can I find job training programs in Dorchester?',
-        a: `Several organizations in Dorchester offer free or low-cost job training:
+        key: 'training',
+        q: t('faq.q.training'),
+        a: `These organizations offer job-search help or training for people in and around Dorchester. Programs, eligibility and openings vary; contact them before applying.
 
-**1. Action for Boston Community Development (ABCD)**
-- Address: Various locations
-- Phone: (617) 357-6000
-- Programs: 
-  - Career coaching
-  - Resume writing
-  - Interview skills
-  - Industry-specific training (healthcare, construction, IT)
+**MassHire Boston ABCD Career Center:** Free job-search resources, career guidance and training information. Career advisors are available by appointment at ABCD neighborhood sites, including Dorchester. Call (617) 442-2791.
 
-**2. Year Up**
-- Phone: (617) 542-1533
-- For ages 18-29
-- 6-month training + 6-month internship
-- Focus: IT, finance, business operations
-- Stipend provided
+**JVS Boston:** Free job-training programs and English-and-employment services for eligible immigrants and refugees. See jvs-boston.org or call (617) 399-3131.
 
-**3. Jewish Vocational Service (JVS)**
-- 75 Federal Street, 3rd Floor, Boston
-- Phone: (617) 399-3131
-- ESOL combined with job training and industry certifications
+**Year Up United:** Tuition-free Career Pathways training for eligible young adults ages 18–29, with an educational stipend and access to internships. Check current offerings at yearupunited.org.
 
-**4. MassHire career centers**
-- Free services for all job seekers: job listings, resume help, training referrals
-- Find the centre nearest you at mass.gov/masshire-career-centers
-
-**Youth Programs (ages 14-24):**
-- ABCD SummerWorks: paid summer jobs, 14-18 at $15/hour and 19-24 at $20/hour; applications open each 1 March
-- Youth Options Unlimited (YOU) Boston: year-round paid placements, apply through boston.gov
-- Year Up: 6-month training plus a 6-month internship, apply at yearup.org
-
-**Timing:** SummerWorks ran 6 July – 28 August 2026; the next application window opens on 1 March 2027.`,
+**Boston youth opportunities:** The City's futureBOS hub lists youth jobs, including SuccessLink opportunities, for Boston youth and young adults ages 14–24. Individual positions have their own rules and schedules. Visit boston.gov/departments/youth-employment-and-opportunity or call (617) 635-4202.`,
         sources: [
-          { name: 'MassHire', url: 'https://www.mass.gov/masshire-career-centers' },
-          { name: 'Year Up', url: 'https://www.yearup.org' },
+          { name: 'MassHire', url: 'https://www.mass.gov/locations/masshire-boston-abcd-career-center' },
+          { name: 'JVS Boston', url: 'https://www.jvs-boston.org/our-services/build-your-skills/' },
+          { name: 'Year Up United', url: 'https://www.yearupunited.org/how-it-works' },
+          { name: 'Boston Youth Employment', url: 'https://www.boston.gov/departments/youth-employment-and-opportunity' },
         ],
       },
       {
-        q: 'How do I apply for unemployment benefits?',
-        a: `**Massachusetts Unemployment Insurance (UI)** provides temporary income if you lose your job through no fault of your own.
+        key: 'unemployment',
+        q: t('faq.q.unemployment'),
+        a: `**Massachusetts Unemployment Insurance (UI)** provides temporary income to some workers who lose their jobs or have hours significantly reduced through no fault of their own.
 
-**Who qualifies:**
-- Worked in MA in the past 15 months
-- Earned at least $6,300 in the base period, with wages in at least two quarters, and at least 30 times your weekly benefit
-- Lost job through no fault of your own
-- Able and available to work
-- Actively searching for work
+**Eligibility:** Applicants generally must be authorized to work, able and available to work, and actively seeking work. Wage requirements include at least $6,300 in the applicable base period and at least 30 times the weekly benefit amount; other rules and exceptions apply. The Department of Unemployment Assistance (DUA) decides eligibility.
 
-**How to apply:**
-1. **Online (fastest):** mass.gov/unemployment
-2. **By phone:** (877) 626-6800
+**Apply:** File online through mass.gov/unemployment or call DUA at (877) 626-6800; voice relay 711. Have your Social Security number, contact details and recent employer information ready. Ask DUA what else is needed.
 
-**Benefit amount:**
-- Maximum weekly benefit: $1,105 (in force since 5 October 2025; DUA re-prices the cap every October from state wage data, so check mass.gov for the figure that applies to your claim)
-- Calculated as about half of your average weekly wage, plus up to $25 per dependent child
-- Duration: up to 30 weeks — the longest run in the country
+**Benefits:** The weekly amount is generally about 50% of average weekly wages, up to the legal maximum. As of October 4, 2026, that maximum is $1,154 per week; it can change. Some eligible claimants may receive a dependent allowance. The current maximum duration is 30 weeks, but individual claims may be shorter and rules may change.
 
-**What you'll need:**
-- Social Security number
-- Driver's license or state ID
-- Employment history (past 18 months)
-- Bank account info for direct deposit
-
-**Processing time:** First payment typically 2-3 weeks after filing
-
-**Important:** 
-- File as soon as you lose your job
-- Benefits are not retroactive
-- You must certify weekly that you're looking for work`,
+After applying, request benefits and certify each week as instructed, including work-search information when required. Report earnings and respond to DUA requests on time.`,
         sources: [
-          { name: 'MA Unemployment', url: 'https://www.mass.gov/unemployment' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/unemployment-insurance-eligibility' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/how-unemployment-insurance-benefits-are-determined' },
+          { name: 'MA Unemployment', url: 'https://www.mass.gov/how-to/apply-for-unemployment-insurance-benefits' },
         ],
       },
     ],
   },
   {
     id: 'utilities',
-    name: 'Utilities & Bills',
+    name: t('faq.topic.utilities'),
     faqs: [
       {
-        q: 'How can I get help paying my utility bills?',
-        a: `Several programs help with utility bills in Massachusetts:
+        key: 'utilities',
+        q: t('faq.q.utilities'),
+        a: `**Home Energy Assistance (HEAP / LIHEAP)** helps eligible Massachusetts households pay part of their primary heating costs. Homeowners and renters may apply, including when heat is included in rent. Eligibility depends on household size, gross income and other rules; the income guideline is at or below 60% of estimated state median income. Benefits and funding vary.
 
-**1. LIHEAP / HEAP (fuel assistance)**
-- Helps pay heating bills (oil, gas, electric heat) — renters qualify even when heat is included in the rent
-- Income limit: 60% of state median income, which is far above the SNAP limit and scales with household size — confirm your household's figure with ABCD
-- Maximum benefit in 2025-26: $1,000 for deliverable fuel (oil, propane) and $850 for utility-heated homes
-- Apply through: ABCD (617) 357-6000
-- Season: 1 November - 30 April; applications open each autumn
+The heating assistance period is November 1 through April 30. Apply at mass.gov/heatinghelp or contact ABCD Fuel Assistance for Boston at (617) 357-6012. Ask about current deadlines and required documents.
 
-**2. Good Neighbor Energy Fund**
-- For households just above LIHEAP eligibility
-- Grants up to $600
-- Apply through: Salvation Army
+**Other help:** Ask your utility about income-eligible discounts, payment plans and any arrearage-forgiveness program. Some enrollments may be automatic, but do not assume a discount is applied: check your bill or call. Eversource: (800) 592-2000; National Grid Massachusetts electric: (800) 322-3223. For other assistance, call 2-1-1.
 
-**3. Utility Company Arrearage Programs**
-- Eversource: (800) 592-2000
-- National Grid: (800) 322-3223
-- Payment plans and forgiveness programs available
-
-**4. Discount Rates**
-- Low-income discount rate available from utilities
-- Automatic if you receive SNAP, MassHealth, or SSI
-
-**Shut-off Protection:**
-- November 15 - March 15: No shut-offs for non-payment if you can't afford to pay
-- Year-round protection for elderly, disabled, seriously ill
-- Must notify utility company of hardship
-
-**To apply for shut-off protection:**
-1. Call your utility company
-2. Request a "financial hardship" designation
-3. Provide proof of income or benefits receipt`,
+**Shutoff protections:** For regulated gas and electric service needed for heat, financial hardship can qualify a household for winter protection from November 15 to March 15. Other protections may apply, for example when a household member is seriously ill, an infant lives in the home, or all residents are 65 or older; rules and documentation differ. Contact your utility promptly to ask about protection and restoration. Protection does not erase the bill; amounts owed still need to be paid.`,
         sources: [
-          { name: 'LIHEAP', url: 'https://www.mass.gov/fuel-assistance' },
-          { name: 'ABCD', url: 'https://www.bostonabcd.org' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/how-to/apply-for-home-energy-assistance-heap' },
+          { name: 'ABCD', url: 'https://bostonabcd.org/service/fuel-assistance/' },
+          { name: 'Mass.gov', url: 'https://www.mass.gov/info-details/when-am-i-protected-from-having-my-utilities-shut-off' },
         ],
       },
     ],
@@ -470,20 +364,40 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
   const [expandedFAQs, setExpandedFAQs] = useState<string[]>([]);
 
   const toggleFAQ = (id: string) => {
-    setExpandedFAQs(prev => 
+    setExpandedFAQs(prev =>
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
 
-  const filteredCategories = FAQ_CATEGORIES.filter(cat => 
+  const getAnswer = (faq: { key: string; a: string }) => {
+    let translated: string | undefined;
+    if (lang === 'es') translated = SPANISH_FAQ_ANSWERS[faq.key];
+    else if (lang !== 'en') {
+      if (faq.key === 'food') translated = FOOD_FAQ_ANSWERS[lang];
+      else if (faq.key === 'snap') translated = SNAP_FAQ_ANSWERS[lang];
+      else if (faq.key === 'eviction') translated = EVICTION_FAQ_ANSWERS[lang];
+      else if (faq.key === 'wic') translated = WIC_FAQ_ANSWERS[lang];
+      else if (faq.key === 'rights') translated = RIGHTS_FAQ_ANSWERS[lang];
+      else if (faq.key === 'ami') translated = AMI_FAQ_ANSWERS[lang];
+      else if (faq.key === 'masshealth') translated = MASSHEALTH_FAQ_ANSWERS[lang];
+      else if (faq.key === 'training') translated = TRAINING_FAQ_ANSWERS[lang];
+      else if (faq.key === 'unemployment') translated = UNEMPLOYMENT_FAQ_ANSWERS[lang];
+      else if (faq.key === 'utilities') translated = UTILITIES_FAQ_ANSWERS[lang];
+      else translated = OTHER_FAQ_ANSWERS[lang]?.[faq.key];
+    }
+    return { text: translated ?? faq.a, language: translated ? lang : 'en', fellBack: lang !== 'en' && !translated };
+  };
+
+  const filteredCategories = FAQ_CATEGORIES.filter(cat =>
     selectedCategory === 'all' || cat.id === selectedCategory
   );
 
   const searchResults = searchQuery.length > 2
-    ? FAQ_CATEGORIES.flatMap(cat => 
-        cat.faqs.filter(faq => 
+    ? FAQ_CATEGORIES.flatMap(cat =>
+        cat.faqs.filter(faq =>
           faq.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.a.toLowerCase().includes(searchQuery.toLowerCase())
+          faq.a.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          getAnswer(faq).text.toLowerCase().includes(searchQuery.toLowerCase())
         ).map(faq => ({ ...faq, category: cat.name }))
       )
     : [];
@@ -500,24 +414,29 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
         <header className="space-y-2">
           <h1 className="font-display text-3xl md:text-4xl font-bold flex items-center gap-3">
             <HelpCircle className="w-8 h-8 text-[var(--color-accent-primary)]" />
-            Frequently Asked Questions
+            {t('faq.title')}
           </h1>
           <p className="text-[var(--color-text-muted)] font-body max-w-2xl">
-            Find answers to common questions about housing, food assistance, healthcare, and more.
+            {t('faq.description')}
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Answers are written in plain language from the statute or agency rule they describe, and each names the office to call. Search by a word you would actually say — &ldquo;heat&rdquo;, &ldquo;deposit&rdquo;, &ldquo;EBT&rdquo; — and open one question at a time. If an answer looks out of date, the &ldquo;report a problem&rdquo; link at the bottom sends it straight to the person who keeps this list.
+            {t('faq.introDetail')}
           </p>
         </header>
+        {lang !== 'en' && (
+          <p role="note" className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            {t('faq.translationDraft')}
+          </p>
+        )}
 
         {/* Emergency Contact */}
         <Card className="bg-[var(--color-accent-primary)]/5">
           <CardContent className="py-4 flex items-center gap-4">
             <Phone className="w-8 h-8 text-[var(--color-accent-primary)]" />
             <div>
-              <p className="font-heading font-semibold">Need help right now?</p>
+              <p className="font-heading font-semibold">{t('faq.needNow')}</p>
               <p className="text-sm text-[var(--color-text-muted)]">
-                Call <span className="font-semibold">2-1-1</span> anytime (24/7) for free, confidential referrals to services.
+                {t('faq.callNow')}
               </p>
             </div>
           </CardContent>
@@ -528,7 +447,8 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Search questions..."
+            aria-label={t('faq.search')}
+            placeholder={t('faq.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
@@ -543,13 +463,14 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
         {searchQuery.length > 2 && (
           <div className="space-y-4">
             <p className="text-sm text-[var(--color-text-muted)]">
-              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
+              {t('common.results', { count: searchResults.length })} · {t('search.resultsFor', { term: searchQuery })}
             </p>
             {searchResults.map((faq, idx) => (
               <Card key={idx} className="overflow-hidden">
                 <button
+                  aria-expanded={expandedFAQs.includes(`search-${idx}`)}
                   onClick={() => toggleFAQ(`search-${idx}`)}
-                  className="w-full p-4 text-left flex items-center gap-3"
+                  className="w-full p-4 text-start flex items-center gap-3"
                 >
                   <div className="flex-1">
                     <p className="text-xs text-[var(--color-accent-primary)] mb-1">{faq.category}</p>
@@ -562,9 +483,10 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
                 </button>
                 {expandedFAQs.includes(`search-${idx}`) && (
                   <div className="px-4 pb-4 prose prose-sm max-w-none">
-                    <div 
+                    {getAnswer(faq).fellBack && <p className="text-xs text-[var(--color-text-muted)]">{t('lang.untranslated', { language: meta.nativeName })}</p>}
+                    <div lang={getAnswer(faq).language} dir={getAnswer(faq).language === 'ar' ? 'rtl' : 'ltr'}
                       className="text-[var(--color-text-secondary)] whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{ __html: faq.a.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
+                      dangerouslySetInnerHTML={{ __html: getAnswer(faq).text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
                     />
                   </div>
                 )}
@@ -586,7 +508,7 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
                     : 'bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                 )}
               >
-                All Topics
+                {t('faq.allTopics')}
               </button>
               {FAQ_CATEGORIES.map(cat => (
                 <button
@@ -613,12 +535,13 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
                     {category.faqs.map((faq, idx) => {
                       const faqId = `${category.id}-${idx}`;
                       const isExpanded = expandedFAQs.includes(faqId);
-                      
+
                       return (
                         <Card key={idx} className="overflow-hidden">
                           <button
+                            aria-expanded={isExpanded}
                             onClick={() => toggleFAQ(faqId)}
-                            className="w-full p-4 text-left flex items-center gap-3 hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                            className="w-full p-4 text-start flex items-center gap-3 hover:bg-[var(--color-bg-tertiary)] transition-colors"
                           >
                             <div className="flex-1">
                               <h3 className="font-heading font-semibold">{faq.q}</h3>
@@ -635,10 +558,11 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
                               className="px-4 pb-4 border-t border-[var(--color-border)]"
                             >
                               <div className="pt-4 prose prose-sm max-w-none">
-                                <div 
+                                {getAnswer(faq).fellBack && <p className="text-xs text-[var(--color-text-muted)]">{t('lang.untranslated', { language: meta.nativeName })}</p>}
+                                <div lang={getAnswer(faq).language} dir={getAnswer(faq).language === 'ar' ? 'rtl' : 'ltr'}
                                   className="text-[var(--color-text-secondary)] whitespace-pre-wrap text-sm leading-relaxed"
-                                  dangerouslySetInnerHTML={{ 
-                                    __html: faq.a
+                                  dangerouslySetInnerHTML={{
+                                    __html: getAnswer(faq).text
                                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                       .replace(/\n/g, '<br>')
                                   }}
@@ -646,7 +570,7 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
                               </div>
                               {faq.sources && faq.sources.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                                  <p className="text-xs text-[var(--color-text-muted)] mb-2">Sources:</p>
+                                  <p className="text-xs text-[var(--color-text-muted)] mb-2">{t('common.sources')}:</p>
                                   <div className="flex flex-wrap gap-2">
                                     {faq.sources.map((source, i) => (
                                       <a
@@ -697,7 +621,7 @@ The maximum is a ceiling, not a guaranteed amount: your benefit is the maximum f
         </Card>
 
         <ProjectNote className="mt-6" sources={['masslegal', 'bostongov', 'dta', 'bha']}>
-          Answers are written in plain language from the rules published by the agency or statute named in each answer. When a rule changes, the answer is updated and the change is visible in the public repository.
+          {t('note.faq')}
         </ProjectNote>
       </motion.div>
     </MainLayout>

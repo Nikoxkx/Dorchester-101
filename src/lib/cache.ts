@@ -19,7 +19,7 @@ export const CACHE_TTL = {
   NOTIFICATIONS: 5 * 60 * 1000,   // 5 minutes
   WEATHER: 5 * 60 * 1000,         // 5 minutes (forecast + active NWS alerts)
   SOURCE_CHECKS: 6 * 60 * 60 * 1000, // 6 hours (winter-clothing page liveness)
-  RESOURCES: 60 * 60 * 1000,      // 1 hour
+  RESOURCES: 60 * 1000,           // 1 minute; open/closed status changes
   DEFAULT: 5 * 60 * 1000,         // 5 minutes
 } as const;
 

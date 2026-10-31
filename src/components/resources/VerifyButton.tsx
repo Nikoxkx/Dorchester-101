@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useBadgeStore } from '@/stores/badgeStore';
 import { cn } from '@/lib/utils';
+import { useI18n, type TranslationKey } from '@/lib/i18n';
 
 interface VerifyRecord {
   count: number;
@@ -20,16 +21,20 @@ function readVerify(id: string): VerifyRecord | null {
   }
 }
 
-function formatAgo(iso: string): string {
+function formatAgo(
+  iso: string,
+  t: (key: TranslationKey, tokens?: Record<string, string | number>) => string,
+): string {
   const diffMin = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 1) return t('time.justNow');
+  if (diffMin < 60) return t('time.minutesAgo', { count: diffMin });
   const hrs = Math.round(diffMin / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.round(hrs / 24)}d ago`;
+  if (hrs < 24) return t('time.hoursAgo', { count: hrs });
+  return t('time.daysAgo', { count: Math.round(hrs / 24) });
 }
 
 export function VerifyButton({ resourceId }: { resourceId: string }) {
+  const { t } = useI18n();
   const [record, setRecord] = useState<VerifyRecord | null>(() => readVerify(resourceId));
   const [justConfirmed, setJustConfirmed] = useState(false);
   const earn = useBadgeStore((s) => s.earn);
@@ -63,8 +68,8 @@ export function VerifyButton({ resourceId }: { resourceId: string }) {
     >
       <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
       {record
-        ? `${record.count} ${record.count === 1 ? 'person' : 'people'} confirmed · ${formatAgo(record.lastAt)}`
-        : 'Confirm open today'}
+        ? `${t('verify.count', { count: record.count })} · ${formatAgo(record.lastAt, t)}`
+        : t('verify.confirmOpen')}
     </button>
   );
 }

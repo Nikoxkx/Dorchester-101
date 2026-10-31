@@ -35,8 +35,9 @@ function buildId(): string {
  * Security headers. Applied for the web build; the Electron window loads
  * localhost and ignores them, which is why none of them assume HTTPS.
  *
- * No third-party script origins are whitelisted: the app ships its own fonts and
- * has no analytics, so the strictest CSP the UI tolerates is the honest default.
+ * No third-party script origins are whitelisted. The app ships its own fonts.
+ * Production Vercel scripts served from the same origin may run after consent;
+ * third-party debug scripts are blocked. Verify the deployed policy and SDK.
  */
 /**
  * The preview environment (and any tunnel used to review a dev build) serves the
@@ -77,8 +78,8 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://api.qrserver.com",
       "font-src 'self'",
-      // Allow same-origin API fetches + Vercel vitals beacon + Open-Meteo for NowBar
-      "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com https://api.open-meteo.com https://air-quality-api.open-meteo.com",
+      // The browser fallback requests public NWS data only when our API fails.
+      "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com https://api.weather.gov https://api.open-meteo.com https://air-quality-api.open-meteo.com",
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
@@ -88,6 +89,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The development badge otherwise covers the bottom-left privacy links on small screens.
+  devIndicators: false,
   allowedDevOrigins,
   poweredByHeader: false,
   compress: true,

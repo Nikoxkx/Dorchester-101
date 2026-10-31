@@ -25,23 +25,25 @@ export interface LanguageMeta {
   nativeName: string;
   /** Short code chip (ISO 639 where it reads well). */
   code2: string;
-  /** BCP-47 tag handed to Intl and to <html lang>. */
+  /** Locale for Intl number and time formatting; may use a related-language fallback. */
   intlLocale: string;
+  /** Actual language of the content, for HTML and assistive technology. */
+  contentLocale: string;
   dir: 'ltr' | 'rtl';
   /** Google Fonts subset we must load for this script to render properly. */
   fontSet: 'latin' | 'cjk' | 'arabic' | 'latin-ext';
 }
 
 export const LANGUAGES: LanguageMeta[] = [
-  { code: 'en',  name: 'English',            nativeName: 'English',         code2: 'EN', intlLocale: 'en-US',     dir: 'ltr', fontSet: 'latin' },
-  { code: 'es',  name: 'Spanish',            nativeName: 'Español',         code2: 'ES', intlLocale: 'es-MX',     dir: 'ltr', fontSet: 'latin' },
-  { code: 'ht',  name: 'Haitian Creole',     nativeName: 'Kreyòl Ayisyen',  code2: 'HT', intlLocale: 'fr-HT',     dir: 'ltr', fontSet: 'latin-ext' },
-  { code: 'pt',  name: 'Portuguese',         nativeName: 'Português',       code2: 'PT', intlLocale: 'pt-BR',     dir: 'ltr', fontSet: 'latin-ext' },
-  { code: 'vi',  name: 'Vietnamese',         nativeName: 'Tiếng Việt',      code2: 'VI', intlLocale: 'vi-VN',     dir: 'ltr', fontSet: 'latin-ext' },
-  { code: 'kea', name: 'Cape Verdean Creole', nativeName: 'Kriolu',          code2: 'KV', intlLocale: 'pt-CV',    dir: 'ltr', fontSet: 'latin-ext' },
-  { code: 'so',  name: 'Somali',             nativeName: 'Afgan Soomaali',  code2: 'SO', intlLocale: 'so-SO',     dir: 'ltr', fontSet: 'latin' },
-  { code: 'zh',  name: 'Mandarin Chinese',   nativeName: '中文',             code2: '中',  intlLocale: 'zh-Hans-CN', dir: 'ltr', fontSet: 'cjk' },
-  { code: 'ar',  name: 'Arabic',             nativeName: 'العربية',          code2: 'ع',  intlLocale: 'ar',       dir: 'rtl', fontSet: 'arabic' },
+  { code: 'en',  name: 'English',            nativeName: 'English',         code2: 'EN', intlLocale: 'en-US', contentLocale: 'en',     dir: 'ltr', fontSet: 'latin' },
+  { code: 'es',  name: 'Spanish',            nativeName: 'Español',         code2: 'ES', intlLocale: 'es-MX', contentLocale: 'es',     dir: 'ltr', fontSet: 'latin' },
+  { code: 'ht',  name: 'Haitian Creole',     nativeName: 'Kreyòl Ayisyen',  code2: 'HT', intlLocale: 'fr-HT', contentLocale: 'ht',     dir: 'ltr', fontSet: 'latin-ext' },
+  { code: 'pt',  name: 'Portuguese',         nativeName: 'Português',       code2: 'PT', intlLocale: 'pt-BR', contentLocale: 'pt',     dir: 'ltr', fontSet: 'latin-ext' },
+  { code: 'vi',  name: 'Vietnamese',         nativeName: 'Tiếng Việt',      code2: 'VI', intlLocale: 'vi-VN', contentLocale: 'vi',     dir: 'ltr', fontSet: 'latin-ext' },
+  { code: 'kea', name: 'Cape Verdean Creole', nativeName: 'Kriolu',          code2: 'KV', intlLocale: 'pt-CV', contentLocale: 'kea',    dir: 'ltr', fontSet: 'latin-ext' },
+  { code: 'so',  name: 'Somali',             nativeName: 'Afgan Soomaali',  code2: 'SO', intlLocale: 'so-SO', contentLocale: 'so',     dir: 'ltr', fontSet: 'latin' },
+  { code: 'zh',  name: 'Mandarin Chinese',   nativeName: '中文',             code2: '中',  intlLocale: 'zh-Hans-CN', contentLocale: 'zh-Hans', dir: 'ltr', fontSet: 'cjk' },
+  { code: 'ar',  name: 'Arabic',             nativeName: 'العربية',          code2: 'ع',  intlLocale: 'ar', contentLocale: 'ar',       dir: 'rtl', fontSet: 'arabic' },
 ];
 
 export const LANGUAGE_MAP = new Map(LANGUAGES.map((l) => [l.code, l]));

@@ -28,7 +28,7 @@ function formatMb(bytes: number | null): string | null {
 }
 
 export function DownloadAppCard({ variant = 'full', className }: { variant?: 'hero' | 'full'; className?: string }) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const [info, setInfo] = useState<DownloadInfo | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   // Inside the desktop app there is nothing to download — the resident already
@@ -162,7 +162,7 @@ export function DownloadAppCard({ variant = 'full', className }: { variant?: 'he
           </div>
           <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-text-muted)]">
             <span>
-              {info.name} · {new Date(info.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              {info.name} · {format.date(info.publishedAt, 'medium')}
             </span>
             <span aria-hidden="true">·</span>
             <span>{t('download.app.note')}</span>
@@ -173,7 +173,7 @@ export function DownloadAppCard({ variant = 'full', className }: { variant?: 'he
           </p>
           {info.fallback && (
             <p role="status" className="mt-1.5 text-[11px] leading-snug text-[var(--color-text-secondary)]">
-              GitHub could not be reached from this server, so the buttons point at the release matching the current version ({info.tag}). Once a newer release is published the site picks it up automatically.
+              {t('download.app.fallback', { tag: info.tag })}
             </p>
           )}
         </>

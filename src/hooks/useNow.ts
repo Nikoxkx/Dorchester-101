@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 /**
  * One ticking clock for every "right now" surface: open/closed badges, the
@@ -9,10 +9,10 @@ import { useEffect, useState } from 'react';
  * a place that closed at 8 PM while you were reading its page kept saying
  * "Open now". Components that consume this hook re-decide on the real clock.
  *
- * The first render returns the mount instant (no SSR mismatch: client-only
- * consumers render after hydration, and server renders use the same value
- * the initializer captured). Ticks pause while the tab is hidden via the
- * browser's own timer throttling.
+ * The first render uses the current clock. It is suitable for content that
+ * appears only after a client-side fetch. Prerendered content must use
+ * `useHydratedNow` instead, because its build-time clock is not the visitor's
+ * clock. Ticks pause while the tab is hidden via the browser's timer throttling.
  */
 export function useNow(intervalMs = 30_000): number {
   const [now, setNow] = useState(() => Date.now());
@@ -26,4 +26,20 @@ export function useNow(intervalMs = 30_000): number {
     };
   }, [intervalMs]);
   return now;
+}
+
+const subscribeHydration = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
+/**
+ * A clock for prerendered pages. Until hydration there is no trustworthy
+ * current time, so callers should omit live claims (open now, age, greeting).
+ * The first client snapshot agrees with the static HTML, then switches to the
+ * visitor's ticking clock immediately after hydration.
+ */
+export function useHydratedNow(intervalMs = 30_000): number | null {
+  const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
+  const now = useNow(intervalMs);
+  return hydrated ? now : null;
 }

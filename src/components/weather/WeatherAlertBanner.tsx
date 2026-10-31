@@ -18,7 +18,7 @@ import { useI18n } from '@/i18n/hook';
  * links to the full text and instructions on /weather.
  */
 export function WeatherAlertBanner() {
-  const { t, format } = useI18n();
+  const { t, lang, format } = useI18n();
   const { data } = useWeather();
 
   if (!data || data.alerts.length === 0) return null;
@@ -38,12 +38,13 @@ export function WeatherAlertBanner() {
         <TriangleAlert className={`mt-0.5 h-5 w-5 shrink-0 ${urgent ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-extrabold leading-snug">
-            {top.event}
+            <span lang="en" dir="auto">{top.event}</span>
             {(top.ends ?? top.expires) ? ` · ${t('weather.alertEnds', { time: format.time((top.ends ?? top.expires) as string) })}` : ''}
           </p>
-          {top.headline && <p className={`text-sm leading-snug ${urgent ? 'text-white/90' : 'text-[var(--color-text-secondary)]'}`}>{top.headline}</p>}
+          {top.headline && <p lang="en" dir="auto" className={`text-sm leading-snug ${urgent ? 'text-white/90' : 'text-[var(--color-text-secondary)]'}`}>{top.headline}</p>}
+          {lang !== 'en' && <p className={`text-xs ${urgent ? 'text-white/80' : 'text-[var(--color-text-muted)]'}`}>{t('weather.alertEnglish')}</p>}
           {rest.length > 0 && (
-            <p className={`text-xs ${urgent ? 'text-white/80' : 'text-[var(--color-text-secondary)]'}`}>{rest.map((a) => a.event).join(' · ')}</p>
+            <p lang="en" dir="auto" className={`text-xs ${urgent ? 'text-white/80' : 'text-[var(--color-text-secondary)]'}`}>{rest.map((a) => a.event).join(' · ')}</p>
           )}
         </div>
         <Link

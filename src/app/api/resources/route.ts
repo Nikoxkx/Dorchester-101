@@ -3,13 +3,14 @@ import { z } from 'zod';
 import {
   RESOURCES,
   findResource,
+  isResourceMappable,
   lastReviewedOn,
   reviewBacklog,
   verificationAge,
   verificationLevel,
   type ResourceRecord,
 } from '@/data/resources';
-import { BOSTON_TZ, isOpenNow, statusFor, windowsForDay } from '@/lib/hours';
+import { BOSTON_TZ, isOpenNow, statusFor, windowsForDay, zonedParts } from '@/lib/hours';
 import { globalCache, CACHE_TTL } from '@/lib/cache';
 import { ApiError } from '@/lib/errors';
 
@@ -43,7 +44,7 @@ const query = z.object({
 
 function serialize(record: ResourceRecord, now: Date) {
   const status = record.hours ? statusFor(record.hours, now, BOSTON_TZ) : null;
-  const dayIndex = (now.getDay() + 6) % 7;
+  const dayIndex = zonedParts(now, BOSTON_TZ).weekday;
   return {
     id: record.id,
     name: record.name,
@@ -51,18 +52,18 @@ function serialize(record: ResourceRecord, now: Date) {
     operator: record.operator ?? null,
     neighborhood: record.neighborhood,
     address: record.address,
-    location: { lat: record.lat, lng: record.lng },
+    location: isResourceMappable(record) ? { lat: record.lat, lng: record.lng } : null,
     phone: record.phone ?? null,
     tty: record.tty ?? null,
     email: record.email ?? null,
     website: record.website ?? null,
     services: record.services,
     languages: record.languages ?? [],
-    acceptsEbt: record.acceptsEbt ?? false,
-    requiresId: record.requiresId ?? false,
+    acceptsEbt: record.acceptsEbt ?? null,
+    requiresId: record.requiresId ?? null,
     eligibility: record.eligibility ?? null,
     transit: record.transit ?? null,
-    accessibility: record.accessibility ?? { stepFree: false },
+    accessibility: isResourceMappable(record) ? record.accessibility ?? null : null,
     hours: {
       today: windowsForDay(record.hours ?? [], dayIndex),
       week: record.hours ?? null,
@@ -99,7 +100,7 @@ export async function GET(request: Request) {
   const hit = globalCache.get(cacheKey);
   if (hit) {
     return NextResponse.json(hit, {
-      headers: { 'cache-control': 'public, s-maxage=1800, stale-while-revalidate=3600' },
+      headers: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=60' },
     });
   }
 
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
   let records = id ? [findResource(id)].filter(Boolean) as ResourceRecord[] : RESOURCES;
 
   if (category && category !== 'all') records = records.filter((record) => record.category === category);
-  if (stepFree) records = records.filter((record) => record.accessibility?.stepFree === true);
+  if (stepFree) records = records.filter((record) => isResourceMappable(record) && record.accessibility?.stepFree === true);
   if (open) records = records.filter((record) => (record.hours ? isOpenNow(record.hours, now, BOSTON_TZ) : false));
   if (staleOnly) records = records.filter((record) => verificationAge(record, now) > staleDays);
   if (q) {
@@ -132,12 +133,12 @@ export async function GET(request: Request) {
     updatedAt: now.toISOString(),
     review: { lastReviewedOn: lastReviewedOn(), ...reviewBacklog(now), staleAfterDays: staleDays },
     timezone: BOSTON_TZ,
-    note: 'Open/closed values are computed in America/New_York from each record’s own hours. Nothing here is estimated.',
+    note: 'Open/closed values are computed in America/New_York from recorded schedules; providers may change their hours. See updatedAt for when this response was calculated.',
   };
 
   globalCache.set(cacheKey, payload, CACHE_TTL.RESOURCES);
 
   return NextResponse.json(payload, {
-    headers: { 'cache-control': 'public, s-maxage=1800, stale-while-revalidate=3600' },
+    headers: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=60' },
   });
 }

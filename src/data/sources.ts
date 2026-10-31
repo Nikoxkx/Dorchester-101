@@ -1,3 +1,5 @@
+import type { TranslationKey } from '@/i18n/en';
+
 /**
  * Registry of every outside source the site cites, so a citation is a
  * lookup rather than a string typed into a page. Each entry carries the
@@ -211,6 +213,22 @@ const SOURCE_TABLE = {
 
 export type SourceId = keyof typeof SOURCE_TABLE;
 export const SOURCES: Record<SourceId, SourceInfo> = SOURCE_TABLE;
+
+/** Translation keys for the explanatory parts of cadence and licence metadata. */
+export const SOURCE_CADENCE_KEYS: Record<SourceId, TranslationKey | undefined> = {
+  nws: 'sources.cadence.nws', openmeteo: 'sources.cadence.openmeteo',
+  census: 'sources.cadence.census', hud: 'sources.cadence.hud', mbta: 'sources.cadence.mbta',
+  bha: 'sources.cadence.bha', bpda: 'sources.cadence.bpda', bostongov: 'sources.cadence.daily',
+  gbfb: 'sources.cadence.gbfb', dta: 'sources.cadence.dta', masslegal: 'sources.cadence.masslegal',
+  osm: 'sources.cadence.osm', esri: 'sources.cadence.esri', wikimedia: undefined,
+  dotnews: 'sources.cadence.dotnews', wbur: 'sources.cadence.daily', globe: 'sources.cadence.daily',
+  massgov: 'sources.cadence.massgov', dor101: 'sources.cadence.dor101',
+};
+export const SOURCE_LICENCE_KEYS: Partial<Record<SourceId, TranslationKey>> = {
+  nws: 'sources.licence.federal', census: 'sources.licence.federal', hud: 'sources.licence.public',
+  mbta: 'sources.licence.mbta', wikimedia: 'sources.licence.wikimedia', dor101: 'sources.licence.dor101',
+};
+// CC BY 4.0 and ODbL are licence names, not prose to translate.
 
 /** Map a news feed id from `feeds.ts` to a source badge. */
 export const FEED_SOURCE: Record<string, SourceId> = {

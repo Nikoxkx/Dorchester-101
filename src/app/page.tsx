@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +9,7 @@ import { MapPreview } from '@/components/map/DorchesterMapLoader';
 import { useI18n } from '@/i18n/hook';
 import { useAppStore, type HomeSectionId } from '@/stores/appStore';
 import { useLivePolling } from '@/hooks/useLivePolling';
+import { useHydratedNow } from '@/hooks/useNow';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { StatCard } from '@/components/dashboard/StatCard';
@@ -20,14 +21,17 @@ import { BadgeWall } from '@/components/gamification/BadgeWall';
 import { FieldNotes } from '@/components/pwa/FieldNotes';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
+import { PhotoCredit } from '@/components/sources/PhotoCredit';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
 import { RESOURCES, lastReviewedOn, reviewBacklog, verificationAge } from '@/data/resources';
 import { TRANSIT_LINES } from '@/data/transit';
+import { referenceLineName } from '@/i18n/transitReference';
 import { BOSTON_TZ, isOpenNow } from '@/lib/hours';
 import { useBadgeStore } from '@/stores/badgeStore';
 import type { TranslationKey } from '@/i18n/en';
+import { newsLanguageName } from '@/i18n/newsContent';
 
 /**
  * The landing screen.
@@ -49,6 +53,8 @@ interface NewsItem {
   link: string;
   publishedAt: string;
   category: string;
+  language: string;
+  translation?: { originalTitle: string; originalSummary: string; originalLanguage: string };
 }
 
 /** The slice of `/api/market-data` this page reads; see `src/app/api/market-data/route.ts`. */
@@ -73,7 +79,10 @@ interface MarketResponse {
 }
 
 export default function DashboardPage() {
-  const { t, format, meta } = useI18n();
+  const { t, format, meta, lang } = useI18n();
+  const nowMs = useHydratedNow(60_000);
+  const latestLanguage = useRef(lang);
+  useEffect(() => { latestLanguage.current = lang; }, [lang]);
   const setLastUpdated = useAppStore((s) => s.setLastUpdated);
   const dataEpoch = useAppStore((s) => s.dataEpoch);
   const earnBadge = useBadgeStore((s) => s.earn);
@@ -98,25 +107,30 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const [newsRes, marketRes] = await Promise.allSettled([
-        fetch('/api/news?limit=20&sinceHours=168').then((r) => (r.ok ? r.json() : null)),
+        fetch(`/api/news?limit=20&sinceHours=168&lang=${encodeURIComponent(lang)}`).then((r) => (r.ok ? r.json() : null)),
         fetch('/api/market-data').then((r) => (r.ok ? r.json() : null)),
       ]);
+      if (latestLanguage.current !== lang) return;
       if (newsRes.status === 'fulfilled' && newsRes.value) {
         setNews((newsRes.value.articles ?? []).slice(0, 3) as NewsItem[]);
         setNewsSnapshot(newsRes.value.snapshot ?? null);
       }
       if (marketRes.status === 'fulfilled' && marketRes.value) setMarket(marketRes.value as MarketResponse);
-      const stamp = new Date().toISOString();
-      setLastRefresh(stamp);
-      setLastUpdated(stamp);
+      // A failed request is not a data update. Keep the previous timestamp
+      // when neither panel returned a payload.
+      if ((newsRes.status === 'fulfilled' && newsRes.value) || (marketRes.status === 'fulfilled' && marketRes.value)) {
+        const stamp = new Date().toISOString();
+        setLastRefresh(stamp);
+        setLastUpdated(stamp);
+      }
     } finally {
-      setLoading(false);
+      if (latestLanguage.current === lang) setLoading(false);
     }
-  }, [setLastUpdated]);
+  }, [setLastUpdated, lang]);
 
   // Mount, auto-refresh and Settings' "refresh now" all run through one rule, so
   // the dashboard cannot hammer the feeds while it sits in a background tab.
-  useLivePolling(load, { minMs: 5 * 60_000 });
+  useLivePolling(load, { minMs: 5 * 60_000, requestKey: lang });
 
   useEffect(() => {
     earnBadge('first-visit');
@@ -134,13 +148,13 @@ export default function DashboardPage() {
   }, [load]);
   void dataEpoch;
 
-  const now = new Date();
-  const greeting = t(`dashboard.greeting.${getTimeOfDayKey(now.getHours())}` as TranslationKey);
-  const foodOpenThisWeek = RESOURCES.filter(
+  const now = nowMs === null ? null : new Date(nowMs);
+  const greeting = now ? t(`dashboard.greeting.${getTimeOfDayKey(now.getHours())}` as TranslationKey) : null;
+  const foodOpenNow = now ? RESOURCES.filter(
     (resource) => resource.category === 'food' && resource.hours && isOpenNow(resource.hours, now, BOSTON_TZ)
-  ).length;
+  ).length : 0;
   const foodListed = RESOURCES.filter((resource) => resource.category === 'food').length;
-  const backlog = reviewBacklog(now);
+  const backlog = now ? reviewBacklog(now) : null;
   const recentlyChecked = [...RESOURCES]
     .sort((a, b) => new Date(b.verification.checkedOn).getTime() - new Date(a.verification.checkedOn).getTime())
     .slice(0, 3);
@@ -161,34 +175,37 @@ export default function DashboardPage() {
         : null,
       t('glance.rent.geography'),
     ].filter((x): x is string => Boolean(x)),
-    link: { href: '/market', label: t('nav.market') },
+    link: { href: '/market-trends', label: t('nav.market') },
   };
   const foodByKind = RESOURCES.filter((r) => r.category === 'food');
-  const foodOpenToday = foodByKind.filter((r) => r.hours && isOpenNow(r.hours, now, BOSTON_TZ));
+  const foodOpenNowRows = now ? foodByKind.filter((r) => r.hours && isOpenNow(r.hours, now, BOSTON_TZ)) : [];
   const foodDetails = {
     summary: t('glance.food.summary'),
     points: [
-      t('glance.food.listed', { count: String(foodListed) }),
-      t('glance.food.openNow', { count: String(foodOpenToday.length) }),
+      t('glance.food.listed', { count: format.number(foodListed) }),
+      now ? t('glance.food.openNow', { count: format.number(foodOpenNowRows.length) }) : null,
       t('glance.food.noId'),
       t('glance.food.snap'),
-    ],
+    ].filter((point): point is string => Boolean(point)),
     link: { href: '/food', label: t('nav.food') },
   };
   const verifyDetails = {
     summary: t('glance.verify.summary'),
     points: [
-      t('glance.verify.total', { count: String(RESOURCES.length) }),
-      t('glance.verify.fresh', { count: String(RESOURCES.length - backlog.needsReview) }),
-      t('glance.verify.backlog', { count: String(backlog.needsReview) }),
+      t('glance.verify.total', { count: format.number(RESOURCES.length) }),
+      backlog ? t('glance.verify.fresh', { count: format.number(RESOURCES.length - backlog.needsReview) }) : null,
+      backlog ? t('glance.verify.backlog', { count: format.number(backlog.needsReview) }) : null,
       t('glance.verify.how'),
-    ],
+    ].filter((point): point is string => Boolean(point)),
     link: { href: '/about', label: t('nav.about') },
   };
   const transitDetails = {
     summary: t('glance.transit.summary'),
     points: [
-      ...TRANSIT_LINES.map((line) => `${line.name} · ${t('map.stopCount', { count: String(line.dorchesterStops.length) })}`),
+      ...TRANSIT_LINES.map((line) => {
+        const name = referenceLineName(line, lang);
+        return `${name.value} · ${t('map.stopCount', { count: format.number(line.dorchesterStops.length) })}${name.fellBack ? ` — ${t('lang.someEnglish')}` : ''}`;
+      }),
       t('glance.transit.live'),
     ],
     link: { href: '/map', label: t('nav.map') },
@@ -203,7 +220,7 @@ export default function DashboardPage() {
         <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
           <Image
             src="/img/dorchester-bay-sunset.jpg"
-            alt="Dorchester Bay and the Neponset River mouth at sunset"
+            alt={t('home.heroAlt')}
             fill
             priority
             sizes="100vw"
@@ -235,7 +252,7 @@ export default function DashboardPage() {
                   the latest GitHub release. */}
               <DownloadAppCard variant="hero" />
             </div>
-            <p className="text-[10px] text-white/60">{t('about.photoCredits')}: Sswonk · CC BY-SA 3.0</p>
+            <p><PhotoCredit className="text-white/90" commonsFile="Dorchester_Bay_Boston_Harbor_sunset.jpg" author="Sswonk" license="3.0" /></p>
           </div>
         </section>
 
@@ -247,10 +264,10 @@ export default function DashboardPage() {
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-heading text-xl font-extrabold leading-tight sm:text-2xl">
-              {greeting}, {t('dashboard.welcome')}
+              {greeting && <>{greeting}, </>}{t('dashboard.welcome')}
             </h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              {format.date(now, 'long')} · {t('dashboard.tagline')}
+              {now && <>{format.date(now, 'long')} · </>}{t('dashboard.tagline')}
             </p>
           </div>
           <DataRefreshIndicator lastUpdated={lastRefresh} isRefreshing={loading} />
@@ -285,17 +302,18 @@ export default function DashboardPage() {
           <h2 id="glance" className="mb-3 font-heading text-lg font-bold sm:text-xl">
             {t('dashboard.glance')}
           </h2>
-          <motion.div variants={cv} initial="hidden" animate="visible" className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <motion.div variants={cv} initial="hidden" animate="visible" className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={<DollarSign className="h-5 w-5" aria-hidden="true" />}
               label={t('stats.medianRent')}
               value={medianRent ?? 0}
               format="currency"
+              hint={t('glance.rent.geography')}
               unavailable={medianRent === null}
               source={
                 market?.acs?.vintage && market.acs.vintage !== 'unavailable'
-                  ? `Census ${market.acs.vintage}, B25064${market.acs.snapshot ? ' (verified capture)' : ''}`
-                  : 'Census ACS 5-year, B25064'
+                  ? `Census · ${t('market.vintage', { years: market.acs.vintage })}, B25064${market.acs.snapshot ? ` (${t('market.verifiedCapture')})` : ''}`
+                  : 'Census · ACS · B25064'
               }
               sourceDate={market?.acs?.status === 'unavailable' ? undefined : market?.acs?.retrievedAt}
               accent="var(--color-accent-primary)"
@@ -304,9 +322,10 @@ export default function DashboardPage() {
             <StatCard
               icon={<Clock className="h-5 w-5" aria-hidden="true" />}
               label={t('stats.foodSites')}
-              value={foodOpenThisWeek}
-              hint={t('resources.count', { count: String(foodListed) })}
-              source="DOR101 directory"
+              value={foodOpenNow}
+              unavailable={!now}
+              hint={t('resources.count', { count: format.number(foodListed) })}
+              source="DOR101"
               sourceDate={lastReviewedOn()}
               accent="var(--color-accent-green)"
               details={foodDetails}
@@ -314,9 +333,10 @@ export default function DashboardPage() {
             <StatCard
               icon={<BadgeCheck className="h-5 w-5" aria-hidden="true" />}
               label={t('about.methodology')}
-              value={RESOURCES.length - backlog.needsReview}
-              hint={t('notifications.reviewBacklog', { count: String(backlog.needsReview) })}
-              source="DOR101 verification log"
+              value={backlog ? RESOURCES.length - backlog.needsReview : 0}
+              unavailable={!backlog}
+              hint={backlog ? t('glance.verify.backlog', { count: format.number(backlog.needsReview) }) : t('common.loading')}
+              source="DOR101"
               sourceDate={lastReviewedOn()}
               accent="var(--color-accent-secondary)"
               details={verifyDetails}
@@ -325,7 +345,7 @@ export default function DashboardPage() {
               icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
               label={t('map.transitRoutes')}
               value={TRANSIT_LINES.length}
-              hint={t('map.stopCount', { count: String(TRANSIT_LINES.reduce((total, line) => total + line.dorchesterStops.length, 0)) })}
+              hint={t('map.stopCount', { count: format.number(TRANSIT_LINES.reduce((total, line) => total + line.dorchesterStops.length, 0)) })}
               source="MBTA V3"
               accent="var(--mbta-red)"
               details={transitDetails}
@@ -358,8 +378,8 @@ export default function DashboardPage() {
 {show('news') && (
           <div style={slot('news')}>
         {/* ── News + verification log ─────────────────────── */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <section className="lg:col-span-2" aria-label={t('dashboard.latestNews')}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <section className="min-w-0 lg:col-span-2" aria-label={t('dashboard.latestNews')}>
             <Card className="h-full">
               <CardHeader>
                 <CardTitle>{t('dashboard.latestNews')}</CardTitle>
@@ -373,7 +393,7 @@ export default function DashboardPage() {
               {newsSnapshot && (
                 <p role="status" className="mx-5 mb-1 flex items-start gap-1.5 text-xs text-[var(--color-text-secondary)]">
                   <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent-amber)]" aria-hidden="true" />
-                  {newsSnapshot.note}
+                  {t('news.snapshotNotice', { date: format.date(newsSnapshot.asOf, 'medium') })}
                 </p>
               )}
               <CardContent>
@@ -398,10 +418,19 @@ export default function DashboardPage() {
                           className="flex items-start gap-3 rounded-lg p-2.5 transition-colors hover:bg-[var(--color-bg-tertiary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="block font-heading text-sm font-semibold leading-snug">{article.title}</span>
+                            <span lang={article.language} dir="auto" className="block font-heading text-sm font-semibold leading-snug">{article.title}</span>
                             <span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">
                               {article.source} · {format.relative(article.publishedAt)}
                             </span>
+                            {article.translation ? (
+                              <span className="block text-xs text-[var(--color-text-muted)]">{t('news.machineNotice')}</span>
+                            ) : article.language !== lang ? (
+                              <span className="block text-xs text-[var(--color-text-muted)]">
+                                {newsLanguageName(article.language, t)
+                                  ? t('news.originalLanguage', { language: newsLanguageName(article.language, t)! })
+                                  : t('news.originalUnknown')}
+                              </span>
+                            ) : null}
                           </span>
                           <Badge variant="blue">{t(`news.category.${article.category}` as TranslationKey)}</Badge>
                         </a>
@@ -413,7 +442,7 @@ export default function DashboardPage() {
             </Card>
           </section>
 
-          <section aria-label={t('dashboard.spotlight')}>
+          <section className="min-w-0" aria-label={t('dashboard.spotlight')}>
             <Card className="h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -434,7 +463,7 @@ export default function DashboardPage() {
                           <span className="block truncate font-heading text-sm font-semibold">{resource.name}</span>
                           <span className="mt-0.5 block text-[11px] text-[var(--color-text-muted)]">
                             {t('resources.checkedOn', { date: format.date(resource.verification.checkedOn, 'medium') })}
-                            {verificationAge(resource, now) > 0 ? ` · ${format.number(verificationAge(resource, now))} d` : ''}
+                            {now && verificationAge(resource, now) > 0 ? ` · ${t('time.daysAgo', { count: format.number(verificationAge(resource, now)) })}` : ''}
                           </span>
                         </span>
                       </Link>
@@ -490,12 +519,12 @@ export default function DashboardPage() {
 {show('extras') && (
           <div style={slot('extras')}>
         {/* ── Explorer Badges + Offline Field Notes ───────── */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="min-w-0 lg:col-span-2">
             <BadgeWall />
           </div>
           <div>
-            <FieldNotes scope="dashboard" title="Offline Field Notes" />
+            <FieldNotes scope="dashboard" title={t('notes.title')} />
           </div>
         </div>
 
@@ -505,13 +534,13 @@ export default function DashboardPage() {
           <p className="text-sm text-[var(--color-text-secondary)]">{t('dashboard.footer.line1')}</p>
           <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">{t('dashboard.footer.line2')}</p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {t('dashboard.footer.verified')}: {format.date(lastReviewedOn(), 'long')} · {meta.intlLocale}
+            {t('dashboard.footer.verified')}: {format.date(lastReviewedOn(), 'long')} · {meta.contentLocale}
           </p>
         </footer>
 
         <div style={{ order: 901 }}>
         <ProjectNote sources={['dor101', 'census', 'mbta', 'dotnews']} className="mt-10">
-          Every number on this page is computed from a dataset the site ships or from an API that names its own source and date. The directory counts are live from the listing data; the rent figure is the Census Bureau&apos;s; the headlines come from the publishers.
+          {t('note.home')}
         </ProjectNote>
         </div>
       </motion.div>

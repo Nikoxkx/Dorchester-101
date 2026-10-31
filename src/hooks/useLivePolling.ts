@@ -18,13 +18,17 @@ import { useAppStore } from '@/stores/appStore';
  */
 export function useLivePolling(
   refresh: () => void | Promise<void>,
-  options: { minMs?: number } = {}
+  options: { minMs?: number; requestKey?: string } = {}
 ): { intervalMs: number; enabled: boolean } {
   const autoRefresh = useAppStore((s) => s.autoRefresh);
   const minutes = useAppStore((s) => s.refreshIntervalMinutes);
   const epoch = useAppStore((s) => s.dataEpoch);
   const lastRun = useRef(0);
   const inFlight = useRef(false);
+  const pendingKeyChange = useRef(false);
+  const lastRequestKey = useRef(options.requestKey);
+  const latestRefresh = useRef(refresh);
+  const mounted = useRef(true);
   const enabled = autoRefresh;
   const intervalMs = Math.max(options.minMs ?? 20_000, Math.max(1, minutes) * 60_000);
 
@@ -33,19 +37,40 @@ export function useLivePolling(
     // caller whose `refresh` identity churns) must never pile up requests.
     if (inFlight.current) return;
     inFlight.current = true;
+    // `run` is invoked only by effects/timers, never during render.
+    // eslint-disable-next-line react-hooks/purity
     lastRun.current = Date.now();
-    void Promise.resolve(refresh()).finally(() => {
+    void Promise.resolve(latestRefresh.current()).finally(() => {
       inFlight.current = false;
+      if (pendingKeyChange.current && mounted.current) {
+        pendingKeyChange.current = false;
+        run();
+      }
     });
   };
+
+  useEffect(() => { latestRefresh.current = refresh; }, [refresh]);
 
   // Mount, "Refresh now" in Settings (which bumps the epoch) and any change to
   // the refresh function itself — a new filter, a new language — all land in this
   // one effect, so a panel cannot fetch twice for the same reason.
   useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; pendingKeyChange.current = false; };
+  }, []);
+
+  useEffect(() => {
+    const keyChanged = lastRequestKey.current !== options.requestKey;
+    lastRequestKey.current = options.requestKey;
+    if (keyChanged && inFlight.current) {
+      // A language/filter change must run after the current request finishes,
+      // even when automatic polling is off. Coalesce rapid changes to the latest.
+      pendingKeyChange.current = true;
+      return;
+    }
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [epoch, refresh]);
+  }, [epoch, refresh, options.requestKey]);
 
   useEffect(() => {
     if (!enabled) return;

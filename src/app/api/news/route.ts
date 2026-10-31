@@ -4,8 +4,11 @@ import { z } from 'zod';
 import { globalCache, CACHE_TTL } from '@/lib/cache';
 import { categorize, DEFAULT_NEWS_FEED_IDS, NEWS_FEEDS, type NewsCategorySlug } from '@/data/feeds';
 import { NEWS_SNAPSHOT, NEWS_SNAPSHOT_AS_OF } from '@/data/news-snapshot';
+import { translateNewsArticles } from '@/lib/newsTranslation';
+import { fetchPublicFeed } from '@/lib/publicFeed';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 /**
  * News, from the publishers' own feeds.
@@ -32,6 +35,8 @@ const parser = new Parser({
 });
 
 const query = z.object({
+  /** Explicit query parameter ensures shared caches cannot mix languages. */
+  lang: z.enum(['en', 'es', 'ht', 'pt', 'vi', 'zh', 'ar', 'so', 'kea']).default('en'),
   /** comma-separated feed ids; empty means the defaults */
   feeds: z.string().optional(),
   /** extra feed urls added by the visitor in Settings */
@@ -52,6 +57,8 @@ export interface Article {
   ageHours: number;
   category: NewsCategorySlug;
   language: string;
+  /** Present only for a machine-translated publisher excerpt. */
+  translation?: { originalTitle: string; originalSummary: string; originalLanguage: string };
 }
 
 interface FeedResult {
@@ -100,7 +107,11 @@ async function readFeed(feed: { id: string; name: string; url: string; language:
   let status: FeedResult['status'] = 'ok';
   let error: string | undefined;
   try {
-    const parsed = await parser.parseURL(feed.url);
+    // Visitor-provided feeds use a DNS-pinned, size-limited public-network fetch.
+    // The built-in publisher registry remains on rss-parser's normal fetch path.
+    const parsed = feed.id.startsWith('custom-')
+      ? await parser.parseString(await fetchPublicFeed(feed.url))
+      : await parser.parseURL(feed.url);
     for (const item of parsed.items ?? []) {
       const publishedAt = item.isoDate || item.pubDate;
       const when = publishedAt ? new Date(publishedAt) : null;
@@ -109,8 +120,12 @@ async function readFeed(feed: { id: string; name: string; url: string; language:
       const title = (item.title ?? '').trim();
       if (!title) continue;
       const summary = snippet(item as never);
-      const link = item.link ?? '';
-      if (!link) continue;
+      let link: string;
+      try {
+        const destination = new URL(item.link ?? '', feed.url);
+        if (!item.link || !['http:', 'https:'].includes(destination.protocol) || destination.username || destination.password) continue;
+        link = destination.toString();
+      } catch { continue; }
       if (!LOCAL_SOURCE_IDS.has(feed.id) && !isRelevant(title, summary)) continue;
       articles.push({
         id: `a-${Buffer.from(link || title).toString('base64url').slice(0, 24)}`,
@@ -154,7 +169,7 @@ export async function GET(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid feed query', articles: [], feeds: [] }, { status: 400 });
   }
-  const { feeds: feedIds, custom, limit, sinceHours } = parsed.data;
+  const { feeds: feedIds, custom, limit, sinceHours, lang } = parsed.data;
 
   const selected = feedIds
     ? NEWS_FEEDS.filter((f) => feedIds.split(',').map((s) => s.trim()).includes(f.id))
@@ -174,7 +189,7 @@ export async function GET(request: Request) {
           id: `custom-${index}`,
           name: (label ?? safe.hostname).slice(0, 60),
           url: safe.toString(),
-          language: 'en',
+          language: 'und',
           homepage: safe.origin,
         };
       } catch {
@@ -188,8 +203,14 @@ export async function GET(request: Request) {
   if (cached) {
     return NextResponse.json(
       {
-        ...cached,
-        articles: cached.articles.slice(0, limit),
+        articles: await translateNewsArticles(cached.articles.slice(0, limit), lang),
+        feeds: cached.results,
+        okFeeds: cached.results.filter((f) => f.status === 'ok').length,
+        requestedFeeds: cached.results.length,
+        fetchedAt: cached.fetchedAt,
+        lastUpdated: cached.fetchedAt,
+        snapshot: cached.snapshot,
+        relevanceFilter: true,
         cached: true,
         refreshInterval: CACHE_TTL.NEWS,
         nextUpdate: new Date(new Date(cached.fetchedAt).getTime() + CACHE_TTL.NEWS).toISOString(),
@@ -261,7 +282,7 @@ export async function GET(request: Request) {
   }
 
   const payload = {
-    articles: merged.slice(0, limit),
+    articles: await translateNewsArticles(merged.slice(0, limit), lang),
     feeds: feedResults,
     okFeeds: feedResults.filter((f) => f.status === 'ok').length,
     requestedFeeds: feedResults.length,
@@ -271,7 +292,7 @@ export async function GET(request: Request) {
     refreshInterval: CACHE_TTL.NEWS,
     cached: false,
     snapshot: snapshotNote ? { asOf: NEWS_SNAPSHOT_AS_OF, note: snapshotNote } : null,
-    relevanceFilter: 'All stories from the local publishers; others must mention Dorchester or a citywide service.',
+    relevanceFilter: true,
   };
 
   // A snapshot answer is held for one minute only: it exists to keep the page

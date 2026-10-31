@@ -1,0 +1,55 @@
+name: Freshness review
+
+on:
+  schedule:
+    - cron: '23 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    name: Flag records and source links for human review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - name: Build review report
+        run: npx tsx scripts/audit-freshness.ts > freshness-report.md
+      - name: Save report
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness-review
+          path: freshness-report.md
+          retention-days: 30
+      - name: Create or update the review issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const title = 'Automated data freshness review';
+            const body = fs.readFileSync('freshness-report.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 });
+            // An initial queue may be opened by the repository owner before
+            // this workflow reaches the default branch. Do not overwrite an
+            // unrelated public issue that happens to have the same title.
+            const trusted = new Set(['github-actions[bot]', owner.toLowerCase()]);
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title
+              && trusted.has((issue.user?.login ?? '').toLowerCase())
+              && issue.body?.includes('<!-- dor101-freshness-review -->'));
+            if (existing) {
+              await github.rest.issues.update({ owner, repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body });
+            }

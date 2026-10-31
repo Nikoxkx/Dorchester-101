@@ -9,7 +9,12 @@
  * a page full of em-dashes behind a perfectly reasonable-looking API.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useAppStore } from '@/stores/appStore';
+import { LANGUAGES } from '@/i18n/config';
+import { dictionaries } from '@/i18n';
+import { formatCurrency, formatPercent, formatYear } from '@/i18n/formatters';
+import { makeTranslator } from '@/i18n/runtime';
 
 // The site frame needs a Next router (`usePathname`) and a real matchMedia;
 // neither exists in jsdom, and neither has anything to do with whether the
@@ -84,12 +89,144 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  act(() => useAppStore.getState().setLanguage('en'));
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   globalCache.clear();
 });
 
 describe('Market trends page', () => {
+  it('switches the snapshot labels, source status and geography in every language', async () => {
+    await serveRouteToPage();
+    render(<MarketTrendsPage />);
+    await waitFor(() => expect(screen.getByText('Live from Census')).toBeTruthy(), { timeout: 4000 });
+    for (const { code } of LANGUAGES) {
+      act(() => useAppStore.getState().setLanguage(code));
+      expect(screen.getByText(dictionaries[code]['market.rentLabel'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.incomeLabel'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.renterNote'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.liveCensus'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.geographyIntro'])).toBeTruthy();
+      expect(screen.getByRole('tablist', { name: dictionaries[code]['market.metric'] })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: dictionaries[code]['market.rentTab'] })).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.renters30'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.renters40'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.distributionNote'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.trendExplain'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.affordabilityExplain'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.growthExplain'])).toBeTruthy();
+      expect(screen.getByText(dictionaries[code]['market.rentByType'])).toBeTruthy();
+      expect(screen.getByRole('img', { name: dictionaries[code]['market.distributionAria'] })).toBeTruthy();
+      const t = makeTranslator(dictionaries[code], code);
+      expect(screen.getByText(t('market.sourceHud'))).toBeTruthy();
+      expect(screen.getByText(t('market.sourceWage'))).toBeTruthy();
+      expect(screen.getByText(t('market.listingsReason'))).toBeTruthy();
+      expect(screen.getByText(t('market.reportMismatch'))).toBeTruthy();
+      expect(screen.getByRole('link', { name: t('market.aboutLink') }).getAttribute('href')).toBe('/about');
+      for (const key of ['market.portalMetro', 'market.portalNavigator', 'market.portalHome', 'market.portalBha'] as const) {
+        expect(screen.getByRole('link', { name: t(key) })).toBeTruthy();
+      }
+      expect(screen.getByText(t('market.accessSite'), { exact: false })).toBeTruthy();
+      if (code !== 'en') expect(screen.getByRole('note').textContent).toContain(dictionaries[code]['lang.someEnglish']);
+    }
+    act(() => useAppStore.getState().setLanguage('en'));
+  }, 15_000); // One rendered chart is switched through all nine locales.
+
+  it('localizes the income-limit estimates and labels them as estimates', async () => {
+    stubPublishers();
+    const payload = await (await GET()).json();
+    payload.ami.table = { '1-person household': 95000, '2-person household': 108000 };
+    payload.ami.snapshot = true;
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })));
+    render(<MarketTrendsPage />);
+    await waitFor(() => expect(screen.getByText('1-person household')).toBeTruthy());
+    for (const { code } of LANGUAGES) {
+      act(() => useAppStore.getState().setLanguage(code));
+      const t = makeTranslator(dictionaries[code], code);
+      expect(screen.getByText(t('market.householdSize', { count: 1 }))).toBeTruthy();
+      expect(screen.getByText(t('market.householdSize', { count: 2 }))).toBeTruthy();
+      expect(screen.getByText(t('market.amiExplanation'), { exact: false })).toBeTruthy();
+      expect(screen.getByText(t('market.amiSnapshotNote'), { exact: false })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: `${t('housing.amiCalculator')} · ${t('market.incomeLimitsTitle', { year: formatYear(payload.ami.effectiveYear, code) })}` })).toBeTruthy();
+      const estimate = t('market.eightyEstimate', { amount: formatCurrency(76000, code) });
+      expect(Array.from(document.querySelectorAll('p')).some((node) => node.textContent === estimate)).toBe(true);
+    }
+  });
+
+  it('does not claim the income-limit workbook loaded when no values are available', async () => {
+    stubPublishers();
+    const payload = await (await GET()).json();
+    payload.ami.table = {};
+    payload.ami.snapshot = false;
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })));
+    render(<MarketTrendsPage />);
+    await waitFor(() => expect(screen.getByText(dictionaries.en['market.amiUnavailable'])).toBeTruthy());
+    expect(screen.queryByText(dictionaries.en['market.amiLiveNote'], { exact: false })).toBeNull();
+    expect(screen.getByRole('heading', { name: `${dictionaries.en['housing.amiCalculator']} · ${dictionaries.en['market.unavailable']}` })).toBeTruthy();
+    expect(screen.queryByText(/income-limit estimate/)).toBeNull();
+    act(() => useAppStore.getState().setLanguage('ar'));
+    expect(screen.getByText(dictionaries.ar['market.amiUnavailable'])).toBeTruthy();
+  });
+
+  it('labels an unknown portal as English rather than pretending it was translated', async () => {
+    stubPublishers();
+    const payload = await (await GET()).json();
+    payload.listings.officialPortals.push({ label: 'New program portal', url: 'https://example.org' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })));
+    useAppStore.getState().setLanguage('es');
+    render(<MarketTrendsPage />);
+    const link = await screen.findByRole('link', { name: 'New program portal' });
+    expect(link.querySelector('[lang="en"]')?.textContent).toBe('New program portal');
+    expect(screen.getByRole('note').textContent).toContain(dictionaries.es['lang.someEnglish']);
+  });
+
+  it('uses ACS 30%-and-above bins and does not call 40% severe HUD burden', async () => {
+    useAppStore.getState().setLanguage('en');
+    await serveRouteToPage();
+    render(<MarketTrendsPage />);
+    await waitFor(() => expect(screen.getByText('Live from Census')).toBeTruthy(), { timeout: 4000 });
+    expect(screen.getByText('Renters paying 30% or more')).toBeTruthy();
+    expect(screen.getByText(/above 50% severely cost-burdened/)).toBeTruthy();
+    expect(screen.queryByText(/40% and above \(severely burdened\)/)).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: dictionaries.en['market.burdenTab'] }));
+    expect(screen.getByRole('tab', { name: dictionaries.en['market.burdenTab'] }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByText(dictionaries.en['market.trendBurdenExplain'], { exact: false })).toBeTruthy();
+  });
+
+  it('translates the no-chart state when trend data is missing', async () => {
+    stubPublishers();
+    const payload = await (await GET()).json();
+    payload.series.points = [];
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })));
+    useAppStore.getState().setLanguage('es');
+    render(<MarketTrendsPage />);
+    await waitFor(() => expect(screen.getAllByText(dictionaries.es['market.noChart']).length).toBeGreaterThan(0));
+    useAppStore.getState().setLanguage('en');
+  });
+
+  it('describes a negative gap as a surplus over the guideline, not an unpaid rent', async () => {
+    stubPublishers();
+    const payload = await (await GET()).json();
+    payload.derived.affordableRentAtWage = { wageCents: 5000, monthly: 2600 };
+    payload.derived.gapPercent = -22.1;
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 })));
+    useAppStore.getState().setLanguage('es');
+    render(<MarketTrendsPage />);
+    const t = makeTranslator(dictionaries.es, 'es');
+    const expected = t('market.gapSurplus', {
+      rent: formatCurrency(2129, 'es'),
+      percent: formatPercent(0.221, 'es', 1),
+    });
+    await waitFor(() => expect(screen.getByText(/En esta comparación, la cantidad de la pauta/)).toBeTruthy());
+    expect(screen.getByText(/En esta comparación, la cantidad de la pauta/).textContent).toBe(expected);
+    expect(screen.getByText(t('market.budgetMethod'))).toBeTruthy();
+    expect(screen.getByText(/Con el salario mínimo de Massachusetts/).textContent).toBe(t('market.wageGuideline', {
+      wage: formatCurrency(50, 'es', { cents: true }),
+      amount: formatCurrency(2600, 'es'),
+    }));
+    useAppStore.getState().setLanguage('en');
+  });
+
   it('prints the Census figures instead of em-dashes', async () => {
     await serveRouteToPage();
     render(<MarketTrendsPage />);
@@ -107,7 +244,7 @@ describe('Market trends page', () => {
 
     // And the panel says the read was live, not a stand-in.
     expect(screen.getByText('Live from Census')).toBeTruthy();
-    expect(screen.queryByText(/No chart: the Census API did not answer/)).toBeNull();
+    expect(screen.queryByText(dictionaries.en['market.noChart'])).toBeNull();
   });
 
   it('names the vintage and the geography it read', async () => {
@@ -139,7 +276,7 @@ describe('Market trends page', () => {
 
     render(<MarketTrendsPage />);
 
-    await waitFor(() => expect(screen.getByText('Verified capture')).toBeTruthy(), { timeout: 4000 });
+    await waitFor(() => expect(screen.getAllByText('Verified capture').length).toBeGreaterThan(0), { timeout: 4000 });
     // The headline figures are still there, and labelled as a capture.
     expect(screen.getByText('$2,129')).toBeTruthy();
     expect(screen.getAllByText(/verified capture|Verified capture/i).length).toBeGreaterThan(0);

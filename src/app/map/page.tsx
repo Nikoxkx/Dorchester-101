@@ -9,12 +9,12 @@ import { SITE_URL } from '@/lib/site';
  * client island because Leaflet cannot run anywhere else.
  */
 export const metadata = {
-  title: 'Dorchester map: MBTA lines, arrivals and verified services',
+  title: 'Dorchester map: MBTA lines, arrivals and community services',
   description:
-    'Interactive map of Dorchester, Boston: Red Line, Mattapan Line, Fairmount Line and bus routes with live MBTA arrivals, service alerts and every verified community resource pin.',
+    'Interactive map of Dorchester, Boston: Red Line, Mattapan Line, Fairmount Line and bus routes with live MBTA arrivals, service alerts and community resource pins; some listings need further review.',
   alternates: { canonical: '/map' },
   ...socialMetadata({
-    title: 'Dorchester map: MBTA lines, arrivals and verified services',
+    title: 'Dorchester map: MBTA lines, arrivals and community services',
     description: 'Live arrivals, service alerts and community resources on one map.',
     url: `${SITE_URL}/map`,
   }),

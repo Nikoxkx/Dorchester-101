@@ -1,29 +1,25 @@
 /// DOR101 service worker — the app version lives in package.json; the
 /// cache key below is versioned on its own, as the README explains.
 ///
-/// What this is for: a resident with no signal should still be able to open the
-/// page they saved, read the resource list and see the last arrivals snapshot with
-/// its timestamp, and the map should still paint streets. What it is not for:
-/// pretending old data is fresh. Every cached answer keeps its own `date` header,
-/// the pages print the `fetchedAt` they received, and nothing here forces a
-/// visitor's page to reload.
+/// What this is for: previously cached pages, assets and map tiles may remain
+/// available without a signal. Live API responses are never cached here: an
+/// old prediction must not be returned as if it were live. Offline availability
+/// depends on the files already stored, and activation never forces a reload.
 ///
 /// Cache names are versioned constants, not timestamps. A name built from
 /// `Date.now()` creates a brand-new cache on every evaluation and leaves the
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-/// Bumped when the About-page photographs were replaced, so caches holding the
-/// old `/img/...` responses have to go with them. This is a cache version, not
+/// Bumped for the privacy, translation and photograph update so an older
+/// cached shell is not retained after activation. This is a cache version, not
 /// the app version: the app's own version lives in package.json.
-const VERSION = 'v4.12.1';
+const VERSION = 'v4.14.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
-const LIVE_CACHE = `dor101-live-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
 
 const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png',
   '/og.png', '/manifest.json', '/faq', '/food'];
-const LIVE_MAX_ENTRIES = 40;
 const TILE_MAX_ENTRIES = 480;
 
 self.addEventListener('install', (event) => {
@@ -41,7 +37,7 @@ self.addEventListener('activate', (event) => {
       // Only ever delete this app's own caches, and only old versions of them.
       await Promise.all(
         keys
-          .filter((key) => key.startsWith('dor101-') && ![SHELL_CACHE, LIVE_CACHE, TILE_CACHE].includes(key))
+          .filter((key) => key.startsWith('dor101-') && ![SHELL_CACHE, TILE_CACHE].includes(key))
           .map((key) => caches.delete(key))
       );
       await self.clients.claim();
@@ -65,7 +61,6 @@ async function networkFirst(request, cacheName, { fallback } = {}) {
     if (response && response.ok && request.method === 'GET') {
       const cache = await caches.open(cacheName);
       await cache.put(request, response.clone());
-      if (cacheName === LIVE_CACHE) await trim(cacheName, LIVE_MAX_ENTRIES);
     }
     return response;
   } catch (error) {
@@ -109,11 +104,11 @@ self.addEventListener('fetch', (event) => {
     // would pull a ~180 MB executable through the worker and try to file it in
     // the shell cache.
     if (url.pathname.startsWith('/api/download')) return;
-    // Live data: network first, cached snapshot if the network fails.
-    if (url.pathname.startsWith('/api/')) {
-      event.respondWith(networkFirst(request, LIVE_CACHE));
-      return;
-    }
+    // Query strings can contain searches, locations or private feed URLs.
+    // API responses also include time-sensitive predictions and warnings;
+    // returning an old response unchanged would make it appear live. Leave
+    // both to the browser and application rather than storing them here.
+    if (url.pathname.startsWith('/api/') || url.search) return;
     // Page navigations: network first, shell cache, then the offline page.
     if (request.mode === 'navigate') {
       event.respondWith(networkFirst(request, SHELL_CACHE, { fallback: '/offline.html' }));

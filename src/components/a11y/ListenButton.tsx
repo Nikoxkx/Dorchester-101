@@ -4,14 +4,16 @@ import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { useReadAloud } from '@/hooks/useReadAloud';
 import { useBadgeStore } from '@/stores/badgeStore';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export function ListenButton({
   text,
-  label = 'Listen',
+  label,
 }: {
   text: string;
   label?: string;
 }) {
+  const { t } = useTranslation();
   const { supported, speaking, paused, speak, stop, pause, resume } = useReadAloud();
   const earn = useBadgeStore((s) => s.earn);
 
@@ -40,13 +42,13 @@ export function ListenButton({
         )}
       >
         {speaking ? <VolumeX className="h-3 w-3" aria-hidden="true" /> : <Volume2 className="h-3 w-3" aria-hidden="true" />}
-        {speaking ? 'Stop' : label}
+        {speaking ? t('a11y.readAloudStop') : (label ?? t('a11y.listen'))}
       </button>
       {speaking && (
         <button
           type="button"
           onClick={() => (paused ? resume() : pause())}
-          aria-label={paused ? 'Resume reading' : 'Pause reading'}
+          aria-label={paused ? t('a11y.resumeReading') : t('a11y.pauseReading')}
           className="inline-flex items-center rounded-full border border-[var(--color-border)] p-1 text-[var(--color-text-secondary)] hover:border-[var(--color-accent-primary)]"
         >
           {paused ? <Play className="h-3 w-3" aria-hidden="true" /> : <Pause className="h-3 w-3" aria-hidden="true" />}
