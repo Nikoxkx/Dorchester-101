@@ -21,7 +21,7 @@ describe('optional analytics privacy choice', () => {
   it('does not treat a previous informational acknowledgement as consent', () => {
     useAppStore.getState().setConsentSeen(true);
     render(<ConsentNotice />);
-    expect(screen.getByRole('region', { name: dictionaries.en['consent.title'] })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: dictionaries.en['consent.title'] })).toBeTruthy();
     expect(screen.getByRole('link', { name: dictionaries.en['consent.policy'] }).getAttribute('href')).toBe('/privacy');
     expect(screen.getByRole('link', { name: dictionaries.en['consent.settingsLink'] }).getAttribute('href')).toBe('/settings#privacy');
     expect(screen.getByRole('link', { name: dictionaries.en['consent.permissions'] }).getAttribute('href')).toBe('/settings#permissions');

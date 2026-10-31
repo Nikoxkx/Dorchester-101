@@ -43,8 +43,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <Header />
         <OfflineBanner />
         <WeatherAlertBanner />
-        {/* Keep the privacy choice in the page flow: it must not cover controls
-            or force a choice before someone can reach the content. */}
+        {/* Renders as a fixed pop-up over the page, so its place in the tree does
+            not affect layout. Escape or a backdrop click dismisses it for the
+            session without recording a choice. */}
         <ConsentNotice />
         <main id="main" tabIndex={-1} className="focus:outline-none">
           <div className="mx-auto w-full max-w-[86rem] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
