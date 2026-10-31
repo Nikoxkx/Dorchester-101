@@ -43,8 +43,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <Header />
         <OfflineBanner />
         <WeatherAlertBanner />
-        {/* Keep the privacy choice in the page flow: it must not cover controls
-            or force a choice before someone can reach the content. */}
+        {/* Renders as a floating card pinned to the bottom corner, so its place in
+            the tree does not affect layout and the page stays usable underneath.
+            Declining or opening any of its links dismisses it for the session. */}
         <ConsentNotice />
         <main id="main" tabIndex={-1} className="focus:outline-none">
           <div className="mx-auto w-full max-w-[86rem] px-4 py-6 sm:px-6 lg:px-8">{children}</div>

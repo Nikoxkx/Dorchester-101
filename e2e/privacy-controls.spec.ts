@@ -2,7 +2,11 @@ import { expect, test } from '@playwright/test';
 
 const scripts = 'script[src*="vercel-scripts.com"],script[src*="/_vercel/insights"],script[src*="/_vercel/speed-insights"]';
 
-test('the privacy notice fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
+// The suite-wide storage state stores a decline so other specs never see the
+// first-visit card; this file needs a genuinely unanswered first visit.
+test.use({ storageState: { cookies: [], origins: [] } });
+
+test('the pop-up fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.addInitScript(() => {
@@ -10,7 +14,7 @@ test('the privacy notice fits a small Arabic screen and a decline persists', asy
     if (!localStorage.getItem('dor101-settings')) localStorage.setItem('dor101-settings', JSON.stringify({ state: { language: 'ar', consentSeen: true }, version: 6 }));
   });
   await page.goto('/privacy', { waitUntil: 'domcontentloaded' });
-  const notice = page.getByRole('region', { name: 'خيارات خصوصيتك' });
+  const notice = page.getByRole('dialog', { name: 'خيارات خصوصيتك' });
   await expect(notice).toBeVisible({ timeout: 20_000 });
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.locator(scripts)).toHaveCount(0);
@@ -18,10 +22,9 @@ test('the privacy notice fits a small Arabic screen and a decline persists', asy
   expect(rect).not.toBeNull();
   expect(rect!.x).toBeGreaterThanOrEqual(0);
   expect(rect!.x + rect!.width).toBeLessThanOrEqual(321);
-  expect(await notice.evaluate((el) => getComputedStyle(el).position)).not.toBe('fixed');
+  expect(rect!.y).toBeGreaterThanOrEqual(0);
+  expect(rect!.y + rect!.height).toBeLessThanOrEqual(569);
   expect(await notice.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
-  const main = await page.locator('main').boundingBox();
-  expect(rect!.y + rect!.height).toBeLessThanOrEqual(main!.y + 1);
 
   const controls = notice.locator('a, button');
   await expect(controls).toHaveCount(5);
@@ -44,14 +47,22 @@ test('the privacy notice fits a small Arabic screen and a decline persists', asy
   await expect(page.locator(scripts)).toHaveCount(0);
 });
 
-test('the notice does not cover page controls or force an analytics choice', async ({ page }, testInfo) => {
+test('the pop-up leaves the page usable and does not force an analytics choice', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/weather', { waitUntil: 'domcontentloaded' });
-  const notice = page.getByRole('region', { name: 'Your privacy choices' });
+  const notice = page.getByRole('dialog', { name: 'Your privacy choices' });
   await expect(notice).toBeVisible({ timeout: 20_000 });
-  await page.getByRole('button', { name: 'Turn on weather' }).click();
-  await expect(page.getByRole('heading', { name: 'Weather is turned off' })).toHaveCount(0);
+
+  // No scrim: a control at the top of the page still receives the click while
+  // the card sits over the bottom of the viewport.
+  await page.getByRole('button', { name: 'Change language' }).click();
+  const menu = page.getByRole('menu', { name: 'Choose your language' });
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+
+  // Reading the page without answering writes nothing and mounts no SDK.
   await expect(notice).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dor101-privacy-choice') ?? '{"state":{}}').state.choice ?? 'unset')).toBe('unset');
   await expect(page.locator(scripts)).toHaveCount(0);
@@ -62,7 +73,7 @@ test('an explicit analytics choice can be withdrawn in another tab', async ({ pa
     if (!localStorage.getItem('dor101-settings')) localStorage.setItem('dor101-settings', JSON.stringify({ state: { language: 'en' }, version: 6 }));
   });
   await page.goto('/privacy', { waitUntil: 'domcontentloaded' });
-  const notice = page.getByRole('region', { name: 'Your privacy choices' });
+  const notice = page.getByRole('dialog', { name: 'Your privacy choices' });
   await expect(notice).toBeVisible({ timeout: 20_000 });
   await expect(page.locator(scripts)).toHaveCount(0);
   await notice.getByRole('button', { name: 'Allow analytics' }).click();
