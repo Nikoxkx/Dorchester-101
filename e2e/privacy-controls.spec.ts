@@ -2,7 +2,11 @@ import { expect, test } from '@playwright/test';
 
 const scripts = 'script[src*="vercel-scripts.com"],script[src*="/_vercel/insights"],script[src*="/_vercel/speed-insights"]';
 
-test('the corner pop-up fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
+// The suite-wide storage state stores a decline so other specs never see the
+// first-visit card; this file needs a genuinely unanswered first visit.
+test.use({ storageState: { cookies: [], origins: [] } });
+
+test('the pop-up fits a small Arabic screen and a decline persists', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.addInitScript(() => {
@@ -50,11 +54,13 @@ test('the pop-up leaves the page usable and does not force an analytics choice',
   const notice = page.getByRole('dialog', { name: 'Your privacy choices' });
   await expect(notice).toBeVisible({ timeout: 20_000 });
 
-  // No scrim: a control at the top of the page still receives the click.
-  await page.getByRole('button', { name: 'Open menu' }).click();
-  await expect(page.locator('.dor101-shell')).toHaveAttribute('data-mobile-open', 'true');
-  await page.locator('.dor101-scrim').click({ position: { x: 8, y: 8 } });
-  await expect(page.locator('.dor101-shell')).toHaveAttribute('data-mobile-open', 'false');
+  // No scrim: a control at the top of the page still receives the click while
+  // the card sits over the bottom of the viewport.
+  await page.getByRole('button', { name: 'Change language' }).click();
+  const menu = page.getByRole('menu', { name: 'Choose your language' });
+  await expect(menu).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
 
   // Reading the page without answering writes nothing and mounts no SDK.
   await expect(notice).toBeVisible();

@@ -20,10 +20,28 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'html',
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'playwright-report/results.json' }]]
+    : 'html',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    /*
+     * Every suite except `privacy-controls.spec.ts` starts with a stored decline,
+     * so the first-visit consent card is not floating over the controls those
+     * tests click. The consent spec opts out with an empty storage state.
+     */
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://localhost:3000',
+          localStorage: [
+            { name: 'dor101-privacy-choice', value: JSON.stringify({ state: { choice: 'decline' }, version: 1 }) },
+          ],
+        },
+      ],
+    },
   },
   projects: [
     {

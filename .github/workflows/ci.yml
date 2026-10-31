@@ -149,6 +149,36 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
 
+      # The HTML report is an artifact only signed-in users can open. Emitting the
+      # failing spec names as annotations makes a red run diagnosable from the
+      # checks API and from the pull request itself.
+      - name: Annotate the failing E2E tests
+        if: failure()
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'playwright-report/results.json';
+            if (!fs.existsSync(file)) { console.log('::error::no Playwright JSON report was written'); process.exit(0); }
+            const failures = [];
+            const walk = (suite) => {
+              for (const spec of suite.specs ?? []) {
+                for (const test of spec.tests ?? []) {
+                  for (const result of test.results ?? []) {
+                    if (result.status === 'passed' || result.status === 'skipped') continue;
+                    const first = (result.error?.message ?? '').split('\n')[0];
+                    failures.push((suite.file ?? spec.file ?? '') + ' > ' + spec.title + ' [' + result.status + ']' + (first ? ': ' + first : ''));
+                  }
+                }
+              }
+              for (const child of suite.suites ?? []) walk(child);
+            };
+            walk({ suites: JSON.parse(fs.readFileSync(file, 'utf8')).suites });
+            for (const failure of [...new Set(failures)]) {
+              console.log('::error::' + failure.replace(/\r?\n/g, ' ').slice(0, 900));
+            }
+            if (failures.length === 0) console.log('::error::the E2E run failed without a per-test failure');
+          "
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
