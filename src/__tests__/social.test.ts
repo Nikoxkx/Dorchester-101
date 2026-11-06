@@ -46,4 +46,16 @@ describe('social previews', () => {
     expect(await sharp(bytes).metadata()).toMatchObject({ width: 1200, height: 630, format: 'jpeg' });
     expect(await sharp('public/social/homepage.png').metadata()).toMatchObject({ width: 1440, height: 800 });
   });
+
+  it('keeps PWA screenshots and legacy preview URLs aligned with the current dark design', async () => {
+    const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8')) as {
+      screenshots: Array<{ src: string; sizes: string; type: string; label: string }>;
+    };
+    expect(manifest.screenshots).toMatchObject([
+      { src: '/social/homepage.png', sizes: '1440x800', type: 'image/png', label: 'DOR101 — dark harbor homepage' },
+      { src: '/og.png', sizes: '1200x630', type: 'image/png', label: 'DOR101 dark harbor share preview' },
+    ]);
+    expect(await sharp('public/og.png').metadata()).toMatchObject({ width: 1200, height: 630, format: 'png' });
+    expect(await sharp('public/og.jpg').metadata()).toMatchObject({ width: 1200, height: 630, format: 'jpeg' });
+  });
 });

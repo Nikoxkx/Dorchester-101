@@ -14,8 +14,8 @@ export function Card({ children, className, hoverable = false, onClick }: CardPr
   return (
     <motion.div
       className={cn(
-        'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4',
-        hoverable && 'cursor-pointer hover:shadow-lg transition-shadow duration-200',
+        'dor101-card-surface bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4',
+        hoverable && 'dor101-card-interactive cursor-pointer hover:shadow-lg transition-shadow duration-200',
         className
       )}
       whileHover={hoverable ? { scale: 1.015, y: -2 } : undefined}

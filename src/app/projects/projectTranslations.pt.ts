@@ -23,12 +23,12 @@ export const PORTUGUESE_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'Dois pequenos prédios totalmente acessíveis, com conclusão em 2026, substituem terrenos vazios por apartamentos familiares.',
-    parcelNote: 'Dois terrenos antes vazios na região de Codman Square / Four Corners: 151 Spencer Street e 25 New England Avenue.',
+    parcelNote: "Dois locais em Codman Square / Four Corners. A Prefeitura e o Housing Navigator indicam 25 New England Avenue; o cabeçalho da página da CSNDC diz 23, mas a descrição detalhada diz 25. Confirme o número com a CSNDC antes de ir; o outro local fica na 151 Spencer Street.",
     unitMix: '42 apartamentos familiares com limite de renda nos dois prédios: 19 na Spencer Street e 23 na New England Avenue.',
     amenities: ['Unidades para famílias', 'Serviços aos moradores pela CSNDC', 'Curta caminhada até Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Novas moradias familiares em terrenos vazios, com serviços da CSNDC para inquilinos no local.',
-    howToApply: "A CSNDC informou que houve um sorteio em fevereiro de 2026. O Housing Navigator mostrava uma lista de espera aberta em 31 de outubro de 2026. A situação pode mudar; confirme a disponibilidade e como se inscrever com a WinnResidential pelo (617) 287-9580.",
-    renderingNote: 'Os projetos e as fotos de progresso são publicados nas atualizações imobiliárias da CSNDC.',
+    howToApply: "A atualização de primavera de 2026 da CSNDC informou que o sorteio terminou em fevereiro; a página do imóvel agora diz que as unidades estão indisponíveis e que o processo de inscrição pode demorar, enquanto o Housing Navigator ainda mostrava uma lista aberta em 31 de outubro de 2026. As fontes divergem. Confirme com a WinnResidential pelo (617) 287-9580 ou talbotcommons2@winnco.com antes de confiar em qualquer uma das listas.",
+    renderingNote: "A CSNDC publica imagens do projeto para os dois locais; a imagem mostrada aqui é uma representação arquitetônica, não uma foto atual do local.",
   },
   4: {
     description: 'Prédio de quatro andares totalmente acessível no terreno de uma oficina de funilaria ao lado da estação Shawmut da Red Line.',

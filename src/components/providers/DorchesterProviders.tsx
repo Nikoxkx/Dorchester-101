@@ -21,6 +21,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
  */
 function DocumentSettings() {
   const prefs = useResolvedPrefs();
+  const brandStyle = useAppStore((s) => s.brandStyle);
   const meta = languageMeta(prefs.language);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ function DocumentSettings() {
     root.dataset.textSpacing = String(prefs.textSpacing);
     root.dataset.surface = prefs.surface;
     root.dataset.palette = prefs.palette;
+    root.dataset.brandStyle = brandStyle;
     root.style.fontSize = prefs.fontSizePx;
   }, [
     prefs.dir,
@@ -51,6 +53,7 @@ function DocumentSettings() {
     prefs.surface,
     prefs.palette,
     prefs.fontSizePx,
+    brandStyle,
     meta.contentLocale,
   ]);
 
@@ -58,7 +61,7 @@ function DocumentSettings() {
   // the theme is 'system' and the OS switches at sunset.
   useEffect(() => {
     const existing = document.querySelector('meta[name="theme-color"]');
-    const color = prefs.dark ? '#0F1720' : '#14304F';
+    const color = prefs.dark ? '#11181B' : '#123D54';
     if (existing) existing.setAttribute('content', color);
   }, [prefs.dark]);
 

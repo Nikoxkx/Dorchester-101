@@ -43,12 +43,12 @@ export const SPANISH_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'Dos pequeños edificios completamente asequibles que se terminan en 2026 y sustituyen terrenos vacíos por apartamentos familiares.',
-    parcelNote: 'Dos terrenos que estaban vacíos en la zona de Codman Square / Four Corners: 151 Spencer Street y 25 New England Avenue.',
+    parcelNote: "Dos sitios en Codman Square / Four Corners. La Ciudad y Housing Navigator indican 25 New England Avenue; el encabezado de CSNDC dice 23, mientras que su descripción detallada dice 25. Confirme el número con CSNDC antes de ir; el otro sitio es 151 Spencer Street.",
     unitMix: '42 apartamentos familiares con límite de ingresos entre los dos edificios: 19 en Spencer Street y 23 en New England Avenue.',
     amenities: ['Unidades de tamaño familiar', 'Servicios para residentes por CSNDC', 'Caminata corta hasta Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Nuevas viviendas familiares en terrenos vacíos, con servicios de CSNDC para inquilinos en el lugar.',
-    howToApply: "CSNDC informó de un sorteo en febrero de 2026. Housing Navigator mostraba una lista de espera abierta el 31 de octubre de 2026. El estado puede cambiar; confirme la disponibilidad y cómo solicitar con WinnResidential al (617) 287-9580.",
-    renderingNote: 'Los planos y fotos del avance se publican en las actualizaciones inmobiliarias de CSNDC.',
+    howToApply: "La actualización de primavera de 2026 de CSNDC informó que el sorteo terminó en febrero; su página de la propiedad ahora dice que las viviendas no están disponibles y que el proceso de solicitud quizá tarde, mientras que Housing Navigator aún mostraba una lista abierta el 31 de octubre de 2026. Las fuentes discrepan. Confirme con WinnResidential al (617) 287-9580 o talbotcommons2@winnco.com antes de confiar en cualquiera de las listas.",
+    renderingNote: "CSNDC publica imágenes de proyecto para ambos sitios; la imagen mostrada aquí es un diseño arquitectónico, no una foto actual del lugar.",
   },
   4: {
     description: 'Edificio de cuatro pisos completamente asequible en el terreno del taller de carrocería junto a la estación Shawmut de la Línea Roja.',
@@ -67,7 +67,7 @@ export const SPANISH_PROJECTS: Record<number, ProjectTranslation> = {
  * record and update this digest; ID parity alone cannot catch stale eligibility
  * or schedule details.
  */
-export const PROJECT_SOURCE_DIGEST = '4cb9d3d6284e88cdf332d93871fe568c587dd204c53fcd3e61c4d96fe87dfcc7';
+export const PROJECT_SOURCE_DIGEST = '8cc36627c5e9aca7484bf9e986969e3bf34ed9de25eb89fb35a7e91a7282fd31';
 
 /** Every supported non-English locale must cover every published project. */
 export const PROJECT_TRANSLATIONS: Record<Exclude<LanguageCode, 'en'>, Record<number, ProjectTranslation>> = {

@@ -96,7 +96,7 @@ export function TempUnitToggle({ unit, onChange }: { unit: TempUnit; onChange: (
           onClick={() => onChange(u)}
           className={
             unit === u
-              ? 'bg-[var(--color-accent-primary)] px-2 py-1 text-white'
+              ? 'bg-[var(--color-accent-primary)] px-2 py-1 text-[var(--color-bg-primary)]'
               : 'bg-[var(--color-bg-raised)] px-2 py-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
           }
         >

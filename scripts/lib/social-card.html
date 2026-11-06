@@ -7,36 +7,53 @@
 @font-face { font-family: Public; src: url('{{BOLD}}') format('woff2'); font-weight: 700; }
 @font-face { font-family: Fraunces; src: url('{{DISPLAY}}') format('woff2'); font-weight: 100 900; }
 * { box-sizing: border-box; }
-body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #102b46; color: #faf6ee; font-family: Public, sans-serif; }
-.card { position: relative; width: 100%; height: 100%; overflow: hidden; background: radial-gradient(ellipse at 85% 15%, #31566d 0, transparent 65%); }
-.brand { position: absolute; left: 48px; top: 43px; display: flex; align-items: center; gap: 13px; font-size: 15px; letter-spacing: 2.2px; font-weight: 700; }
-.mark { width: 37px; height: 37px; display: grid; place-items: center; border: 1px solid #8799a5; border-radius: 10px; font-size: 14px; letter-spacing: -1px; }
-h1 { position: absolute; left: 48px; top: 139px; margin: 0; font: 650 60px/1.04 Fraunces, serif; letter-spacing: -2.8px; }
-h1 span { color: #efb99a; }
-.promise { position: absolute; left: 48px; top: 301px; margin: 0; font-size: 25px; line-height: 1.42; letter-spacing: -.6px; }
-.details { position: absolute; left: 48px; top: 412px; color: #c7d4dd; font-size: 17px; line-height: 1.7; margin: 0; }
-.badge { position: absolute; left: 48px; top: 501px; display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; }
-.dot { width: 7px; height: 7px; background: #b9d6bf; border-radius: 50%; }
-.domain { position: absolute; left: 48px; bottom: 44px; color: #c7d4dd; font-size: 15px; }
-.browser { position: absolute; left: 443px; top: 103px; width: 900px; border: 1px solid #ffffff5c; border-radius: 14px; overflow: hidden; background: #f8f5ef; box-shadow: 0 24px 65px #0007; transform: rotate(-2deg); transform-origin: top left; }
-.toolbar { height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #e9e5dd; border-bottom: 1px solid #d6d1c7; }
-.toolbar i { height: 6px; width: 6px; background: #aaa69f; border-radius: 50%; }
-.toolbar span { margin-left: 19px; font-size: 10px; color: #51616b; }
-.screenshot { display: block; width: 900px; height: 500px; object-fit: cover; object-position: top left; }
-.credit { position: absolute; bottom: 10px; right: 14px; padding: 4px 7px; border-radius: 4px; background: #102b46; font-size: 9px; color: #d1dce3; }
+body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #0B171D; color: #EAF4F4; font-family: Public, sans-serif; }
+.card { position: relative; width: 100%; height: 100%; overflow: hidden; background: radial-gradient(ellipse at 89% 7%, #1c4551 0, transparent 60%), linear-gradient(118deg, #0B171D 0%, #10222A 62%, #12313A 100%); }
+.brand { position: absolute; left: 48px; top: 36px; display: flex; align-items: center; gap: 15px; }
+.wordmark { width: 214px; height: 60px; overflow: visible; }
+.brand-label { color: #C0D0D2; font-size: 12px; letter-spacing: 2px; font-weight: 700; }
+h1 { position: absolute; left: 48px; top: 145px; width: 380px; margin: 0; font: 650 37px/1.12 Fraunces, serif; letter-spacing: -1.4px; }
+h1 span { color: #86C7D5; }
+.promise { position: absolute; left: 48px; top: 258px; width: 355px; margin: 0; color: #EAF4F4; font-size: 19px; line-height: 1.45; letter-spacing: -.3px; }
+.details { position: absolute; left: 48px; top: 378px; color: #C0D0D2; font-size: 15px; line-height: 1.65; margin: 0; }
+.badge { position: absolute; left: 48px; top: 475px; display: flex; align-items: center; gap: 9px; color: #EAF4F4; font-size: 13px; font-weight: 700; }
+.dot { width: 7px; height: 7px; background: #86C7D5; border-radius: 50%; }
+.domain { position: absolute; left: 48px; bottom: 35px; color: #8CA2A7; font-size: 14px; }
+.browser { position: absolute; left: 420px; top: 102px; width: 800px; border: 1px solid #48616A; border-radius: 14px; overflow: hidden; background: #12232B; box-shadow: 0 24px 65px #0009; transform: rotate(-2deg); transform-origin: top left; }
+.toolbar { height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #182C34; border-bottom: 1px solid #2B454E; }
+.toolbar i { height: 6px; width: 6px; background: #55717A; border-radius: 50%; }
+.toolbar span { margin-left: 19px; font-size: 10px; color: #AFC1C4; }
+.screenshot { display: block; width: 800px; height: 444px; object-fit: cover; object-position: top left; }
+.credit { position: absolute; bottom: 10px; right: 14px; padding: 4px 7px; border-radius: 4px; background: #0B171D; font-size: 9px; color: #C0D0D2; }
 </style>
 </head>
 <body><main class="card">
-  <div class="brand"><div class="mark">101</div>DORCHESTER, BOSTON</div>
-  <h1>Dorchester<br><span>101.</span></h1>
-  <p class="promise">Your neighborhood.<br>A little easier.</p>
-  <p class="details">Housing. Food. Transit. Help.<br>One free community guide.</p>
-  <div class="badge"><i class="dot"></i>9 languages &nbsp;·&nbsp; No account. No ads.</div>
+  <div class="brand">
+    <svg class="wordmark" viewBox="0 0 430 120" role="img" aria-label="DOR101">
+      <defs>
+        <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="1.4" cy="1.4" r="1.15" fill="#DDF3F2" fill-opacity=".72"/>
+          <circle cx="4.5" cy="4.5" r=".8" fill="#DDF3F2" fill-opacity=".38"/>
+        </pattern>
+      </defs>
+      <g font-family="Public, Arial Black, sans-serif" font-size="88" font-weight="900" letter-spacing="-4" stroke-linejoin="round">
+        <text x="9" y="91" textLength="408" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#163F49" stroke-opacity=".56" stroke-width="4" transform="translate(9 8)">DOR101</text>
+        <text x="9" y="91" textLength="408" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#86C7D5" stroke-opacity=".6" stroke-width="2.2" transform="translate(4 4)">DOR101</text>
+        <text x="9" y="91" textLength="408" lengthAdjust="spacingAndGlyphs" fill="url(#dots)" stroke="#DDF3F2" stroke-width="2.2" paint-order="stroke fill">DOR101</text>
+        <text x="9" y="91" textLength="408" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#F3FCFA" stroke-opacity=".52" stroke-width=".8">DOR101</text>
+      </g>
+    </svg>
+    <div class="brand-label">DORCHESTER · BOSTON</div>
+  </div>
+  <h1>Your neighborhood.<br><span>A little easier.</span></h1>
+  <p class="promise">Housing, food, transit and everyday help — in one free guide.</p>
+  <p class="details">Nine languages. No account. No ads.<br>Made for Dorchester, Boston.</p>
+  <div class="badge"><i class="dot"></i>Free community guide · DOR101</div>
   <div class="domain">{{DOMAIN}}</div>
   <div class="browser">
     <div class="toolbar"><i></i><i></i><i></i><span>{{DOMAIN}}</span></div>
-    <img class="screenshot" src="{{SCREENSHOT}}" alt="Actual Dorchester 101 homepage">
+    <img class="screenshot" src="{{SCREENSHOT}}" alt="Actual DOR101 homepage in the dark harbor theme">
   </div>
-  <div class="credit">Site screenshot · Photo: Sswonk / CC BY-SA 3.0</div>
+  <div class="credit">Site screenshot · skyline supplied for this project</div>
 </main></body>
 </html>

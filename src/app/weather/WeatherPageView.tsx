@@ -30,7 +30,7 @@ import { localizeShortForecast } from '@/i18n/weatherForecast';
 import { ForecastText } from '@/components/weather/ForecastText';
 import { ConditionIcon, TempUnitToggle, tempText, useTempUnit, type TempUnit } from '@/components/weather/shared';
 import { StyleTips } from '@/components/weather/StyleTips';
-import { MoonDisc, PrecipBars, SkyBackdrop, SunArc, sunArcPoint, TempCurve, TempRangeBar, WindCompass } from '@/components/weather/WeatherVisuals';
+import { MoonDisc, PrecipBars, SunArc, sunArcPoint, TempCurve, TempRangeBar, WindCompass } from '@/components/weather/WeatherVisuals';
 import { WearSpotlight } from '@/components/weather/WearSpotlight';
 import { MOON_PHASE_KEYS, moonPhase, nextFullMoon, nextNewMoon } from '@/lib/moon';
 import { motion } from 'framer-motion';
@@ -67,7 +67,7 @@ export default function WeatherPageView() {
   const blocks: Record<WeatherBlockId, ReactNode> | null = data
     ? {
         current: <CurrentSection payload={data} unit={unit} />,
-        spotlight: <WearSpotlight payload={data} unit={unit} variant="sky" />,
+        spotlight: <WearSpotlight payload={data} unit={unit} />,
         tips: (
           <>
             <section className={card} aria-labelledby="wx-tips">
@@ -129,7 +129,7 @@ export default function WeatherPageView() {
               </h2>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('weather.offBody')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" onClick={() => setWeatherEnabled(true)} className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white transition-transform active:scale-[0.98]">
+                <button type="button" onClick={() => setWeatherEnabled(true)} className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-[var(--color-bg-primary)] transition-transform active:scale-[0.98]">
                   {t('weather.offEnable')}
                 </button>
                 <Link href="/settings#weather" className="rounded-full border border-[var(--color-border-strong)] px-4 py-2 font-heading text-sm font-bold">
@@ -150,7 +150,7 @@ export default function WeatherPageView() {
         {unavailable && (
           <div className={`${card} border-dashed`}>
             <p className="text-sm text-[var(--color-text-secondary)]">{t('weather.unavailable')}</p>
-            <button type="button" onClick={refresh} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white">
+            <button type="button" onClick={refresh} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-[var(--color-bg-primary)]">
               <RefreshCw className="h-4 w-4" aria-hidden="true" /> {t('weather.retry')}
             </button>
           </div>
@@ -212,7 +212,7 @@ function AlertCard({ alert, dayTime }: { alert: WeatherAlert; dayTime: (iso: str
     >
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-heading text-base font-extrabold" lang="en" dir="auto">{alert.event}</h3>
-        <span className={`rounded-full px-2 py-0.5 font-heading text-[11px] font-bold ${urgent ? 'bg-[var(--color-accent-secondary)] text-white' : 'bg-amber-500/25 text-[var(--color-text-primary)]'}`}>
+        <span className={`rounded-full px-2 py-0.5 font-heading text-[11px] font-bold ${urgent ? 'bg-[var(--color-accent-secondary)] text-[var(--color-bg-primary)]' : 'bg-amber-500/25 text-[var(--color-text-primary)]'}`}>
           {t(`weather.severity.${alert.severity}`)}
         </span>
         {ends && <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{t('weather.alertEnds', { time: dayTime(ends) })}</span>}
@@ -248,36 +248,41 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
   const observation = localizeShortForecast(cur.text, lang);
   const windSpeed = cur.windMph != null ? t('weather.windMph', { speed: format.number(Math.round(cur.windMph)) }) : null;
 
-  const tile = "wx-module p-4";
-  const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-white/75";
+  const tile = "rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-4 shadow-[var(--shadow-sm)]";
+  const tileTitle = "flex items-center gap-1.5 text-[11px] font-heading font-bold uppercase tracking-wide text-[var(--color-text-muted)]";
 
   return (
-    <section aria-labelledby="wx-current" className="wx-sky-host relative overflow-hidden rounded-[2rem] text-white shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-border)]">
-      <SkyBackdrop key={`${cur.kind}-${cur.isDay ? 'day' : 'night'}`} kind={cur.kind} isDay={cur.isDay} />
-      <div className="wx-glass-scope relative">
-      {/* Sky hero: the animated backdrop follows the live condition, Apple-style. */}
-      <div className="relative px-5 pb-2 pt-8 text-center text-white md:px-6">
-        <div className="relative">
-          <h2 id="wx-current" className="font-heading text-xl font-bold drop-shadow-sm">Dorchester, Boston</h2>
-          <p className="font-heading text-[6rem] font-extralight leading-none tracking-tighter drop-shadow-md" aria-label={tempText(cur.tempF, unit, format.number)}>
-            {format.number(Math.round(unit === 'F' ? animatedTemp : ((animatedTemp - 32) * 5) / 9))}°
+    <section aria-labelledby="wx-current" className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[var(--shadow-lg)]">
+      <div className="flex flex-col gap-4 border-b border-[var(--color-border)] px-5 py-6 sm:flex-row sm:items-center sm:justify-between md:px-7">
+        <div className="min-w-0">
+          <p className="inline-flex items-center gap-1.5 font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+            <CloudSun className="h-3.5 w-3.5 text-[var(--color-accent-primary)]" aria-hidden="true" /> {t('weather.title')}
           </p>
-          <p className="font-heading text-base font-bold drop-shadow-sm" lang={cur.text ? observation.language : lang} dir="auto">{cur.text ? observation.text : t(`weather.cond.${cur.kind}` as never)}</p>
-          {cur.text && lang !== 'en' && observation.language === 'en' && <p className="text-xs text-white/85">{t(`weather.cond.${cur.kind}` as never)} · {t('weather.observationEnglish')}</p>}
-          {cur.text && lang !== 'en' && observation.language === lang && <p className="text-xs text-white/85">{t('weather.shortTranslationNote')}</p>}
+          <h2 id="wx-current" className="mt-1 font-heading text-xl font-bold">Dorchester, Boston</h2>
+          <p className="mt-1 text-sm font-semibold text-[var(--color-text-secondary)]" lang={cur.text ? observation.language : lang} dir="auto">
+            {cur.text ? observation.text : t(`weather.cond.${cur.kind}` as never)}
+          </p>
+          {cur.text && lang !== 'en' && observation.language === 'en' && <p className="text-xs text-[var(--color-text-muted)]">{t(`weather.cond.${cur.kind}` as never)} · {t('weather.observationEnglish')}</p>}
+          {cur.text && lang !== 'en' && observation.language === lang && <p className="text-xs text-[var(--color-text-muted)]">{t('weather.shortTranslationNote')}</p>}
           {today && today.highF != null && today.lowF != null && (
-            <p className="text-sm font-semibold text-white/95">
+            <p className="mt-1 text-sm font-semibold text-[var(--color-text-secondary)]">
               {t('weather.highLow', { high: tempText(today.highF, unit, format.number), low: tempText(today.lowF, unit, format.number) })}
             </p>
           )}
-          <p className="mt-1 text-xs text-white/85">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {t('weather.feelsLike', { temp: tempText(cur.feelsLikeF, unit, format.number) })} · {t('weather.observedAt', { station: cur.stationName, time: format.time(cur.observedAt) })}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <ConditionIcon kind={cur.kind} isDay={cur.isDay} className="h-9 w-9 text-[var(--color-accent-primary)]" />
+          <p className="font-display text-6xl font-light leading-none tracking-tight text-[var(--color-accent-primary)] sm:text-7xl" aria-label={tempText(cur.tempF, unit, format.number)}>
+            {format.number(Math.round(unit === 'F' ? animatedTemp : ((animatedTemp - 32) * 5) / 9))}°
           </p>
         </div>
       </div>
 
-      {/* Detail tiles, one reading per tile like a phone weather app. */}
-      <div className="relative grid grid-cols-2 gap-2.5 p-4 pb-5 pt-3 md:p-5 md:pb-6 lg:grid-cols-4">
+      {/* Forecast readings use the same quiet, bordered cards as the rest of the site. */}
+      <div className="grid grid-cols-2 gap-2.5 p-4 md:gap-3 md:p-5 lg:grid-cols-4">
         <div className={tile}>
           <p className={tileTitle}><Thermometer className="h-3.5 w-3.5" aria-hidden="true" /> {t('weather.feelsLike', { temp: '' }).trim() || t('weather.conditions')}</p>
           <p className="mt-1 font-heading text-3xl font-extrabold">{tempText(cur.feelsLikeF, unit, format.number)}</p>
@@ -345,7 +350,6 @@ function CurrentSection({ payload, unit }: { payload: WeatherPayload; unit: Temp
           </div>
         )}
       </div>
-      </div>
     </section>
   );
 }
@@ -383,7 +387,7 @@ function SunMoonCycle({ astronomy, nowMs }: { astronomy: WeatherPayload['astrono
     <div>
       {astronomy && (
         <>
-          <div className="relative">
+          <div className="relative mx-auto w-full max-w-[26rem]">
             <SunArc sunrise={astronomy.sunrise} sunset={astronomy.sunset} nowMs={nowMs} />
             {moonPt && (
               <span
@@ -398,39 +402,39 @@ function SunMoonCycle({ astronomy, nowMs }: { astronomy: WeatherPayload['astrono
           <div className="mt-1 flex items-center justify-between text-xs font-semibold">
             <span className="inline-flex items-center gap-1"><Sunrise className="h-3.5 w-3.5" aria-hidden="true" /> {format.time(astronomy.sunrise)}</span>
             {daylightMin != null && (
-              <span className="text-white/70">{t('weather.daylight')} {t('map.arrivalHours', { hours: format.number(Math.floor(daylightMin / 60)), minutes: format.number(daylightMin % 60) })}</span>
+              <span className="text-[var(--color-text-muted)]">{t('weather.daylight')} {t('map.arrivalHours', { hours: format.number(Math.floor(daylightMin / 60)), minutes: format.number(daylightMin % 60) })}</span>
             )}
             <span className="inline-flex items-center gap-1"><Sunset className="h-3.5 w-3.5" aria-hidden="true" /> {format.time(astronomy.sunset)}</span>
           </div>
         </>
       )}
 
-      <div className="mt-3 flex items-center gap-3.5 border-t border-white/15 pt-3.5">
-        <span className="shrink-0 drop-shadow-[0_0_10px_rgba(214,228,255,0.45)]">
+      <div className="mt-3 flex items-center gap-3.5 border-t border-[var(--color-border)] pt-3.5">
+        <span className="shrink-0 drop-shadow-sm">
           <MoonDisc fraction={moon.fraction} size={48} />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-white/75">{t('weather.moonTonight')}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('weather.moonTonight')}</p>
           <p className="font-heading text-xl font-extrabold leading-tight">{t(MOON_PHASE_KEYS[moon.phaseIndex] as never)}</p>
-          <p className="text-xs text-white/85">
+          <p className="text-xs text-[var(--color-text-secondary)]">
             {t('weather.moonIllumination')} {format.percent(moon.illumination, 0)} · {t('weather.moonAgeDays', { days: format.number(Math.floor(moon.ageDays) + 1) })}
           </p>
-          <p className="text-xs text-white/85">
+          <p className="text-xs text-[var(--color-text-secondary)]">
             {t('weather.nextFullMoon', { date: format.date(nextFullMoon(now)) })} · {t('weather.nextNewMoon', { date: format.date(nextNewMoon(now)) })}
           </p>
         </div>
       </div>
 
-      <p className="mt-3.5 text-[11px] font-bold uppercase tracking-wide text-white/75">{t('weather.moonWeek')}</p>
+      <p className="mt-3.5 text-[11px] font-bold uppercase tracking-wide text-[var(--color-text-muted)]">{t('weather.moonWeek')}</p>
       <div className="mt-1.5 flex items-start justify-between gap-1">
         {week.map((d) => (
           <span key={d.date.toISOString()} className="flex flex-col items-center gap-1">
             <MoonDisc fraction={d.fraction} size={26} />
-            <span className="text-[10px] font-semibold text-white/80">{format.weekday(d.date)}</span>
+            <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">{format.weekday(d.date)}</span>
           </span>
         ))}
       </div>
-      <p className="mt-2.5 text-[10px] leading-snug text-white/60">{t('weather.moonPathNote')}</p>
+      <p className="mt-2.5 text-[10px] leading-snug text-[var(--color-text-muted)]">{t('weather.moonPathNote')}</p>
     </div>
   );
 }
@@ -442,7 +446,7 @@ function ColdCta() {
       <h2 id="wx-cold" className="font-heading text-base font-extrabold">{t('clothing.warmTitle')}</h2>
       <p className="mt-1 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('clothing.warmBody')}</p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href="/winter-clothing" className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white transition-transform active:scale-[0.98]">
+        <Link href="/winter-clothing" className="rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-[var(--color-bg-primary)] transition-transform active:scale-[0.98]">
           {t('weather.noCoatCta')}
         </Link>
         <a href="https://www.boston.gov/cold" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border-strong)] px-4 py-2 font-heading text-sm font-bold">

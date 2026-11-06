@@ -25,7 +25,7 @@ try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 800 },
     deviceScaleFactor: 1,
-    colorScheme: 'light',
+    colorScheme: 'dark',
     reducedMotion: 'reduce',
     locale: 'en-US',
     timezoneId: 'America/New_York',
@@ -35,9 +35,9 @@ try {
   await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 120_000 });
   await page.locator('.dor101-home h1').waitFor();
   // Dismiss the real notice through its own UI; no site content is rewritten.
-  const notice = page.getByRole('region', { name: 'Your privacy, in plain words' });
+  const notice = page.getByRole('dialog', { name: 'Your privacy choices' });
   await notice.waitFor({ state: 'visible' });
-  await notice.getByRole('button', { name: 'Got it', exact: true }).click();
+  await notice.getByRole('button', { name: 'Continue without analytics', exact: true }).click();
   await notice.waitFor({ state: 'hidden' });
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -75,13 +75,38 @@ try {
   const hash = createHash('sha256').update(jpeg).digest('hex').slice(0, 12);
   const filename = `dorchester-101-${hash}.jpg`;
   await writeFile(path.join(output, filename), jpeg);
+  const alt = 'Dorchester 101 — a free community guide in nine languages. Dark harbor-themed homepage with the project-supplied Boston skyline and outlined DOR101 wordmark.';
   await writeFile(path.join(root, 'src/lib/social-image.json'), JSON.stringify({
     url: `/social/${filename}`,
     width: 1200,
     height: 630,
     type: 'image/jpeg',
-    alt: 'Dorchester 101 — a free community guide in nine languages. Actual homepage screenshot showing the Dorchester Bay hero, resource links and neighborhood navigation.',
+    alt,
   }, null, 2) + '\n');
+
+  // Keep the legacy PNG URL and installed-app screenshots in step with the
+  // freshly captured real page, rather than leaving the previous light theme.
+  await writeFile(path.join(root, 'public/og.jpg'), jpeg);
+  await sharp(jpeg).png({ compressionLevel: 9 }).toFile(path.join(root, 'public/og.png'));
+  const manifestPath = path.join(root, 'public/manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.screenshots = [
+    {
+      src: '/social/homepage.png',
+      sizes: '1440x800',
+      type: 'image/png',
+      form_factor: 'wide',
+      label: 'DOR101 — dark harbor homepage',
+    },
+    {
+      src: '/og.png',
+      sizes: '1200x630',
+      type: 'image/png',
+      form_factor: 'wide',
+      label: 'DOR101 dark harbor share preview',
+    },
+  ];
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
   console.log(`Created ${filename} (${Math.round(jpeg.length / 1024)} KB) from ${baseURL}`);
 } finally {
   await browser.close();

@@ -71,12 +71,12 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // Leaflet and the map need inline styles for transforms and sizes; the
-      // tile layer is the only cross-origin image source allowed.
+      // Leaflet tiles and explicitly credited, lazy-loaded housing-project images are the
+      // only cross-origin image sources allowed.
       // In production we drop 'unsafe-eval' — it's needed only for Next dev HMR.
       isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://api.qrserver.com",
+      "img-src 'self' data: blob: https://services.arcgisonline.com https://server.arcgisonline.com https://basemap.nationalmap.gov https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.samuelsre.com https://poah.org https://www.csndc.com https://d18hjk6wpn1fl5.cloudfront.net",
       "font-src 'self'",
       // The browser fallback requests public NWS data only when our API fails.
       "connect-src 'self' https://vitals.vercel-insights.com https://*.vercel-scripts.com https://api.weather.gov https://api.open-meteo.com https://air-quality-api.open-meteo.com",
@@ -109,8 +109,8 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 420, 640, 768, 1024, 1280, 1536],
     imageSizes: [16, 24, 32, 48, 64, 96, 128, 256],
-    // No remote hosts: every image is either bundled in /public or drawn by the
-    // OG route. `domains: ['example.com']` sat here for a reason nobody had.
+    // Next/Image optimization is limited to bundled assets and the OG route.
+    // Official project visuals use native <img> tags and the CSP host allowlist.
     localPatterns: [{ pathname: "/**", search: "" }],
     minimumCacheTTL: 86400,
     dangerouslyAllowSVG: false,

@@ -7,6 +7,13 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dorchester-101.vercel.app';
 
+/** Stable, canonical deep link for a resource poster; IDs are safely URL-encoded. */
+export function resourceUrl(placeId: string): string {
+  const url = new URL('/resources', SITE_URL);
+  url.searchParams.set('place', placeId);
+  return url.toString();
+}
+
 export const SITE_NAME = 'DOR101';
 /**
  * Injected from package.json by next.config.ts (`env.NEXT_PUBLIC_APP_VERSION`),

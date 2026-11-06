@@ -107,17 +107,24 @@ export async function GET(request: Request) {
     if (status.state === 'closed' || status.state === 'always-open') continue;
     const minutesLeft = status.minutesUntilClose;
     if (minutesLeft > 60 && record.category !== 'food') continue;
+    const closesAtInstant = new Date(now.getTime() + Math.max(1, minutesLeft) * 60_000);
     items.push({
       id: `open-${record.id}`,
       kind: minutesLeft <= 60 ? 'closing-soon' : 'open-now',
       titleKey: minutesLeft <= 60 ? 'notifications.closingSoon' : 'notifications.openNow',
-      // Keep the legacy text for API clients; the panel formats the numeric
-      // wall-clock minute and count in the reader's selected language.
-      params: { name: record.name, minutes: Math.max(0, minutesLeft), closesAt: formatClock(status.closesAt), closesAtMinutes: status.closesAt },
+      // Keep the Boston wall-clock value for older API clients; the panel uses
+      // the real instant to show the equivalent time in the visitor's zone.
+      params: {
+        name: record.name,
+        minutes: Math.max(0, minutesLeft),
+        closesAt: formatClock(status.closesAt),
+        closesAtMinutes: status.closesAt,
+        closesAtInstant: closesAtInstant.toISOString(),
+      },
       href: record.detailHref ?? `/directory#${record.id}`,
       priority: minutesLeft <= 30 ? 'high' : 'medium',
       occurredAt: now.toISOString(),
-      expiresAt: new Date(now.getTime() + Math.max(1, minutesLeft) * 60_000).toISOString(),
+      expiresAt: closesAtInstant.toISOString(),
       sourceLabel: CATEGORY_TITLES[record.category],
       sourceKey: `map.${record.category}`,
     });

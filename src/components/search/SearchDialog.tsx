@@ -226,7 +226,8 @@ export function SearchDialog() {
               transition={{ duration: 0.2, ease: [0.16, 0.84, 0.44, 1] }}
               className="relative w-full max-w-xl overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-raised)] shadow-[var(--shadow-lg)]"
             >
-              <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-3">
+              <div className="dor101-search-field flex items-center gap-2 border-b border-[var(--color-border)] px-3">
+                <label htmlFor={`${listId}-search`} className="sr-only">{t('search.placeholder')}</label>
                 {loading ? (
                   <Loader2 className="w-4 h-4 shrink-0 animate-spin text-[var(--color-accent-primary)]" aria-hidden="true" />
                 ) : (
@@ -234,6 +235,7 @@ export function SearchDialog() {
                 )}
                 <input
                   ref={inputRef}
+                  id={`${listId}-search`}
                   role="combobox"
                   aria-expanded={flat.length > 0}
                   aria-controls={`${listId}-listbox`}

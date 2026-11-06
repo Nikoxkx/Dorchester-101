@@ -41,8 +41,8 @@ describe('housing projects language coverage', () => {
     expect(url.searchParams.get('details')).toContain(SPANISH_PROJECTS[1].howToApply);
     expect(url.searchParams.get('details')).toContain('Dirección:');
     expect(within(card!).getAllByText(t('projects.units', { count: 17 }))).toHaveLength(2);
-    expect(within(card!).getByText(t('imagery.noVerifiedPhoto'))).toBeTruthy();
-    expect(within(card!).getByRole('link', { name: t('imagery.projectSource') }).getAttribute('href')).toBe(PROJECTS[0].applicationSourceUrl);
+    expect(within(card!).getByRole('img', { name: PROJECTS[0].visual.alt })).toBeTruthy();
+    expect(within(card!).getByRole('link', { name: t('ui.sourceNamed', { name: PROJECTS[0].visual.sourceName }) }).getAttribute('href')).toBe(PROJECTS[0].visual.sourceUrl);
   });
 
   it.each(LANGUAGES.filter(({ code }) => code !== 'en'))(
@@ -66,8 +66,11 @@ describe('housing projects language coverage', () => {
         const card = screen.getByRole('heading', { name: source.name }).closest('[class*="rounded-xl"]');
         const google = within(card!).getByRole('link', { name: t('calendar.google') });
         expect(new URL(google.getAttribute('href')!).searchParams.get('details')).toContain(project.howToApply);
-        const sourceLink = within(card!).getByRole('link', { name: t('ui.sourceNamed', { name: source.applicationSourceName }) });
-        expect(sourceLink.getAttribute('href')).toBe(source.applicationSourceUrl);
+        const sourceLinks = within(card!).getAllByRole('link', { name: t('ui.sourceNamed', { name: source.applicationSourceName }) });
+        expect(sourceLinks.some((link) => link.getAttribute('href') === source.applicationSourceUrl)).toBe(true);
+        const imageSourceLinks = within(card!).getAllByRole('link', { name: t('ui.sourceNamed', { name: source.visual.sourceName }) });
+        expect(imageSourceLinks.some((link) => link.getAttribute('href') === source.visual.sourceUrl)).toBe(true);
+        expect(within(card!).getByRole('img', { name: source.visual.alt })).toBeTruthy();
       }
     },
   );

@@ -34,14 +34,14 @@ describe('offline cache privacy', () => {
     };
     const deleted: string[] = [];
     const caches = {
-      keys: async () => ['dor101-live-v4.13.0', 'dor101-shell-v4.13.0', 'dor101-shell-v4.14.0', 'another-app'],
+      keys: async () => ['dor101-live-v4.13.0', 'dor101-shell-v4.13.0', 'dor101-shell-v4.14.0', 'dor101-shell-v4.15.0', 'dor101-shell-v4.16.0', 'another-app'],
       delete: async (name: string) => { deleted.push(name); return true; },
     };
     vm.runInNewContext(fs.readFileSync('public/sw.js', 'utf8'), { self: worker, URL, caches });
     let activation: Promise<unknown> | undefined;
     handlers.activate({ waitUntil: (promise) => { activation = promise; } });
     await activation;
-    expect(deleted.sort()).toEqual(['dor101-live-v4.13.0', 'dor101-shell-v4.13.0']);
+    expect(deleted.sort()).toEqual(['dor101-live-v4.13.0', 'dor101-shell-v4.13.0', 'dor101-shell-v4.14.0', 'dor101-shell-v4.15.0']);
     expect(worker.clients.claim).toHaveBeenCalledOnce();
   });
 });

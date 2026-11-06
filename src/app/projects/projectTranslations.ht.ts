@@ -23,12 +23,12 @@ export const HAITIAN_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'De ti bilding kote tout lojman yo abòdab, k ap fini an 2026, ranplase teren vid ak apatman pou fanmi.',
-    parcelNote: 'De ansyen teren vid nan zòn Codman Square / Four Corners: 151 Spencer Street ak 25 New England Avenue.',
+    parcelNote: "De kote nan Codman Square / Four Corners. Vil la ak Housing Navigator mete 25 New England Avenue; antèt paj CSNDC a di 23 New England Avenue, men deskripsyon detaye a di 25. Konfime nimewo a ak CSNDC anvan ou ale; lòt kote a se 151 Spencer Street.",
     unitMix: '42 apatman pou fanmi ak limit revni nan de bilding yo: 19 nan Spencer Street ak 23 nan New England Avenue.',
     amenities: ['Lojman pou fanmi', 'Sèvis pou rezidan CSNDC bay', 'Yon ti mache pou rive Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Nouvo lojman fanmi sou teren ki te vid, ak sèvis CSNDC bay lokatè yo sou plas.',
-    howToApply: "CSNDC te rapòte yon tiraj nan fevriye 2026. Housing Navigator te montre yon lis datant ouvè nan dat 31 oktòb 2026. Sitiyasyon an ka chanje; konfime disponiblite ak fason pou aplike ak WinnResidential nan (617) 287-9580.",
-    renderingNote: 'CSNDC pibliye plan ak foto pwogrè nan nouvèl sou byen imobilye li yo.',
+    howToApply: "Mizajou prentan 2026 CSNDC a te di tiraj la fini nan mwa fevriye; paj pwopriyete a di kay yo pa disponib kounye a epi pwosesis aplikasyon an ka poko kòmanse pandan kèk tan, tandiske Housing Navigator te toujou montre lis datant lan ouvè nan dat 31 oktòb 2026. Sous yo pa dakò. Konfime ak WinnResidential nan (617) 287-9580 oswa talbotcommons2@winnco.com anvan ou konte sou youn nan lis yo.",
+    renderingNote: "Paj ofisyèl CSNDC a montre imaj pwojè pou toude kote yo; imaj sa a se yon desen achitekti, se pa foto aktyèl kote a.",
   },
   4: {
     description: 'Yon bilding kat etaj ki gen sèlman lojman abòdab sou teren garaj karosri bò estasyon Shawmut Red Line la.',

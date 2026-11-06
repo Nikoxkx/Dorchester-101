@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/stores/appStore';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -12,51 +13,48 @@ interface LogoProps {
 }
 
 const sizes = {
-  sm: { icon: 32, text: 'text-lg' },
-  md: { icon: 40, text: 'text-xl' },
-  lg: { icon: 56, text: 'text-2xl' },
-  xl: { icon: 80, text: 'text-4xl' },
+  sm: { icon: 32, wordmark: 'text-base' },
+  md: { icon: 44, wordmark: 'text-xl' },
+  lg: { icon: 56, wordmark: 'text-2xl' },
+  xl: { icon: 80, wordmark: 'text-3xl' },
 };
 
+/** A crisp photo tile beside a formal, live-text DOR101 lockup. */
 export function Logo({ size = 'md', showText = true, animated = true, className }: LogoProps) {
-  const { icon, text } = sizes[size];
+  const { icon, wordmark } = sizes[size];
+  const brandStyle = useAppStore((s) => s.brandStyle);
+  const logoSrc = brandStyle === 'classic' ? '/logo-classic.png' : '/logo.png';
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
+    <div className={cn('flex min-w-0 items-center gap-2.5', className)}>
       <motion.div
-        initial={animated ? { opacity: 0 } : undefined}
-        animate={animated ? { opacity: 1 } : undefined}
+        initial={animated ? { opacity: 0, scale: 0.96 } : undefined}
+        animate={animated ? { opacity: 1, scale: 1 } : undefined}
         transition={{ duration: 0.35 }}
-        className="relative"
+        className="relative shrink-0"
       >
-        {/* The mark is a flat civic navy tile: a brand that pulses on a loop steals
-            attention from the one thing the header has to offer, which is the
-            search field. */}
-        {/* A photograph, not an illustration: the Boston skyline seen across
-            Dorchester Bay at dusk (Wikimedia Commons, Sswonk, CC BY-SA 3.0 — see
-            public/IMAGE-CREDITS.md). The same file is the app icon. */}
         <Image
-          src="/logo.png"
+          key={logoSrc}
+          src={logoSrc}
           alt=""
           width={icon}
           height={icon}
           priority
-          className="relative z-10 rounded-[22%] shadow-[var(--shadow-sm)]"
+          unoptimized
+          className="relative z-10 rounded-[22%] border border-white/35 object-cover shadow-[var(--shadow-sm)]"
         />
       </motion.div>
-      
+
       {showText && (
         <motion.div
-          initial={animated ? { opacity: 0, x: -10 } : undefined}
+          initial={animated ? { opacity: 0, x: -8 } : undefined}
           animate={animated ? { opacity: 1, x: 0 } : undefined}
-          transition={{ delay: 0.3, duration: 0.4 }}
-          className="flex flex-col"
+          transition={{ delay: 0.12, duration: 0.32 }}
+          style={{ minHeight: icon }}
+          className="flex min-w-0 flex-col items-start justify-center text-[var(--color-text-primary)]"
         >
-          <span className={cn('font-display font-bold leading-none', text)}>
-            DOR<span className="text-[var(--color-accent-primary)]">101</span>
-          </span>
-          <span className="text-[0.6em] font-heading tracking-wider text-[var(--color-text-muted)]">
-            DORCHESTER
+          <span className={cn('whitespace-nowrap font-display font-bold leading-none tracking-[0.015em]', wordmark)}>
+            DOR<span className="ms-[0.08em] text-[var(--color-accent-primary)]">101</span>
           </span>
         </motion.div>
       )}

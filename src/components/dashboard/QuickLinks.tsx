@@ -62,9 +62,9 @@ export function QuickLinks() {
               {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className={cn(
                 'group flex h-full flex-col items-start gap-2 rounded-[var(--radius-lg)]',
-                'border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3',
+                'border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 shadow-[var(--shadow-sm)] backdrop-blur-sm',
                 'transition-[border-color,box-shadow,transform] duration-200',
-                'hover:-translate-y-0.5 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-md)]',
+                'hover:-translate-y-1 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-md)] active:translate-y-0 active:scale-[0.985]',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2'
               )}
               aria-label={link.external ? `${label} — MBTA.com` : label}

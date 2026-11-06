@@ -1,11 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { RESOURCES, verificationLevel } from '@/data/resources';
+import { RESOURCES, reviewBacklog, verificationLevel } from '@/data/resources';
+import { dictionaries } from '@/i18n';
 import { WINTER_CLOTHING, clothingCheckLevel } from '@/data/winterClothing';
 import { REVIEW_FOCUS } from '@/data/reviewFocus';
 import { freshnessReport } from '../../scripts/audit-freshness';
 
 describe('freshness review signals', () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it('describes current follow-up flags accurately instead of calling them a year old', () => {
+    const now = new Date('2026-11-05T12:00:00Z');
+    expect(reviewBacklog(now)).toEqual({ needsReview: 24, total: 28 });
+    expect(RESOURCES.filter((record) => verificationLevel(record, now) === 'critical')).toHaveLength(0);
+    expect(dictionaries.en['notifications.reviewBacklog']).toContain('follow-up verification');
+    expect(dictionaries.en['notifications.reviewBacklog']).not.toContain('year');
+  });
+
   it('continues aging a needs-review resource or clothing record into critical status', () => {
     const reviewDate = '2025-01-01';
     const now = new Date('2027-01-02T12:00:00Z');

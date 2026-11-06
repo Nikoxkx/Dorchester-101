@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dictionaries } from '@/i18n';
 import { makeTranslator } from '@/i18n/runtime';
 import { formatClockMinutesForLocale } from '@/lib/hours';
+import { formatTimeInTimeZone } from '@/i18n/formatters';
 import { useAppStore } from '@/stores/appStore';
 
 vi.mock('@/lib/mbta', () => ({ fetchAlerts: vi.fn() }));
@@ -30,14 +31,27 @@ describe('live notification language and hours', () => {
     expect(hotline).toMatchObject({
       kind: 'closing-soon',
       sourceKey: 'map.food',
-      params: { minutes: 30, closesAtMinutes: 19 * 60 },
+      params: { minutes: 30, closesAtMinutes: 19 * 60, closesAtInstant: '2026-09-04T23:00:00.000Z' },
       expiresAt: '2026-09-04T23:00:00.000Z',
     });
+    expect(formatTimeInTimeZone('2026-09-04T23:00:00.000Z', 'en', 'America/Los_Angeles')).toBe('4:00 PM');
+    expect(formatTimeInTimeZone('2026-09-04T23:00:00.000Z', 'en', 'America/New_York')).toBe('7:00 PM');
     expect(body.notifications.find((item: { id: string }) => item.id === 'open-dorchester-food-coop')).toBeUndefined();
 
     vi.setSystemTime(new Date('2026-09-04T23:01:00Z')); // after 7 PM Boston
     const later = await (await GET(new Request('http://localhost/api/notifications?categories=food'))).json();
     expect(later.notifications.find((item: { id: string }) => item.id === 'open-bostons-food-district')).toBeUndefined();
+  });
+
+  it('keeps a Boston evening close out of closing-soon several hours early and returns the close instant', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-04T20:00:00Z')); // Friday 4 PM in Boston
+    vi.mocked(fetchAlerts).mockResolvedValue({ alerts: [], fetchedAt: '2026-09-04T19:59:00Z', source: 'mbta-live', status: 'ok' } as never);
+    const body = await (await GET(new Request('http://localhost/api/notifications?categories=food&transit=0'))).json();
+    const hotline = body.notifications.find((item: { id: string }) => item.id === 'open-bostons-food-district');
+    expect(hotline.kind).toBe('open-now');
+    expect(hotline.params.closesAtInstant).toBe('2026-09-04T23:00:00.000Z');
+    expect(formatTimeInTimeZone(hotline.params.closesAtInstant, 'en', 'America/Los_Angeles')).toBe('4:00 PM');
   });
 
   it('does not emit an open or closing alert for the holiday-sensitive library', async () => {

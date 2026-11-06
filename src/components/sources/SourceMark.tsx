@@ -10,10 +10,11 @@ import type { TranslationKey } from '@/i18n/en';
 /**
  * Publisher badge.
  *
- * Prefers a real logo at `/sources/<id>.svg` when an operator has installed one
- * under a licence that allows it, and otherwise draws a monogram in the
- * publisher's public brand colour. Either way the badge is a link to the
- * publisher, because a source you cannot click is a claim, not a citation.
+ * Prefers an included, permitted logo at `/sources/<id>.svg` and otherwise
+ * draws a monogram in the publisher's public brand colour. The source registry
+ * marks sources without included artwork, so their monograms render directly
+ * without a broken-image request. Either way the badge links to the publisher,
+ * because a source you cannot click is a claim, not a citation.
  */
 export function SourceMark({
   id,
@@ -41,7 +42,7 @@ export function SourceMark({
   const fontPx = Math.max(8, Math.round(px * (source.short.length > 3 ? 0.28 : source.short.length > 2 ? 0.36 : 0.46)));
   const external = !(href ?? source.url).startsWith('/');
 
-  const badge = logoFailed ? (
+  const badge = logoFailed || source.logoAvailable === false ? (
     <span
       className="grid shrink-0 place-items-center rounded-[26%] font-heading font-extrabold uppercase leading-none tracking-tight shadow-[var(--shadow-sm)] ring-1 ring-black/10"
       style={{ width: px, height: px, background: source.color, color: source.ink ?? '#FFFFFF', fontSize: fontPx }}

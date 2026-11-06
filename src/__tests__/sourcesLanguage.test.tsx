@@ -13,7 +13,7 @@ vi.mock('@/components/pwa/DownloadAppCard', () => ({ DownloadAppCard: () => null
 vi.mock('@/components/a11y/ReportProblem', () => ({ ReportProblem: () => null }));
 
 import { AboutView } from '@/app/about/AboutView';
-import { Cite } from '@/components/sources/SourceMark';
+import { Cite, SourceMark } from '@/components/sources/SourceMark';
 import { SourcePreview } from '@/components/sources/SourcePreview';
 
 beforeEach(() => {
@@ -38,6 +38,14 @@ describe('source and about language coverage', () => {
       expect(within(section!).getByText(new RegExp(t('sources.cadence.nws').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))).toBeTruthy();
       expect(within(section!).getByText(new RegExp(t('sources.licence.mbta').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))).toBeTruthy();
     }
+  });
+
+  it('renders weather-source monograms without requesting absent publisher artwork', () => {
+    const { container } = render(<><SourceMark id="nws" /><SourceMark id="openmeteo" /></>);
+
+    expect(container.querySelectorAll('img')).toHaveLength(0);
+    expect(screen.getByText('NWS')).toBeTruthy();
+    expect(screen.getByText('OM')).toBeTruthy();
   });
 
   it('localizes licence text and date-only source dates without shifting the day', () => {

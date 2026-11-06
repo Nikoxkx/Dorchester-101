@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   ArrowDown,
@@ -35,7 +36,7 @@ import { Toggle, StatusPicker } from '@/components/a11y/Toggle';
 import { ReportProblem } from '@/components/a11y';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { usePrivacyStore } from '@/stores/privacyStore';
-import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId, type WeatherBlockId } from '@/stores/appStore';
+import { useAppStore, type FontSize, type MapStyle, PALETTES, SURFACES, BRAND_STYLES, type Palette, type Surface, HOME_SECTION_ORDER, HOME_CARD_STYLES, type HomeSectionId, type WeatherBlockId } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
 import { speechVoiceMatches, useSpeechSupported } from '@/hooks/useSpeechSupported';
 import { spokenLanguage } from '@/i18n/spokenLanguages';
@@ -91,7 +92,7 @@ const WEATHER_BLOCK_LABEL: Record<WeatherBlockId, TranslationKey> = {
 
 /** Preview swatches — the same hexes as the palette blocks in globals.css. */
 const PALETTE_SWATCH: Record<Palette, { light: { bg: string; card: string; accent: string; accent2: string }; dark: { bg: string; card: string; accent: string; accent2: string } }> = {
-  harbor: { light: { bg: '#FAF7F1', card: '#F2EDE4', accent: '#14304F', accent2: '#A6362A' }, dark: { bg: '#0F1720', card: '#16202C', accent: '#7FB4E8', accent2: '#E8746A' } },
+  harbor: { light: { bg: '#F2F7F7', card: '#E8F0F1', accent: '#123D54', accent2: '#A63D35' }, dark: { bg: '#11181B', card: '#1A2428', accent: '#86C7D5', accent2: '#EF8478' } },
   midnight: { light: { bg: '#FFFFFF', card: '#F4F4F5', accent: '#111111', accent2: '#C0392B' }, dark: { bg: '#000000', card: '#0B0B0D', accent: '#E8E8ED', accent2: '#FF7A6B' } },
   forest: { light: { bg: '#F7F8F3', card: '#ECEFE4', accent: '#1F5A3A', accent2: '#A85A22' }, dark: { bg: '#0C1511', card: '#121E18', accent: '#7FD3A3', accent2: '#F0A070' } },
   brick: { light: { bg: '#FBF6F2', card: '#F3EAE3', accent: '#8E2E22', accent2: '#14304F' }, dark: { bg: '#170F0D', card: '#201513', accent: '#F09A8C', accent2: '#8DBCEA' } },
@@ -406,6 +407,39 @@ export default function SettingsPage() {
 
             <fieldset className="lg:col-span-2">
               <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('settings.brandStyle')}
+              </legend>
+              <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
+                {BRAND_STYLES.map((value) => {
+                  const active = store.brandStyle === value;
+                  const backdrop = value === 'classic' ? '/img/dorchester-bay-sunset.jpg' : '/img/dor101-skyline.jpg';
+                  const logo = value === 'classic' ? '/logo-classic.png' : '/logo.png';
+                  return (
+                    <label
+                      key={value}
+                      className={cn(
+                        'relative cursor-pointer rounded-[var(--radius-md)] border p-2.5 text-start text-sm font-heading transition-colors',
+                        'focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]',
+                        active ? 'border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/10' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                      )}
+                    >
+                      <input type="radio" name="brand-style" className="sr-only" checked={active} onChange={() => store.setBrandStyle(value)} />
+                      <span aria-hidden="true" className="relative mb-2 block h-16 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)]">
+                        <Image src={backdrop} alt="" fill sizes="(max-width: 640px) 100vw, 30rem" className="object-cover" />
+                        <span className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+                        <Image src={logo} alt="" width={44} height={44} unoptimized className="absolute start-2 top-2 h-11 w-11 rounded-[20%] border border-white/50 object-cover shadow-md" />
+                        {active && <span className="absolute end-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-[var(--color-accent-primary)] text-[var(--color-bg-primary)]"><Check className="h-4 w-4" /></span>}
+                      </span>
+                      <span className="block font-semibold">{t(`settings.brandStyle.${value}` as TranslationKey)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{t('settings.brandStyleNote')}</p>
+            </fieldset>
+
+            <fieldset className="lg:col-span-2">
+              <legend className="mb-2 block text-xs font-heading font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                 {t('settings.palette')}
               </legend>
               <div role="radiogroup" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
@@ -466,7 +500,7 @@ export default function SettingsPage() {
                       <span
                         aria-hidden="true"
                         className="mb-1.5 block h-10 w-full overflow-hidden rounded-md border border-black/10 bg-cover bg-center"
-                        style={{ backgroundImage: 'url(/img/dorchester-bay-sunset.jpg)' }}
+                        style={{ backgroundImage: `url(${store.brandStyle === 'classic' ? '/img/dorchester-bay-sunset.jpg' : '/img/dor101-skyline.jpg'})` }}
                       >
                         <span className="m-1.5 block h-7 rounded-[5px] border border-white/30" style={surfacePreview(value, sw)} />
                       </span>

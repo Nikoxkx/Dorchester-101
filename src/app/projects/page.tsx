@@ -14,7 +14,6 @@ import {
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProjectNote } from '@/components/layout/ProjectNote';
 import { SiteImagery } from '@/components/projects/SiteImagery';
-import { STATION_PHOTOS } from '@/data/stationPhotos';
 import { SourcePreview } from '@/components/sources/SourcePreview';
 import { AddToCalendar } from '@/components/housing/AddToCalendar';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
@@ -191,8 +190,8 @@ export default function ProjectsPage() {
                     lat={project.lat}
                     lng={project.lng}
                     label={project.address.split(',')[0]}
-                    sourceUrl={project.id === 3 ? project.articleUrl : project.applicationSourceUrl}
-                    contextPhoto={project.id === 4 ? { ...STATION_PHOTOS['place-smmnl'], caption: t('map.photo.shawmutContext') } : undefined}
+                    sourceUrl={project.visual?.sourceUrl ?? project.applicationSourceUrl}
+                    visual={project.visual}
                   />
                   <div className="space-y-3 text-sm">
                     <div>
@@ -239,7 +238,7 @@ export default function ProjectsPage() {
                 <SourcePreview
                   title={t('projects.docketTitle', { project: project.name })}
                   url={project.bpdaLink}
-                  sourceId="bpda"
+                  sourceId={project.id === 3 ? 'bostongov' : 'bpda'}
                   description={t('projects.docketDescription')}
                   secondary={{ label: t(project.id === 1 || project.id === 4 ? 'projects.coverage' : 'projects.developerUpdate'), url: project.articleUrl, sourceId: project.id === 1 || project.id === 4 ? 'dotnews' : undefined }}
                   lastChecked={project.lastChecked}

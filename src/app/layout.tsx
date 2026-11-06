@@ -1,6 +1,7 @@
 import { socialMetadata, SOCIAL_DESCRIPTION } from "@/lib/social";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import "./globals.css";
 
 // Self-hosted faces via Fontsource. Third-party font CDNs are a tracking
@@ -57,6 +58,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any", type: "image/x-icon" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-256.png", sizes: "256x256", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
@@ -73,17 +77,14 @@ export const metadata: Metadata = {
     },
   },
   other: {
-    "msapplication-TileColor": "#14304F",
+    "msapplication-TileColor": "#123D54",
     "msapplication-config": "none",
     "format-detection": "telephone=no",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#14304F" },
-    { media: "(prefers-color-scheme: dark)", color: "#0F1720" },
-  ],
+  themeColor: "#11181B",
   width: "device-width",
   viewportFit: "cover",
   initialScale: 1,
@@ -96,8 +97,21 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr" className="dark" suppressHydrationWarning>
       <head>
+        <Script id="dor101-theme-init" strategy="beforeInteractive">
+          {`try {
+            const persisted = localStorage.getItem('dor101-settings');
+            const savedState = persisted ? JSON.parse(persisted)?.state : undefined;
+            const storedTheme = savedState?.theme;
+            const theme = ['light', 'dark', 'system'].includes(storedTheme) ? storedTheme : 'dark';
+            const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.dataset.brandStyle = savedState?.brandStyle === 'classic' ? 'classic' : 'harbor';
+          } catch {
+            document.documentElement.classList.add('dark');
+          }`}
+        </Script>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -110,7 +124,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* The storm-warning banner renders on every page; warming its feed
             means a live warning is already on screen when the page settles. */}
         <link rel="prefetch" href="/api/weather" />
-        <link rel="preload" href="/img/dorchester-bay-sunset.jpg" as="image" />
+        <link rel="preload" href="/img/dor101-skyline.jpg" as="image" />
         <noscript>
           <style>{`.dor101-js-only { display: none !important; } .dor101-nojs { display: block !important; }`}</style>
         </noscript>

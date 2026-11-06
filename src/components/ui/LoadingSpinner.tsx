@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n/hook';
 import { useTranslation } from '@/lib/i18n';
+import { BrandWordmark } from '@/components/ui/BrandWordmark';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -81,22 +82,22 @@ export function PageLoader() {
           <div className="w-16 h-16 mx-auto mb-4 relative">
             {/* Animated logo placeholder */}
             <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#1B3A6B] to-[#4A7BC4]"
-              animate={{ 
+              className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-primary-soft)]"
+              animate={{
                 boxShadow: [
-                  '0 0 20px rgba(27, 58, 107, 0.3)',
-                  '0 0 40px rgba(27, 58, 107, 0.6)',
-                  '0 0 20px rgba(27, 58, 107, 0.3)',
+                  '0 0 20px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
+                  '0 0 40px color-mix(in srgb, var(--color-accent-primary) 56%, transparent)',
+                  '0 0 20px color-mix(in srgb, var(--color-accent-primary) 30%, transparent)',
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
             />
             <motion.div
-              className="absolute inset-0 flex items-center justify-center text-white font-display font-bold text-xl"
+              className="absolute inset-0 flex items-center justify-center text-white"
               animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              D
+              <BrandWordmark decorative className="w-12 text-white" />
             </motion.div>
           </div>
         </motion.div>

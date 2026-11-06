@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { BadgeCheck, Bot, CircleAlert, Gauge, Languages, ShieldCheck } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ReportProblem } from '@/components/a11y/ReportProblem';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
 import { Badge } from '@/components/ui/Badge';
+import { ImageRevealCard } from '@/components/ui/ImageRevealCard';
 import { useI18n } from '@/i18n/hook';
 import { useHydratedNow } from '@/hooks/useNow';
 import { useAppStore } from '@/stores/appStore';
@@ -79,22 +79,17 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
     <MainLayout>
       <div className="flex flex-col gap-6 pb-12">
         <header className="flex flex-col gap-3">
-          <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border)]">
-            <Image
-              src="/img/dorchester-bay-sunset.jpg"
-              alt={t('about.photo.bay')}
-              width={1600}
-              height={900}
-              priority
-              className="h-44 w-full object-cover sm:h-56"
-              sizes="100vw"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-2.5">
-              <p className="font-heading text-[11px] text-white/85">
-                {t('about.photo.bay')} · <CommonsPhotoCredit className="text-white/90" commonsFile="Dorchester_Bay_Boston_Harbor_sunset.jpg" author="Sswonk" license="3.0" />
-              </p>
-            </div>
-          </div>
+          <ImageRevealCard
+            src="/img/dorchester-bay-sunset.jpg"
+            alt={t('about.photo.bay')}
+            width={1600}
+            height={900}
+            priority
+            sizes="100vw"
+            imageClassName="h-44 sm:h-56"
+            caption={t('about.photo.bay')}
+            credit={<CommonsPhotoCredit className="text-white/90" commonsFile="Dorchester_Bay_Boston_Harbor_sunset.jpg" author="Sswonk" license="3.0" />}
+          />
           <div>
             <h1 className="font-heading text-2xl font-extrabold leading-tight sm:text-3xl">{t('about.title')}</h1>
             <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-[var(--color-text-secondary)]">{t('about.intro')}</p>
@@ -112,34 +107,26 @@ export function AboutView({ credits }: { credits: PhotoCredit[] }) {
         </header>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
-            <Image
-              src="/img/hoods/fields-corner.jpg"
-              alt={t('about.photo.train')}
-              width={1200}
-              height={800}
-              className="h-40 w-full object-cover"
-              sizes="(min-width: 640px) 50vw, 100vw"
-            />
-            <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              <p>{t('about.photo.train')}</p>
-              <CommonsPhotoCredit commonsFile="Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg" author="Hutima" license="4.0" />
-            </figcaption>
-          </figure>
-          <figure className="m-0 overflow-hidden rounded-2xl border border-[var(--color-border)]">
-            <Image
-              src="/img/hoods/codman-square-church-2019.jpg"
-              alt={t('about.photo.square')}
-              width={1200}
-              height={800}
-              className="h-40 w-full object-cover"
-              sizes="(min-width: 640px) 50vw, 100vw"
-            />
-            <figcaption className="px-3 py-2 text-[11px] leading-snug text-[var(--color-text-muted)]">
-              <p>{t('about.photo.square')}</p>
-              <CommonsPhotoCredit commonsFile="Second_Church_in_Dorchester.jpg" author="Staruski1" license="4.0" />
-            </figcaption>
-          </figure>
+          <ImageRevealCard
+            src="/img/hoods/fields-corner.jpg"
+            alt={t('about.photo.train')}
+            width={1200}
+            height={800}
+            sizes="(min-width: 640px) 50vw, 100vw"
+            imageClassName="h-40"
+            caption={t('about.photo.train')}
+            credit={<CommonsPhotoCredit commonsFile="Inbound_train_arriving_at_Fields_Corner_station,_July_2021.jpg" author="Hutima" license="4.0" />}
+          />
+          <ImageRevealCard
+            src="/img/hoods/codman-square-church-2019.jpg"
+            alt={t('about.photo.square')}
+            width={1200}
+            height={800}
+            sizes="(min-width: 640px) 50vw, 100vw"
+            imageClassName="h-40"
+            caption={t('about.photo.square')}
+            credit={<CommonsPhotoCredit commonsFile="Second_Church_in_Dorchester.jpg" author="Staruski1" license="4.0" />}
+          />
         </div>
 
         {/* ── What this is, who made it, what it is for ─────────────── */}

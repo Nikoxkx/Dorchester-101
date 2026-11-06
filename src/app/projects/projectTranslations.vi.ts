@@ -23,12 +23,12 @@ export const VIETNAMESE_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'Hai tòa nhà nhỏ hoàn toàn giá phải chăng dự kiến hoàn thành năm 2026, thay thế các lô đất trống bằng căn hộ cho gia đình.',
-    parcelNote: 'Hai khu đất trước đây bỏ trống tại khu Codman Square / Four Corners: 151 Spencer Street và 25 New England Avenue.',
+    parcelNote: "Hai địa điểm tại Codman Square / Four Corners. Thành phố và Housing Navigator ghi 25 New England Avenue; tiêu đề trang CSNDC ghi 23, nhưng phần mô tả chi tiết ghi 25. Hãy xác nhận số nhà với CSNDC trước khi đến; địa điểm còn lại là 151 Spencer Street.",
     unitMix: '42 căn hộ gia đình giới hạn thu nhập trong hai tòa nhà: 19 căn tại Spencer Street và 23 căn tại New England Avenue.',
     amenities: ['Căn hộ dành cho gia đình', 'Dịch vụ cư dân do CSNDC cung cấp', 'Đi bộ một đoạn ngắn đến Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Nhà ở gia đình mới trên các lô đất trống, có dịch vụ của CSNDC tại chỗ cho người thuê.',
-    howToApply: "CSNDC cho biết đã có đợt bốc thăm vào tháng 2 năm 2026. Ngày 31 tháng 10 năm 2026, Housing Navigator cho biết danh sách chờ đang mở. Tình trạng có thể thay đổi; xác nhận căn trống và cách nộp đơn với WinnResidential theo số (617) 287-9580.",
-    renderingNote: 'Bản vẽ và ảnh tiến độ được công bố trong các bản cập nhật bất động sản của CSNDC.',
+    howToApply: "Bản cập nhật mùa xuân năm 2026 của CSNDC cho biết đợt bốc thăm đã kết thúc vào tháng 2; trang bất động sản hiện ghi nhà chưa có sẵn và quy trình nộp đơn có thể chưa bắt đầu trong một thời gian, trong khi Housing Navigator vẫn hiển thị danh sách chờ mở vào ngày 31 tháng 10 năm 2026. Các nguồn không thống nhất. Hãy xác nhận với WinnResidential theo số (617) 287-9580 hoặc talbotcommons2@winnco.com trước khi dựa vào danh sách nào.",
+    renderingNote: "CSNDC đăng hình ảnh dự án cho cả hai địa điểm; hình ở đây là bản vẽ kiến trúc, không phải ảnh hiện trạng.",
   },
   4: {
     description: 'Tòa nhà bốn tầng hoàn toàn giá phải chăng trên khu đất xưởng sửa thân xe cạnh ga Shawmut của Red Line.',

@@ -947,7 +947,7 @@ export function lastReviewedOn(): string {
   return RESOURCES.map((r) => r.verification.checkedOn).sort().at(-1)!;
 }
 
-/** Share of the dataset that has gone past its review window. */
+/** Count of records with an unresolved review flag or outside the freshness window. */
 export function reviewBacklog(now = new Date()): { needsReview: number; total: number } {
   const needsReview = RESOURCES.filter((r) => verificationLevel(r, now) !== 'fresh').length;
   return { needsReview, total: RESOURCES.length };
