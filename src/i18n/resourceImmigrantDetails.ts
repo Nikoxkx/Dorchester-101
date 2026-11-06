@@ -6,10 +6,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
   "somali-development-center": {
     "es": {
       "neighborhood": "Roxbury (atiende a Dorchester)",
-      "hoursNote": "El horario de la oficina y de los programas varía; llame al (617) 522-0700 para confirmar antes de ir.",
+      "hoursNote": "Los horarios de oficina y de programas varían. Llame al (617) 522-0700 o al (617) 938-7573 para confirmar qué número corresponde al servicio y consultar el horario antes de ir.",
       "eligibility": "Los programas se centran en inmigrantes y refugiados; los requisitos, costos y disponibilidad varían. Consulte al centro.",
       "transit": "Consulte las indicaciones actuales de MBTA para llegar a 10 Malcolm X Boulevard; llame para confirmar el acceso antes de ir.",
-      "source": "sdcboston.org; lista de ayuda legal de inmigración de mass.gov; dirección en MapQuest",
+      "source": "Páginas actuales de contacto, eventos y programas del Somali Development Center",
       "services": [
         "Clases de ESOL para adultos",
         "Empleo y preparación para el trabajo",
@@ -22,10 +22,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "ht": {
       "neighborhood": "Roxbury (sèvi Dorchester)",
-      "hoursNote": "Lè biwo a ak orè pwogram yo varye; rele (617) 522-0700 pou konfime anvan ou ale.",
+      "hoursNote": "Lè biwo a ak pwogram yo varye. Rele (617) 522-0700 oswa (617) 938-7573 pou konfime ki nimewo ki pou sèvis la ak orè a anvan ou ale.",
       "eligibility": "Pwogram yo konsantre sou imigran ak refijye; kondisyon, depans ak disponiblite varye. Mande sant lan.",
       "transit": "Tcheke direksyon MBTA ki ajou pou 10 Malcolm X Boulevard; rele pou konfime aksè anvan ou ale.",
-      "source": "sdcboston.org; lis referans èd legal imigrasyon mass.gov; adrès sou MapQuest",
+      "source": "Paj kontak, evènman ak pwogram aktyèl Somali Development Center",
       "services": [
         "Klas ESOL pou granmoun",
         "Travay ak preparasyon pou travay",
@@ -38,10 +38,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "pt": {
       "neighborhood": "Roxbury (atende Dorchester)",
-      "hoursNote": "Os horários do escritório e dos programas variam; ligue para (617) 522-0700 para confirmar antes de ir.",
+      "hoursNote": "Os horários do escritório e dos programas variam. Ligue para (617) 522-0700 ou (617) 938-7573 para confirmar qual número atende ao serviço e consultar o horário antes de ir.",
       "eligibility": "Os programas têm foco em imigrantes e refugiados; requisitos, custos e disponibilidade variam. Pergunte ao centro.",
       "transit": "Consulte as rotas atuais da MBTA para 10 Malcolm X Boulevard; ligue para confirmar o acesso antes de ir.",
-      "source": "sdcboston.org; lista de assistência jurídica de imigração do mass.gov; endereço no MapQuest",
+      "source": "Páginas atuais de contato, eventos e programas do Somali Development Center",
       "services": [
         "Aulas de ESOL para adultos",
         "Emprego e preparação para o trabalho",
@@ -54,10 +54,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "vi": {
       "neighborhood": "Roxbury (phục vụ Dorchester)",
-      "hoursNote": "Giờ văn phòng và lịch chương trình khác nhau; gọi (617) 522-0700 để xác nhận trước khi đến.",
+      "hoursNote": "Giờ văn phòng và lịch chương trình thay đổi. Gọi (617) 522-0700 hoặc (617) 938-7573 để xác nhận số liên hệ phù hợp với dịch vụ và giờ trước khi đến.",
       "eligibility": "Các chương trình tập trung vào người nhập cư và người tị nạn; điều kiện, chi phí và tình trạng sẵn có khác nhau. Hãy hỏi trung tâm.",
       "transit": "Kiểm tra chỉ dẫn MBTA hiện tại đến 10 Malcolm X Boulevard; gọi xác nhận lối tiếp cận trước khi đến.",
-      "source": "sdcboston.org; danh sách giới thiệu trợ giúp pháp lý nhập cư của mass.gov; địa chỉ trên MapQuest",
+      "source": "Trang liên hệ, sự kiện và chương trình hiện tại của Somali Development Center",
       "services": [
         "Lớp ESOL cho người lớn",
         "Việc làm và chuẩn bị đi làm",
@@ -70,10 +70,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "zh": {
       "neighborhood": "Roxbury（服务 Dorchester）",
-      "hoursNote": "办公室和项目时间各异；前往前请致电 (617) 522-0700 确认。",
+      "hoursNote": "办公室和项目时间各异。前往前请致电 (617) 522-0700 或 (617) 938-7573，确认对应服务的联系电话和时间。",
       "eligibility": "项目主要服务移民和难民；资格、费用及供应情况各异。请咨询中心。",
       "transit": "请查看 MBTA 前往 10 Malcolm X Boulevard 的最新路线；前往前致电确认出入条件。",
-      "source": "sdcboston.org；mass.gov 移民法律援助转介名单；MapQuest 地址",
+      "source": "Somali Development Center 当前联系、活动及项目页面",
       "services": [
         "成人 ESOL 课程",
         "就业和求职准备",
@@ -86,10 +86,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "ar": {
       "neighborhood": "Roxbury (تخدم Dorchester)",
-      "hoursNote": "تختلف ساعات المكتب ومواعيد البرامج؛ اتصل على (617) 522-0700 للتأكد قبل الزيارة.",
+      "hoursNote": "تختلف ساعات المكتب والبرامج. اتصل على (617) 522-0700 أو (617) 938-7573 لتأكيد الرقم المناسب للخدمة ومواعيدها قبل الزيارة.",
       "eligibility": "تركز البرامج على المهاجرين واللاجئين؛ تختلف الأهلية والتكاليف والتوفر. اسأل المركز.",
       "transit": "تحقق من اتجاهات MBTA الحالية إلى 10 Malcolm X Boulevard؛ اتصل لتأكيد إمكانية الوصول قبل الزيارة.",
-      "source": "sdcboston.org؛ قائمة mass.gov لإحالات المساعدة القانونية للهجرة؛ العنوان على MapQuest",
+      "source": "صفحات التواصل والفعاليات والبرامج الحالية لدى Somali Development Center",
       "services": [
         "دروس ESOL للبالغين",
         "التوظيف والاستعداد للعمل",
@@ -102,10 +102,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "so": {
       "neighborhood": "Roxbury (u adeegta Dorchester)",
-      "hoursNote": "Saacadaha xafiiska iyo jadwalka barnaamijyadu way kala duwan yihiin; wac (617) 522-0700 si aad u xaqiijiso ka hor booqashada.",
+      "hoursNote": "Saacadaha xafiiska iyo barnaamijyadu way kala duwan yihiin. Wac (617) 522-0700 ama (617) 938-7573 si aad u xaqiijiso lambarka adeegga ku habboon iyo saacadaha ka hor booqashada.",
       "eligibility": "Barnaamijyadu waxay diiradda saaraan soo-galootiga iyo qaxootiga; shuruudaha, kharashka iyo helitaanku way kala duwan yihiin. Weydii xarunta.",
       "transit": "Hubi tilmaamaha MBTA ee hadda jira ee 10 Malcolm X Boulevard; wac si aad u xaqiijiso gelitaanka ka hor booqashada.",
-      "source": "sdcboston.org; liiska gudbinta caawinta sharci ee socdaalka ee mass.gov; cinwaanka MapQuest",
+      "source": "Bogagga xiriirka, dhacdooyinka iyo barnaamijyada hadda ee Somali Development Center",
       "services": [
         "Fasallada ESOL ee dadka waaweyn",
         "Shaqo iyo diyaar-garow shaqo",
@@ -118,10 +118,10 @@ export const IMMIGRANT_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
     },
     "kea": {
       "neighborhood": "Roxbury (ta serbi Dorchester)",
-      "hoursNote": "Orárius di skritóriu i di programas ta varia; txoma (617) 522-0700 pa konfirma antis di bai.",
+      "hoursNote": "Orárius di skritóriu i di programas ta varia. Txoma (617) 522-0700 ô (617) 938-7573 pa konfirma kual númeru é pa kel servisu i kual é oráriu antis di bai.",
       "eligibility": "Programas ta foka na imigrantis i refujiadus; rekizitus, kustus i disponibilidadi ta varia. Purgunta sentru.",
       "transit": "Konsulta indikasons atual di MBTA pa 10 Malcolm X Boulevard; txoma pa konfirma asesu antis di bai.",
-      "source": "sdcboston.org; lista di inkaminhamentu pa ajuda jurídiku di imigrason di mass.gov; morada na MapQuest",
+      "source": "Pájinas atual di kontaktu, eventus i programas di Somali Development Center",
       "services": [
         "Aulas di ESOL pa adultus",
         "Enpregu i preparason pa trabadju",

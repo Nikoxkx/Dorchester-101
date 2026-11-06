@@ -24,7 +24,7 @@ import { ResourcesView } from '@/app/resources/ResourcesView';
 const IDS = ['hcfa-helpline', 'boston-language-access'];
 const byId = (id: string) => RESOURCES.find((r) => r.id === id)!;
 // Change only after reviewing all language drafts against the new source facts.
-const SOURCE_DIGEST = '74c4a41c011c82362e705bccb83a13291d9995c08a4cf0874b2f2aa5c292c824';
+const SOURCE_DIGEST = 'f2dc1311351f45ce3d59c2b0ff5d6424342fb507b8b3343b6dea0dd5de7c49b2';
 
 beforeEach(() => { useAppStore.getState().resetAll(); globalCache.clear(); });
 

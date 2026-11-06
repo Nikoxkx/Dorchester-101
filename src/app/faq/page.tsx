@@ -152,15 +152,14 @@ Use the site's income tools as a starting point, then check the current official
       {
         key: 'food',
         q: t('faq.q.food'),
-        a: `There are many free food resources in Dorchester. Here are the main options:
+        a: `Dorchester has free food resources and low-cost produce options. Call ahead to confirm before traveling:
 
 **Food options (call to confirm):**
 
-1. **Codman Square Community Market** (the health centre's pantry)
-   - 450 Washington St, Dorchester — half a mile up Washington Street from the health centre
-   - The market page lists Tuesday 8am-1pm, Wednesday 2-7pm and Thursday 8am-1pm; another Codman page lists different hours.
-   - Choice-based shopping. Call to confirm current hours, visit frequency, and ID or address requirements.
-   - (617) 825-9660
+1. **Codman Square Community Market**
+   - 450 Washington St, Dorchester — half a mile up Washington Street from the health center
+   - The Community Market page lists Tuesday 8am–1pm, Wednesday 2–7pm and Thursday 8am–1pm. A separate Codman food-resources page lists a Tuesday 8–11am pantry at the same address; confirm whether these are the same service.
+   - Choice-based shopping. Call (617) 825-9660 to confirm current hours, visit frequency, and ID or address requirements.
 
 2. **Salvation Army Kroc Center**
    - 650 Dudley St, Dorchester
@@ -168,12 +167,12 @@ Use the site's income tools as a starting point, then check the current official
    - Call (617) 318-6940 to book; appointments once a month
    - (617) 318-6900 main line
 
-3. **Fair Foods $2 Bag at Lena Park**
+3. **Fair Foods produce bags at Lena Park**
    - 150 American Legion Hwy, Dorchester
-   - Codman's food-resource page lists Tuesdays 2-4:30pm, with a requested $2 per bag.
-   - Call to confirm the current schedule, availability, price and requirements.
-   - (617) 533-8133
-
+   - Fair Foods’ site list (updated September 6, 2026) lists Tuesday 2–4pm, fall through spring; the summer location differs.
+   - Fair Foods says bags cost a few dollars and there are no eligibility requirements, registration or ID checks. Confirm distribution before going.
+   - Fair Foods: (617) 288-6185; Lena Park CDC (host): (617) 533-8133
+   - Schedule: https://www.fairfoods.org/oursites
 
 **Mobile Food Markets:**
 - Greater Boston Food Bank partner pantries and pop-ups rotate through Dorchester
@@ -188,6 +187,9 @@ Call Project Bread FoodSource Hotline: **1-800-645-8333**
           { name: 'Codman Square Community Market', url: 'https://www.codman.org/wellness-resource/food-pantry/' },
           { name: 'Codman food resources', url: 'https://www.codman.org/patient-resource/food-resources/' },
           { name: 'Salvation Army Kroc Center', url: 'https://easternusa.salvationarmy.org/boston-kroc/help/' },
+          { name: 'Fair Foods site list', url: 'https://www.fairfoods.org/oursites' },
+          { name: 'Fair Foods program', url: 'https://www.fairfoods.org/ourprogram' },
+          { name: 'Lena Park CDC', url: 'https://www.lenaparkcdc.org/residential-support-and-services' },
           { name: 'Greater Boston Food Bank', url: 'https://www.gbfb.org/need-food/' },
           { name: 'Project Bread', url: 'https://projectbread.org/get-help' },
         ],

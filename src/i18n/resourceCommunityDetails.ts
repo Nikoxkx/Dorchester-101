@@ -96,106 +96,58 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
   "dotbdc": {
     "es": {
       "neighborhood": "Uphams Corner",
-      "source": "Páginas de contacto y programas de Dorchester Bay EDC; geocodificador del Censo de EE. UU.",
+      "source": "Páginas de contacto y programas de Dorchester Bay EDC",
       "hoursNote": "Sin cita de martes a jueves; lunes y viernes con cita. Llama al (617) 825-4200 para confirmar las horas.",
-      "services": [
-        "Desarrollo de vivienda asequible",
-        "Préstamos y asistencia técnica para pequeñas empresas",
-        "Clases de tecnología",
-        "Programas laborales para jóvenes",
-        "Organización comunitaria"
-      ],
+      "services": ["Desarrollo de vivienda asequible", "Préstamos y asistencia técnica para pequeñas empresas", "Organización comunitaria"],
       "address": "594 Columbia Road, oficina 302, Dorchester, MA 02125"
     },
     "ht": {
       "neighborhood": "Uphams Corner",
-      "source": "Paj kontak ak pwogram Dorchester Bay EDC; jeyokodè Resansman Etazini",
+      "source": "Paj kontak ak pwogram Dorchester Bay EDC",
       "hoursNote": "San randevou madi–jedi; lendi ak vandredi sou randevou. Rele (617) 825-4200 pou konfime lè yo.",
-      "services": [
-        "Devlopman lojman abòdab",
-        "Prè ak èd teknik pou ti biznis",
-        "Kou teknoloji",
-        "Pwogram travay pou jèn",
-        "Òganizasyon kominotè"
-      ],
+      "services": ["Devlopman lojman abòdab", "Prè ak asistans teknik pou ti biznis", "Òganizasyon kominotè"],
       "address": "594 Columbia Road, biwo 302, Dorchester, MA 02125"
     },
     "pt": {
       "neighborhood": "Uphams Corner",
-      "source": "Páginas de contato e programas da Dorchester Bay EDC; geocodificador do Censo dos EUA",
+      "source": "Páginas de contato e programas da Dorchester Bay EDC",
       "hoursNote": "Atendimento sem agendamento de terça a quinta; segunda e sexta com agendamento. Ligue para (617) 825-4200 para confirmar os horários.",
-      "services": [
-        "Desenvolvimento de moradia acessível",
-        "Empréstimos e assistência técnica para pequenos negócios",
-        "Aulas de tecnologia",
-        "Programas de trabalho para jovens",
-        "Organização comunitária"
-      ],
+      "services": ["Desenvolvimento de moradia acessível", "Empréstimos e assistência técnica para pequenos negócios", "Organização comunitária"],
       "address": "594 Columbia Road, sala 302, Dorchester, MA 02125"
     },
     "vi": {
       "neighborhood": "Uphams Corner",
-      "source": "Trang liên hệ và chương trình của Dorchester Bay EDC; bộ định vị của Cục Điều tra Dân số Hoa Kỳ",
+      "source": "Trang liên hệ và chương trình của Dorchester Bay EDC",
       "hoursNote": "Không cần hẹn từ thứ Ba đến thứ Năm; thứ Hai và thứ Sáu cần hẹn. Gọi (617) 825-4200 để xác nhận giờ.",
-      "services": [
-        "Phát triển nhà ở giá phải chăng",
-        "Cho vay và hỗ trợ kỹ thuật cho doanh nghiệp nhỏ",
-        "Lớp công nghệ",
-        "Chương trình việc làm cho thanh thiếu niên",
-        "Tổ chức cộng đồng"
-      ],
+      "services": ["Phát triển nhà ở giá phải chăng", "Cho vay và hỗ trợ kỹ thuật cho doanh nghiệp nhỏ", "Tổ chức cộng đồng"],
       "address": "594 Columbia Road, phòng 302, Dorchester, MA 02125"
     },
     "zh": {
       "neighborhood": "Uphams Corner",
-      "source": "Dorchester Bay EDC 联系和项目页面；美国人口普查局地址定位工具",
+      "source": "Dorchester Bay EDC 联系及项目页面",
       "hoursNote": "周二至周四可直接到访；周一和周五需预约。请致电 (617) 825-4200 确认时间。",
-      "services": [
-        "可负担住房开发",
-        "小企业贷款和技术协助",
-        "科技课程",
-        "青年就业项目",
-        "社区组织工作"
-      ],
+      "services": ["可负担住房开发", "小企业贷款与技术协助", "社区组织工作"],
       "address": "594 Columbia Road，302 室，Dorchester, MA 02125"
     },
     "ar": {
       "neighborhood": "Uphams Corner",
-      "source": "صفحات الاتصال والبرامج لدى Dorchester Bay EDC؛ أداة تحديد المواقع التابعة للتعداد الأمريكي",
+      "source": "صفحات الاتصال والبرامج لدى Dorchester Bay EDC",
       "hoursNote": "زيارة دون موعد من الثلاثاء إلى الخميس؛ الاثنين والجمعة بموعد. اتصل على (617) 825-4200 لتأكيد الساعات.",
-      "services": [
-        "تطوير الإسكان الميسور",
-        "إقراض المشروعات الصغيرة والمساعدة الفنية",
-        "دروس التكنولوجيا",
-        "برامج عمل للشباب",
-        "التنظيم المجتمعي"
-      ],
+      "services": ["تطوير الإسكان الميسور", "قروض ومساعدة فنية للمشروعات الصغيرة", "تنظيم المجتمع"],
       "address": "594 Columbia Road، الجناح 302، Dorchester, MA 02125"
     },
     "so": {
       "neighborhood": "Uphams Corner",
-      "source": "Bogagga xiriirka iyo barnaamijyada Dorchester Bay EDC; aaladda cinwaan-raadinta Tirakoobka Maraykanka",
+      "source": "Bogagga xiriirka iyo barnaamijyada Dorchester Bay EDC",
       "hoursNote": "Ballan la’aan Talaado–Khamiis; Isniin iyo Jimce waa ballan. Wac (617) 825-4200 si aad u xaqiijiso saacadaha.",
-      "services": [
-        "Horumarinta guryaha la awoodi karo",
-        "Amaah iyo caawimo farsamo oo ganacsiyada yaryar",
-        "Fasallo tiknoolajiyad",
-        "Barnaamijyada shaqada dhallinyarada",
-        "Abaabulka bulshada"
-      ],
+      "services": ["Horumarinta guryaha la awoodi karo", "Amaah iyo taageero farsamo oo ganacsiyada yaryar", "Abaabulka bulshada"],
       "address": "594 Columbia Road, xafiiska 302, Dorchester, MA 02125"
     },
     "kea": {
       "neighborhood": "Uphams Corner",
-      "source": "Pájinas di kontaktu i programas di Dorchester Bay EDC; jeyokodifikador di Sensu di Stadus Unidus",
+      "source": "Pájinas di kontaktu i programas di Dorchester Bay EDC",
       "hoursNote": "Sen markason di tersa a kinta; sigunda i sesta ku markason. Txoma (617) 825-4200 pa konfirma oráriu.",
-      "services": [
-        "Dezenvolvimentu di abitason asesível",
-        "Empréstimus i ajudu tékniku pa pikinus negósius",
-        "Aulas di teknologia",
-        "Programas di trabadju pa jovens",
-        "Organizason komunitáriu"
-      ],
+      "services": ["Dezenvolvimentu di abitason asesível", "Empréstimus i apoiu tékniku pa pikinus negósius", "Organizason komunitáriu"],
       "address": "594 Columbia Road, sala 302, Dorchester, MA 02125"
     }
   },
@@ -307,9 +259,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
   },
   "columbia-savin-hill-civic": {
     "es": {
-      "neighborhood": "Savin Hill (dirección de contacto; los lugares de reunión varían)",
-      "source": "Página de contacto y actas de Columbia-Savin Hill Civic Association; geocodificador del Censo de EE. UU.",
-      "hoursNote": "Las reuniones se publican en el sitio web; contacta a la asociación para confirmar lugar y horario.",
+      "neighborhood": "Savin Hill (el lugar de reunión varía; no hay sede pública confirmada)",
+      "address": "No hay una dirección pública actual para reuniones; confirme con la asociación",
+      "source": "Página de contacto y archivo de reuniones de Columbia-Savin Hill Civic Association",
+      "hoursNote": "El sitio describe reuniones mensuales, normalmente el primer lunes salvo el receso de verano y los días festivos, y conserva actas hasta junio de 2026. No se confirmó una sede actual para visitantes ni un teléfono vigente; use el sitio de la asociación para confirmar la próxima fecha, el lugar y el acceso antes de asistir.",
       "services": [
         "Reuniones cívicas",
         "Comentarios sobre desarrollo del barrio",
@@ -318,9 +271,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "ht": {
-      "neighborhood": "Savin Hill (adrès kontak; kote reyinyon varye)",
-      "source": "Paj kontak ak pwosè vèbal Columbia-Savin Hill Civic Association; jeyokodè Resansman Etazini",
-      "hoursNote": "Yo pibliye reyinyon yo sou sit la; kontakte asosyasyon an pou konfime kote ak orè.",
+      "neighborhood": "Savin Hill (kote reyinyon yo varye; pa gen lokal piblik ki konfime)",
+      "address": "Pa gen adrès piblik aktyèl pou reyinyon ki konfime; verifye avèk asosyasyon an",
+      "source": "Paj kontak ak achiv reyinyon Columbia-Savin Hill Civic Association",
+      "hoursNote": "Sit la dekri reyinyon chak mwa, anjeneral premye lendi a eksepte vakans ete ak jou ferye, epi li gen pwosè vèbal jiska jen 2026. Yo pa konfime kote pou vizitè ni yon nimewo telefòn aktyèl; sèvi ak sit asosyasyon an pou konfime pwochen dat la, kote a ak aksè anvan ou ale.",
       "services": [
         "Reyinyon sivik",
         "Kòmantè sou devlopman katye a",
@@ -329,9 +283,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "pt": {
-      "neighborhood": "Savin Hill (endereço de contato; locais de reunião variam)",
-      "source": "Página de contato e atas da Columbia-Savin Hill Civic Association; geocodificador do Censo dos EUA",
-      "hoursNote": "As reuniões são publicadas no site; contate a associação para confirmar local e horário.",
+      "neighborhood": "Savin Hill (o local das reuniões varia; não há sede pública confirmada)",
+      "address": "Não há endereço público atual confirmado para reuniões; confirme com a associação",
+      "source": "Página de contato e arquivo de reuniões da Columbia-Savin Hill Civic Association",
+      "hoursNote": "O site descreve reuniões mensais, geralmente na primeira segunda-feira, exceto no recesso de verão e em feriados, e mantém atas até junho de 2026. Não foi confirmado um local atual para visitantes nem um telefone vigente; use o site da associação para confirmar a próxima data, o local e o acesso antes de comparecer.",
       "services": [
         "Reuniões cívicas",
         "Comentários sobre o desenvolvimento do bairro",
@@ -340,9 +295,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "vi": {
-      "neighborhood": "Savin Hill (địa chỉ liên hệ; địa điểm họp thay đổi)",
-      "source": "Trang liên hệ và biên bản họp của Columbia-Savin Hill Civic Association; bộ định vị của Cục Điều tra Dân số Hoa Kỳ",
-      "hoursNote": "Các cuộc họp được đăng trên trang web; liên hệ hội để xác nhận địa điểm và thời gian.",
+      "neighborhood": "Savin Hill (địa điểm họp thay đổi; chưa xác nhận địa điểm công khai)",
+      "address": "Chưa xác nhận địa chỉ họp công khai hiện tại; hãy hỏi hội",
+      "source": "Trang liên hệ và kho lưu trữ cuộc họp của Columbia-Savin Hill Civic Association",
+      "hoursNote": "Trang web mô tả các cuộc họp hằng tháng, thường vào thứ Hai đầu tiên trừ kỳ nghỉ hè và ngày lễ, và lưu biên bản đến tháng 6 năm 2026. Chưa xác nhận địa điểm tiếp khách hiện tại hoặc số điện thoại còn dùng; hãy dùng trang của hội để xác nhận ngày, địa điểm và lối tiếp cận trước khi đến.",
       "services": [
         "Họp cộng đồng",
         "Góp ý về phát triển khu phố",
@@ -351,9 +307,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "zh": {
-      "neighborhood": "Savin Hill（联系地址；会议地点不同）",
-      "source": "Columbia-Savin Hill Civic Association 联系页面和会议记录；美国人口普查局地址定位工具",
-      "hoursNote": "会议公布于网站；请联系协会确认地点和时间。",
+      "neighborhood": "Savin Hill（会议地点不固定；尚未确认公开会址）",
+      "address": "尚未确认当前公开会议地址；请向协会确认",
+      "source": "Columbia-Savin Hill Civic Association 联系页面及会议档案",
+      "hoursNote": "网站介绍每月举行会议，通常为每月第一个周一，暑期休会及节假日除外；会议记录更新至 2026 年 6 月。尚未确认当前访客地点或有效电话号码；前往前请通过协会网站确认下一次日期、场地和无障碍情况。",
       "services": [
         "社区会议",
         "对社区发展提出意见",
@@ -362,9 +319,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "ar": {
-      "neighborhood": "Savin Hill (عنوان للتواصل؛ تختلف مواقع الاجتماعات)",
-      "source": "صفحة الاتصال ومحاضر اجتماعات Columbia-Savin Hill Civic Association؛ أداة تحديد المواقع التابعة للتعداد الأمريكي",
-      "hoursNote": "تُنشر الاجتماعات على الموقع؛ تواصل مع الجمعية لتأكيد المكان والموعد.",
+      "neighborhood": "Savin Hill (يتغير مكان الاجتماع؛ لم يُؤكد موقع عام)",
+      "address": "لم يُؤكد عنوان عام حالي للاجتماعات؛ أكّد مع الجمعية",
+      "source": "صفحة التواصل وأرشيف الاجتماعات لدى Columbia-Savin Hill Civic Association",
+      "hoursNote": "يصف الموقع اجتماعات شهرية، عادةً في أول يوم اثنين باستثناء العطلة الصيفية والأعياد، ويضم محاضر حتى يونيو 2026. لم يُؤكد موقع حالي للزوار أو رقم هاتف ساري؛ استخدم موقع الجمعية لتأكيد الموعد والمكان وإمكانية الوصول قبل الحضور.",
       "services": [
         "اجتماعات أهلية",
         "تعليقات على تطوير الحي",
@@ -373,9 +331,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "so": {
-      "neighborhood": "Savin Hill (cinwaanka xiriirka; goobaha shirku way kala duwan yihiin)",
-      "source": "Bogga xiriirka iyo qoraallada shirarka Columbia-Savin Hill Civic Association; aaladda cinwaan-raadinta Tirakoobka Maraykanka",
-      "hoursNote": "Shirarka waxaa lagu qoraa bogga internetka; la xiriir ururka si aad u xaqiijiso goobta iyo waqtiga.",
+      "neighborhood": "Savin Hill (goobaha shirarku way kala duwan yihiin; goob dadweyne lama xaqiijin)",
+      "address": "Cinwaan dadweyne oo shirarka hadda ah lama xaqiijin; ururka ka xaqiiji",
+      "source": "Bogga xiriirka iyo kaydka shirarka Columbia-Savin Hill Civic Association",
+      "hoursNote": "Boggu wuxuu sheegayaa shirar bille ah, badanaa Isniinta koowaad marka laga reebo fasaxa xagaaga iyo maalmaha ciidaha, wuxuuna hayaa qoraallo ilaa Juun 2026. Goob booqasho oo hadda ah iyo telefoon shaqaynaya lama xaqiijin; bogga ururka ka xaqiiji taariikhda, goobta iyo gelitaanka ka hor intaadan tegin.",
       "services": [
         "Shirarka bulshada",
         "Faallooyinka horumarinta xaafadda",
@@ -384,9 +343,10 @@ export const COMMUNITY_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<L
       ]
     },
     "kea": {
-      "neighborhood": "Savin Hill (enderesu di kontaktu; lugar di riunion ta varia)",
-      "source": "Pájina di kontaktu i atas di Columbia-Savin Hill Civic Association; jeyokodifikador di Sensu di Stadus Unidus",
-      "hoursNote": "Riunion ta ser publikadu na situ; kontakta asosiason pa konfirma lugar i oráriu.",
+      "neighborhood": "Savin Hill (lugar di riunion ta varia; lugar públiku ka sta konfirmadu)",
+      "address": "Ka ten enderesu públiku atual konfirmadu pa riunions; konfirma ku asosiason",
+      "source": "Pájina di kontaktu i arkivu di riunions di Columbia-Savin Hill Civic Association",
+      "hoursNote": "Situ ta deskribe riunions mensal, normalmenti na primeru sigunda-feira salvu pausa di veron i feriadus, i ten atas té junhu di 2026. Lugar atual pa vizitanti i telefóni validu ka sta konfirmadu; uza situ di asosiason pa konfirma data, lugar i asesu antis di bai.",
       "services": [
         "Riunion siviku",
         "Komentárius sobri dezenvolvimentu di bairu",

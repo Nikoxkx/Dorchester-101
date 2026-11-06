@@ -7,7 +7,7 @@ import { pick } from '@/i18n/runtime';
 /** These eight summaries are AI-assisted drafts. Re-review every locale when the
  * English source changes; this digest cannot judge translation quality. */
 const REVIEW_IDS = ['bha', 'gbfb-dorchester', 'bostons-food-district', 'raft-mass', 'fair-foods-lena-park', 'codman-square-community-market', 'gbLS-dorchester', 'city-life-vida-urbana'];
-const SOURCE_DIGEST = 'e212c191feb264ff3737aa74733dcd509482c6c4c7a9edfda0adb9cf224345c8';
+const SOURCE_DIGEST = 'cba6eba4c39434c7826b117d8c65c40b98523089847c5fa61b7b0bc0df6f139d';
 
 describe('priority resource summary translations', () => {
   it('flags English changes for review', () => {
@@ -57,8 +57,17 @@ describe('priority resource summary translations', () => {
         }
         if (id === 'city-life-vida-urbana') expect(summary.value, code).toContain('(617) 524-3541');
         if (id === 'fair-foods-lena-park') {
-          expect(summary.value, code).toContain('$2');
-          expect(summary.value, code).toContain('(617) 533-8133');
+          const scheduleByLanguage: Record<string, string> = {
+            en: '2–4 PM', es: '2 a 4 p. m.', ht: '2–4 apremidi', pt: '14h às 16h', vi: '2–4 giờ chiều',
+            zh: '下午 2–4 点', ar: '2 إلى 4 مساءً', so: '2–4 galabnimo', kea: '2–4 di tardi',
+          };
+          const priceByLanguage: Record<string, string> = {
+            en: 'few dollars', es: 'unos pocos dólares', ht: 'kèk dola', pt: 'alguns dólares', vi: 'vài đô la',
+            zh: '几美元', ar: 'بضعة دولارات', so: 'dhowr doollar', kea: 'alguns dólar',
+          };
+          expect(summary.value, code).toContain(scheduleByLanguage[code]);
+          expect(summary.value, code).toContain(priceByLanguage[code]);
+          expect(summary.value, code).not.toContain('$2');
         }
       }
     }

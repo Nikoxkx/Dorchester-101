@@ -40,7 +40,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     es: {
       operator: "Ciudad de Boston",
       neighborhood: 'Downtown Crossing (oficina para toda la ciudad)',
-      hoursNote: 'Centro de Servicios de Vivienda: lunes a viernes, de 9:00 a. m. a 4:30 p. m. La oficina principal está en obras; llame antes de ir.',
+      hoursNote: "La página del Centro de Servicios de Vivienda indica lunes a viernes, 9 a. m.–4:30 p. m., en 52 Chauncy Street. Otras páginas de BHA indican que la oficina principal abre de 9 a. m. a 5 p. m., y una FAQ da 56 Chauncy Street. Llame al (617) 988-4000 para confirmar sede y horario antes de ir.",
       eligibility: 'Cualquier persona puede solicitar vivienda pública familiar; se aplican requisitos de ingresos, estatus migratorio y otras normas. Las comunidades para personas mayores o con discapacidad tienen requisitos propios de edad o discapacidad. La BHA decide la elegibilidad.',
       transit: 'Línea Roja o Naranja a Downtown Crossing; Línea Naranja a Chinatown.',
       services: ['Vivienda pública (acepta solicitudes)', 'Vale de elección de vivienda de la Sección 8 (lista de espera cerrada hasta nuevo aviso)', "Vales basados en proyectos y Mod Rehab (generalmente Prioridad Uno; pregunte por excepciones)", 'Servicios para inquilinos'],
@@ -48,7 +48,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     ht: {
       operator: "Vil Boston",
       neighborhood: 'Downtown Crossing (biwo pou tout vil la)',
-      hoursNote: 'Sant Sèvis Lojman: lendi–vandredi, 9:00 a.m.–4:30 p.m. Y ap renove biwo prensipal la; rele anvan ou ale.',
+      hoursNote: "Paj Sant Sèvis Lojman an bay lendi–vandredi, 9 a.m.–4:30 p.m., nan 52 Chauncy Street. Lòt paj BHA bay lè biwo prensipal la kòm 9 a.m.–5 p.m., epi yon FAQ bay 56 Chauncy Street. Rele (617) 988-4000 pou konfime kote ak lè sèvis la anvan ou ale.",
       eligibility: 'Nenpòt moun ka aplike pou lojman piblik pou fanmi; gen règ sou revni, estati imigrasyon ak lòt kondisyon. Kominote pou granmoun aje oswa moun ki gen andikap gen règ apa sou laj oswa andikap. Se BHA ki deside kalifikasyon.',
       transit: 'Liy Wouj oswa Liy Oranj pou Downtown Crossing; Liy Oranj pou Chinatown.',
       services: ['Lojman piblik (ap resevwa aplikasyon)', 'Vouch chwa lojman Seksyon 8 (lis datant fèmen jiskaske yo anonse otreman)', "Vouch ki baze sou pwojè ak Mod Rehab (jeneralman Priyorite Youn; mande sou eksepsyon)", 'Sèvis pou lokatè'],
@@ -56,7 +56,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     pt: {
       operator: "Cidade de Boston",
       neighborhood: 'Downtown Crossing (escritório para toda a cidade)',
-      hoursNote: 'Centro de Serviços de Moradia: segunda a sexta, das 9h às 16h30. O escritório principal está em reforma; ligue antes de ir.',
+      hoursNote: "A página do Centro de Serviços de Moradia informa segunda a sexta, 9h–16h30, em 52 Chauncy Street. Outras páginas da BHA informam que o escritório principal funciona das 9h às 17h, e uma FAQ dá o endereço 56 Chauncy Street. Ligue para (617) 988-4000 para confirmar o local e o horário antes de ir.",
       eligibility: 'Qualquer pessoa pode solicitar moradia pública para famílias; aplicam-se regras de renda, situação imigratória e outras condições. Comunidades para idosos ou pessoas com deficiência têm regras próprias de idade ou deficiência. A BHA decide a elegibilidade.',
       transit: 'Linha Vermelha ou Laranja até Downtown Crossing; Linha Laranja até Chinatown.',
       services: ['Moradia pública (aceita inscrições)', 'Voucher de escolha de moradia da Seção 8 (lista de espera fechada até novo aviso)', "Vouchers vinculados a projetos e Mod Rehab (geralmente Prioridade Um; pergunte sobre exceções)", 'Serviços para inquilinos'],
@@ -64,7 +64,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     vi: {
       operator: "Thành phố Boston",
       neighborhood: 'Downtown Crossing (văn phòng phục vụ toàn thành phố)',
-      hoursNote: 'Trung tâm Dịch vụ Nhà ở: thứ Hai–thứ Sáu, 9:00 sáng–4:30 chiều. Văn phòng chính đang sửa chữa; hãy gọi trước khi đến.',
+      hoursNote: "Trang Trung tâm Dịch vụ Nhà ở ghi giờ thứ Hai–thứ Sáu, 9 giờ sáng–4:30 chiều, tại 52 Chauncy Street. Các trang BHA khác ghi văn phòng chính mở 9 giờ sáng–5 giờ chiều, và một trang FAQ ghi địa chỉ 56 Chauncy Street. Gọi (617) 988-4000 để xác nhận địa điểm và giờ trước khi đến.",
       eligibility: 'Bất kỳ ai cũng có thể nộp đơn xin nhà ở công cho gia đình; các quy định về thu nhập, tình trạng nhập cư và điều kiện khác được áp dụng. Các khu dành cho người cao tuổi hoặc người khuyết tật có quy định riêng về tuổi hoặc tình trạng khuyết tật. BHA quyết định điều kiện hội đủ.',
       transit: 'Tuyến Đỏ hoặc Cam đến Downtown Crossing; Tuyến Cam đến Chinatown.',
       services: ['Nhà ở công (đang nhận đơn)', 'Phiếu lựa chọn nhà ở Section 8 (danh sách chờ đóng cho đến khi có thông báo mới)', "Phiếu gắn với dự án và Mod Rehab (thường cần Priority One; hỏi về ngoại lệ)", 'Dịch vụ cho người thuê'],
@@ -72,7 +72,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     zh: {
       operator: "波士顿市政府",
       neighborhood: 'Downtown Crossing（全市服务办公室）',
-      hoursNote: '住房服务中心：周一至周五，上午 9:00 至下午 4:30。主要办公室正在装修，前往前请先致电。',
+      hoursNote: "住房服务中心页面列出周一至周五上午 9 点至下午 4:30，地址为 52 Chauncy Street。BHA 其他页面称主办公室时间为上午 9 点至下午 5 点，另一个常见问题页面列出 56 Chauncy Street。前往前请致电 (617) 988-4000 确认地点和时间。",
       eligibility: '任何人都可申请家庭公共住房；但须符合收入、移民身份及其他规定。长者或残障人士社区另有年龄或残障条件。是否符合资格由 BHA 决定。',
       transit: '乘红线或橙线至 Downtown Crossing；乘橙线至 Chinatown。',
       services: ['公共住房（接受申请）', '第 8 节住房选择券（等候名单关闭，直至另行通知）', "项目绑定代金券及 Mod Rehab（通常要求 Priority One；请询问例外）", '租户服务'],
@@ -80,7 +80,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     ar: {
       operator: "مدينة بوسطن",
       neighborhood: 'Downtown Crossing (مكتب يخدم المدينة بأكملها)',
-      hoursNote: 'مركز خدمات الإسكان: من الاثنين إلى الجمعة، من 9:00 صباحاً إلى 4:30 مساءً. المكتب الرئيسي قيد التجديد؛ اتصل قبل الزيارة.',
+      hoursNote: "تذكر صفحة مركز خدمات الإسكان الدوام من الاثنين إلى الجمعة، 9 صباحاً–4:30 مساءً، في 52 Chauncy Street. وتذكر صفحات أخرى لدى BHA ساعات المكتب الرئيسي 9 صباحاً–5 مساءً، كما تذكر صفحة أسئلة شائعة العنوان 56 Chauncy Street. اتصل على (617) 988-4000 لتأكيد الموقع والوقت قبل الزيارة.",
       eligibility: 'يمكن لأي شخص التقدم للإسكان العام العائلي؛ وتُطبق قواعد الدخل وحالة الهجرة وغيرها من الشروط. للمجتمعات المخصصة لكبار السن أو الأشخاص ذوي الإعاقة قواعد منفصلة تتعلق بالعمر أو الإعاقة. تقرر BHA الأهلية.',
       transit: 'الخط الأحمر أو البرتقالي إلى Downtown Crossing؛ والخط البرتقالي إلى Chinatown.',
       services: ['الإسكان العام (يقبل الطلبات)', 'قسيمة اختيار السكن للقسم 8 (قائمة الانتظار مغلقة حتى إشعار آخر)', "القسائم المرتبطة بالمشاريع وMod Rehab (عادةً الأولوية الأولى؛ اسأل عن الاستثناءات)", 'خدمات المستأجرين'],
@@ -88,7 +88,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     so: {
       operator: "Magaalada Boston",
       neighborhood: 'Downtown Crossing (xafiis u adeega magaalada oo dhan)',
-      hoursNote: 'Xarunta Adeegga Guryaha: Isniin–Jimce, 9:00 subaxnimo–4:30 galabnimo. Xafiiska weyn waa la dayactirayaa; wac ka hor intaadan tagin.',
+      hoursNote: "Bogga Xarunta Adeegga Guryuhu wuxuu sheegayaa Isniin–Jimce, 9 subaxnimo–4:30 galabnimo, 52 Chauncy Street. Bogag kale oo BHA ah waxay sheegaan in xafiiska weyn furan yahay 9 subaxnimo–5 galabnimo, FAQ kalena wuxuu bixiyaa 56 Chauncy Street. Wac (617) 988-4000 si aad u xaqiijiso goobta iyo saacadaha ka hor booqashada.",
       eligibility: 'Qof kasta wuu codsan karaa guryaha dadweynaha ee qoysaska; waxaa jira xeerar dakhliga, xaaladda socdaalka iyo shuruudo kale. Goobaha waayeelka ama dadka naafada ah waxay leeyihiin xeerar gaar ah oo da’ ama naafo ah. BHA ayaa go’aamisa u-qalmitaanka.',
       transit: 'Khadka Cas ama Oranjiga ilaa Downtown Crossing; Khadka Oranjiga ilaa Chinatown.',
       services: ['Guryaha dadweynaha (codsiyo waa la qaataa)', 'Foojarka doorashada guryaha ee Section 8 (liiska sugitaanku waa xiran yahay ilaa ogeysiis dambe)', "Foojarrada mashruuca iyo Mod Rehab (badanaa Mudnaanta Koowaad; weydii ka-reebitaannada)", 'Adeegyada kiraystayaasha'],
@@ -96,7 +96,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     kea: {
       operator: "Sidadi di Boston",
       neighborhood: 'Downtown Crossing (skritóriu pa sidadi interu)',
-      hoursNote: 'Sentru di Servisu di Abitason: sigunda a sesta, di 9:00 di manhan té 4:30 di tardi. Skritóriu prinsipal sta na obras; txoma antis di bai.',
+      hoursNote: "Pájina di Sentru di Servisu di Abitason ta da sigunda–sesta, 9 di manhan–4:30 di tardi, na 52 Chauncy Street. Otus pájinas di BHA ta da oráriu di skritóriu prinsipal di 9 di manhan–5 di tardi, i un FAQ ta da 56 Chauncy Street. Txoma (617) 988-4000 pa konfirma lugar i oráriu antis di bai.",
       eligibility: 'Kualker pesoa pode kandidata pa abitason públiku pa família; ten regras di rendimentu, situason migratóriu i otus kondisons. Komunidadis pa idozus ô pesoas ku defisiénsia ten regras separadu di idadi ô defisiénsia. BHA ki ta disidi elegibilidadi.',
       transit: 'Linha Vermelhu ô Laranja pa Downtown Crossing; Linha Laranja pa Chinatown.',
       services: ['Abitason públiku (sta ta resebe kandidaturas)', 'Voucher di skodja di abitason Section 8 (lista di spera fetxadu té novu avizu)', "Vouchér ligadu a projetus y Mod Rehab (jeralmenti Prioridadi Un; purgunta sobri isesons)", 'Servisus pa inquilinus'],
@@ -220,7 +220,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "es": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (atiende a Dorchester)",
-      "hoursNote": "Admisión de vivienda (excepto asuntos de refugio): (617) 603-1807, lunes a viernes de 9:00 a 17:00. Admisión telefónica general: de 9:30 a 12:30, lunes a viernes.",
+      "hoursNote": "Oficina principal: lunes a viernes, 9 a. m.–5 p. m. Admisión telefónica general: 9:30 a. m.–12:30 p. m. Línea de vivienda: (617) 603-1807, lunes a viernes, 9 a. m.–5 p. m. Atención sin cita: lunes y jueves, 1:30–4 p. m. La admisión de vivienda es telefónica, excepto asuntos de refugio.",
       "eligibility": "Residentes del área de Boston que cumplan los requisitos de ingresos. Llame para la admisión; no se garantiza representación.",
       "transit": "Líneas Verde y Naranja a North Station, a 4 minutos a pie. Tren de cercanías a North Station.",
       "services": [
@@ -235,7 +235,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "ht": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (sèvi Dorchester)",
-      "hoursNote": "Admisyon lojman (eksepte kesyon abri): (617) 603-1807, lendi–vandredi 9:00–17:00. Admisyon jeneral pa telefòn: 9:30–12:30, lendi–vandredi.",
+      "hoursNote": "Biwo prensipal: lendi–vandredi, 9 a.m.–5 p.m. Admisyon jeneral pa telefòn: 9:30 a.m.–12:30 p.m. Liy lojman: (617) 603-1807, lendi–vandredi, 9 a.m.–5 p.m. Moun ka vini san randevou lendi ak jedi, 1:30–4 p.m. Admisyon lojman fèt pa telefòn, eksepte kesyon abri.",
       "eligibility": "Rezidan zòn Boston ki ranpli kondisyon revni yo. Rele pou admisyon; reprezantasyon pa garanti.",
       "transit": "Liy Vèt ak Liy Oranj pou North Station, 4 minit apye. Tren banlye pou North Station.",
       "services": [
@@ -250,7 +250,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "pt": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (atende Dorchester)",
-      "hoursNote": "Triagem de moradia (exceto questões de abrigo): (617) 603-1807, segunda a sexta, 9:00–17:00. Triagem telefônica geral: 9:30–12:30, segunda a sexta.",
+      "hoursNote": "Escritório principal: segunda a sexta, 9h–17h. Triagem telefônica geral: 9h30–12h30. Linha de moradia: (617) 603-1807, segunda a sexta, 9h–17h. Atendimento sem agendamento: segunda e quinta, 13h30–16h. A triagem de moradia é por telefone, exceto questões de abrigo.",
       "eligibility": "Moradores da região de Boston que atendam aos requisitos de renda. Ligue para a triagem; a representação não é garantida.",
       "transit": "Linhas Verde e Laranja até North Station, 4 minutos a pé. Trem regional até North Station.",
       "services": [
@@ -265,7 +265,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "vi": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (phục vụ Dorchester)",
-      "hoursNote": "Tiếp nhận về nhà ở (trừ vấn đề nơi tạm trú): (617) 603-1807, thứ Hai–thứ Sáu 9:00–17:00. Tiếp nhận chung qua điện thoại: 9:30–12:30, thứ Hai–thứ Sáu.",
+      "hoursNote": "Văn phòng chính: thứ Hai–thứ Sáu, 9 giờ sáng–5 giờ chiều. Tiếp nhận chung qua điện thoại: 9:30 sáng–12:30 trưa. Đường dây nhà ở: (617) 603-1807, thứ Hai–thứ Sáu, 9 giờ sáng–5 giờ chiều. Tiếp nhận không hẹn trước: thứ Hai và thứ Năm, 1:30–4 giờ chiều. Tiếp nhận nhà ở qua điện thoại, trừ vấn đề nơi tạm trú.",
       "eligibility": "Cư dân khu vực Boston đáp ứng điều kiện thu nhập. Gọi để được tiếp nhận; không bảo đảm có người đại diện.",
       "transit": "Tuyến Xanh lá và Cam đến North Station, đi bộ 4 phút. Tàu ngoại ô đến North Station.",
       "services": [
@@ -280,7 +280,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "zh": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston（服务 Dorchester）",
-      "hoursNote": "住房案件受理（庇护所事宜除外）：(617) 603-1807，周一至周五 9:00–17:00。一般电话受理：周一至周五 9:30–12:30。",
+      "hoursNote": "主办公室：周一至周五上午 9 点至下午 5 点。一般电话受理：上午 9:30 至中午 12:30。住房热线：(617) 603-1807，周一至周五上午 9 点至下午 5 点。现场接待：周一和周四下午 1:30 至 4 点。住房案件通过电话受理，庇护所事宜除外。",
       "eligibility": "符合收入条件的波士顿地区居民。请致电申请受理；不保证提供代理。",
       "transit": "乘绿线或橙线至 North Station，步行 4 分钟。通勤铁路至 North Station。",
       "services": [
@@ -295,7 +295,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "ar": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (تخدم Dorchester)",
-      "hoursNote": "استقبال قضايا السكن (عدا شؤون المأوى): (617) 603-1807، الاثنين–الجمعة 9:00–17:00. الاستقبال الهاتفي العام: 9:30–12:30، الاثنين–الجمعة.",
+      "hoursNote": "المكتب الرئيسي: الاثنين–الجمعة، 9 صباحاً–5 مساءً. الاستقبال الهاتفي العام: 9:30 صباحاً–12:30 ظهراً. خط السكن: (617) 603-1807، الاثنين–الجمعة، 9 صباحاً–5 مساءً. استقبال دون موعد: الاثنين والخميس، 1:30–4 مساءً. استقبال قضايا السكن عبر الهاتف، باستثناء شؤون المأوى.",
       "eligibility": "سكان منطقة Boston المستوفون لشروط الدخل. اتصل لطلب المساعدة؛ التمثيل القانوني غير مضمون.",
       "transit": "الخط الأخضر والبرتقالي إلى North Station، ثم مشي 4 دقائق. قطار الضواحي إلى North Station.",
       "services": [
@@ -310,7 +310,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "so": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (u adeegta Dorchester)",
-      "hoursNote": "Qaabilaadda guryaha (marka laga reebo arrimaha hoyga): (617) 603-1807, Isniin–Jimce 9:00–17:00. Qaabilaadda guud ee telefoonka: 9:30–12:30, Isniin–Jimce.",
+      "hoursNote": "Xafiiska weyn: Isniin–Jimce, 9 subaxnimo–5 galabnimo. Qaabilaadda guud ee telefoonka: 9:30 subaxnimo–12:30 duhurnimo. Khadka guryaha: (617) 603-1807, Isniin–Jimce, 9 subaxnimo–5 galabnimo. Soo-gal aan ballan lahayn: Isniin iyo Khamiis, 1:30–4 galabnimo. Qaabilaadda guryuhu waa telefoon, marka laga reebo arrimaha hoyga.",
       "eligibility": "Dadka deggan agagaarka Boston ee buuxiya shuruudaha dakhliga. Wac si laguugu qaabilo; wakiil sharci lama dammaanad qaado.",
       "transit": "Khadka Cagaaran iyo Oranjiga ilaa North Station, 4 daqiiqo oo lug ah. Tareenka Commuter Rail ilaa North Station.",
       "services": [
@@ -325,7 +325,7 @@ export const RESOURCE_DETAIL_DRAFTS: Record<string, Partial<Record<Exclude<Langu
     "kea": {
       "operator": "Greater Boston Legal Services",
       "neighborhood": "Boston (ta serbi Dorchester)",
-      "hoursNote": "Asetason di kazus di abitason (salvu asuntus di abrigu): (617) 603-1807, sigunda–sesta 9:00–17:00. Asetason jeral pa telefoni: 9:30–12:30, sigunda–sesta.",
+      "hoursNote": "Skritóriu prinsipal: sigunda–sesta, 9 di manhan–5 di tardi. Asetason jeral pa telefoni: 9:30 di manhan–12:30 di dia. Linha di abitason: (617) 603-1807, sigunda–sesta, 9 di manhan–5 di tardi. Atendimentu sen markason: sigunda i kinta, 1:30–4 di tardi. Asetason di abitason é pa telefoni, salvu asuntus di abrigu.",
       "eligibility": "Moradoris di zona di Boston ki ta kunpri kondisons di rendimentu. Txoma pa asetason; reprezentason ka é garantidu.",
       "transit": "Linha Verdi i Laranja pa North Station, 4 minutu a pé. Tren suburban pa North Station.",
       "services": [

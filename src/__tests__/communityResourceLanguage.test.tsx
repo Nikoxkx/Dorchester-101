@@ -33,7 +33,7 @@ const cpcs = byId(IDS[5]);
 const stMark = byId(IDS[6]);
 const uncornered = byId(IDS[7]);
 // A digest detects source changes, not translation quality or current service status.
-const SOURCE_DIGEST = 'be3bcf650b502f8fa69f62a4d8357fc6d31525dff0cb0bb5f77d8d94f401e730';
+const SOURCE_DIGEST = 'a1fbf1d74a708b9ceded67c826a73d6c99beeef0c7526dc0944f0d8f46663cf5';
 
 beforeEach(() => useAppStore.getState().resetAll());
 
@@ -73,6 +73,8 @@ describe('community, immigrant-service and legal language drafts', () => {
         if (id === 'somali-development-center') {
           expect(summary.value, code).toContain('(617) 522-0700');
           expect(detail.hoursNote.value, code).toContain('(617) 522-0700');
+          expect(detail.hoursNote.value, code).toContain('(617) 938-7573');
+          expect(detail.source.value, code).not.toContain('MapQuest');
           expect(detail.transit.value, code).toContain('10 Malcolm X Boulevard');
           expect(detail.address.used, code).toBe(code);
           expect(detail.address.fellBack, code).toBe(false);
@@ -104,12 +106,23 @@ describe('community, immigrant-service and legal language drafts', () => {
 
   it('updates the former College Bound record to Uncornered without inventing walk-in service', () => {
     expect(uncornered.name).toBe('Boston Uncornered');
-    expect(uncornered.address).toBe('222 Bowdoin Street, Dorchester, MA 02122');
+    expect(uncornered.address).toBe('No public walk-in address; confirm service location with Uncornered');
+    expect(uncornered.translateAddress).toBe(true);
     expect(uncornered.email).toBe('info@uncornered.org');
     expect(uncornered.phone).toBeUndefined();
     expect(uncornered.hours).toBeUndefined();
     expect(uncornered.mapDestination).toBe(false);
+    expect(uncornered.hoursNote).toContain('218 Adams Street');
+    expect(uncornered.hoursNote).toContain('222 Bowdoin Street');
     expect(uncornered.verification.status).toBe('needs-review');
+    for (const { code } of LANGUAGES) {
+      const detail = resourceDetails(uncornered, code);
+      expect(detail.address.used, code).toBe(code);
+      expect(detail.address.fellBack, code).toBe(false);
+      expect(detail.address.value, code).toContain('Uncornered');
+      expect(detail.hoursNote.value, code).toContain('218 Adams Street');
+      expect(detail.hoursNote.value, code).toContain('222 Bowdoin Street');
+    }
   });
 
   it('corrects St. Mark class fees and avoids treating its contact address as a class venue', () => {
@@ -117,9 +130,14 @@ describe('community, immigrant-service and legal language drafts', () => {
     expect(stMark.summary.en).toContain('Class locations and registration vary');
     expect(stMark.website).toContain('class-registration');
     expect(stMark.eligibility).not.toContain('$40');
+    expect(stMark.hoursNote).toContain('not confirmed as a class site');
     expect(stMark.accessibility).toBeUndefined();
     expect(stMark.mapDestination).toBe(false);
     expect(stMark.verification.status).toBe('needs-review');
+    for (const { code } of LANGUAGES) {
+      expect(resourceDetails(stMark, code).hoursNote.value, code).toContain('25 Beach Street');
+      expect(resourceDetails(stMark, code).hoursNote.value, code).toContain('(617) 288-8515');
+    }
   });
 
   it('distinguishes the two Codman addresses and avoids a single misleading open status', () => {

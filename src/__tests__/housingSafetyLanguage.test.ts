@@ -65,7 +65,7 @@ describe('housing-source translations and safety', () => {
       return [id, r.summary.en, r.address, r.operator, r.verification.source, r.neighborhood, r.hoursNote, r.eligibility, r.services];
     });
     expect(createHash('sha256').update(JSON.stringify(records)).digest('hex'))
-      .toBe('25c49eade7b8f6d7f42f8ce819578b5d6dd9613ec222f11c63e7dd589b24aed1');
+      .toBe('a135f7651e9f232fb83055fb2c586fc0ccc59abcb9bb4ebed25f1cb6d455d8e4');
     for (const id of ['housing-navigator-ma', 'metrolist-boston']) {
       const record = RESOURCES.find((row) => row.id === id)!;
       for (const { code } of LANGUAGES) {
@@ -77,13 +77,25 @@ describe('housing-source translations and safety', () => {
         }
         expect(detail.services.value).toHaveLength(record.services.length);
         if (id === 'housing-navigator-ma') expect(detail.address.used, code).toBe(code);
-        if (id === 'metrolist-boston') expect(detail.hoursNote.used, code).toBe(code);
+        if (id === 'metrolist-boston') {
+          expect(detail.address.used, code).toBe(code);
+          expect(detail.address.value, code).toContain('Metrolist');
+          expect(detail.hoursNote.used, code).toBe(code);
+          expect(detail.hoursNote.value, code).toContain('26 Court Street');
+          expect(detail.hoursNote.value, code).toContain('(617) 635-3880');
+        }
       }
     }
     const navigator = RESOURCES.find((row) => row.id === 'housing-navigator-ma')!;
     expect(navigator.mapDestination).toBe(false);
     expect(navigator.phone).toBeUndefined();
     expect(navigator.verification.status).toBe('verified');
+    const metrolist = RESOURCES.find((row) => row.id === 'metrolist-boston')!;
+    expect(metrolist.mapDestination).toBe(false);
+    expect(metrolist.phone).toBeUndefined();
+    expect(metrolist.email).toBeUndefined();
+    expect(metrolist.address).toContain('no Metrolist walk-in address');
+    expect(metrolist.hours).toBeUndefined();
   });
 
   it('retains the difference between limits and individual eligibility', () => {
