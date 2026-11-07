@@ -1,5 +1,12 @@
 # Building the DOR101 Windows exe
 
+> **Prefer one command?** Double-click **`Build-App.bat`** (Windows) or
+> **`build-app.command`** (macOS). It connects to GitHub by itself, asks whether
+> to build on a GitHub runner or on this computer, verifies the result and asks
+> before publishing. See [docs/MAKE-APP.md](docs/MAKE-APP.md). What follows is
+> the underlying manual build, which is still the thing to read when something
+> goes wrong.
+
 The desktop app is the current website wrapped in Electron. One command builds it
 from whatever is checked out:
 
