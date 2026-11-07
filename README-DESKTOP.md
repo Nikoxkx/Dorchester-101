@@ -10,6 +10,10 @@ no configuration, no database, and no browser required.
 npm run build:exe
 ```
 
+Or, in one command that pulls from GitHub by itself, builds, verifies and asks
+before publishing: double-click **`Build-App.bat`** (Windows) or
+**`build-app.command`** (macOS). See [docs/MAKE-APP.md](docs/MAKE-APP.md).
+
 ## Downloads
 
 From [GitHub Releases](https://github.com/Nikoxkx/Dorchester-101/releases/latest),
@@ -80,6 +84,7 @@ newest release. Installing over an existing installation keeps your preferences.
 
 | Task | Where |
 |------|-------|
+| **Make the app in one command** | Double-click `Build-App.bat` / `build-app.command` — [docs/MAKE-APP.md](docs/MAKE-APP.md) |
 | Build the exe | [BUILD.md](BUILD.md) — `npm run build:exe` |
 | Check a package without installing it | `npm run verify:desktop` |
 | Publish a release | `scripts/publish-release.ps1`, or push a `v*` tag |
