@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight, LocateFixed, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useReduceMotion } from '@/stores/appStore';
 import { useWeather } from '@/hooks/useWeather';
@@ -12,18 +11,13 @@ import { pickSpotlightTip, type HourlyPeriod, type WeatherPayload } from '@/lib/
 import { ConditionIcon, TempUnitToggle, tempText, tipText, useTempUnit, type TempUnit } from './shared';
 import { PrecipBars, TempCurve, TempRangeBar } from './WeatherVisuals';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
-import { WearSpotlight } from './WearSpotlight';
+import { WeatherDisclosure } from './WeatherDisclosure';
 
 /**
- * The homepage weather section uses the same palette-driven cards and ink as
- * the rest of DOR101: current conditions, an hourly ribbon, temperature and
- * precipitation charts, a 7-day list, and the what-to-wear spotlight.
- * `/weather` remains the deep end (sun & moon cycle, 48 hourly rows, every
- * instrument tile, the full tips list). Every number comes from the shared
- * NWS payload (`useWeather`), which also drives the storm banner site-wide.
- *
- * Cached readings are labelled with their age, the publisher is named, and
- * total failure shows a retry box rather than pretending stale values are live.
+ * The homepage keeps the essentials visible: current conditions, the next
+ * several hours, and a compact seven-day list. Optional charts are tucked
+ * behind a native disclosure; the full /weather page holds the deeper details.
+ * Every number comes from the shared payload that also drives storm warnings.
  */
 export function WeatherPanel() {
   const { t, lang, format } = useI18n();
@@ -82,55 +76,27 @@ export function WeatherPanel() {
             </p>
           ) : null}
 
-          <div className="grid gap-3 px-4 pt-4 sm:gap-4 sm:px-5 md:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-            <div className="min-w-0 space-y-3 sm:space-y-4">
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="wx-module p-4"
-              >
-                <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t('weather.tempNext24')}</h3>
-                <div className="mt-1.5">
-                  <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
-                </div>
-              </motion.div>
-              {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.55, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
-                  className="wx-module p-4"
-                >
-                  <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t('weather.precipNext24')}</h3>
-                  <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
-                </motion.div>
-              )}
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className="wx-module p-4"
-              >
-                <WeekList payload={data} unit={unit} />
-              </motion.div>
+          <div className="grid gap-3 px-4 pt-4 sm:px-5 md:px-6">
+            <div className="wx-module min-w-0 p-4">
+              <WeekList payload={data} unit={unit} />
             </div>
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.55, delay: 0.09, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <WearSpotlight payload={data} unit={unit}  />
-            </motion.div>
+            {data.hourly.length > 0 && (
+              <WeatherDisclosure label={t('common.moreInfo')} className="wx-module min-w-0 p-4" contentClassName="space-y-4">
+                <div>
+                  <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t('weather.tempNext24')}</h3>
+                  <div className="mt-1.5">
+                    <TempCurve hours={nextHours(data, now, 24)} labelFor={(f) => tempText(f, unit, format.number)} timeFor={(iso) => format.time(iso)} />
+                  </div>
+                </div>
+                {(data.days[0]?.precipChanceMax ?? 0) >= 10 && (
+                  <div>
+                    <h3 className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t('weather.precipNext24')}</h3>
+                    <PrecipBars hours={nextHours(data, now, 24)} timeFor={(iso) => format.time(iso)} labelFor={(f) => tempText(f, unit, format.number)} />
+                  </div>
+                )}
+              </WeatherDisclosure>
+            )}
           </div>
-
-          {lang !== 'en' && data.hourly.some((hour) => hour.shortForecast) && (
-            <p className="px-5 pt-3 text-xs text-[var(--color-text-muted)] md:px-6">{t('weather.forecastTextNote')}</p>
-          )}
           <div className="flex items-center justify-between gap-2 px-5 pb-5 pt-3 md:px-6">
             <p className="text-xs text-[var(--color-text-muted)]">{updatedLine}</p>
             <div className="flex items-center gap-2">
@@ -157,7 +123,7 @@ export function WeatherPanel() {
 
 
 /**
- * The hour-by-hour ribbon: 24 hours in a horizontally scrolling row of cards with
+ * The hour-by-hour ribbon: the next eight hours in a horizontally scrolling row of cards with
  * snap and mouse drag. Its controls live in a toolbar UNDER the strip —
  * arrow paging on larger screens (dimmed at the ends) and a "back to
  * now" pill once you have scrolled away from the present. Nothing ever
@@ -263,8 +229,7 @@ function ConditionsHero({ payload, unit, now }: { payload: WeatherPayload; unit:
   const feels = cur?.feelsLikeF ?? hour0?.feelsLikeF;
   const kind = cur?.kind ?? hour0?.kind ?? 'unknown';
   const isDay = cur?.isDay ?? hour0?.isDay ?? true;
-  const today = payload.days[0];
-  const hours24 = nextHours(payload, now, 24);
+  const upcomingHours = nextHours(payload, now, 8);
   const topTip = pickSpotlightTip(payload, new Date(now));
   const animatedTemp = useAnimatedNumber(temp ?? 0);
 
@@ -290,11 +255,6 @@ function ConditionsHero({ payload, unit, now }: { payload: WeatherPayload; unit:
           <div className="pb-3">
             <p className="font-heading text-base font-bold">{t(`weather.cond.${kind}` as never)}</p>
             {feels !== undefined && <p className="text-sm text-[var(--color-text-secondary)]">{t('weather.feelsLike', { temp: tempText(feels, unit, format.number) })}</p>}
-            {today && today.highF != null && today.lowF != null && (
-              <p className="text-sm font-semibold text-[var(--color-text-secondary)]">
-                {t('weather.highLow', { high: tempText(today.highF, unit, format.number), low: tempText(today.lowF, unit, format.number) })}
-              </p>
-            )}
           </div>
         </div>
 
@@ -304,7 +264,7 @@ function ConditionsHero({ payload, unit, now }: { payload: WeatherPayload; unit:
           </p>
         )}
 
-        <HourlyStrip hours={hours24} unit={unit} />
+        <HourlyStrip hours={upcomingHours} unit={unit} />
       </div>
     </div>
   );

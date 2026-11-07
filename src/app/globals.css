@@ -1336,6 +1336,11 @@ html.dark .bg-\[var\(--color-accent-primary\)\] { color: #FFFFFF; }
   background: var(--color-bg-raised);
   box-shadow: var(--shadow-sm);
 }
+.wx-disclosure > summary { list-style: none; }
+.wx-disclosure > summary::-webkit-details-marker { display: none; }
+.wx-disclosure[open] .wx-disclosure-chevron { transform: rotate(180deg); }
+.wx-disclosure[open] .wx-disclosure-more { display: none; }
+.wx-disclosure:not([open]) .wx-disclosure-less { display: none; }
 
 /* Temperature curve draw-in + sun pulse + condition icon micro-motion. */
 .wx-curve-line { stroke-dasharray: 1; stroke-dashoffset: 1; }
