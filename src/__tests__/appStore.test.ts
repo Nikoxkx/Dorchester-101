@@ -6,7 +6,7 @@
  */
 import { beforeEach, describe, expect, it } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { useAppStore } from "@/stores/appStore";
+import { migrateSettings, useAppStore } from "@/stores/appStore";
 
 const STORAGE_KEY = "dor101-settings";
 
@@ -26,9 +26,10 @@ describe("appStore defaults", () => {
   it("starts in English with the settings that make the page readable by default", () => {
     const state = useAppStore.getState();
     expect(state.language).toBe("en");
-    expect(state.theme).toBe("system");
+    expect(state.theme).toBe("dark");
     expect(state.fontSize).toBe("medium");
     expect(state.mapStyle).toBe("street");
+    expect(state.brandStyle).toBe("harbor");
     expect(state.refreshIntervalMinutes).toBeGreaterThan(0);
     expect(state.autoRefresh).toBe(true);
     expect(state.favorites).toEqual([]);
@@ -63,6 +64,20 @@ describe("preferences are persisted", () => {
     expect(state.theme).toBe("dark");
     expect(state.mapStyle).toBe("hybrid");
     expect(window.localStorage.getItem("dor101-language")).toBeNull();
+  });
+
+  it("persists the current/classic brand choice and returns to current on reset", () => {
+    const { result } = renderHook(() => useAppStore());
+    act(() => result.current.setBrandStyle("classic"));
+    expect(result.current.brandStyle).toBe("classic");
+    expect(persisted().brandStyle).toBe("classic");
+    act(() => result.current.resetAll());
+    expect(result.current.brandStyle).toBe("harbor");
+  });
+
+  it("migrates older or invalid brand preferences to the current look", () => {
+    expect(migrateSettings({}, 6).brandStyle).toBe("harbor");
+    expect(migrateSettings({ brandStyle: "unknown" }, 7).brandStyle).toBe("harbor");
   });
 
   it("round-trips a language change through the persisted blob", () => {
@@ -140,11 +155,11 @@ describe("refresh plumbing", () => {
       result.current.setEnabledNewsSources(["dotnews"]);
     });
     act(() => result.current.resetAll());
-    expect(useAppStore.getState().theme).toBe("system");
+    expect(useAppStore.getState().theme).toBe("dark");
     expect(useAppStore.getState().favorites).toEqual([]);
     expect(useAppStore.getState().enabledNewsSources).toEqual([]);
     const after = persisted();
-    expect(after.theme).toBe("system");
+    expect(after.theme).toBe("dark");
     expect(after.favorites).toEqual([]);
   });
 });

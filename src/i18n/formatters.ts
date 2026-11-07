@@ -138,6 +138,21 @@ export function formatTime(value: string | number | Date, lang: string): string 
   }
 }
 
+/** Render a real instant in a chosen IANA zone (the visitor's zone for notices). */
+export function formatTimeInTimeZone(value: string | number | Date, lang: string, timeZone: string): string {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  try {
+    return new Intl.DateTimeFormat(languageMeta(lang).intlLocale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone,
+    }).format(d);
+  } catch {
+    return formatTime(d, lang);
+  }
+}
+
 export function formatClock(date: Date, lang: string): string {
   try {
     return new Intl.DateTimeFormat(languageMeta(lang).intlLocale, {

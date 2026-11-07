@@ -23,12 +23,12 @@ export const CHINESE_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: '两栋全部为经济适用住房的小楼将于 2026 年完工，以家庭公寓取代空地。',
-    parcelNote: 'Codman Square / Four Corners 地区两处原先空置的地块：151 Spencer Street 和 25 New England Avenue。',
+    parcelNote: "项目位于 Codman Square / Four Corners 的两个地点。市政府和 Housing Navigator 列出 25 New England Avenue；CSNDC 页面标题写 23，但详细说明写 25。前往前请向 CSNDC 确认门牌号；另一处为 151 Spencer Street。",
     unitMix: '两栋楼共有 42 套有收入限制的家庭公寓：Spencer Street 19 套，New England Avenue 23 套。',
     amenities: ['适合家庭居住的住房', 'CSNDC 提供的居民服务', '步行不远即可到达 Talbot Avenue（Fairmount Line）'],
     communityBenefits: '在空地上新建家庭住房，CSNDC 在现场继续为租户提供居民服务。',
-    howToApply: "CSNDC 曾报告 2026 年 2 月举行了抽签。Housing Navigator 在 2026 年 10 月 31 日显示等候名单开放。状态可能变化；请致电 WinnResidential (617) 287-9580 确认房源和申请方式。",
-    renderingNote: '规划图和工程进度照片发布在 CSNDC 的房地产更新中。',
+    howToApply: "CSNDC 2026 年春季更新称抽签已于 2 月结束；其房产页面目前称房源暂不可用、申请可能尚需一段时间才会开始，而 Housing Navigator 在 2026 年 10 月 31 日仍显示等候名单开放。来源信息不一致。请先致电 WinnResidential (617) 287-9580 或发邮件至 talbotcommons2@winnco.com 核实。",
+    renderingNote: "CSNDC 的官方页面展示两个地点的项目图；此处图片为建筑效果图，并非现场现状照片。",
   },
   4: {
     description: 'Red Line 的 Shawmut 站旁，原汽车钣金维修场地上兴建的四层全经济适用住房楼宇。',

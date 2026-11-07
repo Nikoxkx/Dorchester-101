@@ -23,12 +23,12 @@ export const KABUVERDIANU_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'Dos edifísiu piken tudu asesível, ku ta kaba na 2026, ta substitui terenus vaziu ku apartamentus pa família.',
-    parcelNote: 'Dos terenu ki staba vaziu na zona di Codman Square / Four Corners: 151 Spencer Street i 25 New England Avenue.',
+    parcelNote: "Dos lugar na Codman Square / Four Corners. Sidadi i Housing Navigator ta indika 25 New England Avenue; títulu di pájina di CSNDC ta fla 23, ma deskrison detaliadu ta fla 25. Konfirma númeru di kaza ku CSNDC antis di bai; kel otu lugar é 151 Spencer Street.",
     unitMix: '42 apartamentu pa família ku limiti di rendimentu na dos edifísius: 19 na Spencer Street i 23 na New England Avenue.',
     amenities: ['Unidades pa família', 'Servisus pa moradoris dadu pa CSNDC', 'Un piken kaminhada ti Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Kazas novu pa família na terenus vaziu, ku servisus di CSNDC pa inquilinus na própriu lugar.',
-    howToApply: "CSNDC informaba ma un sorteiu akontese na fevereru di 2026. Housing Navigator mostraba un lista di spera abertu na 31 di otubru di 2026. Situason podi muda; konfirma disponibilidade y manera di kandidata ku WinnResidential na (617) 287-9580.",
-    renderingNote: 'Plantas i fotografias di progresu ta ser publikadu na atualizasons imobiliáriu di CSNDC.',
+    howToApply: "Atualizason di primavera di 2026 di CSNDC fla ma sorteiu kaba na fevereru; pájina di propriedadi gosi ta fla ma kaza ka sta disponível i kandidatura podi ka kumesa pa un tenpu, enkuantu Housing Navigator inda mostraba lista di spera abertu na 31 di otubru di 2026. Fontis sta kontra. Konfirma ku WinnResidential na (617) 287-9580 ô talbotcommons2@winnco.com antis di konfia na kualker lista.",
+    renderingNote: "Pájina ofisial di CSNDC ta mostra imajens di kes dos lugar; imajen li é un disénhu arkitetóniku, ka fotografia di situason atual.",
   },
   4: {
     description: 'Edifísiu di kuatu andar, tudu asesível, na terenu di ofisina di karosaria djuntu di stason Shawmut di Red Line.',

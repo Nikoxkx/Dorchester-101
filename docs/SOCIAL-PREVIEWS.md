@@ -1,10 +1,10 @@
 # Screenshot-led social previews
 
-The site shares a **1200 × 630 JPEG** (about 120 KB) featuring a real homepage
-screenshot, the site's own fonts, navy/cream branding and a concise promise.
-No image generator, external font service, live API or browser is needed when a
-social crawler requests it. The screenshot is an editorial capture, not a live
-view of today's date, hours, weather or availability.
+The site shares a **1200 × 630 JPEG** featuring a real homepage screenshot,
+the site's own fonts, dark harbor/teal branding and a concise promise. No image
+generator, external font service, live API or browser is needed when a social
+crawler requests it. The screenshot is an editorial capture, not a live view of
+today's date, hours, weather or availability.
 
 ## Files and metadata
 
@@ -27,9 +27,9 @@ There are no `opengraph-image.tsx` / `twitter-image.tsx` files competing with th
 explicit metadata. Old `/opengraph-image`, `/twitter-image` and `/api/og` URLs
 redirect to the static card for compatibility; old API title/description query
 parameters no longer personalize the image. The sitemap also uses the static
-image, outside the robots-blocked `/api/` tree. Existing `public/og.png` and
-`public/og.jpg` remain available for legacy consumers but aren't advertised in
-metadata.
+image, outside the robots-blocked `/api/` tree. The legacy `/og.png` and
+`/og.jpg` URLs are refreshed from the same current card; `/og.png` is also used
+as the installed-app share-preview screenshot.
 
 ## Refresh after a visual redesign
 
@@ -58,15 +58,18 @@ only Next's developer overlay, not application content. An optional
 `CHROMIUM_NO_SANDBOX=1` is for sandboxed CI environments that require it, not
 normal desktop use.
 
-The script opens a fresh light-mode, English browser context, dismisses the real
+The script opens a fresh dark-mode, English browser context, dismisses the real
 privacy notice through its button, waits for the hero photo/fonts/animations,
 and screenshots the actual page. It does not inject fake resources, weather,
 counts or mock interface elements. The screenshot is then placed in a decorative
-browser frame. It generates the card and updates the manifest; **rebuild/restart
-the app after refreshing**, since metadata and legacy redirects use that manifest.
-Review both images before shipping. Update the capture date in
-`public/IMAGE-CREDITS.md` when recapturing. The photograph's attribution and
-CC BY-SA 3.0 licence travel with the screenshot/card.
+browser frame. It generates the hashed JPEG, refreshes `/og.jpg` and `/og.png`,
+and updates the PWA manifest screenshots; **rebuild/restart the app after refreshing** so
+metadata and cached assets use the new files. Review both images before shipping.
+Update the capture date in `public/IMAGE-CREDITS.md` when recapturing. The current
+skyline was supplied by the project maintainer; its original photographer and
+separate photo licence were not provided, so no external attribution or licence
+is claimed. Older retained hash-named cards continue to use and credit the
+previously documented Dorchester Bay photograph.
 
 The JPEG filename contains a content hash and is served with immutable caching.
 Keep previously deployed hashed JPEGs when refreshing so older cached posts

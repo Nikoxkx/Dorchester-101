@@ -23,15 +23,18 @@ import { PlaceSheet } from '@/components/map/PlaceSheet';
 
 const bha = RESOURCES.find((record) => record.id === 'bha')!;
 // Re-review every translated field if its English source changes.
-const BHA_SOURCE_DIGEST = '768bba25c188a23375fc1e44bb3755994130f522e5292aa1c1d6b16f4da69985';
+const BHA_SOURCE_DIGEST = '385d29a946a8baf60d919ecf8113d363e8ee3319c5dce990ce270932f43bcc82';
 
 beforeEach(() => useAppStore.getState().setLanguage('en'));
 
 describe('resource detail drafts', () => {
-  it('tracks the complete English source and the corrected BHA contact', () => {
+  it('tracks the complete English source and preserves conflicting BHA site and hours', () => {
     const source = [bha.address, bha.operator, bha.verification.source, bha.neighborhood, bha.hoursNote, bha.eligibility, bha.transit, bha.services];
     expect(createHash('sha256').update(JSON.stringify(source)).digest('hex')).toBe(BHA_SOURCE_DIGEST);
     expect(bha.address).toBe('52 Chauncy Street, Boston, MA 02111');
+    expect(bha.hoursNote).toContain('52 Chauncy Street');
+    expect(bha.hoursNote).toContain('56 Chauncy Street');
+    expect(bha.hoursNote).toContain('9 AM–5 PM');
     expect([bha.lat, bha.lng]).toEqual([42.3537, -71.0601]);
     expect(bha.eligibility).toContain('Anyone may apply');
     expect(bha.eligibility).not.toContain('Boston residents');
@@ -63,7 +66,7 @@ describe('resource detail drafts', () => {
       const record = RESOURCES.find((item) => item.id === id)!;
       return [id, record.operator, record.verification.source, record.neighborhood, record.hoursNote, record.eligibility, record.transit, record.services];
     });
-    expect(createHash('sha256').update(JSON.stringify(records)).digest('hex')).toBe('09984c77f1c35535d14fd8417273f5e6a1eec8baf901967d89f3b11ad6af5734');
+    expect(createHash('sha256').update(JSON.stringify(records)).digest('hex')).toBe('6ebbf5e0dfb2b4814d4bac79489bb4f79ff35114b3b4888e4bb795462c33116d');
   });
 
   it('provides the translated priority details without inventing absent fields', () => {
@@ -138,7 +141,7 @@ describe('resource detail drafts', () => {
   });
 
   it('indexes translated detail phrases and localizes global-search subtitles', () => {
-    const hit = search('oficina principal está em reforma', { language: 'pt', kinds: ['organization'], limit: 50 }).find((entry) => entry.id === 'org-bha');
+    const hit = search('escritório principal funciona', { language: 'pt', kinds: ['organization'], limit: 50 }).find((entry) => entry.id === 'org-bha');
     expect(hit).toBeTruthy();
     expect(hit?.subtitle).toContain(resourceDetails(bha, 'pt').neighborhood.value);
     expect(search('public housing', { language: 'pt', kinds: ['organization'], limit: 50 }).some((entry) => entry.id === 'org-bha')).toBe(true);

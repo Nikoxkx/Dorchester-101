@@ -33,7 +33,7 @@ const hotline = byId(IDS[0]);
 const foodBank = byId(IDS[1]);
 const codman = byId(IDS[2]);
 const fair = byId(IDS[3]);
-const detailsSourceDigest = '759981ae3dcdea2144694c6dd95dd58918272f8502cf8c4ef9a107ed063f5e62';
+const detailsSourceDigest = '7b504cb42b025709d1c84ce5659ae8db121805c9eb807e5b11b026176e410c51';
 
 beforeEach(() => useAppStore.getState().resetAll());
 
@@ -59,6 +59,12 @@ describe('food resource translation and safety', () => {
           expect(detail[field].fellBack, `${id} ${code} ${field}`).toBe(false);
         }
         expect(detail.services.value).toHaveLength(r.services.length);
+        if (id === 'fair-foods-lena-park') {
+          expect(detail.hoursNote.value, `${code} Fair Foods contact`).toContain('(617) 288-6185');
+          expect(detail.hoursNote.value, `${code} Lena Park contact`).toContain('(617) 533-8133');
+          expect(detail.hoursNote.value, `${code} Fair Foods schedule`).toContain('2');
+          expect(detail.hoursNote.value, `${code} Fair Foods price`).not.toContain('$2');
+        }
         if (r.translateAddress) {
           expect(detail.address.used, `${id} ${code} address`).toBe(code);
           expect(detail.address.fellBack).toBe(false);
@@ -71,13 +77,19 @@ describe('food resource translation and safety', () => {
     expect(codman.hours).toBeUndefined();
     expect(fair.hours).toBeUndefined();
     expect(codman.requiresId).toBeUndefined();
-    expect(fair.requiresId).toBeUndefined();
+    expect(fair.requiresId).toBe(false);
     expect(codman.verification.status).toBe('needs-review');
     expect(fair.verification.status).toBe('needs-review');
     expect(codman.summary.en).toContain('ID or address requirements');
     expect(codman.summary.en).not.toContain('no ID');
-    expect(fair.summary.en).toContain('Call (617) 533-8133');
-    expect(fair.summary.en).toContain('$2');
+    expect(fair.name).toContain('produce bags');
+    expect(fair.summary.en).toContain('2–4 PM');
+    expect(fair.summary.en).toContain('fall through spring');
+    expect(fair.summary.en).toContain('few dollars');
+    expect(fair.summary.en).not.toContain('$2');
+    expect(fair.phone).toBe('(617) 288-6185');
+    expect(fair.requiresId).toBe(false);
+    expect(fair.accessibility).toBeUndefined();
     const coop = byId('dorchester-food-coop');
     expect(coop.hours).toBeUndefined(); // weekly open badges would ignore holiday closures
     expect(coop.hoursNote).toContain('Holiday hours differ');
@@ -96,8 +108,10 @@ describe('food resource translation and safety', () => {
       const codmanSection = answer.split('1. **Codman Square Community Market**')[1].split('2. **Salvation Army')[0];
       expect(codmanSection.toLowerCase(), lang).not.toContain(forbiddenCodman[lang]);
       expect(codmanSection, lang).toContain('(617) 825-9660');
+      expect(answer, lang).toContain('(617) 288-6185');
       expect(answer, lang).toContain('(617) 533-8133');
-      expect(answer, lang).toContain('$2');
+      expect(answer, lang).toContain('https://www.fairfoods.org/oursites');
+      expect(answer, lang).not.toContain('$2');
       expect(answer, lang).toContain('1-800-645-8333');
     }
   });

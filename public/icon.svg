@@ -1,117 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t d">
-  <title id="t">DOR101 — Dorchester 101</title>
-  <desc id="d">A Dorchester triple-decker with its stacked bay windows, drawn as a shield in harbour navy, sandstone and brick red, with the harbour line beneath.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">DOR101 — Dorchester 101</title>
+  <desc id="description">A harbor-blue DOR101 wordmark with outlined, halftone letters and an offset skyline-inspired shadow.</desc>
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1B3F66"/>
-      <stop offset="1" stop-color="#0F2540"/>
-    </linearGradient>
-    <linearGradient id="clap" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#F6EFE2"/>
-      <stop offset="1" stop-color="#E4DAC7"/>
-    </linearGradient>
-    <linearGradient id="clapShade" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#CFC3AC"/>
-      <stop offset="1" stop-color="#B9AC94"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.12" y2="1">
+      <stop offset="0" stop-color="#B8DCDD"/>
+      <stop offset="0.62" stop-color="#D8E4DF"/>
+      <stop offset="1" stop-color="#A9C2C2"/>
     </linearGradient>
     <linearGradient id="water" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#2C5A86"/>
-      <stop offset="0.5" stop-color="#5B8DBE"/>
-      <stop offset="1" stop-color="#2C5A86"/>
+      <stop offset="0" stop-color="#2A7387"/>
+      <stop offset="0.52" stop-color="#123D54"/>
+      <stop offset="1" stop-color="#287087"/>
     </linearGradient>
+    <pattern id="halftone" width="6" height="6" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.15" fill="#173543" fill-opacity="0.58"/>
+      <circle cx="4.5" cy="4.5" r="0.8" fill="#173543" fill-opacity="0.28"/>
+    </pattern>
     <clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath>
   </defs>
 
-  <!-- Tile -->
-  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
-
+  <rect width="512" height="512" rx="112" fill="#123D54"/>
   <g clip-path="url(#tile)">
-    <!-- Low sun behind the house, the sunset the site is photographed under -->
-    <circle cx="256" cy="212" r="118" fill="#E9B36A" opacity="0.14"/>
-    <circle cx="256" cy="212" r="86" fill="#E9B36A" opacity="0.16"/>
+    <rect width="512" height="512" fill="url(#sky)"/>
+    <circle cx="386" cy="132" r="75" fill="#F2C986" fill-opacity="0.2"/>
+    <circle cx="386" cy="132" r="49" fill="#F2C986" fill-opacity="0.2"/>
 
-    <!-- Harbour: three bands of water under the ground line -->
-    <rect x="0" y="392" width="512" height="120" fill="#0B1C31"/>
-    <path d="M0 400 C 64 392, 128 408, 192 400 S 320 392, 384 400 S 480 408, 512 400 V 512 H 0 Z" fill="url(#water)" opacity="0.85"/>
-    <path d="M0 424 C 72 416, 136 432, 208 424 S 336 416, 400 424 S 488 432, 512 424 V 512 H 0 Z" fill="#1B3F66" opacity="0.7"/>
-    <path d="M0 450 C 80 442, 150 458, 230 450 S 350 442, 420 450 S 490 458, 512 450 V 512 H 0 Z" fill="#0F2540" opacity="0.8"/>
-
-    <!-- Ground line -->
-    <rect x="96" y="384" width="320" height="10" fill="#0B1C31"/>
-
-    <!-- Main body of the triple-decker: clapboard with a shaded side -->
-    <rect x="148" y="150" width="196" height="236" fill="url(#clap)"/>
-    <rect x="344" y="150" width="30" height="236" fill="url(#clapShade)"/>
-    <!-- Clapboard courses -->
-    <g stroke="#CBBFA7" stroke-width="1.5" opacity="0.7">
-      <path d="M148 172H344M148 194H344M148 216H344M148 238H344M148 260H344M148 282H344M148 304H344M148 326H344M148 348H344M148 370H344"/>
+    <!-- A compact Boston skyline silhouette sits beneath the wordmark. -->
+    <g fill="#193B49">
+      <path d="M0 345h41v-42h28v42h29v-69h20v69h31V253h35v92h23v-52h28v52h22v-84h40v84h25v-57h22v57h26v-70h35v70h22v-44h31v44h37v78H0z"/>
+      <path d="M225 293v-93l9-8 9 8v93zM230 194v-20h8v20zM355 291v-65h26v65zM382 290v-49h20v49z" fill="#102D3A"/>
+      <path d="M349 220h38v7h-38z" fill="#8FB7B7" fill-opacity="0.64"/>
+    </g>
+    <g fill="#E7F0E9" fill-opacity="0.66">
+      <path d="M105 292h5v11h-5zM119 292h5v11h-5zM105 313h5v11h-5zM119 313h5v11h-5z"/>
+      <path d="M159 270h6v10h-6zM172 270h6v10h-6zM159 289h6v10h-6zM172 289h6v10h-6zM159 308h6v10h-6zM172 308h6v10h-6z"/>
+      <path d="M275 279h6v10h-6zM291 279h6v10h-6zM275 298h6v10h-6zM291 298h6v10h-6z"/>
+      <path d="M424 292h5v10h-5zM438 292h5v10h-5zM424 311h5v10h-5zM438 311h5v10h-5z"/>
     </g>
 
-    <!-- Stacked bay window: the signature of a Dorchester triple-decker -->
-    <g>
-      <path d="M154 150 L184 134 L246 134 L276 150 Z" fill="#F9F4EA"/>
-      <path d="M154 150 V386 H276 V150 Z" fill="#FBF7EF"/>
-      <path d="M154 150 L184 134 V386 H154 Z" fill="#E9E0CD"/>
-      <path d="M246 134 L276 150 V386 H246 Z" fill="#D8CDB6"/>
-      <!-- Floor bands -->
-      <rect x="154" y="228" width="122" height="8" fill="#C9BCA2"/>
-      <rect x="154" y="306" width="122" height="8" fill="#C9BCA2"/>
-      <!-- Windows, three per floor, glass in harbour navy with a highlight -->
-      <g fill="#14304F">
-        <rect x="162" y="160" width="16" height="52" rx="1.5"/>
-        <rect x="192" y="156" width="46" height="56" rx="1.5"/>
-        <rect x="252" y="160" width="16" height="52" rx="1.5"/>
-        <rect x="162" y="242" width="16" height="52" rx="1.5"/>
-        <rect x="192" y="238" width="46" height="56" rx="1.5"/>
-        <rect x="252" y="242" width="16" height="52" rx="1.5"/>
-        <rect x="162" y="324" width="16" height="52" rx="1.5"/>
-        <rect x="192" y="320" width="46" height="56" rx="1.5"/>
-        <rect x="252" y="324" width="16" height="52" rx="1.5"/>
-      </g>
-      <g fill="#FFFFFF" opacity="0.28">
-        <rect x="195" y="159" width="8" height="50" rx="1"/>
-        <rect x="195" y="241" width="8" height="50" rx="1"/>
-        <rect x="195" y="323" width="8" height="50" rx="1"/>
-      </g>
-      <!-- Warm lit window on the second floor: somebody is home -->
-      <rect x="192" y="238" width="46" height="56" rx="1.5" fill="#E9B36A" opacity="0.9"/>
-      <rect x="195" y="241" width="8" height="50" rx="1" fill="#FFFFFF" opacity="0.35"/>
-      <!-- Mullions -->
-      <g stroke="#F3EBDD" stroke-width="2.2">
-        <path d="M215 156V212M192 184H238M215 238V294M192 266H238M215 320V376M192 348H238"/>
-      </g>
+    <!-- Layered outline strokes recreate the stacked lettering in the reference. -->
+    <g font-family="Arial Black, Public Sans, Arial, sans-serif" font-size="76" font-weight="900" letter-spacing="-3" stroke-linejoin="round">
+      <text x="36" y="249" textLength="440" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#173541" stroke-opacity="0.3" stroke-width="2.5" transform="translate(12 11)">DOR101</text>
+      <text x="36" y="249" textLength="440" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#173541" stroke-opacity="0.46" stroke-width="2.2" transform="translate(8 8)">DOR101</text>
+      <text x="36" y="249" textLength="440" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#173541" stroke-opacity="0.72" stroke-width="2" transform="translate(4 4)">DOR101</text>
+      <text x="36" y="249" textLength="440" lengthAdjust="spacingAndGlyphs" fill="url(#halftone)" stroke="#142F3B" stroke-width="2.2" paint-order="stroke fill">DOR101</text>
+      <text x="36" y="249" textLength="440" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#F4FBF8" stroke-opacity="0.62" stroke-width="0.9">DOR101</text>
     </g>
 
-    <!-- Right-hand windows on the flat wall -->
-    <g fill="#14304F">
-      <rect x="296" y="164" width="30" height="46" rx="1.5"/>
-      <rect x="296" y="246" width="30" height="46" rx="1.5"/>
-    </g>
-    <g stroke="#F3EBDD" stroke-width="2">
-      <path d="M311 164V210M296 187H326M311 246V292M296 269H326"/>
-    </g>
-
-    <!-- Front door and porch steps, Dorchester brick -->
-    <rect x="292" y="322" width="38" height="64" rx="2" fill="#A6362A"/>
-    <rect x="296" y="328" width="30" height="24" rx="1.5" fill="#C9553F" opacity="0.8"/>
-    <circle cx="322" cy="360" r="2.6" fill="#E9B36A"/>
-    <rect x="286" y="378" width="50" height="8" fill="#CFC3AC"/>
-    <rect x="280" y="386" width="62" height="8" fill="#B9AC94"/>
-
-    <!-- Porch roof line over the door -->
-    <rect x="284" y="312" width="54" height="8" rx="1" fill="#E4DAC7"/>
-    <rect x="284" y="320" width="54" height="3" fill="#B9AC94"/>
-
-    <!-- Cornice and flat roof -->
-    <rect x="140" y="136" width="240" height="14" rx="2" fill="#F6EFE2"/>
-    <rect x="140" y="150" width="240" height="4" fill="#B9AC94"/>
-    <rect x="148" y="122" width="226" height="14" fill="#0B1C31"/>
-    <rect x="148" y="118" width="226" height="6" fill="#1B3F66"/>
-    <!-- Chimney -->
-    <rect x="322" y="96" width="22" height="30" fill="#A6362A"/>
-    <rect x="320" y="92" width="26" height="6" fill="#7E2A20"/>
+    <!-- Harbor water and a fine sail line anchor the badge. -->
+    <path d="M0 386c45-8 80 8 126 0s82-8 126 0 84 8 130 0 85-8 130 0v126H0z" fill="url(#water)"/>
+    <path d="M0 417c52-9 90 9 144 0s96-9 148 0 98 9 148 0 49-4 72 0" fill="none" stroke="#C3E5E3" stroke-opacity="0.58" stroke-width="5"/>
+    <path d="M0 450c52-8 92 8 145 0s95-8 148 0 100 8 151 0 50-4 68 0" fill="none" stroke="#9CCDD0" stroke-opacity="0.4" stroke-width="4"/>
+    <path d="M53 401h75" stroke="#F3EEE2" stroke-opacity="0.88" stroke-width="2"/>
   </g>
-
-  <!-- Hairline so the tile reads on any background -->
-  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="3"/>
+  <rect x="1.5" y="1.5" width="509" height="509" rx="110.5" fill="none" stroke="#F7FCFA" stroke-opacity="0.32" stroke-width="3"/>
 </svg>

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n/hook';
 import { matchesContentLanguage } from '@/i18n/contentLanguage';
 import { formatClockMinutesForLocale } from '@/lib/hours';
+import { formatTimeInTimeZone } from '@/i18n/formatters';
 import { useAppStore } from '@/stores/appStore';
 import { APP_EVENTS } from '@/hooks/useKeyboardShortcuts';
 import { useLivePolling } from '@/hooks/useLivePolling';
@@ -91,11 +92,19 @@ export function NotificationPanel() {
   // tab is in the background — a notification over the open panel would be noise.
   const sysNotified = useRef<Set<string>>(new Set());
 
-  const localizedParams = useCallback((item: DerivedNotification) => ({
-    ...item.params,
-    ...(typeof item.params.closesAtMinutes === 'number' ? { closesAt: formatClockMinutesForLocale(item.params.closesAtMinutes, meta.intlLocale) } : {}),
-    ...(typeof item.params.minutes === 'number' ? { minutes: format.number(item.params.minutes) } : {}),
-  }), [format, meta.intlLocale]);
+  const localizedParams = useCallback((item: DerivedNotification) => {
+    const params = { ...item.params };
+    if (typeof item.params.closesAtInstant === 'string') {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const localTime = formatTimeInTimeZone(item.params.closesAtInstant, lang, timeZone);
+      if (localTime) params.closesAt = localTime;
+    } else if (typeof item.params.closesAtMinutes === 'number') {
+      // Backward-compatible rendering for cached or third-party API payloads.
+      params.closesAt = formatClockMinutesForLocale(item.params.closesAtMinutes, meta.intlLocale);
+    }
+    if (typeof item.params.minutes === 'number') params.minutes = format.number(item.params.minutes);
+    return params;
+  }, [format, lang, meta.intlLocale]);
   const sourceFor = useCallback((item: DerivedNotification) => item.sourceKey
     ? t(item.sourceKey as TranslationKey) : item.sourceLabel, [t]);
 

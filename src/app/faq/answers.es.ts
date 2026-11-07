@@ -66,13 +66,13 @@ Las listas son independientes. Siga las instrucciones de cada programa para actu
 Use las herramientas de ingresos del sitio como punto de partida y luego consulte la tabla oficial vigente y el anuncio específico. Solo el programa o el administrador de la propiedad puede determinar la elegibilidad.
 
 **Ingresos:** Las solicitudes pueden preguntar por salarios, sueldos, propinas, Seguro Social, SSI/SSDI, desempleo, manutención de menores, intereses y jubilación. Las reglas sobre exclusiones, bienes y ayuda estudiantil varían según el programa; consulte a la agencia administradora en lugar de suponer que algo está excluido.`,
-  food: `Hay muchos recursos de alimentos gratis en Dorchester. Estas son las opciones principales:
+  food: `En Dorchester hay recursos de alimentos gratuitos y opciones de productos de bajo costo. Llame para confirmar antes de ir:
 
 **Opciones de alimentos (llame para confirmar):**
 
-1. **Codman Square Community Market** (la despensa del centro de salud)
+1. **Codman Square Community Market**
    - 450 Washington St, Dorchester, a media milla por Washington Street desde el centro de salud
-   - La página del mercado indica martes de 8 a. m. a 1 p. m., miércoles de 2 a 7 p. m. y jueves de 8 a. m. a 1 p. m.; otra página de Codman indica horarios diferentes.
+   - La página del Community Market indica martes de 8 a. m. a 1 p. m., miércoles de 2 a 7 p. m. y jueves de 8 a. m. a 1 p. m. Otra página de recursos de Codman indica una despensa los martes de 8 a 11 a. m. en la misma dirección; confirme si es el mismo servicio.
    - Puede elegir los alimentos. Llame para confirmar el horario actual, la frecuencia de visita y los requisitos de identificación o domicilio.
    - (617) 825-9660
 
@@ -82,12 +82,12 @@ Use las herramientas de ingresos del sitio como punto de partida y luego consult
    - Llame al (617) 318-6940 para reservar; citas una vez al mes
    - Línea principal: (617) 318-6900
 
-3. **Bolsa de $2 de Fair Foods en Lena Park**
+3. **Bolsas de productos de Fair Foods en Lena Park**
    - 150 American Legion Hwy, Dorchester
-   - La página de recursos de Codman indica martes de 2 a 4:30 p. m. y una contribución solicitada de $2 por bolsa.
-   - Llame para confirmar el horario, la disponibilidad, el precio y los requisitos actuales.
-   - (617) 533-8133
-
+   - La lista de sedes de Fair Foods, actualizada el 6 de septiembre de 2026, indica martes de 2 a 4 p. m., de otoño a primavera; la sede de verano cambia.
+   - Fair Foods dice que las bolsas cuestan unos pocos dólares y que no exige requisitos de elegibilidad, inscripción ni identificación. Confirme la distribución antes de ir.
+   - Fair Foods: (617) 288-6185; Lena Park CDC (sede anfitriona): (617) 533-8133
+   - Horario: https://www.fairfoods.org/oursites
 
 **Mercados móviles de alimentos:**
 - Las despensas asociadas y distribuciones temporales de Greater Boston Food Bank rotan por Dorchester

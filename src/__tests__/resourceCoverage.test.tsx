@@ -27,7 +27,7 @@ const IDS = [
 ];
 const byId = (id: string) => RESOURCES.find((record) => record.id === id)!;
 // A change detector, not proof of translation quality or current provider facts.
-const SOURCE_DIGEST = 'be36f1cc7e6513da6f341bb5f7c654875c08528cd2fb2484255c5755fda07495';
+const SOURCE_DIGEST = '369e6dd7c44d28afaa45fe788b89cacebd152a9dc972a427797f6003aa6201dc';
 
 beforeEach(() => useAppStore.getState().resetAll());
 
@@ -77,6 +77,28 @@ describe('resource directory coverage and safer locations', () => {
     }
   });
 
+  it('keeps Dorchester Bay service claims limited and translates the confirmed list', () => {
+    const dorchesterBay = byId('dotbdc');
+    expect(dorchesterBay.services).toEqual([
+      'Affordable housing development',
+      'Small-business lending and technical help',
+      'Community organizing',
+    ]);
+    const expected: Record<string, string[]> = {
+      en: dorchesterBay.services,
+      es: ['Desarrollo de vivienda asequible', 'Préstamos y asistencia técnica para pequeñas empresas', 'Organización comunitaria'],
+      ht: ['Devlopman lojman abòdab', 'Prè ak asistans teknik pou ti biznis', 'Òganizasyon kominotè'],
+      pt: ['Desenvolvimento de moradia acessível', 'Empréstimos e assistência técnica para pequenos negócios', 'Organização comunitária'],
+      vi: ['Phát triển nhà ở giá phải chăng', 'Cho vay và hỗ trợ kỹ thuật cho doanh nghiệp nhỏ', 'Tổ chức cộng đồng'],
+      zh: ['可负担住房开发', '小企业贷款与技术协助', '社区组织工作'],
+      ar: ['تطوير الإسكان الميسور', 'قروض ومساعدة فنية للمشروعات الصغيرة', 'تنظيم المجتمع'],
+      so: ['Horumarinta guryaha la awoodi karo', 'Amaah iyo taageero farsamo oo ganacsiyada yaryar', 'Abaabulka bulshada'],
+      kea: ['Dezenvolvimentu di abitason asesível', 'Empréstimus i apoiu tékniku pa pikinus negósius', 'Organizason komunitáriu'],
+    };
+    for (const { code } of LANGUAGES) expect(resourceDetails(dorchesterBay, code).services.value, code).toEqual(expected[code]);
+    expect(dorchesterBay.services.join(' ')).not.toMatch(/technology|youth/i);
+  });
+
   it('uses the corrected Work Inc. address match and avoids unsupported hours and walk times', () => {
     const work = byId('work-inc-dorchester');
     expect(work.address).toBe('25 Beach Street, Dorchester, MA 02122');
@@ -90,12 +112,14 @@ describe('resource directory coverage and safer locations', () => {
     expect(isResourceMappable(stMark)).toBe(false);
   });
 
-  it('distinguishes ESOL and basic-education eligibility and uses ABCD’s central phone', () => {
+  it('distinguishes ESOL and basic-education eligibility and uses ABCD’s current ESOL enrollment contact', () => {
     const yawkey = byId('yawkey-center-adult-ed');
     const abcd = byId('abcd-esol');
     expect(yawkey.hours).toBeUndefined();
     expect(yawkey.address).toContain('185 Columbia Road');
-    expect(abcd.phone).toBe('(617) 348-6000');
+    expect(abcd.phone).toBe('(508) 203-7670');
+    expect(abcd.email).toBe('margaret.flynn@bostonabcd.org');
+    expect(abcd.address).toContain('no single walk-in class address');
     expect(abcd.hours).toBeUndefined();
     expect(isResourceMappable(abcd)).toBe(false);
     for (const { code } of LANGUAGES) {
@@ -103,7 +127,8 @@ describe('resource directory coverage and safer locations', () => {
       expect(detail.eligibility.value, code).toContain('18');
       expect(detail.eligibility.value, code).toContain('16');
       expect(detail.hoursNote.value, code).toContain('(617) 506-6600');
-      expect(resourceDetails(abcd, code).hoursNote.value, code).toContain('(617) 348-6000');
+      expect(resourceDetails(abcd, code).hoursNote.value, code).toContain('(508) 203-7670');
+      expect(resourceDetails(abcd, code).address.value, code).toContain('ESOL');
     }
   });
 
@@ -116,11 +141,16 @@ describe('resource directory coverage and safer locations', () => {
     expect(dorchesterBay.hours).toBeUndefined();
     expect(fields.transit).toBeUndefined();
     expect(isResourceMappable(civic)).toBe(false);
+    expect(civic.phone).toBeUndefined();
+    expect(civic.address).toContain('No current public meeting address');
+    expect(civic.translateAddress).toBe(true);
     expect(civic.email).toBe('president@columbiasavinhillcivic.org');
     for (const { code } of LANGUAGES) {
       expect(resourceDetails(fields, code).address.value).toContain('1444 Dorchester Avenue');
       expect(resourceDetails(dorchesterBay, code).address.value).toContain('594 Columbia Road');
       expect(resourceDetails(civic, code).neighborhood.value).toContain('Savin Hill');
+      expect(resourceDetails(civic, code).address.used).toBe(code);
+      expect(resourceDetails(civic, code).hoursNote.value).toContain('2026');
     }
   });
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, CloudOff, Globe2, Languages, Menu, Wifi } from 'lucide-react';
+import { Check, CloudOff, Globe2, Languages, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useI18n } from '@/i18n/hook';
@@ -79,9 +79,14 @@ export function Header() {
           onClick={toggleMobileNav}
           aria-label={mobileNavOpen ? t('nav.close') : t('nav.menu')}
           aria-expanded={mobileNavOpen}
-          className="inline-flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-2 text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
+          aria-controls="primary-nav"
+          className="inline-flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-2 text-[var(--color-text-secondary)] shadow-[var(--shadow-sm)] transition-all hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-md)] lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)]"
         >
-          <Menu className="w-4 h-4" aria-hidden="true" />
+          <span className="dor101-burger" aria-hidden="true">
+            <span className="dor101-burger-line dor101-burger-line--top" />
+            <span className="dor101-burger-line dor101-burger-line--middle" />
+            <span className="dor101-burger-line dor101-burger-line--bottom" />
+          </span>
         </button>
 
         <Breadcrumbs />

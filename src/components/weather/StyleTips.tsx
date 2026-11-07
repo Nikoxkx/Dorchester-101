@@ -22,11 +22,17 @@ export function StyleTips({
   unit,
   limit,
   headingLevel = 3,
+  showHeading = true,
+  showSubtitle = true,
+  showCoatLink = true,
 }: {
   payload: WeatherPayload;
   unit: TempUnit;
   limit?: number;
   headingLevel?: 2 | 3;
+  showHeading?: boolean;
+  showSubtitle?: boolean;
+  showCoatLink?: boolean;
 }) {
   const { t, format } = useI18n();
   // Re-derived on the minute tick as well as on every new payload, so the
@@ -40,11 +46,13 @@ export function StyleTips({
 
   return (
     <div>
-      <Heading className="flex items-center gap-2 font-heading text-base font-bold">
-        <Shirt className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
-        {t('weather.tipsTitle')}
-      </Heading>
-      <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{t('weather.tipsSubtitle')}</p>
+      {showHeading && (
+        <Heading className="flex items-center gap-2 font-heading text-base font-bold">
+          <Shirt className="h-4 w-4 text-[var(--color-accent-primary)]" aria-hidden="true" />
+          {t('weather.tipsTitle')}
+        </Heading>
+      )}
+      {showSubtitle && <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{t('weather.tipsSubtitle')}</p>}
       <ul className="mt-3 flex flex-col gap-2">
         {shown.map((tip) => {
           const Icon = TIP_ICON[tip.kind];
@@ -66,7 +74,7 @@ export function StyleTips({
           );
         })}
       </ul>
-      {tipsNeedCoat(tips) && (
+      {showCoatLink && tipsNeedCoat(tips) && (
         <Link
           href="/winter-clothing"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent-primary)] px-4 py-2 font-heading text-sm font-bold text-white transition-transform active:scale-[0.98]"

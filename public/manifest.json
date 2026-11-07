@@ -8,8 +8,8 @@
     "window-controls-overlay",
     "standalone"
   ],
-  "background_color": "#FAFAF8",
-  "theme_color": "#1B3A6B",
+  "background_color": "#11181B",
+  "theme_color": "#11181B",
   "orientation": "any",
   "scope": "/",
   "lang": "en",
@@ -134,25 +134,18 @@
   },
   "screenshots": [
     {
-      "src": "/img/dorchester-bay-sunset.jpg",
-      "sizes": "1920x1080",
-      "type": "image/jpeg",
+      "src": "/social/homepage.png",
+      "sizes": "1440x800",
+      "type": "image/png",
       "form_factor": "wide",
-      "label": "DOR101 — Dorchester Bay at sunset"
+      "label": "DOR101 — dark harbor homepage"
     },
     {
       "src": "/og.png",
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "DOR101 share preview"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "DOR101 — app icon 512"
+      "label": "DOR101 dark harbor share preview"
     }
   ],
   "related_applications": [],

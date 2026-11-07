@@ -8,8 +8,9 @@
  * are what stops their replacements, or any future photograph, from drifting
  * back into the same state. The rule is simple and it is enforced here:
  *
- *   every image the app loads has a credit entry naming a licence and a
- *   Wikimedia Commons page, and no entry is allowed to be a placeholder.
+ *   externally sourced images name their author, licence and Commons page; an
+ *   image supplied directly by the project maintainer records that permission
+ *   and the missing source metadata explicitly, without inventing attribution.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -78,14 +79,20 @@ function referencedImages(): string[] {
 }
 
 describe('image credits', () => {
-  it('credits every photograph the repository ships, with a licence and a Commons page', () => {
+  it('credits every shipped photo or records owner-provided permission without inventing a licence', () => {
     const sections = creditSections();
     for (const image of shippedImages()) {
       const section = sections.find((entry) => entry.file === image);
       expect(section, `no credit entry for ${image}`).toBeTruthy();
-      expect(section!.body, `${image} has no licence`).toMatch(/\*\*Licence:\*\*/);
-      expect(section!.body, `${image} has no Commons page to check it against`).toMatch(/\*\*Commons page:\*\* https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-      expect(section!.body, `${image} names no author`).toMatch(/\*\*Author:\*\*/);
+      const body = section!.body;
+      if (body.includes('**Permission:** Supplied for use in this project')) {
+        expect(body, `${image} does not identify the direct source`).toMatch(/\*\*Source:\*\* Image attached directly by the project maintainer/);
+        expect(body, `${image} hides the missing original attribution`).toMatch(/photographer name or separate photo licence notice/);
+        continue;
+      }
+      expect(body, `${image} has no licence`).toMatch(/\*\*Licence:\*\*/);
+      expect(body, `${image} has no Commons page to check it against`).toMatch(/\*\*Commons page:\*\* https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
+      expect(body, `${image} names no author`).toMatch(/\*\*Author:\*\*/);
     }
   });
 

@@ -11,7 +11,9 @@ import { formatWeekdayIndex } from '@/lib/hours';
 import { useAppStore } from '@/stores/appStore';
 
 const payload = vi.hoisted(() => ({
-  status: 'live', fetchedAt: '2026-10-31T12:00:00Z', current: null, days: [],
+  status: 'live', fetchedAt: '2026-10-31T12:00:00Z', current: null, days: [{
+    date: '2026-11-02', highF: 54, lowF: 42, precipChanceMax: 40, kind: 'rain', hasSnow: false, hasRain: true,
+  }],
   source: { name: 'nws', url: 'https://weather.gov/', office: null, grid: null },
   point: { lat: 42.3, lon: -71.07, city: 'Boston', state: 'MA', timeZone: 'America/New_York' },
   alerts: [], alertsStatus: 'live', astronomy: null,
@@ -45,6 +47,12 @@ beforeEach(() => {
   useAppStore.getState().setWeatherLayout({ order: ['hourly', 'daily'], hidden: [] });
   useAppStore.getState().setAccessibility('reduceMotion', 'on');
 });
+
+function expandWeatherDetails(container: HTMLElement) {
+  for (const details of container.querySelectorAll<HTMLDetailsElement>('details[data-weather-disclosure]')) {
+    fireEvent.click(details.querySelector('summary')!);
+  }
+}
 
 describe('weather period language', () => {
   it.each(LANGUAGES)('translates recognized period names without guessing unknown ones in $nativeName', ({ code }) => {
@@ -95,9 +103,28 @@ describe('weather period language', () => {
     }
   });
 
+  it('keeps long forecasts collapsed until the resident expands them', () => {
+    const { container } = render(<WeatherPageView />);
+    const details = [...container.querySelectorAll<HTMLDetailsElement>('details[data-weather-disclosure]')];
+    expect(details).toHaveLength(2);
+    expect(details.map((item) => item.open)).toEqual([false, false]);
+    expect(screen.getByRole('heading', { name: dictionaries.en['weather.daily'] })).toBeTruthy();
+
+    const firstSummary = details[0].querySelector('summary')!;
+    expect(firstSummary.textContent).toContain(dictionaries.en['common.showMore']);
+    fireEvent.click(firstSummary);
+    expect(details[0].open).toBe(true);
+    expect(details[1].open).toBe(false);
+    expect(firstSummary.textContent).toContain(dictionaries.en['common.showLess']);
+
+    fireEvent.click(firstSummary);
+    expect(details.map((item) => item.open)).toEqual([false, false]);
+  });
+
   it('translates common wind and exact forecast wording in hourly and daily rows', () => {
     useAppStore.getState().setLanguage('es');
-    render(<WeatherPageView />);
+    const { container } = render(<WeatherPageView />);
+    expandWeatherDetails(container);
     const t = makeTranslator(dictionaries.es, 'es');
     const speed = t('weather.windMph', { speed: '5–10' });
     const direction = t('weather.windFrom', { direction: t('weather.direction.NW') });
@@ -114,7 +141,8 @@ describe('weather period language', () => {
     payload.hourly[0].windText = '5 mph gusting 20 mph';
     payload.hourly[0].windDir = 'Variable and shifting';
     try {
-      render(<WeatherPageView />);
+      const { container } = render(<WeatherPageView />);
+      expandWeatherDetails(container);
       expect(screen.getByText('5 mph gusting 20 mph').getAttribute('lang')).toBe('en');
       expect(screen.getByText('Variable and shifting').getAttribute('lang')).toBe('en');
       expect(screen.getByText(`(${dictionaries.es['weather.windEnglish']})`)).toBeTruthy();
@@ -133,7 +161,8 @@ describe('weather period language', () => {
       humidity: 90, dewpointF: null, windMph: 12, windGustMph: 22, windDir: 'NW', pressureInHg: 29.92, visibilityMi: 7.6,
     } });
     try {
-      render(<WeatherPageView />);
+      const { container } = render(<WeatherPageView />);
+      expandWeatherDetails(container);
       const t = makeTranslator(dictionaries.es, 'es');
       expect(screen.getByText('Lluvia ligera').getAttribute('lang')).toBe('es');
       expect(screen.getByText(dictionaries.es['weather.shortTranslationNote'])).toBeTruthy();
@@ -164,10 +193,13 @@ describe('weather period language', () => {
   });
 
   it('switches recognized short forecasts while keeping detailed prose in English', () => {
-    render(<WeatherPageView />);
+    const { container } = render(<WeatherPageView />);
+    expandWeatherDetails(container);
     for (const { code } of LANGUAGES) {
       act(() => useAppStore.getState().setLanguage(code));
       const t = makeTranslator(dictionaries[code], code);
+      const disclosureSummary = container.querySelector('details[data-weather-disclosure] summary');
+      expect(disclosureSummary?.textContent).toContain(t('common.showLess'));
       const weekday = formatWeekdayIndex(0, languageMeta(code).intlLocale);
       const heading = screen.getByRole('heading', { name: t('weather.periodNight', { day: weekday }) });
       expect(heading.getAttribute('lang')).toBe(code);
@@ -175,7 +207,7 @@ describe('weather period language', () => {
       const short = localizeShortForecast('Chance Rain Showers', code);
       for (const text of screen.getAllByText(short.text)) expect(text.getAttribute('lang')).toBe(short.language);
       expect(screen.getByText('A chance of rain after midnight.').getAttribute('lang')).toBe('en');
-      expect(screen.getAllByText(t('weather.forecastTextNote')).length).toBe(2);
+      expect(screen.queryAllByText(t('weather.forecastTextNote')).length).toBe(code === 'en' ? 0 : 1);
     }
   });
 

@@ -21,7 +21,6 @@ import { BadgeWall } from '@/components/gamification/BadgeWall';
 import { FieldNotes } from '@/components/pwa/FieldNotes';
 import { PermissionSetup } from '@/components/pwa/PermissionSetup';
 import { DownloadAppCard } from '@/components/pwa/DownloadAppCard';
-import { PhotoCredit } from '@/components/sources/PhotoCredit';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { DataRefreshIndicator } from '@/components/ui/LoadingSpinner';
@@ -93,6 +92,7 @@ export default function DashboardPage() {
   // without touching this file's data wiring. The emergency banner is not
   // a slot: it always rides just ahead of the weather, hidden or not.
   const homeLayout = useAppStore((s) => s.homeLayout);
+  const brandStyle = useAppStore((s) => s.brandStyle);
   const weatherEnabled = useAppStore((s) => s.weatherEnabled);
   const show = (id: HomeSectionId) => (id !== 'weather' || weatherEnabled) && !homeLayout.hidden.includes(id);
   const slot = (id: HomeSectionId): CSSProperties => ({ order: Math.max(0, homeLayout.order.indexOf(id)) * 10 });
@@ -216,34 +216,35 @@ export default function DashboardPage() {
       <motion.div variants={pv} initial="initial" animate="enter" className="dor101-home flex flex-col gap-7 pb-10" data-cards={homeLayout.cardStyle === 'match' ? undefined : homeLayout.cardStyle}>
 {show('hero') && (
           <div style={slot('hero')}>
-        {/* ── Photo hero: Dorchester Bay at sunset, not a gradient ── */}
-        <section className="relative isolate overflow-hidden rounded-3xl border border-[var(--color-border)]">
+        {/* Keep the neighborhood photograph clean; branding lives in the menu, not over the search-facing hero. */}
+        <section className="dor101-hero relative isolate min-h-[34rem] overflow-hidden rounded-[2rem] border border-[var(--color-border)] shadow-[var(--shadow-lg)] sm:min-h-[40rem]">
           <Image
-            src="/img/dorchester-bay-sunset.jpg"
-            alt={t('home.heroAlt')}
+            src={brandStyle === 'classic' ? '/img/dorchester-bay-sunset.jpg' : '/img/dor101-skyline.jpg'}
+            alt={t(brandStyle === 'classic' ? 'about.photo.bay' : 'home.heroAlt')}
             fill
             priority
-            sizes="100vw"
-            className="object-cover"
+            unoptimized
+            sizes="(max-width: 1024px) 100vw, 86rem"
+            className="object-cover object-[center_30%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2a]/92 via-[#0d1b2a]/68 to-[#0d1b2a]/25" aria-hidden="true" />
-          <div className="relative z-10 flex flex-col gap-4 p-6 sm:p-9 lg:max-w-2xl">
-            <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+          <div className="dor101-hero-wash absolute inset-0" aria-hidden="true" />
+          <div className="relative z-10 flex min-h-[34rem] flex-col justify-end gap-4 px-5 py-6 sm:min-h-[40rem] sm:px-9 sm:py-9 lg:max-w-3xl lg:pb-10">
+            <p className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-[#102c38]/35 px-3 py-1 font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-md">
               <Shield className="h-3.5 w-3.5" aria-hidden="true" />
               {t('intro.subtitle')}
             </p>
-            <h1 className="font-display text-3xl font-extrabold leading-[1.08] text-white sm:text-4xl md:text-5xl">{t('intro.title')}</h1>
-            <p className="max-w-prose text-sm leading-relaxed text-white/88 sm:text-base">{t('intro.body')}</p>
+            <h1 className="max-w-[16ch] font-display text-3xl font-extrabold leading-[1.08] text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.24)] sm:text-4xl md:text-5xl">{t('intro.title')}</h1>
+            <p className="max-w-prose text-sm leading-relaxed text-white/90 sm:text-base">{t('intro.body')}</p>
             <div className="flex flex-wrap items-center gap-2.5">
               <Link
                 href="/resources"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 font-heading text-sm font-bold text-[#14304F] transition-transform active:scale-[0.98]"
+                className="dor101-hero-action inline-flex items-center gap-2 rounded-full bg-[#F4FCFC] px-4 py-2.5 font-heading text-sm font-bold text-[#123D54] shadow-[0_7px_22px_rgba(5,24,34,0.22)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(5,24,34,0.3)] active:translate-y-0 active:scale-[0.98]"
               >
                 {t('intro.cta')} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/map"
-                className="inline-flex items-center gap-2 rounded-full border border-white/35 px-4 py-2.5 font-heading text-sm font-bold text-white transition-colors hover:bg-white/12"
+                className="dor101-hero-action inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-2.5 font-heading text-sm font-bold text-white shadow-[0_5px_16px_rgba(5,24,34,0.14)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/18 hover:shadow-[0_10px_24px_rgba(5,24,34,0.22)] active:translate-y-0 active:scale-[0.98]"
               >
                 <MapPin className="h-4 w-4" aria-hidden="true" />
                 {t('intro.ctaSecondary')}
@@ -252,7 +253,6 @@ export default function DashboardPage() {
                   the latest GitHub release. */}
               <DownloadAppCard variant="hero" />
             </div>
-            <p><PhotoCredit className="text-white/90" commonsFile="Dorchester_Bay_Boston_Harbor_sunset.jpg" author="Sswonk" license="3.0" /></p>
           </div>
         </section>
 

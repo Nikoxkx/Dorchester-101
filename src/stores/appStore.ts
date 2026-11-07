@@ -9,7 +9,7 @@ export type Language = LanguageCode;
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 export type MapStyle = 'satellite' | 'street' | 'hybrid';
 /**
- * Surface treatment — how panels sit over the Dorchester photograph.
+ * Surface treatment — how panels sit over the selected background photograph.
  * `solid` is the default opaque UI. The translucent styles differ in both
  * transparency and hue, and all of them derive from the active palette in CSS
  * (`color-mix` over the `--bg-*-solid` tokens), so a style never washes the
@@ -22,6 +22,9 @@ export type MapStyle = 'satellite' | 'street' | 'hybrid';
  */
 export type Surface = 'solid' | 'glass' | 'frost' | 'tinted' | 'aurora';
 export const SURFACES: Surface[] = ['solid', 'glass', 'frost', 'tinted', 'aurora'];
+/** Site branding switches only the photographic backdrop and sidebar photo mark. */
+export type BrandStyle = 'harbor' | 'classic';
+export const BRAND_STYLES: BrandStyle[] = ['harbor', 'classic'];
 /** Colour palette for the whole interface. Each has a light and a dark variant. */
 export type Palette =
   | 'harbor'
@@ -181,6 +184,7 @@ interface AppState {
   mapStyle: MapStyle;
   surface: Surface;
   palette: Palette;
+  brandStyle: BrandStyle;
   homeLayout: HomeLayout;
   /** Master switch for weather features (Settings → Weather). Off by
    *  default; storm warnings ignore it and always show. */
@@ -225,6 +229,7 @@ interface AppState {
   setMapStyle: (style: MapStyle) => void;
   setSurface: (surface: Surface) => void;
   setPalette: (palette: Palette) => void;
+  setBrandStyle: (brandStyle: BrandStyle) => void;
   setHomeLayout: (layout: HomeLayout) => void;
   resetHomeLayout: () => void;
   setWeatherEnabled: (enabled: boolean) => void;
@@ -340,13 +345,19 @@ export function migrateSettings(persisted: unknown, version: number): AppState {
   // on a readable street map; satellite remains an explicit map option.
   if (version < 6 && state.mapStyle === 'satellite') state.mapStyle = 'street';
 
+  // v7 adds the classic/current branding choice. Existing settings stay on
+  // the current harbor look; malformed values are also repaired safely.
+  if (version < 7 || !BRAND_STYLES.includes(state.brandStyle as BrandStyle)) {
+    state.brandStyle = 'harbor';
+  }
+
   return state as AppState;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      theme: 'system',
+      theme: 'dark',
       language: 'en',
       fontSize: 'medium',
       sidebarCollapsed: false,
@@ -355,6 +366,7 @@ export const useAppStore = create<AppState>()(
       mapStyle: 'street',
       surface: 'solid',
       palette: 'harbor',
+      brandStyle: 'harbor',
       homeLayout: DEFAULT_HOME_LAYOUT,
       weatherEnabled: false,
       weatherLayout: DEFAULT_WEATHER_LAYOUT,
@@ -388,6 +400,7 @@ export const useAppStore = create<AppState>()(
       setMapStyle: (mapStyle) => set({ mapStyle }),
       setSurface: (surface) => set({ surface }),
       setPalette: (palette) => set({ palette }),
+      setBrandStyle: (brandStyle) => set({ brandStyle }),
       setHomeLayout: (homeLayout) => set({ homeLayout }),
       resetHomeLayout: () => set({ homeLayout: DEFAULT_HOME_LAYOUT }),
       setWeatherEnabled: (weatherEnabled) => set({ weatherEnabled }),
@@ -437,13 +450,14 @@ export const useAppStore = create<AppState>()(
         // restores everything the visitor just asked us to delete.
         customStorage.removeItem('dor101-settings');
         set({
-          theme: 'system',
+          theme: 'dark',
           language: 'en',
           fontSize: 'medium',
           sidebarCollapsed: false,
           mapStyle: 'street',
           surface: 'solid',
           palette: 'harbor',
+          brandStyle: 'harbor',
           homeLayout: DEFAULT_HOME_LAYOUT,
           weatherEnabled: false,
           weatherLayout: DEFAULT_WEATHER_LAYOUT,
@@ -464,7 +478,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'dor101-settings',
       storage: createJSONStorage(() => customStorage),
-      version: 6,
+      version: 7,
       migrate: migrateSettings,
       partialize: (s) => ({
         theme: s.theme,
@@ -474,6 +488,7 @@ export const useAppStore = create<AppState>()(
         mapStyle: s.mapStyle,
         surface: s.surface,
         palette: s.palette,
+        brandStyle: s.brandStyle,
         homeLayout: s.homeLayout,
         weatherEnabled: s.weatherEnabled,
         weatherLayout: s.weatherLayout,

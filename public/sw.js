@@ -11,15 +11,15 @@
 /// previous ones behind until something deletes them, which is how a service
 /// worker ends up eating storage instead of saving bandwidth.
 
-/// Bumped for the privacy, translation and photograph update so an older
+/// Bumped for the skyline, wordmark and refreshed offline assets so an older
 /// cached shell is not retained after activation. This is a cache version, not
 /// the app version: the app's own version lives in package.json.
-const VERSION = 'v4.14.0';
+const VERSION = 'v4.16.0';
 const SHELL_CACHE = `dor101-shell-${VERSION}`;
 const TILE_CACHE = `dor101-tiles-${VERSION}`;
 
-const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png',
-  '/og.png', '/manifest.json', '/faq', '/food'];
+const SHELL_URLS = ['/', '/offline.html', '/icon.svg', '/logo.png', '/logo-classic.png',
+  '/img/dor101-skyline.jpg', '/img/dorchester-bay-sunset.jpg', '/og.png', '/manifest.json', '/faq', '/food'];
 const TILE_MAX_ENTRIES = 480;
 
 self.addEventListener('install', (event) => {
@@ -115,7 +115,7 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     // Hashed build assets and images are immutable; never re-fetch them.
-    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/img/') || url.pathname.startsWith('/sources/') || url.pathname.startsWith('/icons/') || url.pathname.endsWith('.svg') || url.pathname === '/logo.png') {
+    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/img/') || url.pathname.startsWith('/sources/') || url.pathname.startsWith('/icons/') || url.pathname.endsWith('.svg') || url.pathname === '/logo.png' || url.pathname === '/logo-classic.png') {
       event.respondWith(cacheFirst(request, SHELL_CACHE));
       return;
     }

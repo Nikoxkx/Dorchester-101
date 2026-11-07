@@ -11,9 +11,9 @@ import { APP_VERSION, SITE_NAME } from '@/lib/site';
  *
  * Each subsystem reports what can actually be observed from the process:
  * whether a database is configured and answering, how many feeds and listings
- * are wired up, how old the hand-checked transit table is, and how much of the
- * directory has gone past its review window. A deploy that is up but stale is
- * the failure mode this site can actually have, so it is the one worth surfacing.
+ * are wired up, how old the hand-checked transit table is, and how many listings
+ * still carry an unresolved review flag. A deploy that is up but has a large
+ * verification backlog is the failure mode this site can actually surface.
  */
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export async function GET() {
   checks.push({
     name: 'data-quality',
     status: backlogShare > 0.5 ? 'degraded' : 'ok',
-    detail: `${review.total - review.needsReview} of ${review.total} listings re-checked inside the window; last review ${lastReviewedOn()}.`,
+    detail: `${review.total - review.needsReview} of ${review.total} listings have no outstanding review flag; ${review.needsReview} need follow-up verification; latest source review ${lastReviewedOn()}.`,
   });
 
   const transitAge = daysSince(TRANSIT_DATA_AS_OF, now);

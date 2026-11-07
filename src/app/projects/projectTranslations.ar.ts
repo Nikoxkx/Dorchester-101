@@ -23,12 +23,12 @@ export const ARABIC_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'مبنيان صغيران بمساكن ميسورة بالكامل يكتملان في 2026، ليحلا محل قطع أرض خالية بشقق عائلية.',
-    parcelNote: 'قطعتا أرض كانتا خاليتين في منطقة Codman Square / Four Corners: ‏151 Spencer Street و25 New England Avenue.',
+    parcelNote: "موقعان في Codman Square / Four Corners. تذكر المدينة وHousing Navigator العنوان 25 New England Avenue؛ بينما يذكر عنوان صفحة CSNDC الرقم 23 وتذكر التفاصيل الرقم 25. أكّد رقم المبنى مع CSNDC قبل الذهاب؛ الموقع الآخر هو 151 Spencer Street.",
     unitMix: '42 شقة عائلية بحدود دخل في المبنيين: 19 في Spencer Street و23 في New England Avenue.',
     amenities: ['وحدات مناسبة للأسر', 'خدمات للمقيمين تقدمها CSNDC', 'مسافة قصيرة سيراً إلى Talbot Avenue ‏(Fairmount Line)'],
     communityBenefits: 'مساكن عائلية جديدة على أراضٍ خالية، مع خدمات للمستأجرين تقدمها CSNDC في الموقع.',
-    howToApply: "أفادت CSNDC بإجراء قرعة في فبراير 2026. عرض Housing Navigator قائمة انتظار مفتوحة في 31 أكتوبر 2026. قد تتغير الحالة؛ أكّد توفر الوحدات وطريقة التقديم مع WinnResidential على (617) 287-9580.",
-    renderingNote: 'تُنشر المخططات وصور التقدم في تحديثات CSNDC العقارية.',
+    howToApply: "ذكر تحديث CSNDC لربيع 2026 أن القرعة انتهت في فبراير؛ وتقول صفحة العقار الآن إن الوحدات غير متاحة وقد لا تبدأ عملية التقديم لبعض الوقت، بينما ظل Housing Navigator يعرض قائمة انتظار مفتوحة في 31 أكتوبر 2026. المصادر متضاربة. أكّد الوضع مع WinnResidential على (617) 287-9580 أو talbotcommons2@winnco.com قبل الاعتماد على أي قائمة.",
+    renderingNote: "تنشر CSNDC صورًا للمشروع في الموقعين؛ الصورة هنا تصميم معماري وليست صورة فوتوغرافية للموقع الحالي.",
   },
   4: {
     description: 'مبنى من أربعة طوابق بمساكن ميسورة بالكامل في موقع ورشة إصلاح سيارات بجوار محطة Shawmut على Red Line.',

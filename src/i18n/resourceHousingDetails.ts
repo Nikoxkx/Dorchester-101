@@ -217,9 +217,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
   },
   "metrolist-boston": {
     "es": {
-      "neighborhood": "Government Center",
+      "neighborhood": "En línea (vivienda en Boston y Greater Boston)",
+      "address": "Servicio de anuncios en línea; Metrolist no tiene oficina de atención presencial",
       "operator": "Oficina del Alcalde de Vivienda de Boston",
-      "hoursNote": "Oficina del Alcalde de Vivienda: lunes a viernes de 9 a. m. a 5 p. m. Confirme antes de visitar.",
+      "hoursNote": "Metrolist es un servicio en línea de anuncios y resumen semanal, no una oficina sin cita; la página dirige las solicitudes a los administradores de propiedades. Boston.gov publica por separado la Oficina del Alcalde de Vivienda en 26 Court Street, (617) 635-3880, de lunes a viernes de 9 a. m. a 5 p. m. Confirme antes de ir; consulte el directorio de agencias asociadas para más ayuda.",
       "eligibility": "Los requisitos de ingresos, tamaño del hogar y otros criterios varían. Consulte al contacto de cada anuncio.",
       "services": [
         "Anuncios de vivienda con límite de ingresos",
@@ -229,9 +230,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "ht": {
-      "neighborhood": "Government Center",
+      "neighborhood": "Sou entènèt (lojman Boston ak Greater Boston)",
+      "address": "Sèvis anons sou entènèt; Metrolist pa gen biwo pou resevwa moun san randevou",
       "operator": "Biwo Majistra a pou Lojman nan Boston",
-      "hoursNote": "Biwo Majistra a pou Lojman: lendi–vandredi 9 a.m.–5 p.m. Konfime anvan ou ale.",
+      "hoursNote": "Metrolist se yon sèvis anons ak rezime chak semèn sou entènèt, se pa yon biwo pou moun vini san randevou; paj la voye aplikasyon yo bay administratè pwopriyete yo. Boston.gov bay enfòmasyon apa pou Biwo Majistra a pou Lojman nan 26 Court Street, (617) 635-3880, lendi–vandredi 9 a.m.–5 p.m. Konfime anvan ou ale; gade lis ajans patnè yo pou plis èd.",
       "eligibility": "Kondisyon revni, kantite moun nan kay ak lòt règ varye. Mande kontak chak anons.",
       "services": [
         "Anons lojman ak limit revni",
@@ -241,9 +243,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "pt": {
-      "neighborhood": "Government Center",
+      "neighborhood": "Online (moradias em Boston e Greater Boston)",
+      "address": "Serviço de anúncios online; a Metrolist não tem atendimento presencial",
       "operator": "Escritório de Habitação da Prefeitura de Boston",
-      "hoursNote": "Escritório de Habitação da Prefeitura: segunda a sexta, das 9h às 17h. Confirme antes de visitar.",
+      "hoursNote": "Metrolist é um serviço online de anúncios e resumo semanal, não um escritório para atendimento sem agendamento; a página encaminha inscrições aos administradores das propriedades. O Boston.gov lista separadamente o Escritório de Habitação do Prefeito em 26 Court Street, (617) 635-3880, de segunda a sexta, 9h–17h. Confirme antes de ir; consulte o diretório de agências parceiras para outras opções.",
       "eligibility": "Requisitos de renda, tamanho da família e outros critérios variam. Consulte o contato de cada anúncio.",
       "services": [
         "Anúncios de moradia com limite de renda",
@@ -253,9 +256,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "vi": {
-      "neighborhood": "Government Center",
+      "neighborhood": "Trực tuyến (nhà ở tại Boston và Greater Boston)",
+      "address": "Dịch vụ đăng tin trực tuyến; Metrolist không có địa điểm tiếp khách trực tiếp",
       "operator": "Văn phòng Nhà ở của Thị trưởng Boston",
-      "hoursNote": "Văn phòng Nhà ở của Thị trưởng: thứ Hai–thứ Sáu, 9 giờ sáng–5 giờ chiều. Xác nhận trước khi đến.",
+      "hoursNote": "Metrolist là dịch vụ đăng tin và bản tin tuần trực tuyến, không phải văn phòng tiếp khách không hẹn; trang hướng dẫn nộp đơn trực tiếp cho quản lý bất động sản. Boston.gov liệt kê riêng Văn phòng Nhà ở của Thị trưởng tại 26 Court Street, (617) 635-3880, thứ Hai–thứ Sáu 9 giờ sáng–5 giờ chiều. Xác nhận trước khi đến; xem danh bạ cơ quan đối tác để biết thêm nơi trợ giúp.",
       "eligibility": "Yêu cầu thu nhập, số người trong hộ và các tiêu chí khác khác nhau. Hỏi người liên hệ của từng tin.",
       "services": [
         "Tin nhà ở giới hạn thu nhập",
@@ -265,9 +269,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "zh": {
-      "neighborhood": "Government Center",
+      "neighborhood": "在线（波士顿及大波士顿房源）",
+      "address": "在线房源服务；Metrolist 没有现场接待地址",
       "operator": "波士顿市长住房办公室",
-      "hoursNote": "市长住房办公室：周一至周五上午 9 点至下午 5 点。前往前请确认。",
+      "hoursNote": "Metrolist 是在线房源和每周摘要服务，不是现场接待办公室；网页指引申请人联系各物业管理方。Boston.gov 另列市长住房办公室地址为 26 Court Street，电话 (617) 635-3880，周一至周五上午 9 点至下午 5 点。前往前请确认；其他帮助请查看合作机构目录。",
       "eligibility": "收入、家庭人数和其他要求各不相同。请咨询每条房源的联系人。",
       "services": [
         "收入限制住房信息",
@@ -277,9 +282,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "ar": {
-      "neighborhood": "Government Center",
+      "neighborhood": "عبر الإنترنت (مساكن Boston وGreater Boston)",
+      "address": "خدمة إعلانات عبر الإنترنت؛ لا يوجد عنوان لاستقبال زوار Metrolist",
       "operator": "مكتب الإسكان التابع لعمدة بوسطن",
-      "hoursNote": "مكتب الإسكان التابع للعمدة: الاثنين–الجمعة 9 صباحًا–5 مساءً. أكّد قبل الزيارة.",
+      "hoursNote": "Metrolist خدمة إعلانات وملخص أسبوعي عبر الإنترنت وليست مكتب استقبال دون موعد؛ توجه الصفحة المتقدمين إلى مديري العقارات. ويعرض Boston.gov منفصلاً مكتب الإسكان التابع للعمدة في 26 Court Street، (617) 635-3880، من الاثنين إلى الجمعة 9 صباحاً–5 مساءً. أكّد قبل الزيارة، واستخدم دليل الوكالات الشريكة للحصول على مساعدة إضافية.",
       "eligibility": "تختلف متطلبات الدخل وحجم الأسرة وغيرها. اسأل جهة الاتصال في كل إعلان.",
       "services": [
         "إعلانات سكن مقيّد بالدخل",
@@ -289,9 +295,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "so": {
-      "neighborhood": "Government Center",
+      "neighborhood": "Internetka (guryaha Boston iyo Greater Boston)",
+      "address": "Adeeg guryaha lagu xayeysiiyo oo internetka ah; Metrolist ma laha goob booqasho",
       "operator": "Xafiiska Guryaha ee Duqa Boston",
-      "hoursNote": "Xafiiska Guryaha ee Duqa: Isniin–Jimce 9 subaxnimo–5 galabnimo. Xaqiiji ka hor booqashada.",
+      "hoursNote": "Metrolist waa adeeg internet ah oo liis gareeya guryaha oo dira warbixin toddobaadle ah; ma aha xafiis lagu yimaado ballan la’aan. Boggu codsiyada wuxuu u diraa maamulayaasha guryaha. Boston.gov si gooni ah ayuu u taxaa Xafiiska Guryaha ee Duqa, 26 Court Street, (617) 635-3880, Isniin–Jimce 9 subaxnimo–5 galabnimo. Xaqiiji ka hor booqashada; eeg liiska hay’adaha lammaanaha si aad gargaar kale u hesho.",
       "eligibility": "Shuruudaha dakhliga, tirada qoyska iyo kuwa kale way kala duwan yihiin. Weydii xiriirka xayeysiis kasta.",
       "services": [
         "Xayeysiisyada guryaha dakhligu xaddidan yahay",
@@ -301,9 +308,10 @@ export const HOUSING_RESOURCE_DETAILS: Record<string, Partial<Record<Exclude<Lan
       ]
     },
     "kea": {
-      "neighborhood": "Government Center",
+      "neighborhood": "Online (abitason na Boston i Greater Boston)",
+      "address": "Servisu di anúnsiu online; Metrolist ka ten lugar pa atendimentu prezensial",
       "operator": "Gabineti di Abitason di Prezidenti di Câmara di Boston",
-      "hoursNote": "Gabineti di Abitason: sigunda–sexta, 9 di manhan–5 di tardi. Konfirma antis di vizita.",
+      "hoursNote": "Metrolist é un servisu online di anúnsius i rezumu semanal, ka é un skritóriu pa atendimentu sen markason; pájina ta manda kandidaturas pa jestoris di propriedadis. Boston.gov ta lista separadamenti Gabineti di Abitason di Prezidenti di Câmara na 26 Court Street, (617) 635-3880, sigunda–sexta 9 di manhan–5 di tardi. Konfirma antis di bai; odja lista di ajénsias parséras pa mas ajuda.",
       "eligibility": "Rekizitus di rendimentu, tamanhu di família y ôtus ta varia. Purgunta kontakto di kada anúnsiu.",
       "services": [
         "Anúnsus di kaza ku limitason di rendimentu",

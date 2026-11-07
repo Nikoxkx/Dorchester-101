@@ -11,7 +11,9 @@ import type { TranslationKey } from '@/i18n/en';
  * public brand colour instead, which identifies the source at a glance without
  * republishing artwork we do not own. Where a publisher offers a press kit that
  * allows editorial use, an operator can drop the file at
- * `public/sources/<id>.svg` and the component will prefer it automatically.
+ * `public/sources/<id>.svg`, then set `logoAvailable: true` on that registry
+ * entry; the component will prefer it automatically. Sources without included
+ * artwork use the registry's monogram directly instead of requesting a missing file.
  */
 export interface SourceInfo {
   id: string;
@@ -22,6 +24,8 @@ export interface SourceInfo {
   provides: string;
   /** Public brand colour, used only as the badge background. */
   color: string;
+  /** True when a permitted publisher mark ships at `/sources/<id>.svg`; otherwise render our monogram directly. */
+  logoAvailable?: boolean;
   ink?: string;
   /** How often the source itself publishes. */
   cadence: string;
@@ -36,6 +40,7 @@ const SOURCE_TABLE = {
     url: 'https://www.weather.gov/box/',
     provides: 'Forecast, hour-by-hour conditions, station observations and active storm watches, warnings and advisories for the Dorchester grid point (Boston office).',
     color: '#003366',
+    logoAvailable: false,
     cadence: 'Live; forecasts reissued through the day, warnings as issued',
     licence: 'Public domain (U.S. federal government work)',
   },
@@ -46,6 +51,7 @@ const SOURCE_TABLE = {
     url: 'https://open-meteo.com',
     provides: 'Backup forecast and astronomy, shown and labelled only when the National Weather Service cannot be reached; never used to stand in for storm warnings.',
     color: '#FF385C',
+    logoAvailable: false,
     cadence: 'Live; model runs update hourly',
     licence: 'CC BY 4.0',
   },

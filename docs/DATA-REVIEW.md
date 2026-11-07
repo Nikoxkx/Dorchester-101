@@ -9,11 +9,17 @@ For each flagged entry:
 3. Record the actual date and source checked in the record. A review date is not a guarantee of present availability. Recheck the meaning and numbers of all affected translations and run the relevant coverage/change-detection tests.
 4. Review the report again after editing: `npx tsx scripts/audit-freshness.ts --offline`. The online version also checks source reachability but may be inconclusive when a provider blocks automated requests.
 
-## Source review recorded 2026-10-31
+## Current source review recorded 2026-11-05
 
-- **Housing Navigator Massachusetts:** its [help center](https://housingnavigatorma.org/resources/help-center/) describes searching income-restricted rentals, rent and eligibility information, accessible-unit filters, and contacting properties for missing details. Its [search](https://search.housingnavigatorma.org/) shows property contacts and application links when available; [Candid](https://www.guidestar.org/profile/84-3542325) describes a free statewide tool. The resource is an online search, not a walk-in location; listings and eligibility must still be confirmed with each property. Its listing status was changed to `verified` for this source review, not to imply that every rental listing was checked.
+The source-linked, record-by-record log is [Resource source review — 2026-11-05](./RESOURCE-AUDIT-2026-11-05.md). It covers the 24 records already marked for follow-up. **All 24 remain `needs-review`; none was marked `verified` by this review.** The `checkedOn` date records this public-source review, not phone confirmation or verification of every field. Conflicting, appointment-only, seasonal, phone-only and accessibility details remain qualified in the data and `src/data/reviewFocus.ts`.
+
+## Historical source review recorded 2026-10-31
+
+The notes below are retained as history and are superseded where the newer source-linked audit above differs.
+
+- **Housing Navigator Massachusetts:** its [help center](https://housingnavigatorma.org/resources/help-center/) describes searching income-restricted rentals, rent and eligibility information, accessible-unit filters, and contacting properties for missing details. Its [search](https://search.housingnavigatorma.org/) shows property contacts and application links when available; [Candid](https://www.guidestar.org/profile/84-3542325) describes a free statewide tool. The resource is an online search, not a walk-in location; listings and eligibility must still be confirmed with each property. Its listing status was changed to `verified` for that source review, not to imply that every rental listing was checked.
 - **Metrolist:** the [city page](https://www.boston.gov/metrolist) confirms the income-restricted search, weekly email and exclusion of public/subsidized housing. Office access and exceptions still need direct confirmation, so the warning remains.
-- **Dorchester Bay EDC:** its [contact page](https://www.dbedc.org/contact-us/) lists 594 Columbia Road, Suite 302, the phone number, Tuesday–Thursday walk-ins and Monday/Friday appointments; its [program page](https://www.dbedc.org/resident-community-engagement/) describes technology, workforce and youth work. Availability of individual programs and office access still need confirmation.
+- **Dorchester Bay EDC:** its [contact page](https://www.dbedc.org/contact-us/) lists 594 Columbia Road, Suite 302, the phone number, Tuesday–Thursday walk-ins and Monday/Friday appointments. The current review removed individual program claims that could not be confirmed as available now.
 - **Fields Corner Main Street:** its [business directory](https://www.fieldscorner.org/shop) lists 1444 Dorchester Avenue, second floor, and 617-474-1432. Confirm current program availability, visiting arrangements and access before removing its warning.
 
 The full current queue is generated rather than copied here, so this document cannot silently become a substitute for current provider information.

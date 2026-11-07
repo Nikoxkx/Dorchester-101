@@ -23,12 +23,12 @@ export const SOMALI_PROJECTS: Record<number, ProjectTranslation> = {
   },
   3: {
     description: 'Laba dhisme oo yaryar oo dhammaantood qiimo jaban, lana dhammaynayo 2026, ayaa dhulal bannaan ku beddelaya guryo qoysas.',
-    parcelNote: 'Laba goobood oo hore u bannaanaa oo ku yaal aagga Codman Square / Four Corners: 151 Spencer Street iyo 25 New England Avenue.',
+    parcelNote: "Laba goobood oo ku yaal Codman Square / Four Corners. Magaalada iyo Housing Navigator waxay qoraan 25 New England Avenue; cinwaanka bogga CSNDC wuxuu leeyahay 23, faahfaahinta bogguna 25. CSNDC ka xaqiiji lambarka ka hor intaadan tegin; goobta kale waa 151 Spencer Street.",
     unitMix: '42 guri qoysas oo dakhligu xaddidan yahay oo ku kala yaal labada dhisme: 19 Spencer Street iyo 23 New England Avenue.',
     amenities: ['Guryo ku habboon qoysaska', 'Adeegyo dadka deggan oo CSNDC bixiso', 'Socod gaaban ilaa Talbot Avenue (Fairmount Line)'],
     communityBenefits: 'Guryo qoysas oo cusub ayaa laga dhisay dhulal bannaanaa, iyadoo CSNDC goobta ku siiso adeegyo kiraystayaasha.',
-    howToApply: "CSNDC waxay sheegtay in bakhtiyaa-nasiib dhacay Febraayo 2026. Housing Navigator wuxuu muujiyay liis sugitaan oo furan 31 Oktoobar 2026. Xaaladdu way is beddeli kartaa; WinnResidential ka xaqiiji helitaanka iyo sida loo codsado, (617) 287-9580.",
-    renderingNote: 'Qorshayaasha iyo sawirrada horumarka waxaa lagu daabacaa wararka hantida maguurtada ah ee CSNDC.',
+    howToApply: "Cusboonaysiinta gu’ga 2026 ee CSNDC waxay sheegtay in bakhtiyaa-nasiibku dhammaaday Febraayo; bogga hantidu hadda wuxuu leeyahay guryuhu ma bannaana oo codsigu muddo ma bilaaban karo, halka Housing Navigator uu weli liis sugitaan furan muujiyay 31 Oktoobar 2026. Xogtu way is khilaafsan tahay. WinnResidential ka xaqiiji (617) 287-9580 ama talbotcommons2@winnco.com ka hor intaadan ku tiirsanaan liisaska.",
+    renderingNote: "CSNDC waxay boggeeda rasmiga ah ku muujisaa sawirrada labada goobood; sawirka halkan ku jira waa naqshad, mana aha sawir goobta hadda laga qaaday.",
   },
   4: {
     description: 'Dhismaha afar dabaq ah oo dhammaantii qiimo jaban, kuna yaal goobtii dayactirka baabuurta ee ku dheggan saldhigga Shawmut Red Line.',

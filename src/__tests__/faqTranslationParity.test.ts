@@ -116,9 +116,10 @@ describe('FAQ translation parity', () => {
   it('retains key food contacts and amounts in every new translation', () => {
     expect(Object.keys(FOOD_FAQ_ANSWERS).sort()).toEqual(LANGUAGES.map(({ code }) => code).filter((code) => code !== 'en' && code !== 'es').sort());
     for (const [language, answer] of Object.entries(FOOD_FAQ_ANSWERS)) {
-      for (const value of ['450 Washington St', '650 Dudley St', '150 American Legion Hwy', '617) 825-9660', '617) 318-6940', '617) 318-6900', '617) 533-8133', '1-800-645-8333', '$2', '180', 'gbfb.org/need-food']) {
+      for (const value of ['450 Washington St', '650 Dudley St', '150 American Legion Hwy', '617) 825-9660', '617) 318-6940', '617) 318-6900', '617) 288-6185', '617) 533-8133', '1-800-645-8333', '180', 'gbfb.org/need-food', 'https://www.fairfoods.org/oursites']) {
         expect(answer, `${language} must retain ${value}`).toContain(value);
       }
+      expect(answer, `${language} must not state a fixed two-dollar price`).not.toContain('$2');
     }
   });
 });
