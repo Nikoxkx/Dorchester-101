@@ -53,6 +53,7 @@ import {
   humanDuration,
   humanSize,
   interpretVerifyLog,
+  isSupportedNodeVersion,
   parseAheadBehind,
   parseArgs,
   parseStatusPorcelain,
@@ -172,7 +173,7 @@ function preflight() {
 
   const [major, minor] = process.versions.node.split('.').map(Number);
   const tools = {
-    nodeOk: (major === 22 && minor >= 12) || major === 24 || major >= 26,
+    nodeOk: isSupportedNodeVersion(major, minor),
     nodeVersion: process.versions.node,
     git: which('git'),
     gh: which('gh'),
@@ -182,7 +183,9 @@ function preflight() {
   tools.ghAuthenticated = false;
   tools.ghUser = null;
 
-  detail(`Node.js ${tools.nodeVersion}${tools.nodeOk ? '' : '  ✖ too old — 22.12+, 24 or 26+ is needed to build here'}`);
+  // Not "too old": Node 23/25 are newer than 22 and still unsupported, and
+  // only a local build cares — building on GitHub works regardless.
+  detail(`Node.js ${tools.nodeVersion}${tools.nodeOk ? '' : '  ✖ not a supported version for building on this computer (local builds need 22.12+, 24 or 26+; building on GitHub is unaffected)'}`);
   detail(tools.git ? `git ${tools.git.version}` : 'git  ✖ not found on PATH');
 
   if (tools.ghAvailable) {

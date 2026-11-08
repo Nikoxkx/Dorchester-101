@@ -30,6 +30,7 @@ import {
   humanDuration,
   humanSize,
   interpretVerifyLog,
+  isSupportedNodeVersion,
   parseAheadBehind,
   parseArgs,
   parseStatusPorcelain,
@@ -299,10 +300,24 @@ describe('dispatchArgs', () => {
     expect(args.slice(0, 2)).toEqual(['api', 'repos/Nikoxkx/Dorchester-101/actions/workflows/release.yml/dispatches']);
     // `-f` sends strings; a GitHub Actions boolean input reads the string
     // "false" as true, which would publish a release nobody asked for.
-    const index = args.indexOf('publish_release=false');
+    const index = args.indexOf('inputs[publish_release]=false');
     expect(args[index - 1]).toBe('-F');
     expect(args).toContain('ref=main');
-    expect(args).toContain('target=portable');
+    expect(args).toContain('inputs[target]=portable');
+  });
+
+  it('nests the workflow inputs under `inputs[...]`, as the REST API requires', () => {
+    // Regression test for the tool's first real run (2026-11-07): the inputs
+    // went out as flat top-level fields (`target=…`, `publish_release=…`)
+    // and GitHub rejected the dispatch with `gh: Invalid request.` — no run
+    // ever started. The API body is `{ ref, inputs: { … } }`; `gh api`
+    // expresses the nesting as `key[subkey]=value`.
+    const args = dispatchArgs({ ref: 'main', targets: 'both', publish: true });
+    expect(args).toContain('inputs[target]=both');
+    expect(args).toContain('inputs[publish_release]=true');
+    expect(args).not.toContain('target=both');
+    expect(args).not.toContain('publish_release=true');
+    expect(args).not.toContain('publish_release=false');
   });
 });
 
@@ -564,6 +579,24 @@ describe('checkModeRequirements', () => {
   it('says a local build needs a supported Node', () => {
     expect(checkModeRequirements('local', { nodeOk: true }).ready).toBe(true);
     expect(checkModeRequirements('local', { nodeOk: false }).missing.join(' ')).toMatch(/Node\.js/);
+  });
+});
+
+describe('isSupportedNodeVersion', () => {
+  it('accepts the lines package.json pins, and only those', () => {
+    expect(isSupportedNodeVersion(22, 12)).toBe(true);
+    expect(isSupportedNodeVersion(22, 11)).toBe(false);
+    expect(isSupportedNodeVersion(24, 0)).toBe(true);
+    expect(isSupportedNodeVersion(26, 0)).toBe(true);
+    expect(isSupportedNodeVersion(28, 1)).toBe(true);
+    expect(isSupportedNodeVersion(20, 19)).toBe(false);
+  });
+
+  it('rejects Node 23 and 25 even though they are newer than 22', () => {
+    // This is why the preflight message must not say "too old": the tool's
+    // first real user ran Node 25.9.0 and was told exactly that.
+    expect(isSupportedNodeVersion(23, 11)).toBe(false);
+    expect(isSupportedNodeVersion(25, 9)).toBe(false);
   });
 });
 
