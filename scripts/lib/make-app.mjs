@@ -490,6 +490,13 @@ export function workflowTargetChoice(targets) {
  * instead of the string `"false"`, which a GitHub Actions boolean input treats
  * as true.
  *
+ * The inputs have to be nested under `inputs[...]` — that is the REST API's
+ * body shape (`{ ref, inputs: { … } }`), and `gh api`'s `key[subkey]=value`
+ * field syntax is how the nesting is expressed on its command line. Sending
+ * `target` and `publish_release` as flat top-level fields is rejected by
+ * GitHub with an unhelpful `gh: Invalid request.` and no run ever starts
+ * (found the hard way on the tool's first real run, 2026-11-07).
+ *
  * @param {{ ref: string, targets?: 'both' | 'installer' | 'portable', publish?: boolean, slug?: string, workflowFile?: string }} input
  * @returns {string[]}
  */
@@ -510,9 +517,9 @@ export function dispatchArgs(input) {
     '-f',
     `ref=${ref}`,
     '-F',
-    `target=${workflowTargetChoice(targets)}`,
+    `inputs[target]=${workflowTargetChoice(targets)}`,
     '-F',
-    `publish_release=${publish ? 'true' : 'false'}`,
+    `inputs[publish_release]=${publish ? 'true' : 'false'}`,
   ];
 }
 
@@ -849,6 +856,25 @@ export function humanSize(bytes) {
 }
 
 /**
+ * Whether a Node version may build the app *on this computer*.
+ *
+ * Mirrors `engines` in package.json. Note what this is not: a "new enough"
+ * check. Node 23 and 25 are newer than 22 yet unsupported (they are not LTS
+ * lines the project pins to), so the message shown for them must never say
+ * "too old" — the first real user of this tool ran Node 25.9.0, was told his
+ * Node was too old, and quite reasonably ignored the rest of the report.
+ * Only the local build cares; the tool itself and the GitHub build run fine
+ * on any of these.
+ *
+ * @param {number} major
+ * @param {number} minor
+ * @returns {boolean}
+ */
+export function isSupportedNodeVersion(major, minor) {
+  return (major === 22 && minor >= 12) || major === 24 || major >= 26;
+}
+
+/**
  * Which local requirements a mode needs, for the preflight report.
  *
  * @param {'remote' | 'local'} mode
@@ -863,7 +889,9 @@ export function checkModeRequirements(mode, tools) {
     if (!ghAvailable) missing.push('the GitHub CLI (gh) — winget install GitHub.cli, or brew install gh');
     else if (!ghAuthenticated) missing.push('a signed-in gh — run: gh auth login');
   } else if (!nodeOk) {
-    missing.push('Node.js 22.12+, 24 or 26+ — install it from nodejs.org');
+    // "A supported Node", not "a newer Node": 23/25 are newer than 22 and
+    // still unsupported, so telling their owners to upgrade would strand them.
+    missing.push('a supported Node.js for building here (22.12+, 24 or 26+) — install one from nodejs.org');
   }
 
   return { ready: missing.length === 0, missing };
